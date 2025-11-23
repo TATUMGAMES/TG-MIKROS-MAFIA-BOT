@@ -1,0 +1,1 @@
+rootProject.name = "TG-MIKROS-BOT-discord"

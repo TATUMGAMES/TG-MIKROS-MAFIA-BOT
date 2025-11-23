@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  mikros-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mikros-bot
+    restart: always
+    environment:
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - BOT_OWNER_ID=${BOT_OWNER_ID}
+    volumes:
+      # Mount logs directory for persistence
+      - ./logs:/app/logs
+      # Mount .env file (optional, if using file-based config)
+      - ./.env:/app/.env:ro
+    # No ports needed for Discord bot (no incoming connections)
+    # ports:
+    #   - "8080:8080"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+
+
+
+

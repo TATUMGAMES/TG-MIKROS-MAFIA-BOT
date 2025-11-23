@@ -1,0 +1,43 @@
+[Unit]
+Description=TG-MIKROS Discord Bot
+Documentation=https://github.com/TATUMGAMES/TG-MIKROS-BOT-discord
+After=network.target
+
+[Service]
+Type=simple
+# Replace YOUR_USERNAME with actual username (check with 'whoami')
+User=YOUR_USERNAME
+# Replace with actual path to project directory
+WorkingDirectory=/home/YOUR_USERNAME/TG-MIKROS-BOT-discord
+# Replace with actual path to JAR file
+ExecStart=/usr/bin/java -jar /home/YOUR_USERNAME/TG-MIKROS-BOT-discord/build/libs/TG-MIKROS-BOT-discord-1.0-SNAPSHOT.jar
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=mikros-bot
+
+# Environment variables (alternative to .env file)
+# Uncomment and set if not using .env file
+# Environment="DISCORD_BOT_TOKEN=your_token_here"
+# Environment="BOT_OWNER_ID=your_owner_id_here"
+
+# Resource limits (optional, adjust as needed)
+# MemoryLimit=1G
+# CPUQuota=50%
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+
+
