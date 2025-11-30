@@ -22,13 +22,13 @@ The MIKROS Discord Bot project has been successfully completed through 19 compre
 ### TASKS_01: Project Setup & Admin Tools ✅
 - **Status:** Complete
 - **Deliverables:** Bot foundation, JDA integration, moderation commands
-- **Commands:** `/admin-warn`, `/admin-kick`, `/admin-ban`, `/admin-history`
+- **Commands:** `/admin-warn`, `/admin-kick`, `/admin-ban`
 - **Files:** 8+ files created
 
 ### TASKS_02: Enhanced Moderation ✅
 - **Status:** Complete
 - **Deliverables:** Auto-escalation, reputation system, message analysis
-- **Commands:** `/warn-suggestions`, `/ban-suggestions`, `/server-stats`, `/top-contributors`, `/praise`, `/report`, `/score`
+- **Commands:** `/warn-suggestions`, `/ban-suggestions`, `/server-stats`, `/top-contributors`, `/praise`, `/report`, `/lookup`
 - **Files:** 10+ files created
 
 ### TASKS_03: Game Promotion System ✅
@@ -45,8 +45,8 @@ The MIKROS Discord Bot project has been successfully completed through 19 compre
 
 ### TASKS_05: Community Games Engine ✅
 - **Status:** Complete
-- **Deliverables:** Three daily reset games (Word Unscramble, Dice Battle, Emoji Match)
-- **Commands:** `/game-setup`, `/guess`, `/roll`, `/match`, `/game-stats`, `/game-config`
+- **Deliverables:** One daily reset game (Word Unscramble)
+- **Commands:** `/game-setup`, `/guess`, `/game-stats`, `/game-config`
 - **Files:** 15+ files created
 
 ### TASKS_06: Text-Based RPG System ✅

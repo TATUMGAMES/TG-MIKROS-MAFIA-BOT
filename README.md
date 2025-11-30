@@ -71,9 +71,9 @@ The bot integrates with the **MIKROS Analytics & Marketing Platform**, providing
 **Community Features:**
 - `/server-stats` - Server activity statistics and insights
 - `/top-contributors` - Leaderboard of most active members
-- `/praise` - Award positive reputation points
-- `/report` - Report users for negative behavior
-- `/score` - View user reputation scores
+- `/praise` - Award positive reputation points (Admin only)
+- `/report` - Report users for negative behavior (Admin only)
+- `/lookup` - Lookup user reputation scores by username (Admin only)
 
 **Reputation System:**
 - Behavior tracking and scoring
@@ -120,8 +120,6 @@ The bot integrates with the **MIKROS Analytics & Marketing Platform**, providing
 
 **Daily Reset Games:**
 - **Word Unscramble** - Unscramble gaming-themed words
-- **Dice Battle** - Roll D20 for highest score
-- **Emoji Match** - Match emoji patterns
 
 **Admin Commands:**
 - `/game-setup` - Initial game configuration
@@ -130,7 +128,6 @@ The bot integrates with the **MIKROS Analytics & Marketing Platform**, providing
 **Player Commands:**
 - `/guess <word>` - Submit word guess
 - `/roll` - Roll dice
-- `/match <emojis>` - Match emoji pattern
 - `/game-stats` - View leaderboard and time remaining
 
 **Features:**
@@ -139,29 +136,39 @@ The bot integrates with the **MIKROS Analytics & Marketing Platform**, providing
 - Rich leaderboards with medals
 - Time-based scoring
 
-### ⚔️ Text-Based RPG System (TASKS_06)
+### ⚔️ Text-Based RPG System (TASKS_06, TASKS_23)
 
 **Character System:**
-- Three classes: **Warrior**, **Mage**, **Rogue**
+- **Six classes:** Warrior, Knight, Mage, Rogue, Necromancer, Priest
 - Persistent character progression
 - Level and XP system
 - Stat growth (HP, STR, AGI, INT, LUCK)
+- **Action Charge System:** 3 charges, refresh every 12 hours
+- **Death & Recovery:** Characters can die, Priests can resurrect
 
 **Player Commands:**
-- `/rpg-register` - Create your character
-- `/rpg-profile` - View character stats
-- `/rpg-action` - Perform daily actions (explore, train, battle)
+- `/rpg-register` - Create your character (6 classes available)
+- `/rpg-profile` - View character stats, charges, recovery status
+- `/rpg-action` - Perform actions (explore, train, battle, rest)
+- `/rpg-resurrect` - Resurrect dead players (Priest-only, free action)
+- `/rpg-boss-battle` - Attack community bosses (attack, status, leaderboard)
 - `/rpg-leaderboard` - View top players
 
 **Admin Commands:**
 - `/rpg-config` - Configure RPG system (5 subcommands)
 
 **Features:**
-- Daily action cooldowns (configurable)
-- Three action types with unique outcomes
-- 15+ narrative encounters
-- 16 enemy types for battles
+- **Action Charge System:** 3 charges, refresh every 12 hours (not 24h cooldown)
+- **Four Action Types:** Explore, Train, Battle, Rest
+- **40+ narrative encounters** (Nilfheim-themed)
+- **36 enemy types** for battles
+- **Death System:** Characters can die, enter recovery
+- **Boss System:** 24 normal bosses + 12 super bosses
+- **Community Boss Battles:** Shared HP pool, damage tracking
+- **Boss Progression:** Levels increase based on defeats
+- **Class Bonuses:** Each class gets +20% damage vs specific boss types
 - Exponential XP progression
+- **Nilfheim Lore:** Full realm integration
 
 **TODO:** Inventory system, quests, multiplayer, prestige system
 
@@ -194,17 +201,15 @@ The bot integrates with the **MIKROS Analytics & Marketing Platform**, providing
 - Configurable cooldowns (1-30 days)
 
 **Commands:**
-- `/promo-help` - Request promotional assistance
 - `/setup-promotions` - Enable/disable detection (admin)
 - `/set-promo-frequency` - Set cooldown days (admin)
 
 **Features:**
 - DM or channel delivery options
 - Per-server configuration
-- Lead submission tracking
 - Respectful, non-intrusive
 
-**TODO:** Google Generative AI NLP integration, API submission (see `/docs/API_MIKROS_PROMO_SUBMISSION.md`)
+**TODO:** Google Generative AI NLP integration
 
 ---
 
@@ -361,29 +366,29 @@ Includes:
 | `/ban-suggestions` | Moderation | Get AI-powered ban suggestions | Moderate Members |
 | `/server-stats` | Community | View server activity statistics | Everyone |
 | `/top-contributors` | Community | View most active members | Everyone |
-| `/praise` | Reputation | Award positive reputation | Everyone |
-| `/report` | Reputation | Report negative behavior | Everyone |
-| `/score` | Reputation | View reputation score | Everyone |
-| `/setup-promotion-channel` | Admin | Configure game promotion channel | Administrator |
-| `/set-promotion-verbosity` | Admin | Set promotion frequency | Administrator |
-| `/force-promotion-check` | Admin | Manually trigger promotion | Administrator |
+| `/praise` | Reputation | Award positive reputation | Admin Only |
+| `/report` | Reputation | Report negative behavior | Admin Only |
+| `/lookup` | Reputation | Lookup user scores by username | Admin Only |
 | `/gamestats` | Analytics | View game analytics (10 subcommands) | Everyone |
 | `/game-setup` | Games | Setup community games | Administrator |
 | `/game-config` | Games | Configure games (5 subcommands) | Administrator |
 | `/guess` | Games | Guess word in games | Everyone |
-| `/roll` | Games | Roll dice in dice battle | Everyone |
-| `/match` | Games | Match emoji pattern | Everyone |
 | `/game-stats` | Games | View game leaderboard | Everyone |
-| `/rpg-register` | RPG | Create RPG character | Everyone |
+| `/rpg-register` | RPG | Create RPG character (6 classes) | Everyone |
 | `/rpg-profile` | RPG | View character profile | Everyone |
-| `/rpg-action` | RPG | Perform daily action | Everyone |
+| `/rpg-action` | RPG | Perform action (explore/train/battle/rest) | Everyone |
+| `/rpg-resurrect` | RPG | Resurrect dead player (Priest-only) | Everyone |
+| `/rpg-boss-battle` | RPG | Attack boss, check status, leaderboard | Everyone |
 | `/rpg-leaderboard` | RPG | View RPG leaderboard | Everyone |
 | `/rpg-config` | RPG | Configure RPG (5 subcommands) | Administrator |
 | `/spelling-challenge` | Spelling | View daily spelling challenge | Everyone |
 | `/spelling-leaderboard` | Spelling | View spelling leaderboard | Everyone |
-| `/promo-help` | Promo | Request promotional help | Everyone |
 | `/setup-promotions` | Promo | Enable/disable promo detection | Administrator |
 | `/set-promo-frequency` | Promo | Set promo cooldown | Administrator |
+| `/admin-setup-promotion-channel` | Admin | Configure game promotion channel | Administrator |
+| `/admin-set-promotion-verbosity` | Admin | Set promotion frequency | Administrator |
+| `/admin-force-promotion-check` | Admin | Manually trigger promotion | Administrator |
+| `/admin-disable-promotions` | Admin | Disable game promotions | Administrator |
 
 **Total Commands:** 33+ (including subcommands)
 
@@ -412,6 +417,9 @@ Includes:
 /rpg-profile
 /rpg-action type:explore
 /rpg-action type:battle
+/rpg-action type:rest
+/rpg-boss-battle attack
+/rpg-resurrect target:@Player
 /rpg-leaderboard
 ```
 
@@ -436,6 +444,12 @@ DISCORD_BOT_TOKEN=your_discord_bot_token_here
 
 # Optional
 BOT_OWNER_ID=your_discord_user_id_here
+
+# Optional: MIKROS Mafia Server ID
+# Used for RPG leaderboard "Mafia Member?" status check
+# Get this by right-clicking your server name → Copy Server ID
+# Or extract from Discord channel URL: https://discord.com/channels/<server_id>/<channel_id>
+MIKROS_MAFIA_GUILD_ID=1213441992936390666
 ```
 
 **Security:** Set file permissions to `600` (owner read/write only):
@@ -819,7 +833,12 @@ For issues, questions, or contributions:
 - ✅ GCP deployment documentation
 
 ### Planned Features 🔮
-- 🔮 Database persistence
+- 🔮 **Database Persistence** - Migrate from in-memory storage to PostgreSQL/MongoDB for production scalability
+  - Character data persistence
+  - Server configuration persistence
+  - Boss progression persistence
+  - Leaderboard caching and optimization
+  - Support for 1M+ users across 10K+ servers
 - 🔮 MIKROS Analytics API integration
 - 🔮 MIKROS Marketing API integration
 - 🔮 Google Generative AI NLP integration

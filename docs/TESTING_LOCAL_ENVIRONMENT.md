@@ -203,12 +203,11 @@ The bot **automatically runs in mock mode** by default. All external API calls a
 
 | Command | Test Case | Expected Result | Notes |
 |---------|-----------|-----------------|-------|
-| `/admin-warn` | Warn a user with reason | Warning logged, confirmation message | Check `/admin-history` to verify |
+| `/admin-warn` | Warn a user with reason | Warning logged, confirmation message | Warning is logged |
 | `/admin-warn` | Warn same user 3 times | Auto-escalation triggers (kick) | Requires 3 warnings threshold |
 | `/admin-kick` | Kick a user | User removed, action logged | Bot must have KICK_MEMBERS permission |
 | `/admin-ban` | Ban a user | User banned, action logged | Bot must have BAN_MEMBERS permission |
 | `/admin-ban` | Ban with delete_days:7 | Messages deleted, user banned | Deletes last 7 days of messages |
-| `/admin-history` | View user history | Shows all actions, reputation score | Includes warnings, kicks, bans |
 
 #### Enhanced Moderation
 
@@ -225,7 +224,7 @@ The bot **automatically runs in mock mode** by default. All external API calls a
 |---------|-----------|-----------------|-------|
 | `/praise` | Praise a user | Reputation score increases | Uses BehaviorCategory enum |
 | `/report` | Report negative behavior | Reputation score decreases | Uses BehaviorCategory enum |
-| `/score` | Check user reputation | Shows local and global score | Global shows "API not available" in mock mode |
+| `/lookup` | Lookup user reputation scores | Shows reputation from API | Admin only, accepts multiple usernames |
 
 ### Games Testing
 
@@ -244,21 +243,6 @@ The bot **automatically runs in mock mode** by default. All external API calls a
 | `/guess gameplay` | Correct guess | Public announcement, game ends | First correct guess wins |
 | `/guess wrongword` | Incorrect guess | Private error message | Can try again |
 | `/game-stats` | View game status | Shows current game, leaderboard | Displays time until reset |
-
-#### Dice Battle Game
-
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/roll` | Roll dice | D20 result shown | Tracks highest roll of day |
-| `/roll` | Multiple rolls | Each roll tracked | Leaderboard shows top roller |
-| `/game-stats` | View dice leaderboard | Top rollers displayed | Resets daily |
-
-#### Emoji Match Game
-
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/match 🎮🎲🎯` | Correct match | Public announcement, game ends | First correct match wins |
-| `/match ❌❌❌` | Incorrect match | Private error message | Can try again |
 
 ### RPG Testing
 
@@ -478,10 +462,9 @@ The bot runs in **mock mode by default** for local testing. All external API dep
 ./gradlew run
 
 # In Discord:
-/praise @user behavior:GOOD_SPORTSMANSHIP
-/report @user behavior:TROLLING
-/score @user
-/admin-history @user  # Shows reputation score
+/praise @user behavior:ACTIVE_PARTICIPATE
+/report @user behavior:TROLL
+/lookup username1 username2  # Lookup reputation scores
 ```
 
 #### 3. InMemoryGamePromotionService
@@ -525,7 +508,7 @@ The bot runs in **mock mode by default** for local testing. All external API dep
 
 # In Discord:
 /admin-warn @user reason:Test warning
-/admin-history @user  # Shows the warning
+# Warning is logged in moderation system
 ```
 
 **Note:** Data is lost when bot restarts (in-memory storage).
@@ -603,8 +586,8 @@ To verify you're in mock mode:
    - Should return same data every time (mock data)
 
 3. **Test Reputation:**
-   - Run `/score @user`
-   - Global reputation should show "API not available"
+   - Run `/lookup username` to check reputation scores
+   - Scores are retrieved from API
 
 ---
 

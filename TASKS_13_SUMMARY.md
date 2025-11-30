@@ -28,8 +28,6 @@ All commands have been systematically renamed to use consistent dashed prefixes:
 
 **Community Games → Game-Specific Prefixes:**
 - ✅ `/guess` → Split into `/scramble-guess` and `/spell-guess`
-- ✅ `/roll` → `/dicefury-roll`
-- ✅ `/match` → `/emojihunt-match`
 - ✅ `/game-stats` → Kept as unified command (shows active game)
 
 **Spelling Commands → `spell-*`:**
@@ -70,8 +68,6 @@ All commands have been systematically renamed to use consistent dashed prefixes:
 
 **Community Games:**
 13. `GuessCommand.java` - Split into two commands (see below)
-14. `RollCommand.java` - Renamed to `dicefury-roll`
-15. `MatchCommand.java` - Renamed to `emojihunt-match`
 16. `GameStatsCommand.java` - Updated references
 
 **Spelling:**
@@ -126,7 +122,7 @@ All commands have been systematically renamed to use consistent dashed prefixes:
 
 ### Command Prefixes Verified
 - ✅ Admin commands: `admin-*`
-- ✅ Community games: `scramble-*`, `dicefury-*`, `emojihunt-*`
+- ✅ Community games: `scramble-*`
 - ✅ Spelling: `spell-*`
 - ✅ Promo: `promo-*` and `admin-promo-*`
 - ✅ Stats: `stats-*`

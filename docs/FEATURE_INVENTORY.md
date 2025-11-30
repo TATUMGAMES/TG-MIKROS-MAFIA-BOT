@@ -21,7 +21,6 @@ This document provides a complete inventory of all features, commands, and capab
 | `/admin-warn` | Issue warning to user | Moderate Members | Moderation |
 | `/admin-kick` | Kick user from server | Kick Members | Moderation |
 | `/admin-ban` | Ban user from server | Ban Members | Moderation |
-| `/admin-history` | View user moderation history | Moderate Members | Moderation |
 
 #### Enhanced Moderation
 | Command | Description | Permission | Module |
@@ -34,9 +33,9 @@ This document provides a complete inventory of all features, commands, and capab
 #### Reputation System
 | Command | Description | Permission | Module |
 |---------|-------------|------------|--------|
-| `/praise` | Award positive reputation | Everyone | Reputation |
-| `/report` | Report negative behavior | Everyone | Reputation |
-| `/score` | View user reputation score | Everyone | Reputation |
+| `/praise` | Award positive reputation | Admin Only | Reputation |
+| `/report` | Report negative behavior | Admin Only | Reputation |
+| `/lookup` | Lookup user scores by username | Admin Only | Reputation |
 
 ### Game Promotion Commands
 
@@ -70,8 +69,6 @@ This document provides a complete inventory of all features, commands, and capab
 |---------|-------------|------------|--------|
 | `/game-setup` | Initial game configuration | Administrator | Games |
 | `/guess` | Submit word guess (Word Unscramble) | Everyone | Games |
-| `/roll` | Roll dice (Dice Battle) | Everyone | Games |
-| `/match` | Match emoji pattern (Emoji Match) | Everyone | Games |
 | `/game-stats` | View game leaderboard | Everyone | Games |
 | `/game-config` | Configure games (5 subcommands) | Administrator | Games |
 
@@ -79,9 +76,11 @@ This document provides a complete inventory of all features, commands, and capab
 
 | Command | Description | Permission | Module |
 |---------|-------------|------------|--------|
-| `/rpg-register` | Create RPG character | Everyone | RPG |
+| `/rpg-register` | Create RPG character (6 classes) | Everyone | RPG |
 | `/rpg-profile` | View character profile | Everyone | RPG |
-| `/rpg-action` | Perform daily action | Everyone | RPG |
+| `/rpg-action` | Perform action (explore/train/battle/rest) | Everyone | RPG |
+| `/rpg-resurrect` | Resurrect dead player (Priest-only) | Everyone | RPG |
+| `/rpg-boss-battle` | Attack boss, check status, leaderboard | Everyone | RPG |
 | `/rpg-leaderboard` | View RPG leaderboard | Everyone | RPG |
 | `/rpg-config` | Configure RPG (5 subcommands) | Administrator | RPG |
 
@@ -147,12 +146,13 @@ This document provides a complete inventory of all features, commands, and capab
 **Features:**
 - Positive/negative reputation points
 - Behavior category tracking
-- Local and global reputation (global TODO)
+- API-integrated reputation system
+- Server-side score calculation and storage
 - Integration with moderation actions
 
 **Services:**
 - `ReputationService` - Reputation management
-- `InMemoryReputationService` - In-memory storage
+- `InMemoryReputationService` - API integration with stub support
 
 **Storage:** In-memory (TODO: API integration)
 
@@ -200,8 +200,6 @@ This document provides a complete inventory of all features, commands, and capab
 
 **Games:**
 1. **Word Unscramble** - Gaming-themed word unscrambling
-2. **Dice Battle** - D20 rolling competition
-3. **Emoji Match** - Emoji pattern matching
 
 **Features:**
 - Daily automatic resets
@@ -219,19 +217,28 @@ This document provides a complete inventory of all features, commands, and capab
 
 ### 6. RPG System
 
-**Purpose:** Text-based RPG progression
+**Purpose:** Text-based RPG progression in Nilfheim realm
 
 **Features:**
-- 3 character classes (Warrior, Mage, Rogue)
-- Level and XP progression
-- Stat growth system
-- 3 action types (explore, train, battle)
-- 15+ narrative encounters
-- 16 enemy types
+- **6 character classes:** Warrior, Knight, Mage, Rogue, Necromancer, Priest
+- Level and XP progression (exponential growth)
+- Stat growth system (+5 HP, +1 all stats per level)
+- **Action Charge System:** 3 charges, refresh every 12 hours
+- **4 action types:** Explore, Train, Battle, Rest
+- **40+ narrative encounters** (Nilfheim-themed)
+- **36 enemy types** for battles
+- **Death & Recovery System:** Characters can die, Priests can resurrect
+- **Boss System:** 24 normal bosses + 12 super bosses
+- **Community Boss Battles:** Shared HP pool, damage tracking
+- **Boss Progression:** Levels increase based on defeats
+- **Class Bonuses:** +20% damage vs specific boss types
+- **Nilfheim Lore Integration**
 
 **Services:**
 - `CharacterService` - Character management
-- `RPGActionService` - Action processing
+- `ActionService` - Action processing
+- `BossService` - Boss spawning and tracking
+- `BossScheduler` - 24h boss spawns
 
 **Storage:** In-memory (TODO: API integration)
 
@@ -363,10 +370,14 @@ This document provides a complete inventory of all features, commands, and capab
 - `PlayerScore` - Player scores
 
 ### RPG Models
-- `RPGCharacter` - Character data
-- `RPGClass` - Character class enum
-- `RPGAction` - Action types
-- `RPGEncounter` - Narrative encounters
+- `RPGCharacter` - Character data (with charges, death/recovery)
+- `CharacterClass` - Character class enum (6 classes)
+- `RPGStats` - Character stats (HP, STR, AGI, INT, LUCK)
+- `RPGActionOutcome` - Action results
+- `Boss` - Normal boss data
+- `SuperBoss` - Super boss data
+- `BossType` - Boss type enum (10 types)
+- `RPGConfig` - Server configuration
 
 ### Spelling Models
 - `SpellingChallenge` - Daily challenge

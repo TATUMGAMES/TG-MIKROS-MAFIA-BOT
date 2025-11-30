@@ -16,10 +16,8 @@ All tasks from TASKS_05.md have been successfully implemented and verified.
   - Enables easy addition of new games without modifying core logic
 
 #### 2. **Model Layer**
-- ✅ `GameType` enum with three game types:
+- ✅ `GameType` enum with one game type:
   - `WORD_UNSCRAMBLE` - Word guessing game
-  - `DICE_ROLL` - Dice battle game
-  - `EMOJI_MATCH` - Emoji pattern matching game
   
 - ✅ `GameConfig` - Guild-specific configuration
   - Properties: guildId, gameChannelId, enabledGames, resetTime, activeGameType
@@ -53,20 +51,6 @@ All tasks from TASKS_05.md have been successfully implemented and verified.
 - ✅ Score based on time (1000 - seconds, minimum 100)
 - ✅ First correct guess wins
 - ✅ Prevents multiple wins by same user
-
-**DiceRollGame:**
-- ✅ D20 dice rolling
-- ✅ One roll per player per day
-- ✅ Critical hit detection (natural 20)
-- ✅ Tracks highest roller
-- ✅ Announces leader changes
-
-**EmojiMatchGame:**
-- ✅ 32 gaming/fantasy-themed emojis
-- ✅ Random 3-emoji patterns
-- ✅ Exact pattern matching required
-- ✅ Time-based scoring
-- ✅ First correct match wins
 
 ---
 
@@ -110,27 +94,6 @@ All tasks from TASKS_05.md have been successfully implemented and verified.
   - ✅ Public announcement for correct guess (with score & time)
   - ❌ Private ephemeral message for incorrect guess
 
-#### `/roll`
-- **Purpose:** Roll dice in dice battle game
-- **Validation:**
-  - Checks for active Dice Battle game
-  - Prevents multiple rolls per user
-  - Only works during active session
-- **Response:**
-  - Public announcement showing roll result
-  - Special indicators for critical hits (20)
-  - Leader change notifications
-
-#### `/match <emojis>`
-- **Purpose:** Match emoji pattern
-- **Validation:**
-  - Checks for active Emoji Match game
-  - Prevents duplicate wins
-  - Only works during active session
-- **Response:**
-  - ✅ Public announcement for correct match (with score)
-  - ❌ Private ephemeral message for incorrect match
-
 #### `/game-stats`
 - **Purpose:** View today's game status and leaderboard
 - **Features:**
@@ -138,7 +101,7 @@ All tasks from TASKS_05.md have been successfully implemented and verified.
   - Displays time remaining until reset (hours & minutes)
   - Participation count
   - **For Dice Roll:** Full leaderboard (top 10) sorted by score
-  - **For Word/Emoji:** Winner info with solve time, or attempt count if unsolved
+  - **For Word Unscramble:** Winner info with solve time, or attempt count if unsolved
   - Beautiful embed formatting with medals (🥇🥈🥉)
   - Footer with reset time
 
@@ -252,12 +215,6 @@ All future feature TODOs have been documented in the code:
 - Add themed word packs (gaming, tech, fantasy, etc.)
 - Track most difficult words (fewest correct guesses)
 
-### EmojiMatchGame
-- Allow admins to define custom emoji pools per guild
-- Add difficulty levels by varying pattern length
-- Add themed emoji sets (animals, food, sports, etc.)
-- Add time-based scoring for faster solves
-
 ---
 
 ## ✅ Verification
@@ -276,11 +233,7 @@ src/main/java/com/tatumgames/mikros/communitygames/
 │   ├── GameSetupCommand.java      # Admin: Initial setup
 │   ├── GameStatsCommand.java      # Player: View leaderboard
 │   ├── GuessCommand.java          # Player: Word unscramble
-│   ├── MatchCommand.java          # Player: Emoji match
-│   └── RollCommand.java           # Player: Dice battle
 ├── games/
-│   ├── DiceRollGame.java          # Dice battle implementation
-│   ├── EmojiMatchGame.java        # Emoji match implementation
 │   └── WordUnscrambleGame.java    # Word unscramble implementation
 ├── model/
 │   ├── GameConfig.java            # Guild configuration
@@ -294,8 +247,8 @@ src/main/java/com/tatumgames/mikros/communitygames/
 
 ### Features Completed
 ✅ Modular, extensible game engine  
-✅ Three fully functional games  
-✅ Six slash commands (3 admin, 3 player, 1 shared)  
+✅ One fully functional game  
+✅ Four slash commands (2 admin, 1 player, 1 shared)  
 ✅ Daily reset system with scheduler  
 ✅ Per-guild configuration  
 ✅ In-memory state management  
@@ -314,8 +267,6 @@ src/main/java/com/tatumgames/mikros/communitygames/
 | Core game system with pluggable interface | ✅ Complete |
 | `/game-setup` admin command | ✅ Complete |
 | Word Unscramble game | ✅ Complete |
-| Dice Battle game | ✅ Complete |
-| Emoji Match game | ✅ Complete |
 | Daily reset system | ✅ Complete |
 | `/game-stats` with leaderboard | ✅ Complete |
 | `/game-config` admin command | ✅ Complete |
@@ -330,8 +281,8 @@ src/main/java/com/tatumgames/mikros/communitygames/
 
 - **Total Files Created/Modified:** 13
 - **Total Lines of Code:** ~1,800
-- **Commands Implemented:** 6
-- **Games Implemented:** 3
+- **Commands Implemented:** 4
+- **Games Implemented:** 1
 - **Service Classes:** 2
 - **Model Classes:** 4
 - **Build Status:** ✅ SUCCESS

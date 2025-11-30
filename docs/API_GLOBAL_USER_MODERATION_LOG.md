@@ -210,7 +210,7 @@ Authorization: Bearer YOUR_API_KEY
 ❌ Private moderation notes  
 
 ### User Rights (GDPR Compliant)
-- Users can view their own data via `/score` command
+- Admins can lookup user data via `/lookup` command
 - Users can request data deletion
 - Users can appeal flagged status
 - Servers can opt out of sharing

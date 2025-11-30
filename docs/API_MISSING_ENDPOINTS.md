@@ -609,7 +609,7 @@ Content-Type: application/json
   "server_id": "123456789012345678",
   "game_channel_id": "987654321098765432",
   "reset_time_utc": "00:00",
-  "enabled_games": ["word_unscramble", "dice_battle", "emoji_match"],
+  "enabled_games": ["word_unscramble"],
   "difficulty": "medium",
   "updated_at": "2025-01-27T12:00:00Z"
 }
@@ -639,7 +639,7 @@ Content-Type: application/json
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `server_id` | string | Yes | Discord server ID |
-| `game_type` | string | No | Filter: "word_unscramble", "dice_battle", "emoji_match" |
+| `game_type` | string | No | Filter: "word_unscramble" |
 
 **Example Response Schema:**
 ```json
@@ -852,7 +852,7 @@ Authorization: Bearer YOUR_API_KEY
 **Method:** `POST`  
 **Route:** `/api/leaderboards/community-games`
 
-**Description:** Saves community game leaderboard state (word unscramble, dice battle, emoji match).
+**Description:** Saves community game leaderboard state (word unscramble).
 
 **Request Body Schema:**
 ```json
@@ -898,7 +898,7 @@ Authorization: Bearer YOUR_API_KEY
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `server_id` | string | Yes | Discord server ID |
-| `game_type` | string | No | Filter: "word_unscramble", "dice_battle", "emoji_match", "all" |
+| `game_type` | string | No | Filter: "word_unscramble", "all" |
 | `period` | string | No | Time period: "daily", "weekly", "monthly", "all_time" (default: "all_time") |
 | `limit` | integer | No | Maximum results (default: 10, max: 100) |
 

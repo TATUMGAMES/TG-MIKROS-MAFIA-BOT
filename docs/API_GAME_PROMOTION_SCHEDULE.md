@@ -2,14 +2,14 @@
 
 ## Feature Overview
 
-This API delivers a list of active indie games that should be promoted by the MIKROS Bot. The data includes timing control via deadlines, custom promotional messages, and asset links for rich embeds. The bot periodically fetches this data and posts promotions to configured Discord channels based on server-specific verbosity settings.
+This API delivers a list of active games/apps that should be promoted by the MIKROS Bot. The bot uses the `/getAllApps` endpoint to fetch app data with campaign information, then automatically schedules and posts promotions using a 4-step story format while respecting campaign dates and verbosity settings.
 
 ## Why This API is Needed
 
-- **Automated Marketing**: Indie developers get automatic exposure across Discord communities
-- **Timing Control**: Promotions only post after specified deadlines (e.g., after launch)
-- **Customization**: Developers can provide custom messages or let the bot generate them
-- **Tracking**: `isPushed` flag prevents duplicate promotions
+- **Automated Marketing**: Games get automatic exposure across Discord communities
+- **Campaign Control**: Promotions only post during active campaign periods
+- **4-Step Story Format**: Structured promotion flow (introduce → details → multi-game → final chance)
+- **Spam Prevention**: Respects verbosity settings and minimum intervals
 - **Scalability**: Centralized system manages promotions across all MIKROS Bot instances
 - **Quality Control**: Marketing team can curate which games get promoted and when
 
@@ -18,15 +18,7 @@ This API delivers a list of active indie games that should be promoted by the MI
 ## Request Details
 
 **Method**: `GET`  
-**URL**: `https://api.tatumgames.com/active-promotions`
-
-### Query Parameters
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `limit` | integer | No | Maximum number of promotions to return (default: 50) |
-| `since_id` | integer | No | Return only promotions with game_id greater than this |
-| `platform` | string | No | Filter by platform: "steam", "itch", "epic", "all" (default: "all") |
+**URL**: `https://api.tatumgames.com/getAllApps`
 
 ### Authentication
 
@@ -41,7 +33,7 @@ Authorization: Bearer YOUR_BOT_API_KEY
 ## Sample Request
 
 ```http
-GET /active-promotions?limit=10 HTTP/1.1
+GET /getAllApps HTTP/1.1
 Host: api.tatumgames.com
 Authorization: Bearer YOUR_BOT_API_KEY
 Content-Type: application/json
@@ -54,50 +46,63 @@ Content-Type: application/json
 **Status: 200 OK**
 
 ```json
-[
-  {
-    "game_id": 1021,
-    "game_name": "ShadowSprint",
-    "description": "A neon-drenched, parkour runner set in a dystopian Tokyo.",
-    "promotion_url": "https://store.steampowered.com/app/00000/shadowsprint",
-    "promotion_message": null,
-    "image_url": "https://cdn.example.com/shadowsprint.png",
-    "deadline": "2025-10-08T18:00:00Z",
-    "isPushed": false,
-    "platform": "steam",
-    "genre": "action",
-    "developer": "NeonStudio",
-    "price": "$14.99"
+{
+  "status": {
+    "statusCode": 200,
+    "statusMessage": "SUCCESS"
   },
-  {
-    "game_id": 1022,
-    "game_name": "Pixel Raiders",
-    "description": "Squad up and raid dungeons in this SNES-style online RPG.",
-    "promotion_url": "https://tatumgames.com/pixel-raiders",
-    "promotion_message": "🔥 Pixel Raiders is now live! Team up, loot up, and dive into the pixel madness! 🎮 Play now: https://tatumgames.com/pixel-raiders",
-    "image_url": null,
-    "deadline": "2025-10-10T16:00:00Z",
-    "isPushed": false,
-    "platform": "itch",
-    "genre": "rpg",
-    "developer": "PixelForge Games",
-    "price": "Free"
-  },
-  {
-    "game_id": 1023,
-    "game_name": "Cosmic Harvest",
-    "description": "Build and manage your own space farm on distant planets.",
-    "promotion_url": "https://store.steampowered.com/app/00001/cosmic-harvest",
-    "promotion_message": null,
-    "image_url": "https://cdn.example.com/cosmic-harvest.jpg",
-    "deadline": "2025-10-05T12:00:00Z",
-    "isPushed": true,
-    "platform": "steam",
-    "genre": "simulation",
-    "developer": "Orbital Studios",
-    "price": "$19.99"
+  "data": {
+    "apps": [
+      {
+        "appId": "hv-nemesis",
+        "appGameId": "tg-nemesis-001",
+        "appName": "Heroes Vs Villains: Nemesis",
+        "shortDescription": "Auto-battler game with idle progression",
+        "longDescription": "Guide your Guardian through levels, defeat enemies, collect rewards. Idle progression allows your character to grow while offline.",
+        "gameGenre": "Action",
+        "gameplayType": "Casual",
+        "contentGenre": "Adventure",
+        "contentTheme": "Fantasy",
+        "campaign": {
+          "campaignId": "cmp_hv_nemesis_jan",
+          "campaignName": "January Promo",
+          "startDate": 1735689600,
+          "endDate": 1735776000,
+          "images": [
+            { "appLogo": "https://cdn.example.com/hv-nemesis.png" }
+          ],
+          "ctas": {
+            "google_store": "https://play.google.com/store/apps/details?id=com.tatumgames.nemesis",
+            "apple_store": "https://apps.apple.com/app/heroes-vs-villains-nemesis/id123456",
+            "steam_store": "https://store.steampowered.com/app/123456/",
+            "samsung_store": "https://apps.samsung.com/appquery/appDetail.as?appId=com.tatumgames.nemesis",
+            "amazon_store": "http://www.amazon.com/gp/mas/dl/android?p=com.tatumgames.nemesis",
+            "website": "https://tatumgames.com/",
+            "other": "https://tatumgames.com/"
+          },
+          "screenshotUrls": [
+            "https://cdn.example.com/ss1.png",
+            "https://cdn.example.com/ss2.png"
+          ],
+          "videoUrls": [
+            "https://cdn.example.com/vid1.mp4",
+            "https://cdn.example.com/vid2.mp4"
+          ],
+          "socialMedia": {
+            "facebook": "http://www.facebook.com/tatumgames",
+            "x": "https://twitter.com/tatumgames",
+            "instagram": "https://instagram.com/tatumgames",
+            "linkedin": "https://www.linkedin.com/company/tatum-games-llc",
+            "tiktok": "https://tiktok.com/@tatumgames",
+            "youtube": "http://www.youtube.com/user/TatumGamesLLC",
+            "discord": "https://discord.gg/tatumgames",
+            "twitch": "https://twitch.tv/tatumgames"
+          }
+        }
+      }
+    ]
   }
-]
+}
 ```
 
 ---
@@ -106,18 +111,56 @@ Content-Type: application/json
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `game_id` | integer | Yes | Unique identifier for the game |
-| `game_name` | string | Yes | Title of the game |
-| `description` | string | Yes | Short marketing pitch or summary (max 500 chars) |
-| `promotion_url` | string | Yes | Steam link, itch.io page, or MIKROS marketing landing page |
-| `promotion_message` | string | No | Pre-written promotional message. If null, bot generates from template |
-| `image_url` | string | No | Cover art, banner, or screenshot URL for embed image |
-| `deadline` | ISO 8601 string | Yes | UTC datetime - only promote if current time is past this |
-| `isPushed` | boolean | Yes | Whether promotion has been marked as pushed |
-| `platform` | string | No | Game platform: "steam", "itch", "epic", etc. |
-| `genre` | string | No | Game genre for categorization |
-| `developer` | string | No | Developer/studio name |
-| `price` | string | No | Game price (can be "Free", "$9.99", etc.) |
+| `status` | object | Yes | Response status information |
+| `status.statusCode` | integer | Yes | HTTP status code (200 for success) |
+| `status.statusMessage` | string | Yes | Status message ("SUCCESS") |
+| `data` | object | Yes | Response data container |
+| `data.apps` | array | Yes | List of app promotions |
+
+### App Object Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `appId` | string | Yes | Unique app identifier (e.g., "hv-nemesis") |
+| `appGameId` | string | Yes | Game ID (e.g., "tg-nemesis-001") |
+| `appName` | string | Yes | Display name of the app |
+| `shortDescription` | string | Yes | Brief description for step 1 and 4 |
+| `longDescription` | string | Yes | Detailed description for step 2 |
+| `gameGenre` | string | No | Game genre (e.g., "Action", "Strategy") |
+| `gameplayType` | string | No | Gameplay type (e.g., "Casual", "Card") |
+| `contentGenre` | string | No | Content genre (e.g., "Adventure") |
+| `contentTheme` | string | No | Content theme (e.g., "Fantasy") |
+| `campaign` | object | Yes | Campaign information |
+
+### Campaign Object Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `campaignId` | string | Yes | Unique campaign identifier |
+| `campaignName` | string | Yes | Campaign display name |
+| `startDate` | integer | Yes | Unix timestamp (seconds) - campaign start |
+| `endDate` | integer | Yes | Unix timestamp (seconds) - campaign end |
+| `images` | array | No | List of image objects |
+| `images[].appLogo` | string | No | App logo URL |
+| `ctas` | object | Yes | Call-to-action links |
+| `ctas.google_store` | string | No | Google Play Store URL |
+| `ctas.apple_store` | string | No | Apple App Store URL |
+| `ctas.steam_store` | string | No | Steam Store URL |
+| `ctas.samsung_store` | string | No | Samsung Store URL |
+| `ctas.amazon_store` | string | No | Amazon Appstore URL |
+| `ctas.website` | string | No | Website URL |
+| `ctas.other` | string | No | Other store/platform URL |
+| `screenshotUrls` | array | No | List of screenshot URLs |
+| `videoUrls` | array | No | List of video URLs |
+| `socialMedia` | object | No | Social media links |
+| `socialMedia.facebook` | string | No | Facebook page URL |
+| `socialMedia.x` | string | No | Twitter/X profile URL |
+| `socialMedia.instagram` | string | No | Instagram profile URL |
+| `socialMedia.linkedin` | string | No | LinkedIn company URL |
+| `socialMedia.tiktok` | string | No | TikTok profile URL |
+| `socialMedia.youtube` | string | No | YouTube channel URL |
+| `socialMedia.discord` | string | No | Discord server invite URL |
+| `socialMedia.twitch` | string | No | Twitch channel URL |
 
 ---
 
@@ -125,91 +168,85 @@ Content-Type: application/json
 
 ### When to Fetch
 
-The bot fetches active promotions based on guild verbosity settings:
+The bot checks for new promotions every 60 minutes. However, actual posting respects guild verbosity settings:
 
-- **LOW**: Every 24 hours
-- **MEDIUM**: Every 12 hours (default)
-- **HIGH**: Every 6 hours
+- **LOW**: Posts only if 24+ hours since last check
+- **MEDIUM**: Posts only if 12+ hours since last check (default)
+- **HIGH**: Posts only if 6+ hours since last check
+
+### 4-Step Promotion Story Format
+
+The bot posts 4 promotions per app across the campaign period:
+
+1. **Step 1: Introduce the game** (at campaign start)
+   - Uses `shortDescription`
+   - Template: "🎮 Introducing <app_name>! <short_description>"
+
+2. **Step 2: Add more details** (33% through campaign)
+   - Uses `longDescription`
+   - Template: "Dive deeper into <app_name>: <long_description>"
+
+3. **Step 3: Multiple games promotion** (66% through campaign, only if 2+ games exist)
+   - Combines multiple active apps
+   - Template: "🌟 MIKROS Top Picks for this month: <game_list>"
+   - Only posts once per guild, not per app
+
+4. **Step 4: Final chance** (90% through campaign)
+   - Uses `shortDescription`
+   - Template: "⏰ Last chance to check out <app_name>! <short_description>"
 
 ### Filtering Logic
 
-For each returned promotion, the bot checks:
+For each app, the bot checks:
 
 ```java
-if (!promotion.isPushed() && Instant.now().isAfter(promotion.getDeadline())) {
-    // Ready to promote
-    postPromotion(promotion);
-    markAsPromoted(promotion.getGameId());
+// 1. Campaign is active
+if (now.isAfter(campaign.startDate) && now.isBefore(campaign.endDate)) {
+    // 2. Minimum 24-hour interval since last post
+    if (lastPostTime == null || now.isAfter(lastPostTime.plus(24, HOURS))) {
+        // 3. Step timing is correct
+        if (now.isAfter(stepTargetTime)) {
+            // Post promotion
+        }
+    }
 }
 ```
 
 **Conditions:**
-1. `isPushed == false` - Not yet promoted globally
-2. Current UTC time is **after** `deadline`
-3. Not already promoted in this specific guild (local tracking)
+1. Campaign is active (current time between `startDate` and `endDate`)
+2. Minimum 24 hours since last post for this app in this guild
+3. Step target time has been reached
+4. Verbosity check passed (enough time since last check)
 
 ### Message Formatting
 
-**If `promotion_message` is provided:**
-```
-Use the custom message as-is in the embed description
-```
+**Step 1, 2, 4 (Single App):**
+- Random template selection from step-specific templates
+- Placeholder replacement: `<app_name>`, `<short_description>`, `<long_description>`
+- At least one CTA link (randomly selected from available CTAs)
+- Optional social media link (~30% chance)
+- App logo image if available
 
-**If `promotion_message` is null:**
-```
-Generate template:
-
-🚨 New indie gem alert!
-
-{description}
-
-👉 Play it here: {promotion_url}
-```
+**Step 3 (Multi-Game):**
+- Combines all active apps in campaign
+- Lists each app with short description and primary CTA
+- Social media links from first app
 
 **Embed Format:**
 ```java
 EmbedBuilder embed = new EmbedBuilder();
-embed.setTitle("🎮 " + gameName);
-embed.setDescription(promotionMessage);
-embed.addField("🔗 Link", promotionUrl, false);
-if (imageUrl != null) {
-    embed.setImage(imageUrl);
+embed.setTitle("🎮 " + appName);
+embed.setDescription(formattedMessage);
+embed.addField("🔗 Links", ctaLinks, false);
+if (socialMediaLink != null) {
+    embed.addField("📱 Follow Us", socialMediaLink, false);
+}
+if (appLogo != null) {
+    embed.setImage(appLogo);
 }
 embed.setFooter("Powered by MIKROS Marketing");
+embed.setTimestamp(Instant.now());
 ```
-
----
-
-## Marking Games as Pushed
-
-After successfully posting a promotion, the bot should notify the backend:
-
-**Endpoint**: `POST /mark-pushed`
-
-**Request Body:**
-```json
-{
-  "game_id": 1021,
-  "bot_id": "your_bot_discord_id",
-  "timestamp": "2025-10-07T22:30:00Z",
-  "guilds_promoted": 15
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Game marked as pushed",
-  "game_id": 1021,
-  "total_reach": 45000
-}
-```
-
-This allows the backend to:
-- Update `isPushed` to `true`
-- Track promotion reach and effectiveness
-- Generate analytics for developers
 
 ---
 
@@ -239,7 +276,7 @@ This allows the backend to:
 ```json
 {
   "error": "Internal server error",
-  "message": "Unable to fetch promotions"
+  "message": "Unable to fetch apps"
 }
 ```
 
@@ -247,10 +284,13 @@ This allows the backend to:
 
 ### Empty Response
 ```json
-[]
+{
+  "status": { "statusCode": 200, "statusMessage": "SUCCESS" },
+  "data": { "apps": [] }
+}
 ```
 
-**Bot Action**: No promotions available, this is normal behavior
+**Bot Action**: No apps available, this is normal behavior
 
 ---
 
@@ -269,165 +309,38 @@ X-RateLimit-Reset: 1696723200
 
 ---
 
-## Scalability Considerations
+## Current Implementation Status
 
-### Backend Infrastructure
-- **Caching**: CDN-cached responses with 5-minute TTL
-- **Database**: Indexed on `deadline`, `isPushed` for fast queries
-- **Load Balancing**: Multiple API servers for redundancy
-- **Monitoring**: Track API response times and error rates
-
-### Bot Optimization
-- **Batch Fetching**: Fetch all guilds' promotions in one request
-- **Local Caching**: Cache fetched promotions for 1 hour
-- **Async Processing**: Post promotions asynchronously
-- **Error Recovery**: Continue operating even if API is down
-
-### Future Enhancements
-1. **WebSockets**: Real-time promotion push instead of polling
-2. **Personalization**: Tailor promotions by guild genre preferences
-3. **A/B Testing**: Test different message formats
-4. **Analytics**: Track which promotions get the most engagement
-5. **Scheduling**: Allow developers to schedule specific post times
-
----
-
-## Security Notes
-
-### API Keys
-- Unique per bot instance
-- Rotatable via dashboard
-- Scope-limited to read-only for this endpoint
-- Encrypted in transit (TLS 1.3)
-
-### Data Privacy
-- No personal user data in responses
-- Guild IDs not shared with API
-- Promotion tracking is anonymous
-
-### Content Moderation
-- All games reviewed before adding to promotion queue
-- Profanity/spam filters applied to descriptions
-- Admin dashboard to remove inappropriate content
-
----
-
-## Example Bot Implementation
-
-```java
-public List<GamePromotion> fetchActivePromotions() {
-    try {
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://api.tatumgames.com/active-promotions?limit=50"))
-                .header("Authorization", "Bearer " + apiKey)
-                .header("Content-Type", "application/json")
-                .GET()
-                .timeout(Duration.ofSeconds(10))
-                .build();
-        
-        HttpResponse<String> response = client.send(request,
-                HttpResponse.BodyHandlers.ofString());
-        
-        if (response.statusCode() == 200) {
-            JsonArray jsonArray = JsonParser.parseString(response.body()).getAsJsonArray();
-            List<GamePromotion> promotions = new ArrayList<>();
-            
-            for (JsonElement element : jsonArray) {
-                JsonObject json = element.getAsJsonObject();
-                
-                GamePromotion promotion = new GamePromotion(
-                        json.get("game_id").getAsInt(),
-                        json.get("game_name").getAsString(),
-                        json.get("description").getAsString(),
-                        json.get("promotion_url").getAsString(),
-                        json.has("promotion_message") && !json.get("promotion_message").isJsonNull()
-                                ? json.get("promotion_message").getAsString()
-                                : null,
-                        json.has("image_url") && !json.get("image_url").isJsonNull()
-                                ? json.get("image_url").getAsString()
-                                : null,
-                        Instant.parse(json.get("deadline").getAsString()),
-                        json.get("isPushed").getAsBoolean()
-                );
-                
-                promotions.add(promotion);
-            }
-            
-            logger.info("Fetched {} active promotions from API", promotions.size());
-            return promotions;
-            
-        } else if (response.statusCode() == 429) {
-            logger.warn("Rate limit exceeded, will retry later");
-            return new ArrayList<>();
-        } else {
-            logger.error("Failed to fetch promotions: HTTP {}", response.statusCode());
-            return new ArrayList<>();
-        }
-        
-    } catch (Exception e) {
-        logger.error("Error fetching promotions from API", e);
-        return new ArrayList<>();
-    }
-}
-```
-
----
-
-## Testing & Development
-
-### Mock Data for Development
-
-Create a local mock endpoint or JSON file for testing:
-
-```json
-{
-  "promotions": [
-    {
-      "game_id": 9999,
-      "game_name": "Test Game",
-      "description": "A test game for development",
-      "promotion_url": "https://example.com/test",
-      "promotion_message": null,
-      "image_url": "https://via.placeholder.com/400x200",
-      "deadline": "2025-01-01T00:00:00Z",
-      "isPushed": false
-    }
-  ]
-}
-```
-
-### Test Scenarios
-
-1. **Normal Flow**: Promotion with passed deadline and isPushed=false
-2. **Future Deadline**: Promotion that shouldn't post yet
-3. **Already Pushed**: Promotion with isPushed=true
-4. **Custom Message**: Promotion with custom promotional message
-5. **No Image**: Promotion without image_url
-6. **Empty Response**: API returns empty array
-7. **API Error**: API returns 500 error
+- ✅ Stub JSON file (`/stubs/getAllApps.json`) for development
+- ✅ AppPromotion model with nested Campaign, CTAs, SocialMedia classes
+- ✅ 4-step promotion logic in `PromotionStepManager`
+- ✅ Message templates (10 templates, developer to add 10 more)
+- ✅ Verbosity enforcement in scheduler
+- ⏳ Real API integration (TODO: Replace stub with HTTP client)
 
 ---
 
 ## Integration Checklist
 
+- [x] Data models created (`AppPromotion`, `Campaign`, `CTAs`, `SocialMedia`)
+- [x] Stub JSON loading implemented
+- [x] 4-step promotion logic implemented
+- [x] Verbosity enforcement implemented
 - [ ] API endpoint URL configured
 - [ ] API key stored securely in environment variables
 - [ ] HTTP client configured with timeout (10s recommended)
-- [ ] JSON parsing implemented
+- [ ] JSON parsing for real API response
 - [ ] Error handling for all HTTP status codes
 - [ ] Rate limit respect implemented
 - [ ] Local duplicate prevention (guild-level tracking)
 - [ ] Promotion message formatting logic
 - [ ] Embed creation with optional image
 - [ ] Logging for debugging and monitoring
-- [ ] Mark-as-pushed API call (if backend supports)
 
 ---
 
-**Version**: 1.0  
-**Last Updated**: October 7, 2025  
-**Status**: 📋 Specification Complete - Implementation Pending  
-**Integration Status**: TODOs placed in bot code for future implementation  
-**Estimated Integration Time**: 2-4 hours once API is live
-
+**Version**: 2.0  
+**Last Updated**: 2025-10-08  
+**Status**: 📋 Specification Complete - Stub Implementation Complete  
+**Integration Status**: Stub JSON in use, real API integration pending  
+**Estimated Integration Time**: 1-2 hours once API is live

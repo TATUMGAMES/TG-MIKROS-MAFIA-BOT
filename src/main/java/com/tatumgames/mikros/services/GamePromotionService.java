@@ -1,6 +1,6 @@
 package com.tatumgames.mikros.services;
 
-import com.tatumgames.mikros.models.GamePromotion;
+import com.tatumgames.mikros.models.AppPromotion;
 import com.tatumgames.mikros.models.PromotionVerbosity;
 
 import java.time.Instant;
@@ -44,48 +44,49 @@ public interface GamePromotionService {
     PromotionVerbosity getPromotionVerbosity(String guildId);
     
     /**
-     * Fetches active game promotions from the external API.
+     * Fetches all apps from /getAllApps endpoint (stub for now).
+     * TODO: Replace with real API call when /getAllApps is live.
      * 
-     * TODO: Integrate with MIKROS Game Promotion API
-     * 
-     * @return list of active game promotions
+     * @return list of app promotions
      */
-    List<GamePromotion> fetchActivePromotions();
+    List<AppPromotion> fetchAllApps();
     
     /**
-     * Checks if a game has already been promoted in a guild.
+     * Gets the last promotion step posted for an app in a guild.
+     * Returns 0 if never promoted, or 1-4 for the last step posted.
      * 
      * @param guildId the guild ID
-     * @param gameId the game ID
-     * @return true if already promoted, false otherwise
+     * @param appId the app ID
+     * @return promotion step (0-4)
      */
-    boolean hasBeenPromoted(String guildId, int gameId);
+    int getLastPromotionStep(String guildId, String appId);
     
     /**
-     * Marks a game as promoted in a guild.
+     * Records that a promotion step was posted for an app in a guild.
      * 
      * @param guildId the guild ID
-     * @param gameId the game ID
+     * @param appId the app ID
+     * @param step the promotion step (1-4)
+     * @param postTime the time when posted
      */
-    void markAsPromoted(String guildId, int gameId);
+    void recordPromotionStep(String guildId, String appId, int step, Instant postTime);
     
     /**
-     * Gets the last post time for a promotion in a guild.
+     * Checks if an app has been promoted in a guild (any step).
      * 
      * @param guildId the guild ID
-     * @param gameId the game ID
+     * @param appId the app ID
+     * @return true if app has been promoted
+     */
+    boolean hasAppBeenPromoted(String guildId, String appId);
+    
+    /**
+     * Gets the last post time for an app in a guild.
+     * 
+     * @param guildId the guild ID
+     * @param appId the app ID
      * @return the last post time, or null if never posted
      */
-    Instant getLastPostTime(String guildId, int gameId);
-    
-    /**
-     * Notifies the backend API that a game was promoted.
-     * 
-     * TODO: Integrate with MIKROS API to mark game as pushed
-     * 
-     * @param gameId the game ID
-     * @return true if successful, false otherwise
-     */
-    boolean notifyGamePushed(int gameId);
+    Instant getLastAppPostTime(String guildId, String appId);
 }
 

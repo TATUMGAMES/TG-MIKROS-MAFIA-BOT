@@ -108,7 +108,6 @@ Fixed **21 linter warnings** across **14 files**:
 - `PromotionVerbosity` from GamePromotionScheduler
 - `UserActivity` from MonthlyReportService
 - `ZoneId`, `TemporalAdjusters` from MonthlyReportService
-- `ArrayList`, `List` from EmojiMatchGame
 - `Logger`, `LoggerFactory` from multiple command classes
 - `Pattern` from MessageAnalysisService
 

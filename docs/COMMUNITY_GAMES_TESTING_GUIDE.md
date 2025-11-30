@@ -55,14 +55,8 @@ The bot will register all slash commands when it starts up.
    - ✅ Verify: View shows new time
 
 5. **Test `/game-config disable-game`**
-   - Run: `/game-config disable-game game:DICE_ROLL`
-   - ✅ Verify: Game is disabled
-   - ✅ Verify: View shows updated status
-   - Try to disable all games: Should prevent disabling last game
-
-6. **Test `/game-config enable-game`**
-   - Run: `/game-config enable-game game:DICE_ROLL`
-   - ✅ Verify: Game is re-enabled
+   - Run: `/game-config disable-game game:WORD_UNSCRAMBLE`
+   - ✅ Verify: Cannot disable the last game (error message)
    - ✅ Verify: View shows updated status
 
 ---
@@ -102,64 +96,6 @@ The bot will register all slash commands when it starts up.
    - ✅ Verify: Shows winner if won, or attempt count if not
 
 ---
-
-### Phase 3: Dice Battle Game
-
-**Setup:** Ensure Dice Roll is the active game
-
-1. **Test `/roll` first time**
-   - Run: `/roll`
-   - ✅ Verify: Public announcement of roll result
-   - ✅ Verify: Shows die value (1-20)
-   - ✅ Verify: Special message for natural 20
-   - ✅ Verify: Shows if you're the new leader
-
-2. **Test `/roll` second time (same user)**
-   - Run: `/roll` again
-   - ✅ Verify: Ephemeral error: already rolled today
-   - ✅ Verify: No public announcement
-
-3. **Test `/roll` with multiple users**
-   - Have multiple users roll
-   - ✅ Verify: Each gets their roll announced
-   - ✅ Verify: Leader changes are announced
-   - ✅ Verify: Higher rolls show leader indicator
-
-4. **Test `/game-stats` during dice game**
-   - Run: `/game-stats`
-   - ✅ Verify: Shows Dice Battle as active game
-   - ✅ Verify: Shows full leaderboard (top 10)
-   - ✅ Verify: Sorted by highest roll
-   - ✅ Verify: Shows medals (🥇🥈🥉) for top 3
-   - ✅ Verify: Critical hits (20) have fire emoji
-
----
-
-### Phase 4: Emoji Match Game
-
-**Setup:** Ensure Emoji Match is the active game
-
-1. **Test `/match` with correct pattern**
-   - Look at the emoji pattern shown
-   - Copy it exactly
-   - Run: `/match emojis:🎮🎲🎯` (use actual pattern)
-   - ✅ Verify: Public announcement of win
-   - ✅ Verify: Shows player mention and score
-   - ✅ Verify: Game is marked as won
-
-2. **Test `/match` with incorrect pattern**
-   - Run: `/match emojis:❌❌❌`
-   - ✅ Verify: Ephemeral error message
-   - ✅ Verify: Encourages trying again
-
-3. **Test `/match` after game is won**
-   - Run: `/match emojis:anything`
-   - ✅ Verify: Game ended message
-
-4. **Test `/game-stats` during emoji game**
-   - Run: `/game-stats`
-   - ✅ Verify: Shows Emoji Match as active game
-   - ✅ Verify: Shows winner if won, or attempt count
 
 ---
 
@@ -226,16 +162,6 @@ The bot will register all slash commands when it starts up.
 
 ### Word Unscramble
 - **Win Condition:** First correct guess
-- **Scoring:** Time-based (faster = higher score)
-- **Attempts:** Unlimited until someone wins
-
-### Dice Battle
-- **Win Condition:** Highest roll at end of day
-- **Scoring:** Dice value (1-20)
-- **Attempts:** One per user per day
-
-### Emoji Match
-- **Win Condition:** First correct pattern match
 - **Scoring:** Time-based (faster = higher score)
 - **Attempts:** Unlimited until someone wins
 

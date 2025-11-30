@@ -43,8 +43,6 @@
 - ✅ `gamestats` (with subcommands)
 - ✅ `admin-game-setup`
 - ✅ `scramble-guess`
-- ✅ `dicefury-roll`
-- ✅ `emojihunt-match`
 - ✅ `game-stats`
 - ✅ `admin-game-config`
 - ✅ `guess` (shared router)

@@ -202,7 +202,6 @@ This document outlines all known limitations of the MIKROS Discord Bot. These li
 - Global reputation shows "API not available"
 
 **Affected Commands:**
-- `/score` (global score unavailable)
 
 **Impact:**
 - **Low:** Local reputation works

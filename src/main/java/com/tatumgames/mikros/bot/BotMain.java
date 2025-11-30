@@ -1,9 +1,9 @@
 package com.tatumgames.mikros.bot;
 
 import com.tatumgames.mikros.commands.*;
-import com.tatumgames.mikros.communitygames.commands.*;
+import com.tatumgames.mikros.games.word_unscramble.commands.*;
 import com.tatumgames.mikros.spelling.commands.SpellGuessCommand;
-import com.tatumgames.mikros.rpg.commands.*;
+import com.tatumgames.mikros.games.rpg.commands.*;
 import com.tatumgames.mikros.spelling.commands.*;
 import com.tatumgames.mikros.promo.commands.*;
 import com.tatumgames.mikros.promo.listener.*;
@@ -12,8 +12,8 @@ import com.tatumgames.mikros.honeypot.listener.*;
 import com.tatumgames.mikros.honeypot.service.*;
 import com.tatumgames.mikros.config.ConfigLoader;
 import com.tatumgames.mikros.services.*;
-import com.tatumgames.mikros.communitygames.service.*;
-import com.tatumgames.mikros.rpg.service.*;
+import com.tatumgames.mikros.games.word_unscramble.service.*;
+import com.tatumgames.mikros.games.rpg.service.*;
 import com.tatumgames.mikros.spelling.service.*;
 import com.tatumgames.mikros.promo.service.*;
 import net.dv8tion.jda.api.JDA;
@@ -50,10 +50,12 @@ public class BotMain extends ListenerAdapter {
     private final GamePromotionService gamePromotionService;
     private final GamePromotionScheduler gamePromotionScheduler;
     private final GameStatsService gameStatsService;
-    private final CommunityGameService communityGameService;
-    private final GameResetScheduler gameResetScheduler;
+    private final WordUnscrambleService wordUnscrambleService;
+    private final WordUnscrambleResetScheduler wordUnscrambleResetScheduler;
     private final CharacterService characterService;
     private final ActionService actionService;
+    private final BossService bossService;
+    private final BossScheduler bossScheduler;
     private final SpellingChallengeService spellingService;
     private final PromoDetectionService promoService;
     private final PromoMessageListener promoListener;
@@ -77,10 +79,12 @@ public class BotMain extends ListenerAdapter {
         this.gamePromotionService = new InMemoryGamePromotionService();
         this.gamePromotionScheduler = new GamePromotionScheduler(gamePromotionService);
         this.gameStatsService = new MockGameStatsService();
-        this.communityGameService = new CommunityGameService();
-        this.gameResetScheduler = new GameResetScheduler(communityGameService);
+        this.wordUnscrambleService = new WordUnscrambleService();
+        this.wordUnscrambleResetScheduler = new WordUnscrambleResetScheduler(wordUnscrambleService);
         this.characterService = new CharacterService();
         this.actionService = new ActionService();
+        this.bossService = new BossService();
+        this.bossScheduler = new BossScheduler(bossService, characterService);
         this.spellingService = new SpellingChallengeService();
         this.promoService = new PromoDetectionService();
         this.promoListener = new PromoMessageListener(promoService);
@@ -138,7 +142,6 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new WarnCommand(moderationLogService, autoEscalationService));
         registerHandler(new KickCommand(moderationLogService));
         registerHandler(new BanCommand(moderationLogService));
-        registerHandler(new HistoryCommand(moderationLogService, reputationService));
         
         // Admin & Server commands
         registerHandler(new WarnSuggestionsCommand(messageAnalysisService));
@@ -147,30 +150,32 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new TopContributorsCommand(activityTrackingService));
         registerHandler(new PraiseCommand(reputationService));
         registerHandler(new ReportCommand(reputationService));
-        registerHandler(new ScoreCommand(reputationService));
+        registerHandler(new LookupCommand(reputationService));
         
         // Game Promotion commands
         registerHandler(new SetupPromotionChannelCommand(gamePromotionService));
         registerHandler(new SetPromotionVerbosityCommand(gamePromotionService));
         registerHandler(new ForcePromotionCheckCommand(gamePromotionScheduler, gamePromotionService));
+        registerHandler(new DisablePromotionsCommand(gamePromotionService));
         
         // Game Stats/Analytics commands
         registerHandler(new com.tatumgames.mikros.commands.GameStatsCommand(gameStatsService));
         
-        // Community Games commands
-        registerHandler(new GameSetupCommand(communityGameService, gameResetScheduler));
-        registerHandler(new ScrambleGuessCommand(communityGameService));
-        registerHandler(new RollCommand(communityGameService));
-        registerHandler(new MatchCommand(communityGameService));
-        registerHandler(new com.tatumgames.mikros.communitygames.commands.GameStatsCommand(communityGameService));
-        registerHandler(new GameConfigCommand(communityGameService));
+        // Word Unscramble commands
+        registerHandler(new GameSetupCommand(wordUnscrambleService, wordUnscrambleResetScheduler));
+        registerHandler(new ScrambleGuessCommand(wordUnscrambleService));
+        registerHandler(new com.tatumgames.mikros.games.word_unscramble.commands.GameStatsCommand(wordUnscrambleService));
+        registerHandler(new GameConfigCommand(wordUnscrambleService));
         
         // RPG System commands
         registerHandler(new RPGRegisterCommand(characterService));
         registerHandler(new RPGProfileCommand(characterService));
         registerHandler(new RPGActionCommand(characterService, actionService));
+        registerHandler(new RPGResurrectCommand(characterService));
+        registerHandler(new RPGBossBattleCommand(characterService, bossService));
         registerHandler(new RPGLeaderboardCommand(characterService));
         registerHandler(new RPGConfigCommand(characterService));
+        registerHandler(new RPGResetCommand(characterService, bossService));
         
         // Spelling Challenge commands
         registerHandler(new SpellingChallengeCommand(spellingService));
@@ -178,7 +183,6 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new SpellGuessCommand(spellingService));
         
         // Promo commands
-        registerHandler(new PromoHelpCommand(promoService));
         registerHandler(new SetupPromotionsCommand(promoService));
         registerHandler(new SetPromoFrequencyCommand(promoService));
         
@@ -217,9 +221,13 @@ public class BotMain extends ListenerAdapter {
         gamePromotionScheduler.start(event.getJDA());
         logger.info("Game promotion scheduler started");
         
-        // Start community game reset scheduler
-        gameResetScheduler.start(event.getJDA());
-        logger.info("Community game reset scheduler started");
+        // Start Word Unscramble reset scheduler
+        wordUnscrambleResetScheduler.start(event.getJDA());
+        logger.info("Word Unscramble reset scheduler started");
+        
+        // Start boss scheduler
+        bossScheduler.start(event.getJDA());
+        logger.info("Boss scheduler started");
     }
     
     /**

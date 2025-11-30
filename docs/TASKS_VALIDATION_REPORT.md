@@ -183,8 +183,6 @@ None - All requirements met.
 |------------|--------|-------|
 | `/game-setup` command | ✅ | `GameSetupCommand.java` |
 | Word Unscramble game | ✅ | Implemented in `CommunityGameService` |
-| Dice Battle game | ✅ | `RollCommand.java` |
-| Emoji Match game | ✅ | `MatchCommand.java` |
 | Game reset system | ✅ | `GameResetScheduler.java` |
 | `/game-stats` command | ✅ | `GameStatsCommand.java` (communitygames package) |
 | `/game-config` command | ✅ | `GameConfigCommand.java` |

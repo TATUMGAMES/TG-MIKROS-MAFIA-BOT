@@ -1,0 +1,105 @@
+{
+  "status": {
+    "statusCode": 200,
+    "statusMessage": "SUCCESS"
+  },
+  "data": {
+    "apps": [
+      {
+        "appId": "hv-nemesis",
+        "appGameId": "tg-nemesis-001",
+        "appName": "Heroes Vs Villains: Nemesis",
+        "shortDescription": "Auto-battler game with idle progression",
+        "longDescription": "Guide your Guardian through levels, defeat enemies, collect rewards. Idle progression allows your character to grow while offline.",
+        "gameGenre": "Action",
+        "gameplayType": "Casual",
+        "contentGenre": "Adventure",
+        "contentTheme": "Fantasy",
+        "campaign": {
+          "campaignId": "cmp_hv_nemesis_jan",
+          "campaignName": "January Promo",
+          "startDate": "29-11-25:08:00:00",
+          "endDate": "26-12-25:08:00:00",
+          "images": [
+            { "appLogo": ".../hv-nemesis.png" }
+          ],
+          "ctas": {
+            "google_store": "https://play.google.com/store/apps/details?id=<package_name>",
+            "apple_store": "https://apps.apple.com/<country>/app/<app-name>/id<app-ID>",
+            "steam_store": "store.steampowered.com<game_id>/",
+            "samsung_store": "https://apps.samsung.com/appquery/appDetail.as?appId=<package_name>",
+            "amazon_store": "http://www.amazon.com/gp/mas/dl/android?p=<package_name>",
+            "website": "https://tatumgames.com/",
+            "other": "https://tatumgames.com/"
+          },
+          "screenshotUrls": [
+            ".../ss1.png",
+            ".../ss2.png"
+          ],
+          "videoUrls": [
+            ".../vid1.mp4",
+            ".../vid2.mp4"
+          ],
+          "socialMedia": {
+            "facebook": "http://www.facebook.com/tatumgames",
+            "x": "https://twitter.com/tatumgames",
+            "instagram": "https://instagram.com/example",
+            "linkedin": "https://www.linkedin.com/company/tatum-games-llc",
+            "tiktok": "https://tiktok.com/example",
+            "youtube": "http://www.youtube.com/user/TatumGamesLLC",
+            "discord": "https://discord.gg/example",
+            "twitch": "https://twitch.tv/example"
+          }
+        }
+      },
+      {
+        "appId": "hv-nervo",
+        "appGameId": "tg-nervo-001",
+        "appName": "Heroes Vs Villains: Rise of Nervo",
+        "shortDescription": "Disguised CCG with guild-based combat",
+        "longDescription": "Our heroes fight villains, earn rewards, and can join/create guilds to battle together.",
+        "gameGenre": "Strategy",
+        "gameplayType": "Card",
+        "contentGenre": "Adventure",
+        "contentTheme": "Fantasy",
+        "campaign": {
+          "campaignId": "cmp_hv_nervo_jan",
+          "campaignName": "January Promo",
+          "startDate": "29-11-25:08:00:00",
+          "endDate": "02-12-25:08:00:00",
+          "images": [
+            { "appLogo": ".../hv-nervo.png" }
+          ],
+          "ctas": {
+            "google_store": "https://play.google.com/store/apps/details?id=<package_name>",
+            "apple_store": "https://apps.apple.com/<country>/app/<app-name>/id<app-ID>",
+            "steam_store": "store.steampowered.com<game_id>/",
+            "samsung_store": "https://apps.samsung.com/appquery/appDetail.as?appId=<package_name>",
+            "amazon_store": "http://www.amazon.com/gp/mas/dl/android?p=<package_name>",
+            "website": "https://tatumgames.com/",
+            "other": "https://tatumgames.com/"
+          },
+          "screenshotUrls": [
+            ".../ss1.png",
+            ".../ss2.png"
+          ],
+          "videoUrls": [
+            ".../vid1.mp4",
+            ".../vid2.mp4"
+          ],
+          "socialMedia": {
+            "facebook": "http://www.facebook.com/tatumgames",
+            "x": "https://twitter.com/tatumgames",
+            "instagram": "https://instagram.com/example",
+            "linkedin": "https://www.linkedin.com/company/tatum-games-llc",
+            "tiktok": "https://tiktok.com/example",
+            "youtube": "http://www.youtube.com/user/TatumGamesLLC",
+            "discord": "https://discord.gg/example",
+            "twitch": "https://twitch.tv/example"
+          }
+        }
+      }
+    ]
+  }
+}
+

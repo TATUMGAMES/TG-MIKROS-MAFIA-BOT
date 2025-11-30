@@ -4,8 +4,8 @@
 
 The **Reputation System** tracks user behavior and calculates reputation scores based on positive and negative actions. It provides a way to measure community standing and helps moderators identify problematic users.
 
-**Status:** ✅ **Fully Functional** (Local reputation)  
-**API Integration:** ⚠️ **TODO** (Global reputation)
+**Status:** ✅ **Fully Functional** (API-integrated)  
+**API Integration:** ✅ **Integrated** (Uses `/trackPlayerRating` and `/getUserScoreDetail` APIs)
 
 ---
 
@@ -15,7 +15,7 @@ The **Reputation System** tracks user behavior and calculates reputation scores 
 
 **Purpose:** Praise a user for positive behavior.
 
-**Permission:** Everyone
+**Permission:** Admin Only (MODERATE_MEMBERS)
 
 **Syntax:**
 ```
@@ -28,10 +28,10 @@ The **Reputation System** tracks user behavior and calculates reputation scores 
 - `notes` (optional): Additional notes
 
 **Positive Behaviors:**
-- `GOOD_SPORTSMANSHIP` - Positive attitude and fair play (+1 point)
-- `GREAT_LEADERSHIP` - Shows leadership and guides others (+2 points)
-- `EXCELLENT_TEAMMATE` - Supportive and cooperative team player (+3 points)
-- `MVP` - Exceptional contribution and behavior (+5 points)
+- `ACTIVE_PARTICIPATE` - Actively participating in community activities (+5 points)
+- `GOOD_HELPER` - Helping other community members (+2 points)
+- `POSITIVE_INFLUENCER` - Positively influencing the community (+3 points)
+- `FRIENDLY_GREETER` - Welcoming new members in a friendly manner (+1 point)
 
 **Example:**
 ```
@@ -43,10 +43,11 @@ The **Reputation System** tracks user behavior and calculates reputation scores 
 ✨ Praise Recorded
 
 User: @JohnDoe
-Behavior: Excellent Teammate (+3 points)
+Behavior: Positive Influencer (+3 points)
 Notes: Helped me debug my code
 Reporter: @You
-Local Reputation: 103
+
+✅ Praise has been recorded and sent to the reputation system.
 ```
 
 ---
@@ -55,7 +56,7 @@ Local Reputation: 103
 
 **Purpose:** Report a user for negative behavior.
 
-**Permission:** Everyone
+**Permission:** Admin Only (MODERATE_MEMBERS)
 
 **Syntax:**
 ```
@@ -68,10 +69,14 @@ Local Reputation: 103
 - `notes` (optional): Additional notes
 
 **Negative Behaviors:**
-- `POOR_SPORTSMANSHIP` - Unsportsmanlike conduct or attitude (-1 point)
-- `TROLLING` - Deliberately annoying others or excessive mentions (-2 points)
-- `AFK_COMPLAINING` - Frequently AFK or excessive complaining (-3 points)
-- `BAD_LANGUAGE_CHEATING` - Profanity, slurs, or cheating (-5 points)
+- `SPAMMER` - Posting spam or unwanted content (-1 point)
+- `TOXIC_BEHAVIOR` - Engaging in toxic or harmful behavior (-2 points)
+- `HARRASSING` - Harassing or bullying other users (-3 points)
+- `IGNORING_RULES` - Repeatedly ignoring server rules (-2 points)
+- `BAN_EVASION` - Attempting to evade a ban (-5 points)
+- `TROLL` - Trolling or deliberately annoying others (-3 points)
+- `EXCESSIVE_PINGING` - Excessive use of mentions or pings (-3 points)
+- `NSFW_IN_NON_NSFW_SPACE` - Posting NSFW content in inappropriate channels (-5 points)
 
 **Example:**
 ```
@@ -83,59 +88,60 @@ Local Reputation: 103
 🚨 Report Submitted
 
 User: @BadUser
-Behavior: Trolling / Constant Pinging (-2 points)
+Behavior: Troll (-3 points)
 Notes: Posting links repeatedly
 Reporter: @You
-Local Reputation: 98
 
-⚠️ This report has been recorded. Moderators will review if needed.
+✅ Report has been recorded and sent to the reputation system.
 ```
 
 **Note:** Reports are sent as ephemeral (private) messages for privacy.
 
 ---
 
-### `/score`
+### `/lookup`
 
-**Purpose:** Check a user's reputation score.
+**Purpose:** Lookup user reputation scores by username.
 
-**Permission:** Everyone
+**Permission:** Admin Only (MODERATE_MEMBERS)
 
 **Syntax:**
 ```
-/score [user:<@user>]
+/lookup usernames:<username1> [username2] [username3] ...
 ```
 
 **Parameters:**
-- `user` (optional): User to check (defaults to yourself)
+- `usernames` (required): Comma or space-separated list of Discord usernames to lookup
 
 **Example:**
 ```
-/score
-/score user:@JohnDoe
+/lookup usernames:drxeno02 usernameA usernameB
 ```
 
 **Output:**
 ```
-🎯 Reputation Score
+🔍 Reputation Score Lookup
 
-Reputation for JohnDoe
+Results for 3 user(s)
 
-📊 Local Reputation (This Server)
-105 / 100
-[██████████]
+👤 drxeno02
+Discord ID: 123456789012345678
+Reputation Score: 0
+Email: abc@gmail.com
+Servers: 987654321098765432, 887654321098765432, ...
 
-🌍 Global Reputation (MIKROS Network)
-API not yet available
-Local score is based on behavior in this server only.
+👤 usernameA
+Discord ID: 023456789012345678
+Reputation Score: 10
+Email: xyz@gmail.com
+Servers: 987654321098765432
 
-✅ Positive Behaviors: 5
-⚠️ Negative Behaviors: 2
-📈 Total Reports: 7
-
-📝 Interpretation
-🌟 Excellent! This user is a model community member.
+⚠️ Not Found
+The following usernames were not found in the system:
+usernameZ
 ```
+
+**Note:** This command calls the `/getUserScoreDetail` API to retrieve reputation information from the server database.
 
 ---
 
@@ -155,16 +161,20 @@ Local score is based on behavior in this server only.
 ### Behavior Weights
 
 **Positive Behaviors:**
-- `GOOD_SPORTSMANSHIP`: +1 point
-- `GREAT_LEADERSHIP`: +2 points
-- `EXCELLENT_TEAMMATE`: +3 points
-- `MVP`: +5 points
+- `ACTIVE_PARTICIPATE`: +5 points
+- `GOOD_HELPER`: +2 points
+- `POSITIVE_INFLUENCER`: +3 points
+- `FRIENDLY_GREETER`: +1 point
 
 **Negative Behaviors:**
-- `POOR_SPORTSMANSHIP`: -1 point
-- `TROLLING`: -2 points
-- `AFK_COMPLAINING`: -3 points
-- `BAD_LANGUAGE_CHEATING`: -5 points
+- `SPAMMER`: -1 point
+- `TOXIC_BEHAVIOR`: -2 points
+- `HARRASSING`: -3 points
+- `IGNORING_RULES`: -2 points
+- `BAN_EVASION`: -5 points
+- `TROLL`: -3 points
+- `EXCESSIVE_PINGING`: -3 points
+- `NSFW_IN_NON_NSFW_SPACE`: -5 points
 
 ### Score Calculation Formula
 
@@ -175,10 +185,10 @@ Score = max(0, min(200, Score))
 
 **Example:**
 - Starting: 100
-- +3 (EXCELLENT_TEAMMATE)
-- +2 (GREAT_LEADERSHIP)
-- -2 (TROLLING)
-- = 103 points
+- +3 (POSITIVE_INFLUENCER)
+- +2 (GOOD_HELPER)
+- -3 (TROLL)
+- = 102 points
 
 ---
 
@@ -188,67 +198,65 @@ Score = max(0, min(200, Score))
 
 | Category | Points | Description |
 |----------|--------|-------------|
-| `GOOD_SPORTSMANSHIP` | +1 | Positive attitude and fair play |
-| `GREAT_LEADERSHIP` | +2 | Shows leadership and guides others |
-| `EXCELLENT_TEAMMATE` | +3 | Supportive and cooperative team player |
-| `MVP` | +5 | Exceptional contribution and behavior |
+| `ACTIVE_PARTICIPATE` | +5 | Actively participating in community activities |
+| `GOOD_HELPER` | +2 | Helping other community members |
+| `POSITIVE_INFLUENCER` | +3 | Positively influencing the community |
+| `FRIENDLY_GREETER` | +1 | Welcoming new members in a friendly manner |
 
 ### Negative Behaviors
 
 | Category | Points | Description |
 |----------|--------|-------------|
-| `POOR_SPORTSMANSHIP` | -1 | Unsportsmanlike conduct or attitude |
-| `TROLLING` | -2 | Deliberately annoying others or excessive mentions |
-| `AFK_COMPLAINING` | -3 | Frequently AFK or excessive complaining |
-| `BAD_LANGUAGE_CHEATING` | -5 | Profanity, slurs, or cheating |
+| `SPAMMER` | -1 | Posting spam or unwanted content |
+| `TOXIC_BEHAVIOR` | -2 | Engaging in toxic or harmful behavior |
+| `HARRASSING` | -3 | Harassing or bullying other users |
+| `IGNORING_RULES` | -2 | Repeatedly ignoring server rules |
+| `BAN_EVASION` | -5 | Attempting to evade a ban |
+| `TROLL` | -3 | Trolling or deliberately annoying others |
+| `EXCESSIVE_PINGING` | -3 | Excessive use of mentions or pings |
+| `NSFW_IN_NON_NSFW_SPACE` | -5 | Posting NSFW content in inappropriate channels |
 
 ---
 
 ## Integration with Moderation
 
-### Moderation History
-
-Reputation scores are displayed in `/admin-history`:
-- Shows reputation score alongside moderation actions
-- Provides context for moderation decisions
-- Helps identify patterns
-
 ### Automatic Updates
 
-**Status:** ⚠️ **TODO**
+**Status:** ✅ **Implemented**
 
-**Planned:**
-- Moderation actions automatically affect reputation
-- Warn: -2 points
-- Kick: -5 points
-- Ban: -10 points
-- Integration with Tatum Games Reputation Score API
+**Current:**
+- All reputation calculations are handled by the server via API
+- Reports are sent to `/trackPlayerRating` API endpoint
+- Scores are retrieved from `/getUserScoreDetail` API endpoint
+- All calculations and storage are server-side
+
+**Note:** Warn/Kick/Ban commands are separate from reputation and do not affect reputation scores. They use Discord's native moderation features.
 
 ---
 
-## Local vs Global Reputation
+## API Integration
 
-### Local Reputation
+### Reputation Tracking
 
-**Current:** ✅ **Implemented**
-- Calculated per-server
-- Based on behavior reports in that server
-- Stored in-memory (TODO: database)
+**Status:** ✅ **Implemented**
 
-**Calculation:**
-- Starts at 100 points
-- Adjusted by behavior reports
-- Bounded between 0-200
+**API Endpoints:**
+- `/trackPlayerRating` (POST) - Records behavior reports and updates reputation scores
+- `/getUserScoreDetail` (GET) - Retrieves user reputation scores and server information
 
-### Global Reputation
+**How It Works:**
+1. Admin uses `/report` or `/praise` command
+2. Command creates a `BehaviorReport` object
+3. Report is converted to `TrackPlayerRatingRequest` format
+4. Request is sent to `/trackPlayerRating` API
+5. Server processes the request and updates reputation scores
+6. Admin receives confirmation of successful submission
 
-**Status:** ⚠️ **TODO**
-
-**Planned:**
-- Aggregated across all MIKROS servers
-- API integration with Tatum Games
-- Cross-server reputation tracking
-- Persistent storage
+**Score Lookup:**
+1. Admin uses `/lookup` command with usernames
+2. Command calls `/getUserScoreDetail` API
+3. Server returns reputation scores and server information
+4. Results are displayed in an embed format
 
 **API Documentation:**
 - See `/docs/API_REPUTATION_SCORE.md`
@@ -259,18 +267,17 @@ Reputation scores are displayed in `/admin-history`:
 ## Use Cases
 
 ### For Users
-- **Track Standing:** See your reputation score
-- **Recognize Good Behavior:** Praise helpful users
-- **Report Issues:** Report negative behavior
-- **Build Reputation:** Accumulate positive reports
-
-### For Moderators
-- **Identify Problem Users:** Low scores indicate issues
-- **Context for Actions:** See behavior history
-- **Track Improvements:** Monitor score changes
-- **Make Informed Decisions:** Use scores in moderation
+- **Track Standing:** See your reputation score using `/score` command
+- **Build Reputation:** Accumulate positive reports from admins
 
 ### For Admins
+- **Report Behavior:** Use `/report` to record negative behavior
+- **Praise Behavior:** Use `/praise` to record positive behavior
+- **Lookup Scores:** Use `/lookup` to check reputation scores for multiple users
+- **Identify Problem Users:** Low scores indicate issues
+- **Context for Actions:** See behavior history via API
+- **Track Improvements:** Monitor score changes
+- **Make Informed Decisions:** Use scores in moderation decisions
 - **Community Health:** Monitor overall reputation trends
 - **Identify Leaders:** High scores indicate valuable members
 - **Prevent Issues:** Catch problems early with low scores
@@ -281,23 +288,19 @@ Reputation scores are displayed in `/admin-history`:
 
 ### Current Implementation
 
-**Storage:** In-memory (`ConcurrentHashMap`)
-- Per-server isolation
-- Thread-safe
-- Fast access
+**Storage:** Server-side via API
+- All reputation data is stored on the server
+- Data is persistent and survives bot restarts
+- Cross-server reputation tracking
+- Centralized database
 
-**Limitations:**
-- Data lost on restart
-- No persistence
-- No cross-server sharing
+**API Integration:**
+- `/trackPlayerRating` - Stores behavior reports and updates scores
+- `/getUserScoreDetail` - Retrieves reputation data from server database
 
-### Future Implementation
-
-**Planned:**
-- Database persistence
-- Cross-server aggregation
-- API integration
-- Backup and restore
+**Local Caching:**
+- Bot may cache some data temporarily for performance
+- All authoritative data comes from the server API
 
 ---
 
@@ -319,13 +322,12 @@ Reputation scores are displayed in `/admin-history`:
 
 ## Future Enhancements
 
-- 🔮 **API Integration:** Connect to Tatum Games Reputation Score API
-- 🔮 **Automatic Moderation:** Actions affect reputation automatically
 - 🔮 **Reputation Decay:** Scores decay over time
 - 🔮 **Achievements:** Unlock achievements for high scores
 - 🔮 **Leaderboards:** Top reputation scores
 - 🔮 **Badges:** Visual badges for reputation tiers
 - 🔮 **Notifications:** Notify on significant score changes
+- 🔮 **Batch Operations:** Report multiple users at once
 
 ---
 
@@ -333,19 +335,18 @@ Reputation scores are displayed in `/admin-history`:
 
 ### For Users
 1. **Be Helpful:** Help others to build positive reputation
-2. **Report Appropriately:** Only report genuine issues
-3. **Check Scores:** Monitor your own reputation
-4. **Build Trust:** Consistent positive behavior
+2. **Build Trust:** Consistent positive behavior
 
-### For Moderators
-1. **Review Reports:** Check behavior reports regularly
-2. **Use Context:** Consider reputation in moderation decisions
-3. **Encourage Positive:** Praise good behavior
-4. **Monitor Trends:** Watch for score patterns
+### For Admins
+1. **Report Appropriately:** Only report genuine issues using `/report`
+2. **Praise Good Behavior:** Use `/lookup` to check scores, then `/praise` for positive behavior
+3. **Use Context:** Consider reputation in moderation decisions
+4. **Monitor Trends:** Use `/lookup` to check multiple users' scores
+5. **Review Regularly:** Check behavior reports and scores regularly
 
 ---
 
-**Last Updated:** 2025-10-08  
-**Commands:** 3 (`praise`, `report`, `score`)  
-**Status:** ✅ Local reputation functional, ⚠️ Global reputation TODO
+**Last Updated:** 2025-01-27  
+**Commands:** 3 (`praise`, `report`, `lookup`)  
+**Status:** ✅ Fully functional with API integration
 

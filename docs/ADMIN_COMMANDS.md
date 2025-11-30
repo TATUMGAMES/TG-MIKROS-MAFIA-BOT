@@ -109,38 +109,6 @@ All admin commands use the `admin-*` prefix and require appropriate Discord perm
 
 ---
 
-### `/admin-history`
-
-**Purpose:** View moderation history for a user.
-
-**Permission Required:** `MODERATE_MEMBERS`
-
-**Syntax:**
-```
-/admin-history user:<@user>
-```
-
-**Parameters:**
-- `user` (required): The user to check
-
-**Behavior:**
-- Displays all moderation actions for the user
-- Shows action type, reason, moderator, timestamp
-- Includes reputation score if available
-- Sorted by timestamp (newest first)
-
-**Example:**
-```
-/admin-history user:@JohnDoe
-```
-
-**Error Handling:**
-- Permission denied: Ephemeral error message
-- No history: Clear message
-- Execution errors: Logged with context
-
----
-
 ## Configuration Commands
 
 ### `/admin-game-setup`
@@ -468,7 +436,7 @@ All admin commands use the `admin-*` prefix and require appropriate Discord perm
 
 | Permission | Commands |
 |------------|----------|
-| `MODERATE_MEMBERS` | `/admin-warn`, `/admin-history`, `/list_bans` |
+| `MODERATE_MEMBERS` | `/admin-warn`, `/list_bans` |
 | `KICK_MEMBERS` | `/admin-kick` |
 | `BAN_MEMBERS` | `/admin-ban`, `/ban_and_remove_all_messages` |
 | `MESSAGE_MANAGE` | `/cleanup` |
@@ -535,25 +503,22 @@ All moderation actions are logged:
 
 ## Reputation Integration
 
-**Status:** ⚠️ **TODO**
+**Status:** ✅ **Implemented**
 
-Moderation actions currently:
-- ✅ Logged to moderation service
-- ✅ Displayed in history
-- ⚠️ Not yet affecting reputation scores
+Reputation system:
+- ✅ Admin-only `/report` and `/praise` commands
+- ✅ `/lookup` command for checking user scores
+- ✅ API integration with `/trackPlayerRating` and `/getUserScoreDetail`
+- ✅ Server-side reputation calculation and storage
 
-**Planned:**
-- Integration with reputation system
-- Automatic reputation adjustments
-- API calls to Tatum Games Reputation Score service
+**Note:** Warn/Kick/Ban commands are separate from reputation and do not affect reputation scores. They use Discord's native moderation features.
 
 ---
 
 ## Best Practices
 
 1. **Always Provide Reasons:** Clear reasons help with accountability
-2. **Check History First:** Use `/admin-history` before taking action
-3. **Respect Role Hierarchy:** Bot role must be above target users
+2. **Respect Role Hierarchy:** Bot role must be above target users
 4. **Use Appropriate Commands:** Choose the right tool for the situation
 5. **Document Actions:** Clear reasons make moderation history useful
 

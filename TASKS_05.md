@@ -19,7 +19,6 @@ All work must follow `BEST_CODING_PRACTICES.md`.
 This engine supports rotating or fixed games per server. Initial implementation should support:
 
 - Word Guess Game (e.g., "Unscramble")
-- Dice Battle Game
 - Emoji Reaction Game
 
 Future games can be added modularly.
@@ -51,17 +50,7 @@ Unscramble: "PNGAEML" (7 letters)
 
 ---
 
-### 3. Game: Dice Battle
-- Players type `/roll` to roll a D20 (or random dice)
-- Bot tracks top roller of the day
-- At reset, bot announces the winner
-
 ---
-
-### 4. Game: Emoji Match
-- Bot posts an emoji combo (e.g. 🐉+🎮+🕹️)
-- Players type `/match <emojis>` or click reaction buttons
-- First correct match wins
 
 ---
 
@@ -111,7 +100,6 @@ Cursor AI must:
 | `/game-setup` | Configure which games are enabled and where |
 | `/guess <word>` | Submit guess for word game |
 | `/roll` | Roll a dice for the dice game |
-| `/match <emojis>` | Attempt to match emoji pattern |
 | `/game-stats` | View game of the day and leaderboard |
 | `/game-config` | Modify settings (admin only) |
 
@@ -148,8 +136,6 @@ src/
 │ ├── service/
 │ ├── games/
 │ │ ├── WordUnscrambleGame.java
-│ │ ├── DiceRollGame.java
-│ │ └── EmojiMatchGame.java
 │ └── config/
 
 

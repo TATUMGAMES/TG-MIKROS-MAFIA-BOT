@@ -59,8 +59,6 @@ All requirements from TASKS_17.md have been successfully completed.
 - ✅ **Games:**
   - Community games setup
   - Word Unscramble game
-  - Dice Battle game
-  - Emoji Match game
 
 - ✅ **RPG:**
   - Character creation

@@ -14,6 +14,7 @@ public class ConfigLoader {
     private final Dotenv dotenv;
     private final String botToken;
     private final String botOwnerId;
+    private final String mafiaGuildId;
     
     /**
      * Creates a new ConfigLoader instance and loads configuration.
@@ -36,6 +37,7 @@ public class ConfigLoader {
         // Load required configuration
         this.botToken = getRequiredEnv("DISCORD_BOT_TOKEN");
         this.botOwnerId = getEnv("BOT_OWNER_ID", "");
+        this.mafiaGuildId = getEnv("MIKROS_MAFIA_GUILD_ID", "");
         
         logger.info("Configuration loaded successfully");
     }
@@ -96,6 +98,16 @@ public class ConfigLoader {
      */
     public String getBotOwnerId() {
         return botOwnerId;
+    }
+    
+    /**
+     * Gets the MIKROS Mafia Discord server ID.
+     * Used for leaderboard member status checks.
+     * 
+     * @return the Mafia server ID, or empty string if not configured
+     */
+    public String getMafiaGuildId() {
+        return mafiaGuildId;
     }
 }
 

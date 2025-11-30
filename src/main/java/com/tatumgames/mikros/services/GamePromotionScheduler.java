@@ -1,6 +1,6 @@
 package com.tatumgames.mikros.services;
 
-import com.tatumgames.mikros.models.GamePromotion;
+import com.tatumgames.mikros.models.AppPromotion;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -8,46 +8,33 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.tatumgames.mikros.models.PromotionVerbosity;
+
 import java.awt.Color;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
- * Scheduler service for posting game promotions at configured intervals.
- * Frequency is based on the guild's promotion verbosity setting.
+ * Scheduler service for posting app promotions at configured intervals.
+ * Uses 4-step promotion story format while respecting campaign dates and avoiding spam.
+ * Checks every 60 minutes and posts promotions based on guild verbosity settings.
  */
 public class GamePromotionScheduler {
     private static final Logger logger = LoggerFactory.getLogger(GamePromotionScheduler.class);
     
     private final GamePromotionService gamePromotionService;
+    private final PromotionStepManager stepManager;
+    private final PromotionMessageTemplates messageTemplates;
     private final ScheduledExecutorService scheduler;
     private final Random random;
     private JDA jda;
-    
-    // Intro message templates
-    private static final String[] INTRO_TEMPLATES = {
-        "This game is making waves! Have you heard of <game_name>?",
-        "If you have not checked out <game_name> do it now.",
-        "Here is one of MIKROS' favorite games, are you playing <game_name> already?",
-        "Let's support <game_name>. Another amazing game within the MIKROS Ecosystem."
-    };
-    
-    // CTA (Call to Action) templates
-    private static final String[] CTA_TEMPLATES = {
-        "Where to Get It?:",
-        "Play It Today:",
-        "Try It Out Today:",
-        "Play It Here:"
-    };
-    
-    // Test message intro and CTA
-    private static final String TEST_INTRO = "This game is EPIC! Let's rally behind <game_name>";
-    private static final String TEST_CTA = "Download It Today:";
     
     /**
      * Creates a new GamePromotionScheduler.
@@ -56,6 +43,8 @@ public class GamePromotionScheduler {
      */
     public GamePromotionScheduler(GamePromotionService gamePromotionService) {
         this.gamePromotionService = gamePromotionService;
+        this.stepManager = new PromotionStepManager();
+        this.messageTemplates = new PromotionMessageTemplates();
         this.scheduler = Executors.newScheduledThreadPool(1);
         this.random = new Random();
         logger.info("GamePromotionScheduler initialized");
@@ -63,23 +52,25 @@ public class GamePromotionScheduler {
     
     /**
      * Starts the promotion scheduler.
-     * Checks every hour and posts promotions based on guild verbosity settings.
+     * Checks at intervals based on guild verbosity settings (LOW: 24h, MEDIUM: 12h, HIGH: 6h).
+     * Default check interval is 60 minutes to ensure all verbosity levels are respected.
      * 
      * @param jda the JDA instance
      */
     public void start(JDA jda) {
         this.jda = jda;
         
-        // Run check every hour
+        // Run check every 60 minutes (ensures we catch all verbosity levels)
+        // Actual posting respects verbosity settings per guild
         scheduler.scheduleAtFixedRate(() -> {
             try {
                 checkAndPostPromotions();
             } catch (Exception e) {
                 logger.error("Error in promotion scheduler", e);
             }
-        }, 0, 1, TimeUnit.HOURS);
+        }, 0, 60, TimeUnit.MINUTES);
         
-        logger.info("Game promotion scheduler started (checks every hour)");
+        logger.info("Game promotion scheduler started (checks every 60 minutes, respects verbosity per guild)");
     }
     
     /**
@@ -123,10 +114,6 @@ public class GamePromotionScheduler {
             return;
         }
         
-        // Check if it's time to post based on verbosity
-        // For now, we'll post every time the scheduler runs
-        // In a production system, you'd track last post time per guild
-        
         postPromotionsToChannel(guild, channel);
     }
     
@@ -156,7 +143,8 @@ public class GamePromotionScheduler {
     }
     
     /**
-     * Posts promotions to a channel.
+     * Posts promotions to a channel using the 4-step story format.
+     * Respects guild verbosity settings to determine if enough time has passed.
      * 
      * @param guild the guild
      * @param channel the channel to post in
@@ -165,129 +153,226 @@ public class GamePromotionScheduler {
     private int postPromotionsToChannel(Guild guild, TextChannel channel) {
         String guildId = guild.getId();
         
-        // Fetch active promotions from API
-        List<GamePromotion> promotions = gamePromotionService.fetchActivePromotions();
+        // Check verbosity to determine if we should check for promotions
+        PromotionVerbosity verbosity = gamePromotionService.getPromotionVerbosity(guildId);
+        Instant lastCheckTime = getLastCheckTime(guildId);
+        Instant now = Instant.now();
         
-        if (promotions.isEmpty()) {
-            logger.debug("No active promotions available for guild {}", guildId);
+        if (lastCheckTime != null) {
+            long hoursSinceLastCheck = java.time.temporal.ChronoUnit.HOURS.between(lastCheckTime, now);
+            if (hoursSinceLastCheck < verbosity.getHoursInterval()) {
+                logger.debug("Guild {} verbosity check: {} hours since last check, need {} hours",
+                        guildId, hoursSinceLastCheck, verbosity.getHoursInterval());
+                return 0;
+            }
+        }
+        
+        // Record this check time
+        recordLastCheckTime(guildId, now);
+        
+        // Fetch all apps from /getAllApps (stub for now)
+        List<AppPromotion> allApps = gamePromotionService.fetchAllApps();
+        
+        if (allApps.isEmpty()) {
+            logger.debug("No apps available for guild {}", guildId);
+            return 0;
+        }
+        
+        // Filter to only active campaigns
+        List<AppPromotion> activeApps = allApps.stream()
+                .filter(AppPromotion::isCampaignActive)
+                .collect(Collectors.toList());
+        
+        if (activeApps.isEmpty()) {
+            logger.debug("No active campaigns for guild {}", guildId);
             return 0;
         }
         
         int posted = 0;
-        Instant now = Instant.now();
         
-        for (GamePromotion promotion : promotions) {
-            // Check if promotion is within campaign date range
-            if (!promotion.isWithinCampaignPeriod()) {
-                logger.debug("Game {} not within campaign period (start: {}, end: {}, now: {})", 
-                        promotion.getGameId(), promotion.getCampaignStartDate(), 
-                        promotion.getCampaignEndDate(), now);
-                continue;
-            }
+        // Check if we should post step 3 (multi-game promotion) using consolidated logic
+        if (!activeApps.isEmpty()) {
+            AppPromotion firstApp = activeApps.get(0);
+            int lastStepForFirstApp = gamePromotionService.getLastPromotionStep(guildId, firstApp.getAppId());
             
-            // Check if enough time has passed since last post (frequency check)
-            Instant lastPostTime = gamePromotionService.getLastPostTime(guildId, promotion.getGameId());
-            
-            if (lastPostTime != null) {
-                Instant nextPostTime = lastPostTime.plus(promotion.getFrequencyDays(), ChronoUnit.DAYS);
-                if (now.isBefore(nextPostTime)) {
-                    logger.debug("Game {} not ready to post yet (last post: {}, next post: {}, frequency: {} days)", 
-                            promotion.getGameId(), lastPostTime, nextPostTime, promotion.getFrequencyDays());
-                    continue;
+            if (firstApp.getCampaign() != null && stepManager.shouldPostStep3(
+                    activeApps, lastStepForFirstApp,
+                    firstApp.getCampaign().getStartDate(),
+                    firstApp.getCampaign().getEndDate(),
+                    now)) {
+                try {
+                    postMultiGamePromotion(channel, activeApps);
+                    // Record step 3 for all apps (so we don't post it again)
+                    for (AppPromotion app : activeApps) {
+                        gamePromotionService.recordPromotionStep(guildId, app.getAppId(), 3, now);
+                    }
+                    posted++;
+                    logger.info("Posted multi-game promotion (step 3) in guild {}", guildId);
+                } catch (Exception e) {
+                    logger.error("Failed to post multi-game promotion", e);
                 }
             }
-            
-            // Post the promotion
+        }
+        
+        // Process each app for individual promotions (steps 1, 2, 4)
+        for (AppPromotion app : activeApps) {
             try {
-                postPromotion(channel, promotion);
+                int lastStep = gamePromotionService.getLastPromotionStep(guildId, app.getAppId());
+                Instant lastPostTime = gamePromotionService.getLastAppPostTime(guildId, app.getAppId());
                 
-                // Record post time (this also marks as promoted)
-                gamePromotionService.markAsPromoted(guildId, promotion.getGameId());
+                // Determine next step to post
+                int nextStep = stepManager.determineNextStep(app, lastStep, lastPostTime, activeApps, now);
                 
-                // Notify backend API (if available)
-                gamePromotionService.notifyGamePushed(promotion.getGameId());
+                if (nextStep == 0) {
+                    // No step ready to post yet
+                    continue;
+                }
+                
+                // Skip step 3 here (already handled above)
+                if (nextStep == 3) {
+                    continue;
+                }
+                
+                // Post the promotion
+                postAppPromotion(channel, app, nextStep, activeApps);
+                
+                // Record the step
+                gamePromotionService.recordPromotionStep(guildId, app.getAppId(), nextStep, now);
                 
                 posted++;
-                
-                logger.info("Posted promotion for game {} in guild {}", 
-                        promotion.getGameId(), guildId);
+                logger.info("Posted promotion step {} for app {} in guild {}", 
+                        nextStep, app.getAppId(), guildId);
                 
             } catch (Exception e) {
-                logger.error("Failed to post promotion for game {}", promotion.getGameId(), e);
+                logger.error("Failed to post promotion for app {}", app.getAppId(), e);
             }
         }
         
         return posted;
     }
     
+    // Track last check time per guild for verbosity enforcement
+    private final Map<String, Instant> lastCheckTimes = new ConcurrentHashMap<>();
+    
+    private Instant getLastCheckTime(String guildId) {
+        return lastCheckTimes.get(guildId);
+    }
+    
+    private void recordLastCheckTime(String guildId, Instant checkTime) {
+        lastCheckTimes.put(guildId, checkTime);
+    }
+    
     /**
-     * Posts a single promotion to a channel.
+     * Posts a single app promotion for a specific step.
      * 
      * @param channel the channel
-     * @param promotion the promotion to post
+     * @param app the app promotion
+     * @param step the promotion step (1, 2, or 4)
+     * @param allApps all active apps (for context)
      */
-    private void postPromotion(TextChannel channel, GamePromotion promotion) {
+    private void postAppPromotion(TextChannel channel, AppPromotion app, int step, List<AppPromotion> allApps) {
         EmbedBuilder embed = new EmbedBuilder();
-        embed.setTitle("🎮 " + promotion.getGameName());
+        embed.setTitle("🎮 " + app.getAppName());
         embed.setColor(Color.CYAN);
         
-        // Build message using templates
-        String introText;
-        String ctaText;
-        
-        // Check if this is the test promotion (game ID 999)
-        if (promotion.getGameId() == 999) {
-            introText = TEST_INTRO;
-            ctaText = TEST_CTA;
-        } else {
-            introText = selectIntroTemplate();
-            ctaText = selectCtaTemplate();
-        }
-        
-        // Replace placeholders in intro
-        introText = introText.replace("<game_name>", promotion.getGameName());
-        
-        // Build the message in the format: "Intro: <intro>\n\nDescription: <description>\n\n<CTA> <url>"
-        String message = String.format(
-                "Intro: %s\n\nDescription: %s\n\n%s %s",
-                introText,
-                promotion.getDescription(),
-                ctaText,
-                promotion.getPromotionUrl()
-        );
+        // Get message template for this step
+        String template = messageTemplates.getTemplate(step);
+        String message = messageTemplates.formatMessage(template, app, allApps);
         
         embed.setDescription(message);
         
+        // Add CTAs (at least one required)
+        List<String> availableCtas = messageTemplates.getAvailableCtas(app);
+        if (!availableCtas.isEmpty()) {
+            String ctaText = messageTemplates.getRandomCta();
+            StringBuilder ctaSection = new StringBuilder(ctaText + "\n");
+            
+            // Include at least one CTA, randomly select from available
+            int ctaCount = Math.min(availableCtas.size(), random.nextInt(3) + 1); // 1-3 CTAs
+            for (int i = 0; i < ctaCount && i < availableCtas.size(); i++) {
+                ctaSection.append(availableCtas.get(i));
+                if (i < ctaCount - 1) {
+                    ctaSection.append(" | ");
+                }
+            }
+            
+            embed.addField("🔗 Links", ctaSection.toString(), false);
+        }
+        
+        // Optionally add social media links (~30% chance)
+        if (app.getCampaign() != null && app.getCampaign().getSocialMedia() != null) {
+            String socialLink = messageTemplates.getRandomSocialMediaLink(app.getCampaign().getSocialMedia());
+            if (socialLink != null) {
+                embed.addField("📱 Follow Us", socialLink, false);
+            }
+        }
+        
         // Add image if available
-        if (promotion.getImageUrl() != null && !promotion.getImageUrl().isBlank()) {
-            embed.setImage(promotion.getImageUrl());
+        if (app.getCampaign() != null && 
+            app.getCampaign().getImages() != null && 
+            !app.getCampaign().getImages().isEmpty()) {
+            String imageUrl = app.getCampaign().getImages().get(0).getAppLogo();
+            if (imageUrl != null && !imageUrl.isBlank() && !imageUrl.contains("...")) {
+                embed.setImage(imageUrl);
+            }
         }
         
         embed.setFooter("Powered by MIKROS Marketing");
         embed.setTimestamp(Instant.now());
         
         channel.sendMessageEmbeds(embed.build()).queue(
-                success -> logger.debug("Successfully posted promotion for game {}", promotion.getGameId()),
+                success -> logger.debug("Successfully posted promotion step {} for app {}", step, app.getAppId()),
                 error -> logger.error("Failed to send promotion message", error)
         );
     }
     
     /**
-     * Randomly selects an intro template.
+     * Posts a multi-game promotion (step 3).
      * 
-     * @return the selected intro template
+     * @param channel the channel
+     * @param apps list of active apps to promote
      */
-    private String selectIntroTemplate() {
-        return INTRO_TEMPLATES[random.nextInt(INTRO_TEMPLATES.length)];
-    }
-    
-    /**
-     * Randomly selects a CTA template.
-     * 
-     * @return the selected CTA template
-     */
-    private String selectCtaTemplate() {
-        return CTA_TEMPLATES[random.nextInt(CTA_TEMPLATES.length)];
+    private void postMultiGamePromotion(TextChannel channel, List<AppPromotion> apps) {
+        EmbedBuilder embed = new EmbedBuilder();
+        embed.setTitle("🌟 MIKROS Top Picks for this month");
+        embed.setColor(Color.MAGENTA);
+        
+        // Get template for step 3
+        String template = messageTemplates.getTemplate(3);
+        String message = messageTemplates.formatMessage(template, null, apps);
+        
+        embed.setDescription(message);
+        
+        // Add each app with its description and CTA
+        for (AppPromotion app : apps) {
+            StringBuilder appInfo = new StringBuilder(app.getShortDescription());
+            
+            // Add primary CTA for this app
+            List<String> ctas = messageTemplates.getAvailableCtas(app);
+            if (!ctas.isEmpty()) {
+                appInfo.append("\n").append(ctas.get(0)); // Use first available CTA
+            }
+            
+            embed.addField(app.getAppName(), appInfo.toString(), false);
+        }
+        
+        // Add social media links if available (from first app)
+        if (!apps.isEmpty() && apps.get(0).getCampaign() != null && 
+            apps.get(0).getCampaign().getSocialMedia() != null) {
+            String socialLink = messageTemplates.getRandomSocialMediaLink(
+                    apps.get(0).getCampaign().getSocialMedia());
+            if (socialLink != null) {
+                embed.addField("📱 Follow Us", socialLink, false);
+            }
+        }
+        
+        embed.setFooter("Powered by MIKROS Marketing");
+        embed.setTimestamp(Instant.now());
+        
+        channel.sendMessageEmbeds(embed.build()).queue(
+                success -> logger.debug("Successfully posted multi-game promotion"),
+                error -> logger.error("Failed to send multi-game promotion message", error)
+        );
     }
     
     /**
@@ -298,4 +383,3 @@ public class GamePromotionScheduler {
         logger.info("Game promotion scheduler stopped");
     }
 }
-

@@ -184,7 +184,7 @@ X-RateLimit-Reset: 1696723200
 - GDPR-compliant with data deletion endpoints
 
 ### Privacy
-- Users can request their data via `/score` command
+- Admins can lookup user data via `/lookup` command
 - Server owners can opt out of global tracking
 - Sensitive notes are only visible to moderators
 - Public API excludes private moderation notes

@@ -3,9 +3,11 @@ package com.tatumgames.mikros.commands;
 import com.tatumgames.mikros.models.BehaviorCategory;
 import com.tatumgames.mikros.models.BehaviorReport;
 import com.tatumgames.mikros.services.ReputationService;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -17,7 +19,8 @@ import java.time.Instant;
 
 /**
  * Command handler for the /praise command.
- * Allows users to report positive behavior.
+ * Allows admins to report positive behavior.
+ * Admin-only command.
  */
 public class PraiseCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(PraiseCommand.class);
@@ -39,17 +42,26 @@ public class PraiseCommand implements CommandHandler {
             behaviorOption.addChoice(category.getLabel(), category.name());
         }
         
-        return Commands.slash("praise", "Praise a user for positive behavior")
+        return Commands.slash("praise", "Praise a user for positive behavior (Admin only)")
                 .addOption(OptionType.USER, "user", "The user to praise", true)
                 .addOptions(behaviorOption)
                 .addOption(OptionType.STRING, "notes", "Additional notes (optional)", false)
-                .setGuildOnly(true);
+                .setGuildOnly(true)
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS));
     }
     
     @Override
     public void handle(SlashCommandInteractionEvent event) {
         Member reporter = event.getMember();
         if (reporter == null) {
+            return;
+        }
+        
+        // Check admin permissions
+        if (!reporter.hasPermission(Permission.MODERATE_MEMBERS)) {
+            event.reply("❌ You don't have permission to use this command.")
+                    .setEphemeral(true)
+                    .queue();
             return;
         }
         
@@ -100,28 +112,30 @@ public class PraiseCommand implements CommandHandler {
         
         reputationService.recordBehavior(report);
         
-        // TODO: Call Tatum Games Reputation Score Update API
-        // reputationService.reportToExternalAPI(report);
-        
-        // Calculate new local reputation
-        int newReputation = reputationService.calculateLocalReputation(
-                targetUser.getId(), event.getGuild().getId());
+        // Call API to track player rating
+        boolean apiSuccess = reputationService.reportToExternalAPI(report);
         
         // Send confirmation
-        event.reply(String.format(
+        String message = String.format(
                 "✨ **Praise Recorded**\n" +
                 "User: %s\n" +
                 "Behavior: %s (+%d points)\n" +
                 "%s" +
-                "Reporter: %s\n" +
-                "Local Reputation: %d",
+                "Reporter: %s\n",
                 targetUser.getAsMention(),
                 behaviorCategory.getLabel(),
                 behaviorCategory.getWeight(),
                 notes.isEmpty() ? "" : "Notes: " + notes + "\n",
-                reporter.getAsMention(),
-                newReputation
-        )).queue();
+                reporter.getAsMention()
+        );
+        
+        if (apiSuccess) {
+            message += "\n✅ Praise has been recorded and sent to the reputation system.";
+        } else {
+            message += "\n⚠️ Praise recorded locally, but API call failed.";
+        }
+        
+        event.reply(message).queue();
         
         logger.info("User {} praised by {} in guild {}: {}",
                 targetUser.getId(), reporter.getId(), event.getGuild().getId(), behaviorCategory);

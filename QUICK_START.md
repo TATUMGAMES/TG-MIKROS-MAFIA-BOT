@@ -24,9 +24,12 @@ Create a `.env` file in the project root:
 ```env
 DISCORD_BOT_TOKEN=your_token_here
 BOT_OWNER_ID=your_discord_user_id
+MIKROS_MAFIA_GUILD_ID=1213441992936390666
 ```
 
 **Important**: Never commit the `.env` file to git (it's already in .gitignore)
+
+**Note**: `MIKROS_MAFIA_GUILD_ID` is optional. If set, the RPG leaderboard will show which players are members of the MIKROS Mafia server. To find your server ID, right-click your server name → Copy Server ID, or extract it from a Discord channel URL: `https://discord.com/channels/<server_id>/<channel_id>`
 
 ### 3. Build the Project
 

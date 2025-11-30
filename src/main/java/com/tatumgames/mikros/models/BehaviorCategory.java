@@ -1,53 +1,73 @@
 package com.tatumgames.mikros.models;
 
 /**
- * Enum representing behavior categories with Fibonacci-weighted values.
+ * Enum representing behavior categories with weighted values.
  * Used for reputation score calculations and moderation actions.
  * 
  * Negative weights represent poor behavior, positive weights represent good behavior.
  */
 public enum BehaviorCategory {
-    // NEGATIVE BEHAVIOR (Fibonacci-weighted)
+    // NEGATIVE BEHAVIOR
     /**
-     * Poor sportsmanship behavior.
+     * Spammer behavior.
      */
-    POOR_SPORTSMANSHIP(-1, "Poor Sportsmanship", "Unsportsmanlike conduct or attitude"),
+    SPAMMER(-1, "Spammer", "Posting spam or unwanted content"),
     
     /**
-     * Trolling or constant pinging behavior.
+     * Toxic behavior.
      */
-    TROLLING(-2, "Trolling / Constant Pinging", "Deliberately annoying others or excessive mentions"),
+    TOXIC_BEHAVIOR(-2, "Toxic Behavior", "Engaging in toxic or harmful behavior"),
     
     /**
-     * AFK or complaining behavior.
+     * Harassing behavior.
      */
-    AFK_COMPLAINING(-3, "AFK / Complaining", "Frequently AFK or excessive complaining"),
+    HARRASSING(-3, "Harassing", "Harassing or bullying other users"),
     
     /**
-     * Bad language or cheating behavior.
+     * Ignoring rules.
      */
-    BAD_LANGUAGE_CHEATING(-5, "Bad Language / Cheating", "Profanity, slurs, or cheating"),
-    
-    // POSITIVE BEHAVIOR (Fibonacci-weighted)
-    /**
-     * Good sportsmanship behavior.
-     */
-    GOOD_SPORTSMANSHIP(1, "Good Sportsmanship", "Positive attitude and fair play"),
+    IGNORING_RULES(-2, "Ignoring Rules", "Repeatedly ignoring server rules"),
     
     /**
-     * Great leadership qualities.
+     * Ban evasion.
      */
-    GREAT_LEADERSHIP(2, "Great Leadership", "Shows leadership and guides others"),
+    BAN_EVASION(-5, "Ban Evasion", "Attempting to evade a ban"),
     
     /**
-     * Excellent teammate qualities.
+     * Trolling behavior.
      */
-    EXCELLENT_TEAMMATE(3, "Excellent Teammate", "Supportive and cooperative team player"),
+    TROLL(-3, "Troll", "Trolling or deliberately annoying others"),
     
     /**
-     * MVP level behavior.
+     * Excessive pinging.
      */
-    MVP(5, "MVP", "Exceptional contribution and behavior");
+    EXCESSIVE_PINGING(-3, "Excessive Pinging", "Excessive use of mentions or pings"),
+    
+    /**
+     * NSFW content in non-NSFW space.
+     */
+    NSFW_IN_NON_NSFW_SPACE(-5, "NSFW in Non-NSFW Space", "Posting NSFW content in inappropriate channels"),
+    
+    // POSITIVE BEHAVIOR
+    /**
+     * Active participation.
+     */
+    ACTIVE_PARTICIPATE(5, "Active Participate", "Actively participating in community activities"),
+    
+    /**
+     * Good helper behavior.
+     */
+    GOOD_HELPER(2, "Good Helper", "Helping other community members"),
+    
+    /**
+     * Positive influencer.
+     */
+    POSITIVE_INFLUENCER(3, "Positive Influencer", "Positively influencing the community"),
+    
+    /**
+     * Friendly greeter.
+     */
+    FRIENDLY_GREETER(1, "Friendly Greeter", "Welcoming new members in a friendly manner");
     
     private final int weight;
     private final String label;
@@ -118,10 +138,14 @@ public enum BehaviorCategory {
      */
     public static BehaviorCategory[] getNegativeBehaviors() {
         return new BehaviorCategory[] {
-            POOR_SPORTSMANSHIP,
-            TROLLING,
-            AFK_COMPLAINING,
-            BAD_LANGUAGE_CHEATING
+            SPAMMER,
+            TOXIC_BEHAVIOR,
+            HARRASSING,
+            IGNORING_RULES,
+            BAN_EVASION,
+            TROLL,
+            EXCESSIVE_PINGING,
+            NSFW_IN_NON_NSFW_SPACE
         };
     }
     
@@ -132,10 +156,10 @@ public enum BehaviorCategory {
      */
     public static BehaviorCategory[] getPositiveBehaviors() {
         return new BehaviorCategory[] {
-            GOOD_SPORTSMANSHIP,
-            GREAT_LEADERSHIP,
-            EXCELLENT_TEAMMATE,
-            MVP
+            ACTIVE_PARTICIPATE,
+            GOOD_HELPER,
+            POSITIVE_INFLUENCER,
+            FRIENDLY_GREETER
         };
     }
 }

@@ -116,32 +116,6 @@ All admin commands (`admin-*` prefix) have been audited for:
 
 ---
 
-### 4. `/admin-history`
-
-**File:** `src/main/java/com/tatumgames/mikros/commands/HistoryCommand.java`
-
-**Permission Check:** ✅
-- Requires: `MODERATE_MEMBERS`
-- Validates: `moderator.hasPermission(Permission.MODERATE_MEMBERS)`
-- Default permissions set in command registration
-
-**Role Hierarchy:** N/A
-- Read-only command, no hierarchy check needed
-
-**Mod Logging:** N/A
-- Viewing command, doesn't create new logs
-
-**Reputation Integration:** ✅
-- Displays reputation score if available
-- Shows moderation history with reputation context
-
-**Error Handling:** ✅
-- Permission errors: Ephemeral messages
-- No history: Clear message
-- Execution errors: Logged with context
-
----
-
 ### 5. `/admin-setup-promotion-channel`
 
 **File:** `src/main/java/com/tatumgames/mikros/commands/SetupPromotionChannelCommand.java`
