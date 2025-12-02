@@ -4,7 +4,9 @@
 
 ### Overview
 
-TASKS_03 has been fully implemented, adding an **Indie Game Campaign Promotion** feature that allows the MIKROS Bot to automatically share indie games running active marketing campaigns in designated Discord channels. The system includes configuration commands, scheduled posting, and comprehensive API documentation.
+TASKS_03 has been fully implemented, adding an **Indie Game Campaign Promotion** feature that allows the MIKROS Bot to
+automatically share indie games running active marketing campaigns in designated Discord channels. The system includes
+configuration commands, scheduled posting, and comprehensive API documentation.
 
 ---
 
@@ -15,6 +17,7 @@ TASKS_03 has been fully implemented, adding an **Indie Game Campaign Promotion**
 **Purpose**: Admin-only command to designate a text channel for game promotions
 
 **Features:**
+
 - ✅ Administrator permission required
 - ✅ Validates bot has permission to send messages in the channel
 - ✅ Stores configuration in-memory (expandable to database)
@@ -22,11 +25,13 @@ TASKS_03 has been fully implemented, adding an **Indie Game Campaign Promotion**
 - ✅ Confirms channel selection with clear feedback
 
 **Usage:**
+
 ```
 /setup-promotion-channel channel:#promotions
 ```
 
 **Response:**
+
 - Channel confirmation
 - Next steps guide
 - Default frequency information
@@ -37,13 +42,14 @@ TASKS_03 has been fully implemented, adding an **Indie Game Campaign Promotion**
 
 **Implementation:** `PromotionVerbosity` enum with three levels
 
-| Level | Interval | Use Case |
-|-------|----------|----------|
-| **LOW** | Every 24 hours | Minimal promotions |
+| Level                | Interval       | Use Case           |
+|----------------------|----------------|--------------------|
+| **LOW**              | Every 24 hours | Minimal promotions |
 | **MEDIUM** (default) | Every 12 hours | Balanced frequency |
-| **HIGH** | Every 6 hours | Maximum exposure |
+| **HIGH**             | Every 6 hours  | Maximum exposure   |
 
 **Configuration Storage:**
+
 - Per-guild settings in-memory
 - Thread-safe with ConcurrentHashMap
 - Defaults to MEDIUM if not configured
@@ -55,6 +61,7 @@ TASKS_03 has been fully implemented, adding an **Indie Game Campaign Promotion**
 **Purpose**: Control how often promotions are posted
 
 **Features:**
+
 - ✅ Dropdown with all verbosity levels
 - ✅ Shows interval in selection (e.g., "Medium (every 12h)")
 - ✅ Validates promotion channel is configured first
@@ -62,6 +69,7 @@ TASKS_03 has been fully implemented, adding an **Indie Game Campaign Promotion**
 - ✅ Clear confirmation message
 
 **Usage:**
+
 ```
 /set-promotion-verbosity level:MEDIUM
 ```
@@ -73,18 +81,20 @@ TASKS_03 has been fully implemented, adding an **Indie Game Campaign Promotion**
 **Implementation:** `GamePromotionScheduler` class
 
 **Key Features:**
+
 - ✅ Uses `ScheduledExecutorService` for reliable scheduling
 - ✅ Runs every hour, checks all guilds
 - ✅ Respects guild-specific verbosity settings
 - ✅ Filters promotions based on:
-  - `isPushed == false`
-  - `current_time > deadline`
-  - Not already promoted in this guild
+    - `isPushed == false`
+    - `current_time > deadline`
+    - Not already promoted in this guild
 - ✅ Formats and posts beautiful embeds
 - ✅ Prevents duplicate posts per guild
 - ✅ TODO comments for external API integration
 
 **Posting Logic:**
+
 ```java
 for (GamePromotion promotion : promotions) {
     if (promotion.isReadyToPromote()) {
@@ -98,6 +108,7 @@ for (GamePromotion promotion : promotions) {
 ```
 
 **Message Formatting:**
+
 - Uses custom `promotion_message` if provided
 - Otherwise generates template:
   ```
@@ -117,6 +128,7 @@ for (GamePromotion promotion : promotions) {
 **Purpose**: Manually trigger promotion check for testing/demo
 
 **Features:**
+
 - ✅ Administrator only
 - ✅ Validates channel is configured
 - ✅ Triggers immediate check
@@ -125,11 +137,13 @@ for (GamePromotion promotion : promotions) {
 - ✅ Deferred reply for better UX
 
 **Usage:**
+
 ```
 /force-promotion-check
 ```
 
 **Response Examples:**
+
 - Success: "Posted 3 game promotion(s)..."
 - No promotions: "No Promotions Available" with reasons
 
@@ -140,6 +154,7 @@ for (GamePromotion promotion : promotions) {
 ### Models Created
 
 #### 1. **PromotionVerbosity Enum** ✅
+
 ```java
 public enum PromotionVerbosity {
     LOW("Low", 24),
@@ -152,7 +167,9 @@ public enum PromotionVerbosity {
 ```
 
 #### 2. **GamePromotion Model** ✅
+
 **Fields:**
+
 - `gameId` (int) - Unique identifier
 - `gameName` (String) - Game title
 - `description` (String) - Marketing pitch
@@ -163,6 +180,7 @@ public enum PromotionVerbosity {
 - `isPushed` (boolean) - Prevents duplicates
 
 **Key Methods:**
+
 - `isReadyToPromote()` - Returns true if ready to post
 
 ---
@@ -172,6 +190,7 @@ public enum PromotionVerbosity {
 #### 1. **GamePromotionService Interface** ✅
 
 **Methods:**
+
 ```java
 void setPromotionChannel(String guildId, String channelId);
 String getPromotionChannel(String guildId);
@@ -186,11 +205,13 @@ boolean notifyGamePushed(int gameId); // TODO: API
 #### 2. **InMemoryGamePromotionService** ✅
 
 **Storage:**
+
 - `Map<String, String> promotionChannels` - Guild → Channel ID
 - `Map<String, PromotionVerbosity> promotionVerbosity` - Guild → Verbosity
 - `Map<String, Set<Integer>> promotedGames` - Guild → Set of Game IDs
 
 **Features:**
+
 - ✅ Thread-safe with ConcurrentHashMap
 - ✅ Validation on all inputs
 - ✅ Comprehensive logging
@@ -201,6 +222,7 @@ boolean notifyGamePushed(int gameId); // TODO: API
 #### 3. **GamePromotionScheduler** ✅
 
 **Key Features:**
+
 - ✅ Scheduled execution (every hour)
 - ✅ Iterates all guilds
 - ✅ Posts to configured channels
@@ -218,17 +240,19 @@ boolean notifyGamePushed(int gameId); // TODO: API
 **Comprehensive specification including:**
 
 #### API Endpoints
+
 1. **GET /active-promotions**
-   - Fetches list of games to promote
-   - Query parameters: limit, since_id, platform
-   - Returns array of GamePromotion objects
+    - Fetches list of games to promote
+    - Query parameters: limit, since_id, platform
+    - Returns array of GamePromotion objects
 
 2. **POST /mark-pushed**
-   - Notifies backend when game is promoted
-   - Updates `isPushed` flag
-   - Tracks reach and analytics
+    - Notifies backend when game is promoted
+    - Updates `isPushed` flag
+    - Tracks reach and analytics
 
 #### Response Schema
+
 ```json
 {
   "game_id": 1021,
@@ -247,6 +271,7 @@ boolean notifyGamePushed(int gameId); // TODO: API
 ```
 
 #### Bot Behavior Logic
+
 - Fetch frequency based on verbosity
 - Filter by deadline and isPushed flag
 - Local guild-level duplicate prevention
@@ -254,23 +279,27 @@ boolean notifyGamePushed(int gameId); // TODO: API
 - Embed creation with optional images
 
 #### Error Handling
+
 - 401 Unauthorized → Log and retry with backoff
 - 429 Too Many Requests → Respect retry_after
 - 500 Server Error → Log and retry after 5 minutes
 - Empty response → Normal, no promotions available
 
 #### Rate Limiting
+
 - Standard: 60 requests/hour
 - Premium: 300 requests/hour
 - Burst: 10 requests/minute
 
 #### Security & Privacy
+
 - Bearer token authentication
 - API keys per bot instance
 - No personal user data in responses
 - Content moderation by marketing team
 
 #### Integration Checklist
+
 - [ ] API endpoint URL configured
 - [ ] API key stored securely
 - [ ] HTTP client with timeout
@@ -287,12 +316,14 @@ boolean notifyGamePushed(int gameId); // TODO: API
 ## 🔧 Integration with BotMain
 
 ### Services Initialized ✅
+
 ```java
 this.gamePromotionService = new InMemoryGamePromotionService();
 this.gamePromotionScheduler = new GamePromotionScheduler(gamePromotionService);
 ```
 
 ### Commands Registered ✅
+
 - `SetupPromotionChannelCommand`
 - `SetPromotionVerbosityCommand`
 - `ForcePromotionCheckCommand`
@@ -300,6 +331,7 @@ this.gamePromotionScheduler = new GamePromotionScheduler(gamePromotionService);
 **Total Commands Now:** 14 (4 from TASKS_01 + 7 from TASKS_02 + 3 from TASKS_03)
 
 ### Scheduler Started ✅
+
 ```java
 gamePromotionScheduler.start(event.getJDA());
 ```
@@ -309,6 +341,7 @@ gamePromotionScheduler.start(event.getJDA());
 ## 📊 Statistics
 
 ### New in TASKS_03
+
 - **Commands:** 3 new
 - **Services:** 2 new (GamePromotionService + Scheduler)
 - **Models:** 2 new (PromotionVerbosity enum, GamePromotion)
@@ -317,6 +350,7 @@ gamePromotionScheduler.start(event.getJDA());
 - **Lines of Code:** ~1,000+
 
 ### Total Project Stats
+
 - **Commands:** 14 total
 - **Services:** 9 total
 - **Models:** 9 total
@@ -329,6 +363,7 @@ gamePromotionScheduler.start(event.getJDA());
 ## ✅ Best Practices Compliance
 
 ### Code Quality ✅
+
 - ✅ Clean architecture (services, commands, models)
 - ✅ All classes have Javadoc comments
 - ✅ Interface-based design
@@ -338,12 +373,14 @@ gamePromotionScheduler.start(event.getJDA());
 - ✅ Permission checks on commands
 
 ### Naming Conventions ✅
+
 - ✅ PascalCase for classes
 - ✅ camelCase for methods
 - ✅ UPPER_SNAKE_CASE for constants
 - ✅ Descriptive names throughout
 
 ### Documentation ✅
+
 - ✅ Comprehensive Javadoc on all public methods
 - ✅ @param and @return tags
 - ✅ Clear code comments
@@ -354,6 +391,7 @@ gamePromotionScheduler.start(event.getJDA());
 ## 🔒 TODOs for Future Integration
 
 ### In GamePromotionService
+
 ```java
 // TODO: Integrate with MIKROS Game Promotion API
 // This would make a GET request to: https://api.tatumgames.com/active-promotions
@@ -365,6 +403,7 @@ gamePromotionScheduler.start(event.getJDA());
 ```
 
 **Integration Points:**
+
 1. HTTP client configuration
 2. JSON parsing
 3. Error handling
@@ -393,18 +432,20 @@ gamePromotionScheduler.start(event.getJDA());
    ```
 
 4. **Wait for Automatic Posts:**
-   - Bot checks every hour
-   - Posts based on verbosity setting
-   - Respects deadline and isPushed flags
+    - Bot checks every hour
+    - Posts based on verbosity setting
+    - Respects deadline and isPushed flags
 
 ### For Server Admins
 
 **Commands Available:**
+
 - `/setup-promotion-channel` - Initial setup
 - `/set-promotion-verbosity` - Adjust frequency
 - `/force-promotion-check` - Test/manual trigger
 
 **Permissions Required:**
+
 - Administrator permission for all commands
 - Bot needs "Send Messages" permission in target channel
 
@@ -413,6 +454,7 @@ gamePromotionScheduler.start(event.getJDA());
 ## 🧪 Testing
 
 ### Build Status ✅
+
 ```bash
 ./gradlew clean build
 
@@ -423,24 +465,24 @@ BUILD SUCCESSFUL in 4s
 ### Test Scenarios Covered
 
 1. **Channel Setup**
-   - ✅ Valid channel configuration
-   - ✅ Bot permission validation
-   - ✅ Confirmation message
+    - ✅ Valid channel configuration
+    - ✅ Bot permission validation
+    - ✅ Confirmation message
 
 2. **Verbosity Setting**
-   - ✅ All three levels configurable
-   - ✅ Requires channel setup first
-   - ✅ Clear feedback
+    - ✅ All three levels configurable
+    - ✅ Requires channel setup first
+    - ✅ Clear feedback
 
 3. **Manual Check**
-   - ✅ Triggers immediate check
-   - ✅ Reports results
-   - ✅ Handles no promotions gracefully
+    - ✅ Triggers immediate check
+    - ✅ Reports results
+    - ✅ Handles no promotions gracefully
 
 4. **Scheduler**
-   - ✅ Starts on bot ready
-   - ✅ Runs every hour
-   - ✅ Respects guild settings
+    - ✅ Starts on bot ready
+    - ✅ Runs every hour
+    - ✅ Respects guild settings
 
 ---
 

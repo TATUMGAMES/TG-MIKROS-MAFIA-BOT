@@ -2,7 +2,9 @@
 
 ## Feature Overview
 
-This API provides access to cross-server moderation history for users across the entire MIKROS bot network. Server owners and moderators can query whether a user has been warned, kicked, or banned in other servers, enabling informed moderation decisions.
+This API provides access to cross-server moderation history for users across the entire MIKROS bot network. Server
+owners and moderators can query whether a user has been warned, kicked, or banned in other servers, enabling informed
+moderation decisions.
 
 ## Why API is Needed
 
@@ -22,20 +24,20 @@ This API provides access to cross-server moderation history for users across the
 
 ### Path Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name         | Type   | Description                 |
+|--------------|--------|-----------------------------|
 | `discord_id` | string | Discord user ID (snowflake) |
 
 ### Query Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `server_id` | string | No | Filter by specific server |
-| `action_type` | string | No | Filter by action: "warn", "kick", "ban", "all" (default: "all") |
-| `severity` | string | No | Filter by severity: "low", "medium", "high", "critical" |
-| `days` | integer | No | Limit to actions within last N days (default: 365) |
-| `limit` | integer | No | Maximum number of results (default: 50, max: 500) |
-| `include_server_names` | boolean | No | Include server names (default: false for privacy) |
+| Name                   | Type    | Required | Description                                                     |
+|------------------------|---------|----------|-----------------------------------------------------------------|
+| `server_id`            | string  | No       | Filter by specific server                                       |
+| `action_type`          | string  | No       | Filter by action: "warn", "kick", "ban", "all" (default: "all") |
+| `severity`             | string  | No       | Filter by severity: "low", "medium", "high", "critical"         |
+| `days`                 | integer | No       | Limit to actions within last N days (default: 365)              |
+| `limit`                | integer | No       | Maximum number of results (default: 50, max: 500)               |
+| `include_server_names` | boolean | No       | Include server names (default: false for privacy)               |
 
 ---
 
@@ -140,38 +142,38 @@ Content-Type: application/json
 
 ## Response Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `discord_id` | string | User's Discord ID |
-| `username` | string | User's current username |
-| `total_actions` | integer | Total moderation actions across all servers |
-| `servers_with_actions` | integer | Number of unique servers with actions |
-| `first_action_date` | ISO 8601 string | Date of first recorded action |
-| `last_action_date` | ISO 8601 string | Date of most recent action |
-| `summary` | object | Count of each action type |
-| `severity_breakdown` | object | Count by severity level |
-| `is_flagged` | boolean | Whether user is globally flagged |
-| `flagged_reason` | string | Reason for global flag |
-| `actions` | array | List of moderation actions |
-| `recommendation` | string | Risk level: "NO_HISTORY", "LOW_RISK", "MODERATE_RISK", "HIGH_RISK", "CRITICAL" |
-| `recommendation_reason` | string | Explanation for the recommendation |
-| `patterns_detected` | array | Behavioral patterns identified |
-| `privacy_note` | string | Information about privacy protections |
+| Field                   | Type            | Description                                                                    |
+|-------------------------|-----------------|--------------------------------------------------------------------------------|
+| `discord_id`            | string          | User's Discord ID                                                              |
+| `username`              | string          | User's current username                                                        |
+| `total_actions`         | integer         | Total moderation actions across all servers                                    |
+| `servers_with_actions`  | integer         | Number of unique servers with actions                                          |
+| `first_action_date`     | ISO 8601 string | Date of first recorded action                                                  |
+| `last_action_date`      | ISO 8601 string | Date of most recent action                                                     |
+| `summary`               | object          | Count of each action type                                                      |
+| `severity_breakdown`    | object          | Count by severity level                                                        |
+| `is_flagged`            | boolean         | Whether user is globally flagged                                               |
+| `flagged_reason`        | string          | Reason for global flag                                                         |
+| `actions`               | array           | List of moderation actions                                                     |
+| `recommendation`        | string          | Risk level: "NO_HISTORY", "LOW_RISK", "MODERATE_RISK", "HIGH_RISK", "CRITICAL" |
+| `recommendation_reason` | string          | Explanation for the recommendation                                             |
+| `patterns_detected`     | array           | Behavioral patterns identified                                                 |
+| `privacy_note`          | string          | Information about privacy protections                                          |
 
 ### Action Object Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `action_id` | string | Unique identifier for the action |
-| `server_id` | string | Discord server ID (always provided) |
-| `server_name` | string | Server name (null if privacy enabled) |
-| `action_type` | string | "warn", "kick", or "ban" |
-| `behavior_category` | string | Behavior category enum value |
-| `severity` | string | Severity level of the action |
-| `reason` | string | Moderator-provided reason |
-| `moderator_id` | string | ID of moderator (hashed for privacy) |
-| `timestamp` | ISO 8601 string | When action occurred |
-| `days_ago` | integer | Days since the action |
+| Field               | Type            | Description                           |
+|---------------------|-----------------|---------------------------------------|
+| `action_id`         | string          | Unique identifier for the action      |
+| `server_id`         | string          | Discord server ID (always provided)   |
+| `server_name`       | string          | Server name (null if privacy enabled) |
+| `action_type`       | string          | "warn", "kick", or "ban"              |
+| `behavior_category` | string          | Behavior category enum value          |
+| `severity`          | string          | Severity level of the action          |
+| `reason`            | string          | Moderator-provided reason             |
+| `moderator_id`      | string          | ID of moderator (hashed for privacy)  |
+| `timestamp`         | ISO 8601 string | When action occurred                  |
+| `days_ago`          | integer         | Days since the action                 |
 
 ---
 
@@ -184,6 +186,7 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 **Special Permissions Required:**
+
 - Bot must be verified
 - Bot must have at least 100 servers
 - Server must have opted into global moderation sharing
@@ -194,22 +197,25 @@ Authorization: Bearer YOUR_API_KEY
 ## Privacy & Ethics
 
 ### What Is Shared
+
 ✅ Action types (warn, kick, ban)  
 ✅ Behavior categories (TROLLING, etc.)  
 ✅ Severity levels  
 ✅ Timestamps  
 ✅ Anonymized moderator IDs  
-✅ Patterns and recommendations  
+✅ Patterns and recommendations
 
 ### What Is NOT Shared
+
 ❌ Server names (unless opted in)  
 ❌ Specific message content  
 ❌ Personal information  
 ❌ Moderator names  
 ❌ Server invite links  
-❌ Private moderation notes  
+❌ Private moderation notes
 
 ### User Rights (GDPR Compliant)
+
 - Admins can lookup user data via `/lookup` command
 - Users can request data deletion
 - Users can appeal flagged status
@@ -221,29 +227,34 @@ Authorization: Bearer YOUR_API_KEY
 ## Risk Recommendation System
 
 ### NO_HISTORY
+
 - User has no moderation actions
 - New to the MIKROS network
 - No special considerations needed
 
 ### LOW_RISK
+
 - 1-2 warnings only
 - No kicks or bans
 - Isolated incidents
 - **Action**: Standard welcome procedures
 
 ### MODERATE_RISK
+
 - Multiple warnings or 1 kick
 - No critical violations
 - Pattern across 2+ servers
 - **Action**: Monitor activity, clarify rules
 
 ### HIGH_RISK
+
 - 1+ bans or multiple kicks
 - High severity violations
 - Pattern of escalating behavior
 - **Action**: Probation period, strict monitoring
 
 ### CRITICAL
+
 - Multiple bans for severe violations
 - Hate speech, harassment, threats
 - Network-wide flagged status
@@ -264,6 +275,7 @@ This API has stricter rate limits due to the sensitive nature of the data.
 ## Scalability and Security Notes
 
 ### Security Measures
+
 - End-to-end encryption (TLS 1.3)
 - API key validation with scope checking
 - Audit logging of all access
@@ -274,6 +286,7 @@ This API has stricter rate limits due to the sensitive nature of the data.
 - Two-factor authentication for key generation
 
 ### Data Protection
+
 - Encrypted at rest (AES-256)
 - Access logs retained for 90 days
 - Regular security audits
@@ -282,6 +295,7 @@ This API has stricter rate limits due to the sensitive nature of the data.
 - Regular penetration testing
 
 ### Ethical Use
+
 - No selling or sharing of data
 - Transparent privacy policy
 - User-friendly appeal process
@@ -293,6 +307,7 @@ This API has stricter rate limits due to the sensitive nature of the data.
 ## Opt-In/Opt-Out
 
 ### Server Opt-In
+
 Servers must explicitly opt into global moderation sharing:
 
 ```
@@ -300,6 +315,7 @@ Servers must explicitly opt into global moderation sharing:
 ```
 
 ### Server Opt-Out
+
 Servers can opt out at any time:
 
 ```
@@ -307,6 +323,7 @@ Servers can opt out at any time:
 ```
 
 When opted out:
+
 - Your server's actions are not shared with other servers
 - You cannot query other servers' actions
 - Your server's actions are still visible to the flagged user

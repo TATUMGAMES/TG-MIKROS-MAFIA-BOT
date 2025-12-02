@@ -2,7 +2,8 @@
 
 ## Feature Overview
 
-Returns the most engaging content genres (multiplayer, open world, story mode) by total player engagement and time spent.
+Returns the most engaging content genres (multiplayer, open world, story mode) by total player engagement and time
+spent.
 
 ---
 

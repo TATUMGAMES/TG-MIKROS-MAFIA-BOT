@@ -12,7 +12,7 @@ import java.util.Random;
  */
 public class ExploreAction implements CharacterAction {
     private static final Random random = new Random();
-    
+
     private static final String[] NARRATIVES = {
             // Original 15 narratives
             "You ventured into an ancient forest and discovered a hidden shrine. The spirits blessed your journey.",
@@ -72,38 +72,38 @@ public class ExploreAction implements CharacterAction {
             "You find a torn cloak clasp made of dragonbone.",
             "The sky ripples with aurora lights that form strange, ancient symbols."
     };
-    
+
     @Override
     public String getActionName() {
         return "explore";
     }
-    
+
     @Override
     public String getActionEmoji() {
         return "🧭";
     }
-    
+
     @Override
     public String getDescription() {
         return "Explore the world and encounter random events";
     }
-    
+
     @Override
     public RPGActionOutcome execute(RPGCharacter character, RPGConfig config) {
         // Select random narrative
         String narrative = NARRATIVES[random.nextInt(NARRATIVES.length)];
-        
+
         // Calculate XP gain (scales with level and config multiplier)
         int baseXp = 30 + (character.getLevel() * 5);
         int variance = random.nextInt(20) - 10; // +/- 10
         int xpGained = (int) ((baseXp + variance) * config.getXpMultiplier());
-        
+
         // Add XP and check for level up
         boolean leveledUp = character.addXp(xpGained);
-        
+
         // Record the action
         character.recordAction();
-        
+
         return RPGActionOutcome.builder()
                 .narrative(narrative)
                 .xpGained(xpGained)

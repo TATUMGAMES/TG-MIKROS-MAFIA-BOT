@@ -10,6 +10,7 @@ Necromancer (hybrid Mage + Rogue)
 Priest (or "Resurrector") — name options included below
 
 ⚔️ All Five Classes
+
 1. Warrior
 
 Role: Bruiser / Tank
@@ -215,9 +216,8 @@ Boss-level increases by defeating enough normal bosses.
 
 Formula (your idea refined):
 
-Boss-level increases when 
+Boss-level increases when
 TotalDefeated >= 6 × currentBossLevel
-
 
 Examples:
 
@@ -249,9 +249,8 @@ Higher ATK
 Special effects (we can design 12 later)
 
 ✔ Super Boss Level Progression
-superBossLevel increases when 
+superBossLevel increases when
 SuperBossesDefeated >= 2 × superBossLevel
-
 
 Examples:
 
@@ -355,7 +354,8 @@ You said Nilfheim is created by Tatum Games — here’s how to weave it in.
 
 Opening text for /rpg-register:
 
-“Your soul awakens in Nilfheim — a realm wrapped in cold twilight, plagued by rising horrors. Heroes are few. Legends are fewer. Yet fate stirs… and your journey begins.”
+“Your soul awakens in Nilfheim — a realm wrapped in cold twilight, plagued by rising horrors. Heroes are few. Legends
+are fewer. Yet fate stirs… and your journey begins.”
 
 Boss failure text:
 
@@ -466,6 +466,7 @@ Behavior
 Optional battle lines
 
 ⭐ LEVEL 1 BOSSES
+
 1. Frostbitten Troll
 
 Type: Beast / Giant
@@ -503,6 +504,7 @@ Battle lines:
 “Your warmth… we take…”
 
 ⭐ LEVEL 2 BOSSES
+
 3. Bonegnasher Ghoul
 
 Type: Undead
@@ -528,6 +530,7 @@ Behavior:
 Fast attack bursts.
 
 ⭐ LEVEL 3 BOSSES
+
 5. Iceborne Sorcerer
 
 Type: Humanoid Mage
@@ -553,6 +556,7 @@ Behavior:
 Can heal itself slightly.
 
 ⭐ LEVEL 4 BOSSES
+
 7. Shadowblade Assassin
 
 Type: Humanoid Rogue
@@ -578,6 +582,7 @@ Behavior:
 Mixed magic & physical attacks.
 
 ⭐ LEVEL 5 BOSSES
+
 9. Frost Titan
 
 Type: Giant
@@ -603,6 +608,7 @@ Behavior:
 Magic damage + occasional freezing debuff.
 
 ⭐ LEVEL 6 BOSSES
+
 11. Crypt Sovereign
 
 Type: Undead King
@@ -628,6 +634,7 @@ Behavior:
 Fast AGI-based strikes + shock damage.
 
 ⭐ LEVEL 7 BOSSES
+
 13. Plague Herald
 
 Type: Demon
@@ -653,6 +660,7 @@ Behavior:
 Chance to “freeze” (reduce damage dealt by players).
 
 ⭐ LEVEL 8 BOSSES
+
 15. Ironhide Juggernaut
 
 Type: Construct
@@ -678,6 +686,7 @@ Behavior:
 High crit chance.
 
 ⭐ LEVEL 9 BOSSES
+
 17. Frostwraith Matriarch
 
 Type: Spirit
@@ -703,6 +712,7 @@ Behavior:
 Very high STR.
 
 ⭐ LEVEL 10 BOSSES
+
 19. Polar Hydra
 
 Type: Dragon/Beast
@@ -728,6 +738,7 @@ Behavior:
 High INT + drains mana (if mana added).
 
 ⭐ LEVEL 11 BOSSES
+
 21. Ashen Revenant
 
 Type: Undead
@@ -753,6 +764,7 @@ Behavior:
 Elemental breath attacks.
 
 ⭐ LEVEL 12 BOSSES
+
 23. The Rime Executioner
 
 Type: Humanoid Elite
@@ -794,6 +806,7 @@ Class matchups
 Signature mechanic
 
 🌑 SUPER BOSS 1 — THE FIRST DOOM
+
 1. Ymir the Winterbound Colossus
 
 Type: Giant Titan
@@ -805,6 +818,7 @@ Mechanic:
 Every 20% HP, unleashes “Avalanche Crash.”
 
 🌑 SUPER BOSS 2
+
 2. Skorn, Devourer of Hope
 
 Type: Demon Lord
@@ -816,6 +830,7 @@ Mechanic:
 Steals HP from highest-damage attacker each round.
 
 🌑 SUPER BOSS 3
+
 3. Vespera, Queen of Frostwraiths
 
 Type: Spirit Monarch
@@ -827,6 +842,7 @@ Mechanic:
 High dodge → 30% player attacks miss.
 
 🌑 SUPER BOSS 4
+
 4. The Eternal Maw
 
 Type: Eldritch
@@ -838,6 +854,7 @@ Mechanic:
 50% of damage is delayed (DoT effect on boss).
 
 🌑 SUPER BOSS 5
+
 5. Draugr King Halrom
 
 Type: Undead King
@@ -849,6 +866,7 @@ Mechanic:
 Summons spectral guards (flavor-only).
 
 🌑 SUPER BOSS 6
+
 6. Stormlord Valkyrios
 
 Type: Elemental Dragon
@@ -860,6 +878,7 @@ Mechanic:
 Random lightning strikes hit all attackers.
 
 🌑 SUPER BOSS 7
+
 7. The Obsidian Reaper
 
 Type: Shadow Construct
@@ -871,6 +890,7 @@ Mechanic:
 Reflects small % of damage back at attackers.
 
 🌑 SUPER BOSS 8
+
 8. Níðhollow Serpent
 
 Type: Eldritch Serpent
@@ -882,6 +902,7 @@ Mechanic:
 Can “swallow” a random attacker (flavor stun).
 
 🌑 SUPER BOSS 9
+
 9. Bloodmoon Matron
 
 Type: Vampire Queen
@@ -893,6 +914,7 @@ Mechanic:
 Heals from total player damage dealt.
 
 🌑 SUPER BOSS 10
+
 10. The Rune-Eater Behemoth
 
 Type: Arcane Golem
@@ -904,6 +926,7 @@ Mechanic:
 Reduces all magic-based player damage.
 
 🌑 SUPER BOSS 11
+
 11. Frostwind Chimera
 
 Type: Beast/Monstrosity
@@ -915,6 +938,7 @@ Mechanic:
 Random multi-type damage.
 
 🌑 SUPER BOSS 12 — FINAL BOSS
+
 12. Kalgorath, Harbinger of the Void Star
 
 Type: Eldritch Titan
@@ -941,19 +965,23 @@ Use these when a Priest tries resurrecting someone who isn’t dead.
 
 “🙏 {priest} calls to the heavens, but {target} breathes strongly. Warm light surrounds them.”
 
-“✨ {priest} closes his eyes. A halo forms… then fades. {target} stands untouched by death, and receives a gentle blessing.”
+“✨ {priest} closes his eyes. A halo forms… then fades. {target} stands untouched by death, and receives a gentle
+blessing.”
 
 “🌬 {priest} whispers under his breadth. A breeze of holy magic brushes past {target}, who is very much alive.”
 
-“💫 {priest} begins to tremble. The resurrection fails softly — {target} is already among the living. A blessing remains behind.”
+“💫 {priest} begins to tremble. The resurrection fails softly — {target} is already among the living. A blessing remains
+behind.”
 
 “🌸 {priest} invokes ancient rites, only to find {target}’s soul still tethered. They are blessed instead.”
 
-“⛅ {priest} takes a deep breadth. A sacred radiance descends, confirming {target}’s life. The light leaves them empowered.”
+“⛅ {priest} takes a deep breadth. A sacred radiance descends, confirming {target}’s life. The light leaves them
+empowered.”
 
 “⭐ {priest} smiles. ‘No fallen soul found,’ the spirits sigh. Still, {target} is touched by holiness.”
 
-“🔮 {priest} cracks his knuckles and looks off to the distance. Light gathers… then dissipates harmlessly. {target} receives a calm, serene blessing.”
+“🔮 {priest} cracks his knuckles and looks off to the distance. Light gathers… then dissipates harmlessly. {target}
+receives a calm, serene blessing.”
 
 --------------------------------------
 
@@ -963,11 +991,13 @@ Use these when the Priest actually revives someone.
 
 “✨ {priest} calls forth ancient power — and {target} gasps back to life, restored at half strength.”
 
-“🌟 {priest} starts jumping around frantically! Then stops. A surge of holy brilliance erupts! {target} rises from death’s grasp, weak but alive.”
+“🌟 {priest} starts jumping around frantically! Then stops. A surge of holy brilliance erupts! {target} rises from
+death’s grasp, weak but alive.”
 
 “🙏 {priest} eyes turn white. Did he go blind? ‘Return,’ whispers the spirit choir — {target} stirs, reborn but fragile.”
 
-“💫 {priest} picks up dirt from the ground and rubs it all over his face. He says it has begun. A sacred wind sweeps through the realm… {target}’s soul snaps back into their body!”
+“💫 {priest} picks up dirt from the ground and rubs it all over his face. He says it has begun. A sacred wind sweeps
+through the realm… {target}’s soul snaps back into their body!”
 
 “🔥 {priest} cries out in pain! Resurrection succeeds! {target} awakens, trembling, halfway between life and death.”
 

@@ -2,7 +2,8 @@
 
 ## Feature Overview
 
-Returns average total gameplay time per app, optionally filtered by genre. Helps developers benchmark player engagement and retention.
+Returns average total gameplay time per app, optionally filtered by genre. Helps developers benchmark player engagement
+and retention.
 
 ---
 
@@ -13,9 +14,9 @@ Returns average total gameplay time per app, optionally filtered by genre. Helps
 
 ### Query Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `genre` | string | No | Filter by game genre |
+| Name    | Type   | Required | Description          |
+|---------|--------|----------|----------------------|
+| `genre` | string | No       | Filter by game genre |
 
 ---
 

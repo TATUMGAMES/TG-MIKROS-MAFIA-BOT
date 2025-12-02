@@ -11,10 +11,10 @@ public class RPGStats {
     private int agility;
     private int intelligence;
     private int luck;
-    
+
     /**
      * Creates RPG stats from a character class.
-     * 
+     *
      * @param characterClass the character class
      */
     public RPGStats(CharacterClass characterClass) {
@@ -25,16 +25,16 @@ public class RPGStats {
         this.intelligence = characterClass.getBaseInt();
         this.luck = characterClass.getBaseLuck();
     }
-    
+
     /**
      * Creates RPG stats with specific values.
-     * 
-     * @param maxHp maximum hit points
-     * @param currentHp current hit points
-     * @param strength strength stat
-     * @param agility agility stat
+     *
+     * @param maxHp        maximum hit points
+     * @param currentHp    current hit points
+     * @param strength     strength stat
+     * @param agility      agility stat
      * @param intelligence intelligence stat
-     * @param luck luck stat
+     * @param luck         luck stat
      */
     public RPGStats(int maxHp, int currentHp, int strength, int agility, int intelligence, int luck) {
         this.maxHp = maxHp;
@@ -44,30 +44,30 @@ public class RPGStats {
         this.intelligence = intelligence;
         this.luck = luck;
     }
-    
+
     /**
      * Applies stat growth when leveling up.
      * Level up: +5 HP, +1 to all stats (as per TASKS_23.md).
-     * 
+     *
      * @param characterClass the character's class
      */
     public void applyLevelUpGrowth(CharacterClass characterClass) {
         // +5 HP on level up
         this.maxHp += 5;
         this.currentHp = this.maxHp; // Heal on level up
-        
+
         // +1 to all stats
         this.strength += 1;
         this.agility += 1;
         this.intelligence += 1;
         this.luck += 1;
     }
-    
+
     /**
      * Randomly increases a stat (used in training).
-     * 
+     *
      * @param statName the stat to increase (HP, STR, AGI, INT, LUCK)
-     * @param amount the amount to increase
+     * @param amount   the amount to increase
      */
     public void increaseStat(String statName, int amount) {
         switch (statName.toUpperCase()) {
@@ -81,10 +81,10 @@ public class RPGStats {
             case "LUCK" -> this.luck += amount;
         }
     }
-    
+
     /**
      * Damages the character.
-     * 
+     *
      * @param damage the damage amount
      * @return true if character is still alive
      */
@@ -92,69 +92,69 @@ public class RPGStats {
         this.currentHp = Math.max(0, this.currentHp - damage);
         return this.currentHp > 0;
     }
-    
+
     /**
      * Heals the character.
-     * 
+     *
      * @param amount the heal amount
      */
     public void heal(int amount) {
         this.currentHp = Math.min(this.maxHp, this.currentHp + amount);
     }
-    
+
     /**
      * Fully heals the character.
      */
     public void fullHeal() {
         this.currentHp = this.maxHp;
     }
-    
+
     // Getters and setters
-    
+
     public int getMaxHp() {
         return maxHp;
     }
-    
+
     public void setMaxHp(int maxHp) {
         this.maxHp = maxHp;
     }
-    
+
     public int getCurrentHp() {
         return currentHp;
     }
-    
+
     public void setCurrentHp(int currentHp) {
         this.currentHp = Math.max(0, Math.min(maxHp, currentHp));
     }
-    
+
     public int getStrength() {
         return strength;
     }
-    
+
     public void setStrength(int strength) {
         this.strength = strength;
     }
-    
+
     public int getAgility() {
         return agility;
     }
-    
+
     public void setAgility(int agility) {
         this.agility = agility;
     }
-    
+
     public int getIntelligence() {
         return intelligence;
     }
-    
+
     public void setIntelligence(int intelligence) {
         this.intelligence = intelligence;
     }
-    
+
     public int getLuck() {
         return luck;
     }
-    
+
     public void setLuck(int luck) {
         this.luck = luck;
     }

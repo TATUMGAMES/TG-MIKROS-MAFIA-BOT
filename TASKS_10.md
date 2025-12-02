@@ -1,7 +1,10 @@
 # TASKS_10.md
 
 ## Objective
-Generate complete deployment instructions for running the MIKROS Bot on **Google Cloud Platform (GCP)** using a **Virtual Machine (VM)**. Cursor AI should **not attempt to deploy the bot**, but instead provide detailed documentation for human operators to follow.
+
+Generate complete deployment instructions for running the MIKROS Bot on **Google Cloud Platform (GCP)** using a *
+*Virtual Machine (VM)**. Cursor AI should **not attempt to deploy the bot**, but instead provide detailed documentation
+for human operators to follow.
 
 ---
 

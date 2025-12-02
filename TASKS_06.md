@@ -2,9 +2,11 @@
 
 ## Objective
 
-Build the foundation for a **long-form, opt-in text RPG game** within Discord. Users will create characters, explore a game world, and progress through experience, stats, items, and storylines.
+Build the foundation for a **long-form, opt-in text RPG game** within Discord. Users will create characters, explore a
+game world, and progress through experience, stats, items, and storylines.
 
-This system is **modular**, **scalable**, and designed for long-term community retention. Features will evolve over time (quests, enemies, inventory, multiplayer, etc.).
+This system is **modular**, **scalable**, and designed for long-term community retention. Features will evolve over
+time (quests, enemies, inventory, multiplayer, etc.).
 
 ---
 
@@ -34,6 +36,7 @@ Initial gameplay is simple:
 ## Phase 1: Core RPG Engine
 
 ### 1. `/rpg-register`
+
 - Command to opt-in and create a new character
 - Steps:
     - Choose name
@@ -42,6 +45,7 @@ Initial gameplay is simple:
 - **TODO**: Persistence layer in later phase
 
 ### 2. `/rpg-profile`
+
 - View your character stats, class, level, XP, inventory
 - Includes an RPG-style embed card with:
     - Character Name
@@ -52,6 +56,7 @@ Initial gameplay is simple:
     - Inventory items (if applicable)
 
 ### 3. `/rpg-action`
+
 - Player chooses an action from:
     - `explore` (random story/narrative encounter)
     - `train` (gain XP, increase random stat)
@@ -59,6 +64,7 @@ Initial gameplay is simple:
 - Each action has cooldown (e.g. 1 per day)
 
 ### 4. `/rpg-leaderboard`
+
 - Show top characters by level / XP
 - Server-wide leaderboard with formatting
 
@@ -67,20 +73,23 @@ Initial gameplay is simple:
 ## Game Data & Models
 
 ### Character Class (ENUM)
+
 - `WARRIOR`, `ROGUE`, `MAGE`
 
 ### RPGCharacter
-| Field | Type | Description |
-|-------|------|-------------|
-| discordId | String | Unique Discord user ID |
-| name | String | Chosen character name |
-| class | Enum | Character class |
-| level | int | Starts at 1 |
-| xp | int | Experience points |
-| stats | Map<String, Integer> | HP, STR, AGI, etc. |
-| lastActionTime | Timestamp | Used for cooldown |
+
+| Field          | Type                 | Description            |
+|----------------|----------------------|------------------------|
+| discordId      | String               | Unique Discord user ID |
+| name           | String               | Chosen character name  |
+| class          | Enum                 | Character class        |
+| level          | int                  | Starts at 1            |
+| xp             | int                  | Experience points      |
+| stats          | Map<String, Integer> | HP, STR, AGI, etc.     |
+| lastActionTime | Timestamp            | Used for cooldown      |
 
 ### RPGActionOutcome
+
 - Result of user actions (text, XP gained, changes)
 - Used to generate Discord message responses
 
@@ -88,11 +97,11 @@ Initial gameplay is simple:
 
 ## Internal Game Logic
 
-| Action | Logic |
-|--------|-------|
-| **Explore** | Random story encounter, XP gain |
-| **Train** | XP + possible stat increase |
-| **Battle** | Random AI enemy, HP loss, win = XP |
+| Action      | Logic                              |
+|-------------|------------------------------------|
+| **Explore** | Random story encounter, XP gain    |
+| **Train**   | XP + possible stat increase        |
+| **Battle**  | Random AI enemy, HP loss, win = XP |
 
 ---
 
@@ -123,25 +132,25 @@ Cursor AI must:
 
 ## Slash Commands to Implement
 
-| Command | Description |
-|---------|-------------|
-| `/rpg-register` | Create a new character |
-| `/rpg-profile` | View your RPG stats |
-| `/rpg-action <type>` | Perform a daily action |
-| `/rpg-leaderboard` | View top players |
-| `/rpg-config` | Admin config for game toggle, cooldowns |
+| Command              | Description                             |
+|----------------------|-----------------------------------------|
+| `/rpg-register`      | Create a new character                  |
+| `/rpg-profile`       | View your RPG stats                     |
+| `/rpg-action <type>` | Perform a daily action                  |
+| `/rpg-leaderboard`   | View top players                        |
+| `/rpg-config`        | Admin config for game toggle, cooldowns |
 
 ---
 
 ## Future Phases (Mark as TODOs in code)
 
-| Feature | Description |
-|---------|-------------|
-| Inventory | Collect loot, equip weapons, use potions |
-| Quests | Scripted storylines with objectives and rewards |
-| Multiplayer | Party-based exploration or PvP |
-| Reputation Ties | Link RPG behavior to MIKROS Reputation Score |
-| Web Dashboard | View character/profile outside Discord |
+| Feature         | Description                                     |
+|-----------------|-------------------------------------------------|
+| Inventory       | Collect loot, equip weapons, use potions        |
+| Quests          | Scripted storylines with objectives and rewards |
+| Multiplayer     | Party-based exploration or PvP                  |
+| Reputation Ties | Link RPG behavior to MIKROS Reputation Score    |
+| Web Dashboard   | View character/profile outside Discord          |
 
 ---
 
@@ -175,9 +184,11 @@ src/
 1. Narrative Quests (Storyline Engine)
 
 Add a section like this:
+
 ## TODO: Narrative Quests Engine
 
 Introduce story-based gameplay:
+
 - Players unlock chapters or quests at specific levels
 - Each quest presents a situation and choices (like a CYOA)
 - Choices affect XP, stats, or inventory
@@ -205,10 +216,12 @@ Future phase will store quest progress per user.
 ## TODO: Inventory & Loot
 
 Add a lightweight inventory system:
+
 - Characters can find weapons, potions, and artifacts
 - Each has stats/bonuses (e.g. Sword of Fire +5 STR)
 
 Commands:
+
 - `/rpg-inventory` – View items
 - `/rpg-equip <item>` – Equip something
 - `/rpg-loot` – View most recent item drop
@@ -222,6 +235,7 @@ Use `InventoryService`, `Item`, `ItemType` enums.
 ## TODO: Boss Battles & Events
 
 Introduce weekly boss fights:
+
 - Every Sunday, players can `/rpg-bossfight`
 - All players contribute damage
 - Boss has health bar (persisted)
@@ -236,11 +250,13 @@ Future expansion: Multi-stage raids.
 ## TODO: Endgame / Prestige System
 
 When a character hits Level 50 (or 100):
+
 - They can “ascend” – reset to Level 1 but gain a permanent bonus (e.g. +5% XP gain)
 - Prestige levels displayed in leaderboard
 - Unlock cosmetic class skins (flair in embeds)
 
 Purpose:
+
 - Prevent burnout at high levels
 - Encourage replayability
 
@@ -249,6 +265,7 @@ Purpose:
 ## TODO: MIKROS Integration
 
 Use player progress to:
+
 - Unlock MIKROS discount codes
 - Reward active players with Reputation Score boosts
 - Connect to marketing campaigns (e.g. quest rewards include promo offers)
@@ -256,4 +273,5 @@ Use player progress to:
 Requires API coordination – handled via TODOs and `/docs` API planning.
 
 Conclusion
-> Note: This RPG system is designed to grow over time. The current phase focuses on daily actions and leveling. Future phases will add quests, inventory, boss battles, and prestige to increase depth and replayability.
+> Note: This RPG system is designed to grow over time. The current phase focuses on daily actions and leveling. Future
+> phases will add quests, inventory, boss battles, and prestige to increase depth and replayability.

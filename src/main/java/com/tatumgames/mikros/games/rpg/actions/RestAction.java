@@ -12,7 +12,7 @@ import java.util.Random;
  */
 public class RestAction implements CharacterAction {
     private static final Random random = new Random();
-    
+
     private static final String[] NARRATIVES = {
             "You rest beside a glowing icefire brazier, warmth filling you.",
             "You sleep beneath the twin moons of Nilfheim, dreaming of battle.",
@@ -40,39 +40,39 @@ public class RestAction implements CharacterAction {
             "You relax near glowing mushrooms that emit a comforting warmth.",
             "You fall asleep listening to the wind howl like distant wolves."
     };
-    
+
     @Override
     public String getActionName() {
         return "rest";
     }
-    
+
     @Override
     public String getActionEmoji() {
         return "💤";
     }
-    
+
     @Override
     public String getDescription() {
         return "Rest to fully restore your HP";
     }
-    
+
     @Override
     public RPGActionOutcome execute(RPGCharacter character, RPGConfig config) {
         // Select random narrative
         String narrative = NARRATIVES[random.nextInt(NARRATIVES.length)];
-        
+
         // Get HP before rest
         int hpBefore = character.getStats().getCurrentHp();
         int maxHp = character.getStats().getMaxHp();
-        
+
         // Fully restore HP
         character.getStats().fullHeal();
-        
+
         int hpRestored = maxHp - hpBefore;
-        
+
         // Record the action (uses a charge)
         character.recordAction();
-        
+
         return RPGActionOutcome.builder()
                 .narrative(narrative)
                 .xpGained(0) // Rest doesn't give XP

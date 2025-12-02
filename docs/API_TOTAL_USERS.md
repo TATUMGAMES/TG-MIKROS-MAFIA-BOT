@@ -2,7 +2,8 @@
 
 ## Feature Overview
 
-Returns the total number of unique user profiles tracked across all MIKROS-enabled games, demonstrating network reach and cross-game player base.
+Returns the total number of unique user profiles tracked across all MIKROS-enabled games, demonstrating network reach
+and cross-game player base.
 
 ---
 
@@ -31,14 +32,14 @@ Returns the total number of unique user profiles tracked across all MIKROS-enabl
 
 ## Response Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `total_users` | integer | Total unique users ever tracked |
-| `active_users_30d` | integer | Users active in last 30 days |
-| `new_users_30d` | integer | New users added in last 30 days |
-| `growth_percentage` | number | User growth rate |
-| `average_games_per_user` | number | Average games played per user |
-| `cross_game_users` | integer | Users who play multiple MIKROS games |
+| Field                    | Type    | Description                          |
+|--------------------------|---------|--------------------------------------|
+| `total_users`            | integer | Total unique users ever tracked      |
+| `active_users_30d`       | integer | Users active in last 30 days         |
+| `new_users_30d`          | integer | New users added in last 30 days      |
+| `growth_percentage`      | number  | User growth rate                     |
+| `average_games_per_user` | number  | Average games played per user        |
+| `cross_game_users`       | integer | Users who play multiple MIKROS games |
 
 ---
 

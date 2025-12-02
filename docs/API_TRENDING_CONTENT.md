@@ -2,7 +2,8 @@
 
 ## Feature Overview
 
-This API returns specific in-game content (levels, bosses, characters, game modes) that are experiencing engagement spikes. This helps developers understand which content resonates with players and informs future development priorities.
+This API returns specific in-game content (levels, bosses, characters, game modes) that are experiencing engagement
+spikes. This helps developers understand which content resonates with players and informs future development priorities.
 
 ## Why API is Needed
 
@@ -21,11 +22,11 @@ This API returns specific in-game content (levels, bosses, characters, game mode
 
 ### Query Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `limit` | integer | No | Number of content items to return (default: 5, max: 50) |
-| `content_type` | string | No | Filter: "boss", "level", "character", "mode", "all" (default: "all") |
-| `period` | string | No | "7d", "30d" (default: "30d") |
+| Name           | Type    | Required | Description                                                          |
+|----------------|---------|----------|----------------------------------------------------------------------|
+| `limit`        | integer | No       | Number of content items to return (default: 5, max: 50)              |
+| `content_type` | string  | No       | Filter: "boss", "level", "character", "mode", "all" (default: "all") |
+| `period`       | string  | No       | "7d", "30d" (default: "30d")                                         |
 
 ---
 

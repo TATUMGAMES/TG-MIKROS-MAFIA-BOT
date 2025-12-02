@@ -10,14 +10,14 @@ public enum CharacterClass {
      * Role: Bruiser / Tank
      * Focus: Melee combat and endurance.
      */
-    WARRIOR("Warrior", "⚔️", 
+    WARRIOR("Warrior", "⚔️",
             110, // Base HP
             17,  // Base STR
             8,   // Base AGI
             5,   // Base INT
             7    // Base LUCK
     ),
-    
+
     /**
      * Knight - Massive HP and Defense, low agility and luck.
      * Role: Full Tank
@@ -30,7 +30,7 @@ public enum CharacterClass {
             6,   // Base INT
             5    // Base LUCK
     ),
-    
+
     /**
      * Mage - High Intelligence, lower HP.
      * Role: Glass Cannon
@@ -43,7 +43,7 @@ public enum CharacterClass {
             20,  // Base INT
             5    // Base LUCK
     ),
-    
+
     /**
      * Rogue - High Agility and Luck, moderate HP.
      * Role: Crit / Dodge specialist
@@ -56,7 +56,7 @@ public enum CharacterClass {
             7,   // Base INT
             12   // Base LUCK
     ),
-    
+
     /**
      * Necromancer - Hybrid Mage + Rogue.
      * Role: Damage-over-time + crit-magic
@@ -70,7 +70,7 @@ public enum CharacterClass {
             15,  // Base INT
             10   // Base LUCK
     ),
-    
+
     /**
      * Priest - Support class with healing and resurrection.
      * Role: Healer + Resurrector
@@ -84,7 +84,7 @@ public enum CharacterClass {
             15,  // Base INT
             10   // Base LUCK
     );
-    
+
     private final String displayName;
     private final String emoji;
     private final int baseHp;
@@ -92,19 +92,19 @@ public enum CharacterClass {
     private final int baseAgi;
     private final int baseInt;
     private final int baseLuck;
-    
+
     /**
      * Creates a CharacterClass.
-     * 
+     *
      * @param displayName the display name
-     * @param emoji the emoji representing the class
-     * @param baseHp base hit points
-     * @param baseStr base strength
-     * @param baseAgi base agility
-     * @param baseInt base intelligence
-     * @param baseLuck base luck
+     * @param emoji       the emoji representing the class
+     * @param baseHp      base hit points
+     * @param baseStr     base strength
+     * @param baseAgi     base agility
+     * @param baseInt     base intelligence
+     * @param baseLuck    base luck
      */
-    CharacterClass(String displayName, String emoji, int baseHp, int baseStr, 
+    CharacterClass(String displayName, String emoji, int baseHp, int baseStr,
                    int baseAgi, int baseInt, int baseLuck) {
         this.displayName = displayName;
         this.emoji = emoji;
@@ -114,31 +114,31 @@ public enum CharacterClass {
         this.baseInt = baseInt;
         this.baseLuck = baseLuck;
     }
-    
+
     public String getDisplayName() {
         return displayName;
     }
-    
+
     public String getEmoji() {
         return emoji;
     }
-    
+
     public int getBaseHp() {
         return baseHp;
     }
-    
+
     public int getBaseStr() {
         return baseStr;
     }
-    
+
     public int getBaseAgi() {
         return baseAgi;
     }
-    
+
     public int getBaseInt() {
         return baseInt;
     }
-    
+
     public int getBaseLuck() {
         return baseLuck;
     }

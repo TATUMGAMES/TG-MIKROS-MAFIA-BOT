@@ -15,19 +15,19 @@ public enum BossType {
     CONSTRUCT("Construct", "🤖"),
     DRAGON("Dragon", "🐉"),
     DEMON("Demon", "😈");
-    
+
     private final String displayName;
     private final String emoji;
-    
+
     BossType(String displayName, String emoji) {
         this.displayName = displayName;
         this.emoji = emoji;
     }
-    
+
     public String getDisplayName() {
         return displayName;
     }
-    
+
     public String getEmoji() {
         return emoji;
     }

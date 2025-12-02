@@ -13,7 +13,7 @@ import java.util.Random;
  */
 public class ResurrectAction implements CharacterAction {
     private static final Random random = new Random();
-    
+
     // Messages when target is ALIVE (blessing instead)
     private static final String[] BLESSING_MESSAGES = {
             "✨ {priest} meditates and divine energies swirl… but {target} is already alive. A soft blessing settles upon them.",
@@ -27,7 +27,7 @@ public class ResurrectAction implements CharacterAction {
             "⭐ {priest} smiles. 'No fallen soul found,' the spirits sigh. Still, {target} is touched by holiness.",
             "🔮 {priest} cracks his knuckles and looks off to the distance. Light gathers… then dissipates harmlessly. {target} receives a calm, serene blessing."
     };
-    
+
     // Messages when target is DEAD (true resurrection)
     private static final String[] RESURRECTION_MESSAGES = {
             "✨ {priest} calls forth ancient power — and {target} gasps back to life, restored at half strength.",
@@ -41,32 +41,32 @@ public class ResurrectAction implements CharacterAction {
             "⭐ {priest} whispers to himself. The spirits relent. {target} rises, weakened but living again.",
             "🌈 {priest} looks to the skies. A beam of radiant light pierces the dark… {target} lives anew, though recovery awaits."
     };
-    
+
     @Override
     public String getActionName() {
         return "resurrect";
     }
-    
+
     @Override
     public String getActionEmoji() {
         return "✨";
     }
-    
+
     @Override
     public String getDescription() {
         return "Resurrect a dead player (Priest-only, free action)";
     }
-    
+
     @Override
     public RPGActionOutcome execute(RPGCharacter character, RPGConfig config) {
         // This action requires a target, so it should be handled differently
         // For now, return a generic outcome - the command handler will provide the target
         throw new UnsupportedOperationException("ResurrectAction requires a target character. Use ResurrectAction.executeWithTarget() instead.");
     }
-    
+
     /**
      * Executes resurrection with a target character.
-     * 
+     *
      * @param priest the Priest performing the resurrection
      * @param target the target character to resurrect
      * @param config the guild's RPG configuration
@@ -77,18 +77,18 @@ public class ResurrectAction implements CharacterAction {
         if (priest.getCharacterClass() != CharacterClass.PRIEST) {
             throw new IllegalArgumentException("Only Priests can perform resurrection!");
         }
-        
+
         String narrative;
         int xpGained = 0;
         boolean success = false;
-        
+
         if (target.isDead()) {
             // Target is dead - perform resurrection
             target.resurrect(24); // 24 hour recovery
             narrative = RESURRECTION_MESSAGES[random.nextInt(RESURRECTION_MESSAGES.length)]
                     .replace("{priest}", priest.getName())
                     .replace("{target}", target.getName());
-            
+
             // Priest gets +5 XP for successful resurrection
             xpGained = 5;
             success = true;
@@ -97,18 +97,18 @@ public class ResurrectAction implements CharacterAction {
             narrative = BLESSING_MESSAGES[random.nextInt(BLESSING_MESSAGES.length)]
                     .replace("{priest}", priest.getName())
                     .replace("{target}", target.getName());
-            
+
             // Small XP bonus for blessing
             xpGained = 2;
             success = true;
         }
-        
+
         // Add XP to priest (doesn't level up from this small amount typically)
         boolean leveledUp = priest.addXp(xpGained);
-        
+
         // Note: This action does NOT consume a charge (free action)
         // Do NOT call character.recordAction()
-        
+
         return RPGActionOutcome.builder()
                 .narrative(narrative)
                 .xpGained(xpGained)

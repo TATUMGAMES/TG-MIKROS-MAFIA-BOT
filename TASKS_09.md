@@ -1,7 +1,9 @@
 # TASKS_09.md
 
 ## Objective
-Ensure the Discord bot application is complete, professional, and ready for testing and deployment by performing the final quality assurance (QA), cleanup, and architectural sanity check.
+
+Ensure the Discord bot application is complete, professional, and ready for testing and deployment by performing the
+final quality assurance (QA), cleanup, and architectural sanity check.
 
 Always refer to `BEST_CODING_PRACTICES.md`.
 
@@ -73,6 +75,7 @@ Always refer to `BEST_CODING_PRACTICES.md`.
 ## ✅ Exit Criteria
 
 The bot is ready for staging or production when:
+
 - All tests pass
 - All docs are generated
 - Code is clean, modular, maintainable

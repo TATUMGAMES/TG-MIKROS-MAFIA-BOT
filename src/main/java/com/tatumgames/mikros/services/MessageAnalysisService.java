@@ -11,33 +11,33 @@ import java.util.*;
  * Uses keyword-based filtering (expandable to NLP in the future).
  */
 public class MessageAnalysisService {
-    
+
     // Critical severity - immediate ban consideration
     private static final Set<String> CRITICAL_KEYWORDS = Set.of(
             "n-word", "f-slur", "kys", "kill yourself",
             "extreme-hate", "doxx", "swat"
     );
-    
+
     // High severity - kick consideration
     private static final Set<String> HIGH_SEVERITY_KEYWORDS = Set.of(
             "retard", "rape", "nazi", "hitler",
             "gore", "die", "death threat"
     );
-    
+
     // Medium severity - warning consideration
     private static final Set<String> MEDIUM_SEVERITY_KEYWORDS = Set.of(
             "fuck", "shit", "bitch", "ass",
             "damn", "crap", "piss", "idiot",
             "stupid", "dumb", "loser"
     );
-    
+
     // Spam patterns
     private static final int MASS_PING_THRESHOLD = 5;
     private static final int REPEATED_MESSAGE_THRESHOLD = 3;
-    
+
     /**
      * Analyzes a message for toxic content.
-     * 
+     *
      * @param message the message to analyze
      * @return a MessageSuggestion if the message is flagged, null otherwise
      */
@@ -45,9 +45,9 @@ public class MessageAnalysisService {
         if (message == null || message.getAuthor().isBot()) {
             return null;
         }
-        
+
         String content = message.getContentRaw().toLowerCase();
-        
+
         // Check for critical violations
         for (String keyword : CRITICAL_KEYWORDS) {
             if (content.contains(keyword)) {
@@ -55,7 +55,7 @@ public class MessageAnalysisService {
                         "Contains severely inappropriate content: " + keyword);
             }
         }
-        
+
         // Check for high severity violations
         for (String keyword : HIGH_SEVERITY_KEYWORDS) {
             if (content.contains(keyword)) {
@@ -63,7 +63,7 @@ public class MessageAnalysisService {
                         "Contains inappropriate content: " + keyword);
             }
         }
-        
+
         // Check for mass mentions
         int mentionCount = message.getMentions().getUsers().size() +
                 message.getMentions().getRoles().size();
@@ -71,7 +71,7 @@ public class MessageAnalysisService {
             return createSuggestion(message, "@everyone/@role spam", SuggestionSeverity.HIGH,
                     String.format("Mass pinging (%d mentions)", mentionCount));
         }
-        
+
         // Check for medium severity violations
         for (String keyword : MEDIUM_SEVERITY_KEYWORDS) {
             if (content.contains(keyword)) {
@@ -79,20 +79,20 @@ public class MessageAnalysisService {
                         "Contains profanity: " + keyword);
             }
         }
-        
+
         // Check for all caps (yelling)
         if (isAllCaps(content) && content.length() > 20) {
             return createSuggestion(message, "ALL CAPS", SuggestionSeverity.LOW,
                     "Excessive use of capital letters");
         }
-        
+
         return null;
     }
-    
+
     /**
      * Analyzes a list of messages and returns suggestions.
-     * 
-     * @param messages the messages to analyze
+     *
+     * @param messages       the messages to analyze
      * @param maxSuggestions maximum number of suggestions to return
      * @return list of message suggestions
      */
@@ -100,15 +100,15 @@ public class MessageAnalysisService {
         List<MessageSuggestion> suggestions = new ArrayList<>();
         Map<String, Integer> userMessageCount = new HashMap<>();
         Map<String, String> userLastMessage = new HashMap<>();
-        
+
         for (Message message : messages) {
             if (message.getAuthor().isBot()) {
                 continue;
             }
-            
+
             String userId = message.getAuthor().getId();
             String content = message.getContentRaw().toLowerCase();
-            
+
             // Check for spam (repeated messages)
             userMessageCount.merge(userId, 1, Integer::sum);
             String lastMessage = userLastMessage.get(userId);
@@ -121,7 +121,7 @@ public class MessageAnalysisService {
                 }
             }
             userLastMessage.put(userId, content);
-            
+
             // Analyze individual message
             MessageSuggestion suggestion = analyzeMessage(message);
             if (suggestion != null) {
@@ -131,13 +131,13 @@ public class MessageAnalysisService {
                 }
             }
         }
-        
+
         // Sort by severity (critical first)
-        suggestions.sort(Comparator.comparing(MessageSuggestion::getSeverity));
-        
+        suggestions.sort(Comparator.comparing(MessageSuggestion::severity));
+
         return suggestions;
     }
-    
+
     /**
      * Creates a MessageSuggestion from a flagged message.
      */
@@ -153,10 +153,10 @@ public class MessageAnalysisService {
                 message.getChannel().getId(),
                 message.getId()
         );
-        
+
         String content = message.getContentRaw();
         String snippet = content.length() > 100 ? content.substring(0, 97) + "..." : content;
-        
+
         return new MessageSuggestion(
                 message.getId(),
                 message.getAuthor().getId(),
@@ -170,7 +170,7 @@ public class MessageAnalysisService {
                 reason
         );
     }
-    
+
     /**
      * Checks if a message is all caps (excluding punctuation and numbers).
      */

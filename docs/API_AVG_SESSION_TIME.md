@@ -2,7 +2,8 @@
 
 ## Feature Overview
 
-Returns average session length across games or filtered by genre. Indicates typical play session duration and helps optimize game design for target session lengths.
+Returns average session length across games or filtered by genre. Indicates typical play session duration and helps
+optimize game design for target session lengths.
 
 ---
 
@@ -13,9 +14,9 @@ Returns average session length across games or filtered by genre. Indicates typi
 
 ### Query Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `genre` | string | No | Filter by game genre |
+| Name    | Type   | Required | Description          |
+|---------|--------|----------|----------------------|
+| `genre` | string | No       | Filter by game genre |
 
 ---
 
@@ -47,14 +48,14 @@ Returns average session length across games or filtered by genre. Indicates typi
 
 ## Response Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `average_session_minutes` | number | Average session length in minutes |
-| `genre` | string | Genre filter applied (null if all genres) |
-| `sample_size` | integer | Number of sessions analyzed |
-| `median_session_minutes` | number | Median session length |
-| `breakdown_by_genre` | object | Session times per genre |
-| `breakdown_by_platform` | object | Session times per platform |
+| Field                     | Type    | Description                               |
+|---------------------------|---------|-------------------------------------------|
+| `average_session_minutes` | number  | Average session length in minutes         |
+| `genre`                   | string  | Genre filter applied (null if all genres) |
+| `sample_size`             | integer | Number of sessions analyzed               |
+| `median_session_minutes`  | number  | Median session length                     |
+| `breakdown_by_genre`      | object  | Session times per genre                   |
+| `breakdown_by_platform`   | object  | Session times per platform                |
 
 ---
 

@@ -18,54 +18,54 @@ import org.slf4j.LoggerFactory;
 public class PromoMessageListener extends ListenerAdapter {
     private static final Logger logger = LoggerFactory.getLogger(PromoMessageListener.class);
     private final PromoDetectionService promoService;
-    
+
     /**
      * Creates a new PromoMessageListener.
-     * 
+     *
      * @param promoService the promotional detection service
      */
     public PromoMessageListener(PromoDetectionService promoService) {
         this.promoService = promoService;
     }
-    
+
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         // Skip bot messages
         if (event.getAuthor().isBot()) {
             return;
         }
-        
+
         // Skip DMs (only check guild messages)
         if (!event.isFromGuild()) {
             return;
         }
-        
+
         Member member = event.getMember();
         if (member == null) {
             return;
         }
-        
+
         String guildId = event.getGuild().getId();
         String userId = event.getAuthor().getId();
         String messageContent = event.getMessage().getContentRaw();
-        
+
         // Check if detection is enabled for this guild
         if (!promoService.getConfig(guildId).isEnabled()) {
             return;
         }
-        
+
         // Detect trigger patterns
         String detectedPattern = promoService.detectTrigger(messageContent);
         if (detectedPattern == null) {
             return;
         }
-        
+
         // Check cooldown
         if (!promoService.canSendPrompt(userId, guildId)) {
             logger.debug("User {} is on cooldown for promotional prompts", userId);
             return;
         }
-        
+
         // Create trigger
         PromoTrigger trigger = promoService.createTrigger(
                 userId,
@@ -75,56 +75,56 @@ public class PromoMessageListener extends ListenerAdapter {
                 messageContent,
                 detectedPattern
         );
-        
+
         // Send prompt
         sendPromoPrompt(event, trigger);
-        
+
         // Record that prompt was sent
         promoService.recordPromptSent(userId);
         trigger.setPromptSent(true);
-        
+
         logger.info("Sent promotional prompt to user {} in guild {} (pattern: {})",
                 userId, guildId, detectedPattern);
     }
-    
+
     /**
      * Sends a promotional prompt to the user.
-     * 
-     * @param event the message event
+     *
+     * @param event   the message event
      * @param trigger the promotional trigger
      */
     private void sendPromoPrompt(MessageReceivedEvent event, PromoTrigger trigger) {
         User user = event.getAuthor();
         PromoDetectionService promoService = this.promoService;
         String guildId = trigger.getGuildId();
-        
-        String promptMessage = String.format(
-                "🚀 **Looks like you're launching a game!**\n\n" +
-                "Want help promoting with MIKROS? Type `/promo-help` to get a free promo code or speak with a partner.\n\n" +
-                "We can help with:\n" +
-                "• Game launch promotions\n" +
-                "• Marketing campaigns\n" +
-                "• Store page optimization\n" +
-                "• Community building"
-        );
-        
+
+        String promptMessage = """
+                🚀 **Looks like you're launching a game!**
+                
+                Want help promoting with MIKROS? Type `/promo-help` to get a free promo code or speak with a partner.
+                
+                We can help with:
+                • Game launch promotions
+                • Marketing campaigns
+                • Store page optimization
+                • Community building
+                """;
+
         // Check config for where to send
         var config = promoService.getConfig(guildId);
-        
+
         if (config.isSendDm()) {
             // Try DM first
             user.openPrivateChannel().queue(
-                    channel -> {
-                        channel.sendMessage(promptMessage).queue(
-                                success -> logger.debug("Sent promo prompt DM to user {}", user.getId()),
-                                error -> {
-                                    // Fallback to channel if DM fails
-                                    if (config.isSendInChannel()) {
-                                        sendChannelPrompt(event, promptMessage);
-                                    }
+                    channel -> channel.sendMessage(promptMessage).queue(
+                            success -> logger.debug("Sent promo prompt DM to user {}", user.getId()),
+                            error -> {
+                                // Fallback to channel if DM fails
+                                if (config.isSendInChannel()) {
+                                    sendChannelPrompt(event, promptMessage);
                                 }
-                        );
-                    },
+                            }
+                    ),
                     error -> {
                         // Fallback to channel if DM fails
                         if (config.isSendInChannel()) {
@@ -137,16 +137,15 @@ public class PromoMessageListener extends ListenerAdapter {
             sendChannelPrompt(event, promptMessage);
         }
     }
-    
+
     /**
      * Sends a promotional prompt in the channel.
-     * 
-     * @param event the message event
+     *
+     * @param event   the message event
      * @param message the prompt message
      */
     private void sendChannelPrompt(MessageReceivedEvent event, String message) {
-        if (event.getChannel() instanceof TextChannel) {
-            TextChannel channel = (TextChannel) event.getChannel();
+        if (event.getChannel() instanceof TextChannel channel) {
             channel.sendMessage(event.getAuthor().getAsMention() + " " + message).queue(
                     success -> logger.debug("Sent promo prompt in channel {} for user {}",
                             channel.getId(), event.getAuthor().getId()),

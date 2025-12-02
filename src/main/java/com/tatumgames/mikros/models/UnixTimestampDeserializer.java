@@ -16,7 +16,7 @@ import java.time.format.DateTimeFormatter;
  */
 public class UnixTimestampDeserializer extends JsonDeserializer<Instant> {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yy:HH:mm:ss");
-    
+
     @Override
     public Instant deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         String dateString = p.getText();

@@ -1,47 +1,49 @@
 package com.tatumgames.mikros.games.rpg.commands;
 
-import com.tatumgames.mikros.commands.CommandHandler;
+import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.games.rpg.model.CharacterClass;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.Color;
+import java.awt.*;
 
 /**
  * Command handler for /rpg-register.
  * Allows users to create their RPG character.
  */
+@SuppressWarnings("ClassCanBeRecord")
 public class RPGRegisterCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RPGRegisterCommand.class);
     private final CharacterService characterService;
-    
+
     /**
      * Creates a new RPGRegisterCommand handler.
-     * 
+     *
      * @param characterService the character service
      */
     public RPGRegisterCommand(CharacterService characterService) {
         this.characterService = characterService;
     }
-    
+
     @Override
     public CommandData getCommandData() {
         return Commands.slash("rpg-register", "Create your RPG character and begin your adventure in Nilfheim")
                 .addOption(OptionType.STRING, "name", "Your character's name", true)
                 .addOption(OptionType.STRING, "class", "Your character class (WARRIOR, KNIGHT, MAGE, ROGUE, NECROMANCER, PRIEST)", true);
     }
-    
+
     @Override
     public void handle(SlashCommandInteractionEvent event) {
         String userId = event.getUser().getId();
-        
+
         // Check if user already has a character
         if (characterService.hasCharacter(userId)) {
             event.reply("❌ You already have a character! Use `/rpg-profile` to view it.")
@@ -49,11 +51,18 @@ public class RPGRegisterCommand implements CommandHandler {
                     .queue();
             return;
         }
-        
+
         // Get options
-        String name = event.getOption("name").getAsString().trim();
-        String classString = event.getOption("class").getAsString().toUpperCase().trim();
-        
+        OptionMapping nameOption = event.getOption("name");
+        String name = nameOption != null
+                ? nameOption.getAsString().trim()
+                : "";
+
+        OptionMapping classOption = event.getOption("class");
+        String classString = classOption != null
+                ? classOption.getAsString().toUpperCase().trim()
+                : "";
+
         // Validate name
         if (name.length() < 2 || name.length() > 20) {
             event.reply("❌ Character name must be between 2 and 20 characters.")
@@ -61,7 +70,7 @@ public class RPGRegisterCommand implements CommandHandler {
                     .queue();
             return;
         }
-        
+
         // Validate class
         CharacterClass characterClass;
         try {
@@ -72,21 +81,21 @@ public class RPGRegisterCommand implements CommandHandler {
                     .queue();
             return;
         }
-        
+
         // Create character
         try {
             RPGCharacter character = characterService.registerCharacter(userId, name, characterClass);
-            
+
             // Build welcome embed
             EmbedBuilder embed = new EmbedBuilder();
             embed.setTitle("⚔️ Character Created!");
             embed.setColor(Color.GREEN);
-            embed.setDescription(String.format(
-                    "Your soul awakens in **Nilfheim** — a realm wrapped in cold twilight, plagued by rising horrors.\n\n" +
-                    "Heroes are few. Legends are fewer. Yet fate stirs… and your journey begins, **%s**.",
-                    name
-            ));
-            
+            embed.setDescription(String.format("""
+                    Your soul awakens in **Nilfheim** — a realm wrapped in cold twilight, plagued by rising horrors.
+                    
+                    Heroes are few. Legends are fewer. Yet fate stirs… and your journey begins, **%s**.
+                    """, name));
+
             embed.addField(
                     "Class",
                     String.format("%s **%s**",
@@ -94,13 +103,13 @@ public class RPGRegisterCommand implements CommandHandler {
                             characterClass.getDisplayName()),
                     true
             );
-            
+
             embed.addField(
                     "Level",
                     String.valueOf(character.getLevel()),
                     true
             );
-            
+
             embed.addField(
                     "XP",
                     String.format("%d / %d",
@@ -108,15 +117,16 @@ public class RPGRegisterCommand implements CommandHandler {
                             character.getXpToNextLevel()),
                     true
             );
-            
+
             embed.addField(
                     "Stats",
-                    String.format(
-                            "❤️ HP: %d/%d\n" +
-                            "⚔️ STR: %d\n" +
-                            "🏃 AGI: %d\n" +
-                            "🧠 INT: %d\n" +
-                            "🍀 LUCK: %d",
+                    String.format("""
+                                    ❤️ HP: %d/%d
+                                    ⚔️ STR: %d
+                                    🏃 AGI: %d
+                                    🧠 INT: %d
+                                    🍀 LUCK: %d
+                                    """,
                             character.getStats().getCurrentHp(),
                             character.getStats().getMaxHp(),
                             character.getStats().getStrength(),
@@ -126,30 +136,33 @@ public class RPGRegisterCommand implements CommandHandler {
                     ),
                     false
             );
-            
+
             embed.addField(
                     "🎮 Getting Started",
-                    "• Use `/rpg-action` to explore, train, or battle\n" +
-                    "• Use `/rpg-profile` to view your stats\n" +
-                    "• Use `/rpg-leaderboard` to see top players\n\n" +
-                    "Good luck on your journey!",
+                    """
+                            • Use `/rpg-action` to explore, train, or battle
+                            • Use `/rpg-profile` to view your stats
+                            • Use `/rpg-leaderboard` to see top players
+                            
+                            Good luck on your journey!
+                            """,
                     false
             );
-            
+
             embed.setTimestamp(java.time.Instant.now());
-            
+
             event.replyEmbeds(embed.build()).queue();
-            
+
             logger.info("User {} registered character: {} ({})",
                     userId, name, characterClass.getDisplayName());
-            
+
         } catch (IllegalStateException e) {
             event.reply("❌ Error creating character: " + e.getMessage())
                     .setEphemeral(true)
                     .queue();
         }
     }
-    
+
     @Override
     public String getCommandName() {
         return "rpg-register";

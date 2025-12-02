@@ -1,7 +1,9 @@
 # TASKS_01.md
 
 ## Objective
-Set up the Discord bot project in Java using the JDA (Java Discord API) library and begin implementation of the first modular feature: Admin Tools.
+
+Set up the Discord bot project in Java using the JDA (Java Discord API) library and begin implementation of the first
+modular feature: Admin Tools.
 
 > Follow all best practices outlined in `BEST_CODING_PRACTICES.md`.
 
@@ -23,12 +25,15 @@ Set up the Discord bot project in Java using the JDA (Java Discord API) library 
 > We will add traditional moderation commands **but with enhanced features**.
 
 ### Create the following slash commands:
-- `/warn <@user> <reason>` – Warns a user and logs the warning in a persistent store (in-memory for now, will expand to DB later)
+
+- `/warn <@user> <reason>` – Warns a user and logs the warning in a persistent store (in-memory for now, will expand to
+  DB later)
 - `/kick <@user> <reason>` – Kicks user, logs action
 - `/ban <@user> <reason>` – Bans user, logs action
 - `/history <@user>` – Lists previous moderation actions for the user (warns, kicks, bans, reasons, and timestamps)
 
 ### Feature Extension Ideas:
+
 - Add TODO comments to:
     - Call the Tatum Games Reputation Score API (not connected yet)
     - Track Reputation score logic locally (as a mock or stub)
@@ -37,6 +42,7 @@ Set up the Discord bot project in Java using the JDA (Java Discord API) library 
 ---
 
 ## Reminders
+
 - All code must follow `BEST_CODING_PRACTICES.md`
 - Add Javadoc-style comments
 - Use clean architecture: services, commands, models
