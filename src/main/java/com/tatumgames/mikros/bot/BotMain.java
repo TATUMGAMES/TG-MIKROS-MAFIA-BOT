@@ -88,7 +88,7 @@ public class BotMain extends ListenerAdapter {
         this.wordUnscrambleResetScheduler = new WordUnscrambleResetScheduler(wordUnscrambleService);
         this.characterService = new CharacterService();
         this.actionService = new ActionService();
-        this.bossService = new BossService();
+        this.bossService = new BossService(characterService);
         this.bossScheduler = new BossScheduler(bossService, characterService);
         this.promoService = new PromoDetectionService();
         this.promoListener = new PromoMessageListener(promoService);
@@ -180,6 +180,7 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new RPGLeaderboardCommand(characterService));
         registerHandler(new RPGConfigCommand(characterService));
         registerHandler(new RPGResetCommand(characterService, bossService));
+        registerHandler(new RPGStatsCommand(characterService));
 
         // Promo commands
         registerHandler(new SetupPromotionsCommand(promoService));

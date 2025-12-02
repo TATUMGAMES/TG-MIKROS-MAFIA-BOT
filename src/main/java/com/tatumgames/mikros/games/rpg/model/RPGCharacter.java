@@ -33,6 +33,11 @@ public class RPGCharacter {
     private boolean isRecovering;
     private Instant recoverUntil;
 
+    // Kill counter system
+    private int enemiesKilled = 0;
+    private int bossesKilled = 0;
+    private int superBossesKilled = 0;
+
     /**
      * Creates a new RPG character.
      *
@@ -59,6 +64,11 @@ public class RPGCharacter {
         this.isDead = false;
         this.isRecovering = false;
         this.recoverUntil = null;
+
+        // Initialize kill counters
+        this.enemiesKilled = 0;
+        this.bossesKilled = 0;
+        this.superBossesKilled = 0;
     }
 
     /**
@@ -304,5 +314,55 @@ public class RPGCharacter {
 
     public void setRecoverUntil(Instant recoverUntil) {
         this.recoverUntil = recoverUntil;
+    }
+
+    // Kill counter system getters
+
+    /**
+     * Gets the number of regular enemies killed.
+     *
+     * @return the number of enemies killed
+     */
+    public int getEnemiesKilled() {
+        return enemiesKilled;
+    }
+
+    /**
+     * Gets the number of bosses killed.
+     *
+     * @return the number of bosses killed
+     */
+    public int getBossesKilled() {
+        return bossesKilled;
+    }
+
+    /**
+     * Gets the number of super bosses killed.
+     *
+     * @return the number of super bosses killed
+     */
+    public int getSuperBossesKilled() {
+        return superBossesKilled;
+    }
+
+    /**
+     * Increments the enemies killed counter.
+     */
+    public void incrementEnemiesKilled() {
+        this.enemiesKilled++;
+    }
+
+    /**
+     * Increments the bosses killed counter.
+     */
+    public void incrementBossesKilled() {
+        this.bossesKilled++;
+    }
+
+    /**
+     * Increments the super bosses killed counter.
+     */
+    public void incrementSuperBossesKilled() {
+        this.superBossesKilled++;
     }
 }

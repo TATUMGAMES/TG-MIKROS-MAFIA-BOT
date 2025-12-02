@@ -82,6 +82,9 @@ public class BattleAction implements CharacterAction {
             xpGained = (int) ((50 + (enemyLevel * 10)) * config.getXpMultiplier());
             damageTaken = Math.max(5, enemyLevel * 3);
 
+            // Increment kill counter
+            character.incrementEnemiesKilled();
+
             narrative = String.format(
                     "You encountered a **%s** (Level %d) and emerged victorious! " +
                             "Your combat prowess proved superior.",

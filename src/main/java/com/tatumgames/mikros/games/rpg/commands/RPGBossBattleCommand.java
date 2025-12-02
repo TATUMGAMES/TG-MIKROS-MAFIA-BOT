@@ -179,6 +179,17 @@ public class RPGBossBattleCommand implements CommandHandler {
             embed.addField("🎉 Victory!",
                     "The shadows spread across Nilfheim… but this boss has fallen! A heroic roar echoes through the realm as hope flickers brighter.",
                     false);
+
+            // Add concise kill count
+            if (boss != null) {
+                embed.addField("🏆 Bosses Defeated",
+                        String.format("%d", character.getBossesKilled()),
+                        true);
+            } else {
+                embed.addField("👹 Super Bosses Defeated",
+                        String.format("%d", character.getSuperBossesKilled()),
+                        true);
+            }
         } else {
             // Time remaining
             Instant expiresAt = boss != null ? boss.getExpiresAt() : superBoss.getExpiresAt();

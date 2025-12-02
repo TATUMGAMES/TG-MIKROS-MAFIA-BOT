@@ -194,6 +194,11 @@ public class RPGActionCommand implements CommandHandler {
                 results.append(String.format("\n💚 **+%d HP Restored**", outcome.hpRestored()));
             }
 
+            // Display concise kill count for battle victories
+            if (actionType.equals("battle") && outcome.success()) {
+                results.append(String.format("\n💀 Enemies Defeated: %d", character.getEnemiesKilled()));
+            }
+
             if (character.isDead()) {
                 results.append("\n\n💀 **YOU HAVE DIED!** A Priest can resurrect you.");
             }

@@ -22,12 +22,17 @@ public class BossService {
     // Damage tracking: guildId -> Map<userId, totalDamage>
     private final Map<String, Map<String, Integer>> damageTracking;
 
+    private final CharacterService characterService;
+
     /**
      * Creates a new BossService.
+     *
+     * @param characterService the character service for tracking kills
      */
-    public BossService() {
+    public BossService(CharacterService characterService) {
         this.serverStates = new ConcurrentHashMap<>();
         this.damageTracking = new ConcurrentHashMap<>();
+        this.characterService = characterService;
         logger.info("BossService initialized");
     }
 
@@ -196,6 +201,21 @@ public class BossService {
         ServerBossState state = getState(guildId);
         if (state == null) {
             return;
+        }
+
+        // Credit kills to all participants who dealt damage
+        Map<String, Integer> damage = damageTracking.get(guildId);
+        if (damage != null) {
+            for (String userId : damage.keySet()) {
+                RPGCharacter character = characterService.getCharacter(userId);
+                if (character != null) {
+                    if (isNormalBoss) {
+                        character.incrementBossesKilled();
+                    } else {
+                        character.incrementSuperBossesKilled();
+                    }
+                }
+            }
         }
 
         if (isNormalBoss) {
