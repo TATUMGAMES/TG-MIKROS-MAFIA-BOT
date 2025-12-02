@@ -250,5 +250,3 @@ public class GameConfigCommand implements CommandHandler {
         return "admin-game-config";
     }
 }
-
-

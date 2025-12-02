@@ -125,7 +125,3 @@ public class WordUnscrambleProgression {
         return level >= 20;
     }
 }
-
-
-
-

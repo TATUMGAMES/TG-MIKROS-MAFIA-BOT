@@ -95,4 +95,3 @@ public class RPGConfig {
         this.xpMultiplier = Math.max(0.1, xpMultiplier);
     }
 }
-

@@ -82,7 +82,7 @@ public class CleanupCommand implements CommandHandler {
 
         // Delete messages
         int daysToDelete = days == -1 ? Integer.MAX_VALUE : days;
-        messageDeletionService.deleteAllUserMessages(event.getGuild(), targetUser, daysToDelete)
+        messageDeletionService.deleteAllUserMessages(guild, targetUser, daysToDelete)
                 .thenAccept(count -> {
                     String timeRange = days == -1
                             ? "All messages"
@@ -102,7 +102,7 @@ public class CleanupCommand implements CommandHandler {
                     )).queue();
 
                     logger.info("Cleaned up {} messages from user {} in guild {}",
-                            count, targetUser.getId(), event.getGuild().getId());
+                            count, targetUser.getId(), guild.getId());
                 })
                 .exceptionally(error -> {
                     logger.error("Error cleaning up messages from user {}: {}", targetUser.getId(), error.getMessage(), error);

@@ -116,7 +116,3 @@ public class ScrambleGuessCommand implements CommandHandler {
         return "scramble-guess";
     }
 }
-
-
-
-

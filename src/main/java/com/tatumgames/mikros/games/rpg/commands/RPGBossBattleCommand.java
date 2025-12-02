@@ -60,7 +60,7 @@ public class RPGBossBattleCommand implements CommandHandler {
         }
 
         String userId = event.getUser().getId();
-        String guildId = event.getGuild().getId();
+        String guildId = guild.getId();
 
         // Get guild config
         RPGConfig config = characterService.getConfig(guildId);
@@ -307,4 +307,3 @@ public class RPGBossBattleCommand implements CommandHandler {
         return "rpg-boss-battle";
     }
 }
-

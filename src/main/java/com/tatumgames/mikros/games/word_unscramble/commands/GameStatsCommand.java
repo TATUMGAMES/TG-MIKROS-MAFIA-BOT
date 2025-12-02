@@ -178,5 +178,3 @@ public class GameStatsCommand implements CommandHandler {
         return "game-stats";
     }
 }
-
-

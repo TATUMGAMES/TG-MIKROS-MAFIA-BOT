@@ -67,7 +67,7 @@ public class BanAndRemoveCommand implements CommandHandler {
         // Get command options
         User targetUser = event.getOption("user", OptionMapping::getAsUser);
         String reason = event.getOption("reason", OptionMapping::getAsString);
-        Member targetMember = event.getGuild().getMember(targetUser);
+        Member targetMember = guild.getMember(targetUser);
 
         if (AdminUtils.isInvalidTargetUser(member, targetUser, event)) {
             return; // stop executing the command
@@ -97,7 +97,7 @@ public class BanAndRemoveCommand implements CommandHandler {
                 return;
             }
 
-            if (!event.getGuild().getSelfMember().canInteract(targetMember)) {
+            if (!guild.getSelfMember().canInteract(targetMember)) {
                 event.reply("❌ I cannot ban this user due to role hierarchy.")
                         .setEphemeral(true)
                         .queue();
@@ -114,7 +114,7 @@ public class BanAndRemoveCommand implements CommandHandler {
                 ActionType.BAN,
                 reason,
                 Instant.now(),
-                event.getGuild().getId()
+                guild.getId()
         );
         moderationLogService.logAction(action);
 
@@ -123,14 +123,14 @@ public class BanAndRemoveCommand implements CommandHandler {
 
         // Ban the user
         int daysToBan = Math.max(deleteDays, 0);
-        event.getGuild().ban(targetUser, daysToBan, java.util.concurrent.TimeUnit.DAYS)
+        guild.ban(targetUser, daysToBan, java.util.concurrent.TimeUnit.DAYS)
                 .reason(reason)
                 .queue(
                         success -> {
                             // Determine how many days of messages to delete
                             int daysToDelete = (deleteDays == -1) ? Integer.MAX_VALUE : deleteDays;
 
-                            messageDeletionService.deleteAllUserMessages(event.getGuild(), targetUser, daysToDelete)
+                            messageDeletionService.deleteAllUserMessages(guild, targetUser, daysToDelete)
                                     .thenAccept(count -> {
                                         String deleteInfo = (deleteDays == -1)
                                                 ? "All messages deleted"
@@ -152,7 +152,7 @@ public class BanAndRemoveCommand implements CommandHandler {
                                         )).queue();
 
                                         logger.info("Banned user {} and deleted {} messages in guild {}",
-                                                targetUser.getId(), count, event.getGuild().getId());
+                                                targetUser.getId(), count, guild.getId());
                                     })
                                     .exceptionally(error -> {
                                         logger.error("Error deleting messages from user {}: {}", targetUser.getId(), error.getMessage(), error);

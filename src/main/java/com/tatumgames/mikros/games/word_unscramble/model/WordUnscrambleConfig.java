@@ -95,7 +95,3 @@ public class WordUnscrambleConfig {
         this.activeGameType = activeGameType;
     }
 }
-
-
-
-

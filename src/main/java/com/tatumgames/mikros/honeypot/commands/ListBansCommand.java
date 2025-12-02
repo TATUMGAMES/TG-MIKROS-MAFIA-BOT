@@ -58,7 +58,7 @@ public class ListBansCommand implements CommandHandler {
         }
 
         // Get guild id
-        String guildId = event.getGuild().getId();
+        String guildId = guild.getId();
 
         // Get all bans from moderation log
         List<ModerationAction> allActions = moderationLogService.getAllActions(guildId);

@@ -89,7 +89,7 @@ public class GameSetupCommand implements CommandHandler {
         }
 
         // Setup games with all types enabled by default
-        String guildId = event.getGuild().getId();
+        String guildId = guild.getId();
         Set<WordUnscrambleType> allGames = new HashSet<>(Set.of(WordUnscrambleType.values()));
         LocalTime resetTime = LocalTime.of(resetHour, 0);
 
@@ -132,7 +132,3 @@ public class GameSetupCommand implements CommandHandler {
         return "admin-game-setup";
     }
 }
-
-
-
-

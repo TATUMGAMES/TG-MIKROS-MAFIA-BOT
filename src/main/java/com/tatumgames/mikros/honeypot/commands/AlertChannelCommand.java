@@ -52,7 +52,7 @@ public class AlertChannelCommand implements CommandHandler {
             return;
         }
 
-        var config = honeypotService.getConfig(event.getGuild().getId());
+        var config = honeypotService.getConfig(guild.getId());
 
         if (event.getOption("channel") == null) {
             // Clear alert channel
@@ -60,7 +60,7 @@ public class AlertChannelCommand implements CommandHandler {
             event.reply("✅ Alert channel cleared. Honeypot triggers will no longer send alerts.")
                     .setEphemeral(true)
                     .queue();
-            logger.info("Alert channel cleared for guild {}", event.getGuild().getId());
+            logger.info("Alert channel cleared for guild {}", guild.getId());
             return;
         }
 
@@ -69,7 +69,7 @@ public class AlertChannelCommand implements CommandHandler {
         if (channel == null) return;
 
         // Check bot permissions
-        if (!event.getGuild().getSelfMember().hasPermission(channel, Permission.MESSAGE_SEND, Permission.MESSAGE_EMBED_LINKS)) {
+        if (!guild.getSelfMember().hasPermission(channel, Permission.MESSAGE_SEND, Permission.MESSAGE_EMBED_LINKS)) {
             event.reply("❌ I don't have permission to send messages in that channel.")
                     .setEphemeral(true)
                     .queue();
@@ -85,7 +85,7 @@ public class AlertChannelCommand implements CommandHandler {
                 channel.getAsMention()
         )).setEphemeral(true).queue();
 
-        logger.info("Alert channel set to {} for guild {}", channel.getName(), event.getGuild().getId());
+        logger.info("Alert channel set to {} for guild {}", channel.getName(), guild.getId());
     }
 
     @Override

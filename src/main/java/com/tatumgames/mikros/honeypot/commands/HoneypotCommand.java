@@ -4,6 +4,7 @@ import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.honeypot.service.HoneypotService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -100,7 +101,8 @@ public class HoneypotCommand implements CommandHandler {
         }
         event.deferReply().queue();
 
-        TextChannel channel = honeypotService.enableHoneypot(event.getGuild(), channelName);
+        Guild guild = event.getGuild();
+        TextChannel channel = honeypotService.enableHoneypot(guild, channelName);
 
         if (channel != null) {
             event.getHook().sendMessage(String.format("""
@@ -110,7 +112,7 @@ public class HoneypotCommand implements CommandHandler {
                             """,
                     channel.getAsMention()
             )).queue();
-            logger.info("Honeypot enabled for guild {} with channel {}", event.getGuild().getId(), channelName);
+            logger.info("Honeypot enabled for guild {} with channel {}", guild.getId(), channelName);
         } else {
             event.getHook().sendMessage("❌ Failed to create honeypot channel. Check bot permissions.")
                     .setEphemeral(true)
@@ -128,14 +130,15 @@ public class HoneypotCommand implements CommandHandler {
                 .map(OptionMapping::getAsBoolean)
                 .orElse(false);
 
-        honeypotService.disableHoneypot(event.getGuild(), deleteChannel);
+        Guild guild = event.getGuild();
+        honeypotService.disableHoneypot(guild, deleteChannel);
 
         String message = deleteChannel
                 ? "✅ **Honeypot Mode Disabled**\nHoneypot channel has been deleted."
                 : "✅ **Honeypot Mode Disabled**\nHoneypot channel remains but is inactive.";
 
         event.reply(message).setEphemeral(true).queue();
-        logger.info("Honeypot disabled for guild {} (delete channel: {})", event.getGuild().getId(), deleteChannel);
+        logger.info("Honeypot disabled for guild {} (delete channel: {})", guild.getId(), deleteChannel);
     }
 
     private void handleConfig(SlashCommandInteractionEvent event) {
@@ -144,8 +147,8 @@ public class HoneypotCommand implements CommandHandler {
             return;
         }
 
-        var guild = event.getGuild();
-        var config = honeypotService.getConfig(event.getGuild().getId());
+        Guild guild = event.getGuild();
+        var config = honeypotService.getConfig(guild.getId());
 
         // If no setting provided, show current config
         if (event.getOption("setting") == null) {
@@ -237,4 +240,3 @@ public class HoneypotCommand implements CommandHandler {
         return "honeypot";
     }
 }
-

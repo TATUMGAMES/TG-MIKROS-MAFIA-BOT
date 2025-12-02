@@ -82,7 +82,7 @@ public class TopContributorsCommand implements CommandHandler {
         // Build leaderboard embed
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("🏆 Top Contributors Leaderboard");
-        embed.setDescription(String.format("Most active users in **%s**", event.getGuild().getName()));
+        embed.setDescription(String.format("Most active users in **%s**", guild.getName()));
         embed.setColor(new Color(255, 215, 0)); // Gold color
 
         // Add leaderboard entries

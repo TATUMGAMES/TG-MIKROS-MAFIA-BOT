@@ -306,4 +306,3 @@ public class RPGCharacter {
         this.recoverUntil = recoverUntil;
     }
 }
-
