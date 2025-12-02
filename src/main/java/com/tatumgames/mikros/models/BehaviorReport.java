@@ -7,27 +7,19 @@ import java.util.Objects;
  * Represents a behavior report for reputation score tracking.
  * Used when reporting positive or negative user behavior.
  */
-public class BehaviorReport {
-    private final String targetUserId;
-    private final String targetUsername;
-    private final String reporterId;
-    private final String reporterUsername;
-    private final BehaviorCategory behaviorCategory;
-    private final String notes;
-    private final Instant timestamp;
-    private final String guildId;
-    
+public record BehaviorReport(String targetUserId, String targetUsername, String reporterId, String reporterUsername,
+                             BehaviorCategory behaviorCategory, String notes, Instant timestamp, String guildId) {
     /**
      * Creates a new BehaviorReport.
-     * 
-     * @param targetUserId the ID of the user being reported
-     * @param targetUsername the username of the user being reported
-     * @param reporterId the ID of the user making the report
+     *
+     * @param targetUserId     the ID of the user being reported
+     * @param targetUsername   the username of the user being reported
+     * @param reporterId       the ID of the user making the report
      * @param reporterUsername the username of the reporter
      * @param behaviorCategory the behavior category
-     * @param notes optional additional notes
-     * @param timestamp when the report was created
-     * @param guildId the ID of the guild where the behavior occurred
+     * @param notes            optional additional notes
+     * @param timestamp        when the report was created
+     * @param guildId          the ID of the guild where the behavior occurred
      */
     public BehaviorReport(
             String targetUserId,
@@ -48,79 +40,87 @@ public class BehaviorReport {
         this.timestamp = Objects.requireNonNull(timestamp, "timestamp cannot be null");
         this.guildId = Objects.requireNonNull(guildId, "guildId cannot be null");
     }
-    
+
     /**
      * Gets the target user's ID.
-     * 
+     *
      * @return the target user ID
      */
-    public String getTargetUserId() {
+    @Override
+    public String targetUserId() {
         return targetUserId;
     }
-    
+
     /**
      * Gets the target user's username.
-     * 
+     *
      * @return the target username
      */
-    public String getTargetUsername() {
+    @Override
+    public String targetUsername() {
         return targetUsername;
     }
-    
+
     /**
      * Gets the reporter's ID.
-     * 
+     *
      * @return the reporter ID
      */
-    public String getReporterId() {
+    @Override
+    public String reporterId() {
         return reporterId;
     }
-    
+
     /**
      * Gets the reporter's username.
-     * 
+     *
      * @return the reporter username
      */
-    public String getReporterUsername() {
+    @Override
+    public String reporterUsername() {
         return reporterUsername;
     }
-    
+
     /**
      * Gets the behavior category.
-     * 
+     *
      * @return the behavior category
      */
-    public BehaviorCategory getBehaviorCategory() {
+    @Override
+    public BehaviorCategory behaviorCategory() {
         return behaviorCategory;
     }
-    
+
     /**
      * Gets the optional notes.
-     * 
+     *
      * @return the notes
      */
-    public String getNotes() {
+    @Override
+    public String notes() {
         return notes;
     }
-    
+
     /**
      * Gets the timestamp when the report was created.
-     * 
+     *
      * @return the timestamp
      */
-    public Instant getTimestamp() {
+    @Override
+    public Instant timestamp() {
         return timestamp;
     }
-    
+
     /**
      * Gets the guild ID where the behavior occurred.
-     * 
+     *
      * @return the guild ID
      */
-    public String getGuildId() {
+    @Override
+    public String guildId() {
         return guildId;
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -132,12 +132,12 @@ public class BehaviorReport {
                 Objects.equals(timestamp, that.timestamp) &&
                 Objects.equals(guildId, that.guildId);
     }
-    
+
     @Override
     public int hashCode() {
         return Objects.hash(targetUserId, reporterId, behaviorCategory, timestamp, guildId);
     }
-    
+
     @Override
     public String toString() {
         return String.format(

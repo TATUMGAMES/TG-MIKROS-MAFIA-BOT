@@ -8,10 +8,6 @@ Cursor must create:
 
 docs/GAME_SCRAMBLE.md
 
-docs/GAME_DICEFURY.md
-
-docs/GAME_EMOJIHUNT.md
-
 docs/GAME_SPELLING.md
 
 docs/GAME_RPG.md

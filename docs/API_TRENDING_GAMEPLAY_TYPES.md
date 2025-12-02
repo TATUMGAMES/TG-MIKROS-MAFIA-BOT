@@ -2,7 +2,8 @@
 
 ## Feature Overview
 
-This API tracks trends in gameplay styles (casual, competitive, hyper-casual) to help developers understand shifting player preferences and market dynamics.
+This API tracks trends in gameplay styles (casual, competitive, hyper-casual) to help developers understand shifting
+player preferences and market dynamics.
 
 ## Why API is Needed
 
@@ -20,10 +21,10 @@ This API tracks trends in gameplay styles (casual, competitive, hyper-casual) to
 
 ### Query Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `limit` | integer | No | Number of types to return (default: 3, max: 10) |
-| `period` | string | No | "7d", "30d", "90d" (default: "30d") |
+| Name     | Type    | Required | Description                                     |
+|----------|---------|----------|-------------------------------------------------|
+| `limit`  | integer | No       | Number of types to return (default: 3, max: 10) |
+| `period` | string  | No       | "7d", "30d", "90d" (default: "30d")             |
 
 ---
 

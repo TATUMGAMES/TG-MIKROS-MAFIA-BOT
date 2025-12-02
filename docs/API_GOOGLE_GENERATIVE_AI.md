@@ -1,14 +1,18 @@
 # API: Google Generative AI Integration
 
 ## Overview
-Integrate Google Generative AI (Gemini) for improved message classification and intent detection in promotional lead generation.
+
+Integrate Google Generative AI (Gemini) for improved message classification and intent detection in promotional lead
+generation.
 
 **Status:** 🔴 NOT IMPLEMENTED - Future Enhancement
 
 ---
 
 ## Purpose
+
 Replace/augment regex-based pattern matching with AI-powered message understanding for:
+
 - More accurate launch intent detection
 - Multi-language support
 - Context-aware classification
@@ -20,16 +24,19 @@ Replace/augment regex-based pattern matching with AI-powered message understandi
 ## Google AI API
 
 ### Endpoint
+
 ```
 POST https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent
 ```
 
 ### Authentication
+
 ```
 Authorization: Bearer <GOOGLE_AI_API_KEY>
 ```
 
 Or use API key in URL:
+
 ```
 POST https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=<API_KEY>
 ```
@@ -39,6 +46,7 @@ POST https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generate
 ## Request Format
 
 ### Example: Message Classification
+
 ```json
 {
   "contents": [{
@@ -56,6 +64,7 @@ POST https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generate
 ```
 
 ### Response
+
 ```json
 {
   "candidates": [{
@@ -75,6 +84,7 @@ POST https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generate
 ## Integration Plan
 
 ### 1. Add Dependency
+
 ```gradle
 dependencies {
     implementation 'com.google.cloud:google-cloud-aiplatform:3.30.0'
@@ -151,6 +161,7 @@ private AIClassificationResult fallbackToRegex(String message) {
 ```
 
 ### 3. Classification Result Model
+
 ```java
 public class AIClassificationResult {
     private final boolean hasLaunchIntent;
@@ -168,12 +179,14 @@ public class AIClassificationResult {
 ## Prompt Engineering
 
 ### Best Practices
+
 1. **Be Specific:** Clearly define what you're looking for
 2. **Provide Context:** Include domain knowledge (game dev, launches)
 3. **Request Structure:** Ask for JSON or structured output
 4. **Few-Shot Examples:** Include examples in prompt for better accuracy
 
 ### Optimized Prompt
+
 ```
 You are an expert at detecting promotional intent in Discord messages from game developers.
 
@@ -207,11 +220,13 @@ Respond with JSON only:
 ## Rate Limits & Costs
 
 ### Google AI (Gemini Pro)
+
 - **Free Tier:** 60 requests/minute
 - **Paid Tier:** Higher limits based on plan
 - **Cost:** ~$0.00025 per 1K characters (input + output)
 
 ### Recommendations
+
 1. **Cache Results:** Store classifications for 24h to reduce API calls
 2. **Batch Processing:** Process multiple messages if needed
 3. **Confidence Threshold:** Only use AI for borderline cases; regex for obvious ones
@@ -222,6 +237,7 @@ Respond with JSON only:
 ## Multi-Language Support
 
 ### Language Detection + Translation
+
 ```json
 {
   "contents": [{
@@ -233,6 +249,7 @@ Respond with JSON only:
 ```
 
 ### Supported Languages
+
 - English, Spanish, French, German, Portuguese
 - Japanese, Korean, Chinese
 - 100+ total languages
@@ -242,6 +259,7 @@ Respond with JSON only:
 ## Testing
 
 ### Test Prompts
+
 ```
 1. "We're launching our game on Steam October 15th!"
    Expected: has_launch_intent=true, campaign_type="Game Launch", urgency="high"
@@ -257,6 +275,7 @@ Respond with JSON only:
 ```
 
 ### Accuracy Metrics
+
 - Track false positives/negatives
 - Compare AI vs regex detection rates
 - Adjust confidence thresholds based on results
@@ -266,12 +285,14 @@ Respond with JSON only:
 ## Privacy & Ethics
 
 ### Data Handling
+
 - ✅ Only send message content, not user IDs
 - ✅ No PII (personally identifiable information)
 - ✅ Messages processed in real-time, not stored by Google
 - ✅ Comply with Discord ToS and privacy policies
 
 ### Opt-Out
+
 - Users in servers with disabled promo detection won't have messages analyzed
 - Admin controls via `/setup-promotions`
 
@@ -280,20 +301,21 @@ Respond with JSON only:
 ## Alternative: Self-Hosted Models
 
 For complete control, consider:
+
 1. **Hugging Face Transformers**
-   - BERT, RoBERTa for classification
-   - Self-hosted, no external API calls
-   - Requires GPU/CPU resources
+    - BERT, RoBERTa for classification
+    - Self-hosted, no external API calls
+    - Requires GPU/CPU resources
 
 2. **OpenAI API**
-   - GPT-3.5/4 for classification
-   - Higher accuracy, higher cost
-   - Similar integration to Google AI
+    - GPT-3.5/4 for classification
+    - Higher accuracy, higher cost
+    - Similar integration to Google AI
 
 3. **Local LLMs**
-   - LLaMA, Mistral for on-premise deployment
-   - No API costs
-   - Requires significant infrastructure
+    - LLaMA, Mistral for on-premise deployment
+    - No API costs
+    - Requires significant infrastructure
 
 ---
 
@@ -313,6 +335,7 @@ For complete control, consider:
 ---
 
 ## References
+
 - [Google AI Studio](https://makersuite.google.com/app/apikey)
 - [Gemini API Docs](https://ai.google.dev/docs)
 - [Best Practices](https://ai.google.dev/docs/prompt_best_practices)

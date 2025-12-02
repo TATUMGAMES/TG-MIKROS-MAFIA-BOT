@@ -6,7 +6,7 @@
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-    
+
     <!-- File appender -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/bot.log</file>
@@ -18,17 +18,17 @@
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
-    
+
     <!-- Root logger -->
     <root level="INFO">
-        <appender-ref ref="CONSOLE" />
-        <appender-ref ref="FILE" />
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
     </root>
-    
+
     <!-- Bot-specific logging -->
-    <logger name="com.tatumgames.mikros" level="DEBUG" />
-    
+    <logger name="com.tatumgames.mikros" level="DEBUG"/>
+
     <!-- JDA logging (reduce verbosity) -->
-    <logger name="net.dv8tion.jda" level="INFO" />
+    <logger name="net.dv8tion.jda" level="INFO"/>
 </configuration>
 

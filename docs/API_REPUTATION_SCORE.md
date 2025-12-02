@@ -2,13 +2,17 @@
 
 ## Feature Overview
 
-This API allows the Discord bot to retrieve a user's current **Reputation Score** based on their behavior across multiple Discord servers using the MIKROS bot. The score is affected by warnings, bans, kicks, and community-reported behaviors.
+This API allows the Discord bot to retrieve a user's current **Reputation Score** based on their behavior across
+multiple Discord servers using the MIKROS bot. The score is affected by warnings, bans, kicks, and community-reported
+behaviors.
 
 ## Why API is Needed
 
-- **Cross-Server Tracking**: User behavior shouldn't be isolated to a single server. Bad actors can move between servers, and good community members should be recognized universally.
+- **Cross-Server Tracking**: User behavior shouldn't be isolated to a single server. Bad actors can move between
+  servers, and good community members should be recognized universally.
 - **Centralized Database**: A single source of truth for reputation scores across the MIKROS network.
-- **Historical Context**: Provides moderators with valuable context when dealing with new users who may have a history elsewhere.
+- **Historical Context**: Provides moderators with valuable context when dealing with new users who may have a history
+  elsewhere.
 - **Fair Moderation**: Helps identify repeat offenders while also recognizing positive contributors.
 
 ---
@@ -20,16 +24,16 @@ This API allows the Discord bot to retrieve a user's current **Reputation Score*
 
 ### Path Parameters
 
-| Name | Type | Description |
-|------|------|-------------|
+| Name         | Type   | Description                 |
+|--------------|--------|-----------------------------|
 | `discord_id` | string | Discord user ID (snowflake) |
 
 ### Query Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `server_id` | string | No | If provided, includes server-specific breakdown |
-| `include_history` | boolean | No | Whether to include full history (default: false) |
+| Name              | Type    | Required | Description                                      |
+|-------------------|---------|----------|--------------------------------------------------|
+| `server_id`       | string  | No       | If provided, includes server-specific breakdown  |
+| `include_history` | boolean | No       | Whether to include full history (default: false) |
 
 ---
 
@@ -118,22 +122,22 @@ Content-Type: application/json
 
 ## Response Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `discord_id` | string | User's Discord ID |
-| `username` | string | User's current Discord username |
-| `reputation_score` | integer | Overall reputation (0-200, default 100) |
-| `tier` | string | Reputation tier: "Excellent", "Good Standing", "Caution", "Flagged" |
-| `global_rank` | integer | User's rank among all MIKROS users |
-| `total_actions` | integer | Total behavior reports |
-| `positive_actions` | integer | Count of positive behaviors |
-| `negative_actions` | integer | Count of negative behaviors |
-| `servers_active` | integer | Number of servers user is tracked on |
-| `last_updated` | ISO 8601 string | When the score was last updated |
-| `is_flagged` | boolean | Whether user is flagged for severe violations |
-| `flagged_reason` | string | Reason for flagging (if applicable) |
-| `history` | array | Full history of behavior reports (if requested) |
-| `breakdown_by_server` | array | Per-server reputation breakdown (if requested) |
+| Field                 | Type            | Description                                                         |
+|-----------------------|-----------------|---------------------------------------------------------------------|
+| `discord_id`          | string          | User's Discord ID                                                   |
+| `username`            | string          | User's current Discord username                                     |
+| `reputation_score`    | integer         | Overall reputation (0-200, default 100)                             |
+| `tier`                | string          | Reputation tier: "Excellent", "Good Standing", "Caution", "Flagged" |
+| `global_rank`         | integer         | User's rank among all MIKROS users                                  |
+| `total_actions`       | integer         | Total behavior reports                                              |
+| `positive_actions`    | integer         | Count of positive behaviors                                         |
+| `negative_actions`    | integer         | Count of negative behaviors                                         |
+| `servers_active`      | integer         | Number of servers user is tracked on                                |
+| `last_updated`        | ISO 8601 string | When the score was last updated                                     |
+| `is_flagged`          | boolean         | Whether user is flagged for severe violations                       |
+| `flagged_reason`      | string          | Reason for flagging (if applicable)                                 |
+| `history`             | array           | Full history of behavior reports (if requested)                     |
+| `breakdown_by_server` | array           | Per-server reputation breakdown (if requested)                      |
 
 ---
 
@@ -170,12 +174,14 @@ X-RateLimit-Reset: 1696723200
 ## Scalability and Security Notes
 
 ### Scalability
+
 - API uses caching with 5-minute TTL to reduce database load
 - Batch endpoints available for checking multiple users at once
 - CDN-backed for global low-latency access
 - Horizontal scaling with load balancing
 
 ### Security
+
 - All requests must use HTTPS
 - API keys are tied to specific bot IDs
 - Rate limiting prevents abuse
@@ -184,7 +190,8 @@ X-RateLimit-Reset: 1696723200
 - GDPR-compliant with data deletion endpoints
 
 ### Privacy
-- Users can request their data via `/score` command
+
+- Admins can lookup user data via `/lookup` command
 - Server owners can opt out of global tracking
 - Sensitive notes are only visible to moderators
 - Public API excludes private moderation notes

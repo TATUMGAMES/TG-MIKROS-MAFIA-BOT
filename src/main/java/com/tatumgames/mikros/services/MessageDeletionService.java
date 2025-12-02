@@ -3,8 +3,8 @@ package com.tatumgames.mikros.services;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,28 +21,28 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class MessageDeletionService {
     private static final Logger logger = LoggerFactory.getLogger(MessageDeletionService.class);
-    
+
     // Discord bulk delete limit: 2-100 messages, max 14 days old
     private static final int BULK_DELETE_LIMIT = 100;
     private static final int BULK_DELETE_MAX_DAYS = 14;
-    
+
     /**
      * Deletes all messages from a user across all channels in a guild.
-     * 
+     *
      * @param guild the guild
-     * @param user the user whose messages to delete
-     * @param days the number of days to look back (-1 for all messages)
+     * @param user  the user whose messages to delete
+     * @param days  the number of days to look back (-1 for all messages)
      * @return a CompletableFuture that completes with the total number of messages deleted
      */
     public CompletableFuture<Integer> deleteAllUserMessages(Guild guild, User user, int days) {
         CompletableFuture<Integer> result = new CompletableFuture<>();
         AtomicInteger totalDeleted = new AtomicInteger(0);
         List<CompletableFuture<Void>> channelFutures = new ArrayList<>();
-        
+
         Instant cutoffTime = (days > 0 && days <= BULK_DELETE_MAX_DAYS)
                 ? Instant.now().minus(days, ChronoUnit.DAYS)
                 : null;
-        
+
         // Iterate through all text channels
         for (TextChannel channel : guild.getTextChannels()) {
             CompletableFuture<Void> channelFuture = deleteUserMessagesInChannel(channel, user, cutoffTime)
@@ -52,7 +52,7 @@ public class MessageDeletionService {
                     });
             channelFutures.add(channelFuture);
         }
-        
+
         // Wait for all channels to complete
         CompletableFuture.allOf(channelFutures.toArray(new CompletableFuture[0]))
                 .thenRun(() -> {
@@ -65,15 +65,15 @@ public class MessageDeletionService {
                     result.completeExceptionally(error);
                     return null;
                 });
-        
+
         return result;
     }
-    
+
     /**
      * Deletes messages from a user in a specific channel.
-     * 
-     * @param channel the channel
-     * @param user the user whose messages to delete
+     *
+     * @param channel    the channel
+     * @param user       the user whose messages to delete
      * @param cutoffTime messages older than this will be skipped (null for all)
      * @return a CompletableFuture that completes with the number of messages deleted
      */
@@ -81,7 +81,7 @@ public class MessageDeletionService {
         CompletableFuture<Integer> result = new CompletableFuture<>();
         AtomicInteger deletedCount = new AtomicInteger(0);
         List<Message> messagesToDelete = new ArrayList<>();
-        
+
         // Fetch messages in batches
         channel.getIterableHistory()
                 .forEachAsync(message -> {
@@ -89,12 +89,12 @@ public class MessageDeletionService {
                     if (cutoffTime != null && message.getTimeCreated().toInstant().isBefore(cutoffTime)) {
                         return true; // Continue iteration
                     }
-                    
+
                     // Check if message is from the target user
                     if (message.getAuthor().equals(user)) {
                         messagesToDelete.add(message);
                     }
-                    
+
                     return true; // Continue iteration
                 })
                 .thenRun(() -> {
@@ -112,15 +112,15 @@ public class MessageDeletionService {
                     result.completeExceptionally(error);
                     return null;
                 });
-        
+
         return result;
     }
-    
+
     /**
      * Deletes messages in batches, respecting Discord's bulk delete limits.
-     * 
-     * @param channel the channel
-     * @param messages the messages to delete
+     *
+     * @param channel      the channel
+     * @param messages     the messages to delete
      * @param deletedCount counter for deleted messages
      * @return a CompletableFuture that completes when all batches are processed
      */
@@ -128,12 +128,12 @@ public class MessageDeletionService {
         if (messages.isEmpty()) {
             return CompletableFuture.completedFuture(null);
         }
-        
+
         // Filter messages that are eligible for bulk delete (2-100 messages, max 14 days old)
         Instant bulkDeleteCutoff = Instant.now().minus(BULK_DELETE_MAX_DAYS, ChronoUnit.DAYS);
         List<Message> bulkDeleteMessages = new ArrayList<>();
         List<Message> individualDeleteMessages = new ArrayList<>();
-        
+
         for (Message message : messages) {
             if (message.getTimeCreated().toInstant().isAfter(bulkDeleteCutoff)) {
                 bulkDeleteMessages.add(message);
@@ -141,49 +141,47 @@ public class MessageDeletionService {
                 individualDeleteMessages.add(message);
             }
         }
-        
+
         List<CompletableFuture<Void>> futures = new ArrayList<>();
-        
+
         // Delete in bulk batches (2-100 messages)
         for (int i = 0; i < bulkDeleteMessages.size(); i += BULK_DELETE_LIMIT) {
             int end = Math.min(i + BULK_DELETE_LIMIT, bulkDeleteMessages.size());
             List<Message> batch = bulkDeleteMessages.subList(i, end);
-            
+
             // Bulk delete requires at least 2 messages
             if (batch.size() >= 2) {
-                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                    channel.deleteMessages(batch).queue(
-                            success -> {
-                                deletedCount.addAndGet(batch.size());
-                                logger.debug("Bulk deleted {} messages in channel {}", batch.size(), channel.getName());
-                            },
-                            error -> {
-                                logger.warn("Bulk delete failed, falling back to individual deletion: {}", error.getMessage());
-                                // Fall back to individual deletion
-                                deleteIndividually(channel, batch, deletedCount);
-                            }
-                    );
-                });
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> channel.deleteMessages(batch).queue(
+                        success -> {
+                            deletedCount.addAndGet(batch.size());
+                            logger.debug("Bulk deleted {} messages in channel {}", batch.size(), channel.getName());
+                        },
+                        error -> {
+                            logger.warn("Bulk delete failed, falling back to individual deletion: {}", error.getMessage());
+                            // Fall back to individual deletion
+                            deleteIndividually(channel, batch, deletedCount);
+                        }
+                ));
                 futures.add(future);
             } else {
                 // Too few messages for bulk delete, delete individually
                 individualDeleteMessages.addAll(batch);
             }
         }
-        
+
         // Delete old messages individually
         if (!individualDeleteMessages.isEmpty()) {
             deleteIndividually(channel, individualDeleteMessages, deletedCount);
         }
-        
+
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
     }
-    
+
     /**
      * Deletes messages individually (for messages older than 14 days).
-     * 
-     * @param channel the channel
-     * @param messages the messages to delete
+     *
+     * @param channel      the channel
+     * @param messages     the messages to delete
      * @param deletedCount counter for deleted messages
      */
     private void deleteIndividually(MessageChannel channel, List<Message> messages, AtomicInteger deletedCount) {

@@ -1,6 +1,7 @@
 # API Blueprints for Missing Endpoints
 
-This document provides comprehensive API specifications for all missing endpoints required by the MIKROS Discord Bot. These endpoints need to be implemented by the MIKROS backend to enable full functionality.
+This document provides comprehensive API specifications for all missing endpoints required by the MIKROS Discord Bot.
+These endpoints need to be implemented by the MIKROS backend to enable full functionality.
 
 ---
 
@@ -26,12 +27,13 @@ This document provides comprehensive API specifications for all missing endpoint
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `limit` | integer | No | Maximum number of results (default: 3, max: 10) |
-| `period` | string | No | Time period: "7d", "30d", "90d" (default: "30d") |
+| Parameter | Type    | Required | Description                                      |
+|-----------|---------|----------|--------------------------------------------------|
+| `limit`   | integer | No       | Maximum number of results (default: 3, max: 10)  |
+| `period`  | string  | No       | Time period: "7d", "30d", "90d" (default: "30d") |
 
 **Example Request:**
+
 ```http
 GET /api/gamestats/trending-genres?limit=3&period=30d HTTP/1.1
 Host: api.tatumgames.com
@@ -40,6 +42,7 @@ Content-Type: application/json
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -82,12 +85,13 @@ Content-Type: application/json
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `limit` | integer | No | Maximum number of results (default: 3, max: 10) |
-| `period` | string | No | Time period: "7d", "30d", "90d" (default: "30d") |
+| Parameter | Type    | Required | Description                                      |
+|-----------|---------|----------|--------------------------------------------------|
+| `limit`   | integer | No       | Maximum number of results (default: 3, max: 10)  |
+| `period`  | string  | No       | Time period: "7d", "30d", "90d" (default: "30d") |
 
 **Example Request:**
+
 ```http
 GET /api/gamestats/trending-content-genres?limit=3 HTTP/1.1
 Host: api.tatumgames.com
@@ -95,6 +99,7 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -136,12 +141,13 @@ Authorization: Bearer YOUR_API_KEY
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `limit` | integer | No | Maximum number of results (default: 5, max: 20) |
-| `content_type` | string | No | Filter: "level", "boss", "character", "item", "all" (default: "all") |
+| Parameter      | Type    | Required | Description                                                          |
+|----------------|---------|----------|----------------------------------------------------------------------|
+| `limit`        | integer | No       | Maximum number of results (default: 5, max: 20)                      |
+| `content_type` | string  | No       | Filter: "level", "boss", "character", "item", "all" (default: "all") |
 
 **Example Request:**
+
 ```http
 GET /api/gamestats/trending-content?limit=5&content_type=all HTTP/1.1
 Host: api.tatumgames.com
@@ -149,6 +155,7 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -189,11 +196,12 @@ Authorization: Bearer YOUR_API_KEY
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `limit` | integer | No | Maximum number of results (default: 3, max: 10) |
+| Parameter | Type    | Required | Description                                     |
+|-----------|---------|----------|-------------------------------------------------|
+| `limit`   | integer | No       | Maximum number of results (default: 3, max: 10) |
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -226,11 +234,12 @@ Authorization: Bearer YOUR_API_KEY
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `limit` | integer | No | Maximum number of results (default: 3, max: 10) |
+| Parameter | Type    | Required | Description                                     |
+|-----------|---------|----------|-------------------------------------------------|
+| `limit`   | integer | No       | Maximum number of results (default: 3, max: 10) |
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -262,6 +271,7 @@ Authorization: Bearer YOUR_API_KEY
 **Description:** Returns content genres with most engagement overall.
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -287,11 +297,12 @@ Authorization: Bearer YOUR_API_KEY
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `limit` | integer | No | Maximum number of results (default: 5, max: 20) |
+| Parameter | Type    | Required | Description                                     |
+|-----------|---------|----------|-------------------------------------------------|
+| `limit`   | integer | No       | Maximum number of results (default: 5, max: 20) |
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -319,6 +330,7 @@ Authorization: Bearer YOUR_API_KEY
 **Description:** Returns most popular gameplay types overall.
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -343,6 +355,7 @@ Authorization: Bearer YOUR_API_KEY
 **Description:** Returns total number of apps using MIKROS Analytics.
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -365,6 +378,7 @@ Authorization: Bearer YOUR_API_KEY
 **Description:** Returns total users signed up to MIKROS ecosystem (devs, testers, players).
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -388,6 +402,7 @@ Authorization: Bearer YOUR_API_KEY
 **Description:** Returns unique user profiles tracked across MIKROS-enabled games.
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -411,11 +426,12 @@ Authorization: Bearer YOUR_API_KEY
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `genre` | string | No | Filter by genre (e.g., "Action", "RPG") |
+| Parameter | Type   | Required | Description                             |
+|-----------|--------|----------|-----------------------------------------|
+| `genre`   | string | No       | Filter by genre (e.g., "Action", "RPG") |
 
 **Example Request:**
+
 ```http
 GET /api/gamestats/avg-gameplay-time?genre=Action HTTP/1.1
 Host: api.tatumgames.com
@@ -423,6 +439,7 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -447,11 +464,12 @@ Authorization: Bearer YOUR_API_KEY
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `genre` | string | No | Filter by genre |
+| Parameter | Type   | Required | Description     |
+|-----------|--------|----------|-----------------|
+| `genre`   | string | No       | Filter by genre |
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -478,13 +496,14 @@ Authorization: Bearer YOUR_API_KEY
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `limit` | integer | No | Maximum number of promotions (default: 50) |
-| `since_id` | integer | No | Return only promotions with game_id greater than this |
-| `platform` | string | No | Filter: "steam", "itch", "epic", "all" (default: "all") |
+| Parameter  | Type    | Required | Description                                             |
+|------------|---------|----------|---------------------------------------------------------|
+| `limit`    | integer | No       | Maximum number of promotions (default: 50)              |
+| `since_id` | integer | No       | Return only promotions with game_id greater than this   |
+| `platform` | string  | No       | Filter: "steam", "itch", "epic", "all" (default: "all") |
 
 **Example Request:**
+
 ```http
 GET /api/promotions/active?limit=10 HTTP/1.1
 Host: api.tatumgames.com
@@ -492,6 +511,7 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -524,6 +544,7 @@ Authorization: Bearer YOUR_API_KEY
 **Description:** Marks a game promotion as pushed to prevent duplicate posts.
 
 **Request Body Schema:**
+
 ```json
 {
   "game_id": 1021,
@@ -535,6 +556,7 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 **Example Request:**
+
 ```http
 POST /api/promotions/mark-pushed HTTP/1.1
 Host: api.tatumgames.com
@@ -550,6 +572,7 @@ Content-Type: application/json
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -569,6 +592,7 @@ Content-Type: application/json
 **Description:** Submits a lead when a Discord user requests promotional help.
 
 **Request Body Schema:**
+
 ```json
 {
   "discord_id": "123456789012345678",
@@ -582,6 +606,7 @@ Content-Type: application/json
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -604,18 +629,20 @@ Content-Type: application/json
 **Description:** Syncs community game configuration from Discord server to backend for persistence.
 
 **Request Body Schema:**
+
 ```json
 {
   "server_id": "123456789012345678",
   "game_channel_id": "987654321098765432",
   "reset_time_utc": "00:00",
-  "enabled_games": ["word_unscramble", "dice_battle", "emoji_match"],
+  "enabled_games": ["word_unscramble"],
   "difficulty": "medium",
   "updated_at": "2025-01-27T12:00:00Z"
 }
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -636,12 +663,13 @@ Content-Type: application/json
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `server_id` | string | Yes | Discord server ID |
-| `game_type` | string | No | Filter: "word_unscramble", "dice_battle", "emoji_match" |
+| Parameter   | Type   | Required | Description               |
+|-------------|--------|----------|---------------------------|
+| `server_id` | string | Yes      | Discord server ID         |
+| `game_type` | string | No       | Filter: "word_unscramble" |
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -672,6 +700,7 @@ Content-Type: application/json
 **Description:** Saves or updates an RPG character's state.
 
 **Request Body Schema:**
+
 ```json
 {
   "discord_id": "123456789012345678",
@@ -694,6 +723,7 @@ Content-Type: application/json
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -714,17 +744,18 @@ Content-Type: application/json
 
 **Path Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `discord_id` | string | Yes | Discord user ID |
+| Parameter    | Type   | Required | Description     |
+|--------------|--------|----------|-----------------|
+| `discord_id` | string | Yes      | Discord user ID |
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `server_id` | string | No | Filter by server (optional) |
+| Parameter   | Type   | Required | Description                 |
+|-------------|--------|----------|-----------------------------|
+| `server_id` | string | No       | Filter by server (optional) |
 
 **Example Request:**
+
 ```http
 GET /api/rpg/characters/123456789012345678?server_id=987654321098765432 HTTP/1.1
 Host: api.tatumgames.com
@@ -732,6 +763,7 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -768,13 +800,14 @@ Authorization: Bearer YOUR_API_KEY
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `server_id` | string | No | Filter by server (omit for global) |
-| `limit` | integer | No | Maximum results (default: 10, max: 100) |
-| `sort_by` | string | No | Sort: "level", "xp", "created_at" (default: "level") |
+| Parameter   | Type    | Required | Description                                          |
+|-------------|---------|----------|------------------------------------------------------|
+| `server_id` | string  | No       | Filter by server (omit for global)                   |
+| `limit`     | integer | No       | Maximum results (default: 10, max: 100)              |
+| `sort_by`   | string  | No       | Sort: "level", "xp", "created_at" (default: "level") |
 
 **Example Request:**
+
 ```http
 GET /api/rpg/leaderboard?server_id=987654321098765432&limit=10&sort_by=level HTTP/1.1
 Host: api.tatumgames.com
@@ -782,6 +815,7 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -820,6 +854,7 @@ Authorization: Bearer YOUR_API_KEY
 **Description:** Logs an RPG action for analytics and progression tracking.
 
 **Request Body Schema:**
+
 ```json
 {
   "discord_id": "123456789012345678",
@@ -834,6 +869,7 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -852,9 +888,10 @@ Authorization: Bearer YOUR_API_KEY
 **Method:** `POST`  
 **Route:** `/api/leaderboards/community-games`
 
-**Description:** Saves community game leaderboard state (word unscramble, dice battle, emoji match).
+**Description:** Saves community game leaderboard state (word unscramble).
 
 **Request Body Schema:**
+
 ```json
 {
   "server_id": "123456789012345678",
@@ -875,6 +912,7 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -895,14 +933,15 @@ Authorization: Bearer YOUR_API_KEY
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `server_id` | string | Yes | Discord server ID |
-| `game_type` | string | No | Filter: "word_unscramble", "dice_battle", "emoji_match", "all" |
-| `period` | string | No | Time period: "daily", "weekly", "monthly", "all_time" (default: "all_time") |
-| `limit` | integer | No | Maximum results (default: 10, max: 100) |
+| Parameter   | Type    | Required | Description                                                                 |
+|-------------|---------|----------|-----------------------------------------------------------------------------|
+| `server_id` | string  | Yes      | Discord server ID                                                           |
+| `game_type` | string  | No       | Filter: "word_unscramble", "all"                                            |
+| `period`    | string  | No       | Time period: "daily", "weekly", "monthly", "all_time" (default: "all_time") |
+| `limit`     | integer | No       | Maximum results (default: 10, max: 100)                                     |
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -936,6 +975,7 @@ Authorization: Bearer YOUR_API_KEY
 **Description:** Saves spelling challenge leaderboard state.
 
 **Request Body Schema:**
+
 ```json
 {
   "server_id": "123456789012345678",
@@ -954,6 +994,7 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -974,12 +1015,13 @@ Authorization: Bearer YOUR_API_KEY
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `server_id` | string | Yes | Discord server ID |
-| `limit` | integer | No | Maximum results (default: 10, max: 100) |
+| Parameter   | Type    | Required | Description                             |
+|-------------|---------|----------|-----------------------------------------|
+| `server_id` | string  | Yes      | Discord server ID                       |
+| `limit`     | integer | No       | Maximum results (default: 10, max: 100) |
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -1013,6 +1055,7 @@ Authorization: Bearer YOUR_API_KEY
 **Description:** Syncs scheduler configurations (game resets, monthly reports, promotion checks) to backend.
 
 **Request Body Schema:**
+
 ```json
 {
   "server_id": "123456789012345678",
@@ -1027,6 +1070,7 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -1047,11 +1091,12 @@ Authorization: Bearer YOUR_API_KEY
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `server_id` | string | Yes | Discord server ID |
+| Parameter   | Type   | Required | Description       |
+|-------------|--------|----------|-------------------|
+| `server_id` | string | Yes      | Discord server ID |
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -1092,6 +1137,7 @@ Authorization: Bearer YOUR_API_KEY
 **Description:** Manually triggers a scheduler (for testing/admin purposes).
 
 **Request Body Schema:**
+
 ```json
 {
   "server_id": "123456789012345678",
@@ -1102,6 +1148,7 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 **Example Response Schema:**
+
 ```json
 {
   "success": true,
@@ -1122,6 +1169,7 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 **API Key Format:**
+
 - Generated by MIKROS backend
 - Stored securely in bot configuration
 - Rotated periodically for security
@@ -1131,6 +1179,7 @@ Authorization: Bearer YOUR_API_KEY
 All endpoints return consistent error responses:
 
 **Example Error Response:**
+
 ```json
 {
   "success": false,
@@ -1144,6 +1193,7 @@ All endpoints return consistent error responses:
 ```
 
 **Common Error Codes:**
+
 - `INVALID_REQUEST` - Missing or invalid parameters
 - `UNAUTHORIZED` - Invalid or missing API key
 - `NOT_FOUND` - Resource not found
@@ -1155,9 +1205,9 @@ All endpoints return consistent error responses:
 - **Default:** 100 requests per minute per API key
 - **Burst:** Up to 200 requests in a 10-second window
 - **Headers:** Rate limit info returned in response headers:
-  - `X-RateLimit-Limit`: Maximum requests per window
-  - `X-RateLimit-Remaining`: Remaining requests
-  - `X-RateLimit-Reset`: Time when limit resets
+    - `X-RateLimit-Limit`: Maximum requests per window
+    - `X-RateLimit-Remaining`: Remaining requests
+    - `X-RateLimit-Reset`: Time when limit resets
 
 ## Base URL
 

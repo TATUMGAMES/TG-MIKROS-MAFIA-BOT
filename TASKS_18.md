@@ -1,9 +1,11 @@
 API BLUEPRINTS FOR ALL MISSING ENDPOINTS
 
 Cursor must produce:
+
 * docs/API_MISSING_ENDPOINTS.md
 
 Document API requirements for:
+
 * MIKROS analytics
 * MIKROS marketing/promotions
 * game ecosystems
@@ -12,6 +14,7 @@ Document API requirements for:
 * scheduling sync
 
 For each API:
+
 * method
 * route
 * example request schema

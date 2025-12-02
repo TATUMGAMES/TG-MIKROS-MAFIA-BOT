@@ -1,7 +1,9 @@
 # TASKS_11.md
 
 ## Objective
-Create a comprehensive `README.md` for the MIKROS Discord Bot project that clearly explains the project purpose, architecture, features, setup, usage, and documentation references.
+
+Create a comprehensive `README.md` for the MIKROS Discord Bot project that clearly explains the project purpose,
+architecture, features, setup, usage, and documentation references.
 
 ---
 
@@ -75,6 +77,6 @@ Create a comprehensive `README.md` for the MIKROS Discord Bot project that clear
 
 ## When Done
 
-* `README.md` created at project root  
-* All relevant info covered and cross-linked  
+* `README.md` created at project root
+* All relevant info covered and cross-linked
 * Professional, clear, and formatted correctly  

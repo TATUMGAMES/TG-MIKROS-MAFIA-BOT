@@ -2,7 +2,8 @@
 
 ## Feature Overview
 
-This API provides real-time data on the fastest-growing game genres based on 30-day player engagement trends. It helps developers, marketers, and community managers identify emerging opportunities in the gaming industry.
+This API provides real-time data on the fastest-growing game genres based on 30-day player engagement trends. It helps
+developers, marketers, and community managers identify emerging opportunities in the gaming industry.
 
 ## Why API is Needed
 
@@ -21,11 +22,11 @@ This API provides real-time data on the fastest-growing game genres based on 30-
 
 ### Query Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `limit` | integer | No | Number of genres to return (default: 3, max: 20) |
-| `period` | string | No | Time period: "7d", "30d", "90d" (default: "30d") |
-| `min_player_count` | integer | No | Minimum player threshold (default: 1000) |
+| Name               | Type    | Required | Description                                      |
+|--------------------|---------|----------|--------------------------------------------------|
+| `limit`            | integer | No       | Number of genres to return (default: 3, max: 20) |
+| `period`           | string  | No       | Time period: "7d", "30d", "90d" (default: "30d") |
+| `min_player_count` | integer | No       | Minimum player threshold (default: 1000)         |
 
 ### Headers
 
@@ -95,19 +96,19 @@ Authorization: Bearer YOUR_API_KEY
 
 ## Response Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `period` | string | Time period for the analysis |
-| `timestamp` | ISO 8601 string | When the data was generated |
-| `genres` | array | List of trending genres |
-| `genres[].rank` | integer | Ranking position (1 = top) |
-| `genres[].genre_name` | string | Name of the genre |
-| `genres[].growth_percentage` | number | Growth rate percentage |
-| `genres[].current_player_count` | integer | Current active players |
-| `genres[].previous_player_count` | integer | Players at start of period |
-| `genres[].trend` | string | "accelerating", "steady", "decelerating" |
-| `genres[].notable_games` | array | Top games in this genre |
-| `metadata` | object | Additional context information |
+| Field                            | Type            | Description                              |
+|----------------------------------|-----------------|------------------------------------------|
+| `period`                         | string          | Time period for the analysis             |
+| `timestamp`                      | ISO 8601 string | When the data was generated              |
+| `genres`                         | array           | List of trending genres                  |
+| `genres[].rank`                  | integer         | Ranking position (1 = top)               |
+| `genres[].genre_name`            | string          | Name of the genre                        |
+| `genres[].growth_percentage`     | number          | Growth rate percentage                   |
+| `genres[].current_player_count`  | integer         | Current active players                   |
+| `genres[].previous_player_count` | integer         | Players at start of period               |
+| `genres[].trend`                 | string          | "accelerating", "steady", "decelerating" |
+| `genres[].notable_games`         | array           | Top games in this genre                  |
+| `metadata`                       | object          | Additional context information           |
 
 ---
 

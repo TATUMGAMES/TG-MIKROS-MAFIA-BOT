@@ -40,10 +40,6 @@ Cursor invents and uses these simple, memorable names:
 
 Word Unscramble → Scramble
 
-Dice Battle → DiceFury
-
-Emoji Match → EmojiHunt
-
 Commands must use dashed prefixes:
 
 Scramble
@@ -53,22 +49,6 @@ Scramble
 /scramble-stats
 
 /scramble-info (Cursor can introduce this as needed)
-
-DiceFury
-
-/dicefury-roll
-
-/dicefury-stats
-
-/dicefury-info
-
-EmojiHunt
-
-/emojihunt-match
-
-/emojihunt-stats
-
-/emojihunt-info
 
 Routing rules:
 

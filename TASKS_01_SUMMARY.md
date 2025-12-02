@@ -5,6 +5,7 @@
 ### Project Setup
 
 #### Dependencies Added (build.gradle.kts)
+
 - ✅ JDA (Java Discord API) 5.0.0-beta.20
 - ✅ SLF4J 2.0.9 + Logback 1.4.14 for logging
 - ✅ Dotenv-java 3.0.0 for environment variable management
@@ -13,6 +14,7 @@
 - ✅ Application plugin configured with main class
 
 #### Configuration Files
+
 - ✅ `.gitignore` created with comprehensive exclusions
 - ✅ `.env` configuration system implemented (with example template documented in README)
 - ✅ `logback.xml` created for logging configuration
@@ -47,50 +49,54 @@ src/main/java/com/tatumgames/mikros/
 #### Slash Commands Implemented
 
 1. **`/warn <@user> <reason>`** ✅
-   - Issues warnings to users
-   - Logs all actions with full context
-   - Permission checks (Moderate Members)
-   - Validation for bots and self-moderation
+    - Issues warnings to users
+    - Logs all actions with full context
+    - Permission checks (Moderate Members)
+    - Validation for bots and self-moderation
 
 2. **`/kick <@user> <reason>`** ✅
-   - Kicks users from the server
-   - Role hierarchy validation
-   - Permission checks (Kick Members)
-   - Comprehensive error handling
+    - Kicks users from the server
+    - Role hierarchy validation
+    - Permission checks (Kick Members)
+    - Comprehensive error handling
 
 3. **`/ban <@user> <reason> [delete_days]`** ✅
-   - Bans users permanently
-   - Optional message deletion (0-7 days)
-   - Permission checks (Ban Members)
-   - Role hierarchy validation
+    - Bans users permanently
+    - Optional message deletion (0-7 days)
+    - Permission checks (Ban Members)
+    - Role hierarchy validation
 
 4. **`/history <@user>`** ✅
-   - Displays complete moderation history
-   - Shows statistics by action type
-   - Displays 5 most recent actions
-   - Beautiful embed formatting
+    - Displays complete moderation history
+    - Shows statistics by action type
+    - Displays 5 most recent actions
+    - Beautiful embed formatting
 
 #### Service Layer
 
 **ModerationLogService Interface** ✅
+
 - Clean interface design
 - Comprehensive Javadoc comments
 - Methods for logging and retrieving history
 
 **InMemoryModerationLogService Implementation** ✅
+
 - Thread-safe using ConcurrentHashMap
 - Efficient storage with composite keys
 - TODO comments for future API integration:
-  - Tatum Games Reputation Score API
-  - Local reputation tracking
+    - Tatum Games Reputation Score API
+    - Local reputation tracking
 
 #### Data Models
 
 **ActionType Enum** ✅
+
 - WARN, KICK, BAN values
 - Javadoc comments for each type
 
 **ModerationAction Class** ✅
+
 - Immutable design with final fields
 - Full validation in constructor
 - Proper equals() and hashCode()
@@ -100,16 +106,18 @@ src/main/java/com/tatumgames/mikros/
 ### Testing
 
 **InMemoryModerationLogServiceTest** ✅
+
 - 14 comprehensive unit tests
 - Tests cover:
-  - Basic CRUD operations
-  - Validation and error handling
-  - Sorting and filtering
-  - Guild/user isolation
-  - Concurrent operations (thread safety)
-  - Edge cases
+    - Basic CRUD operations
+    - Validation and error handling
+    - Sorting and filtering
+    - Guild/user isolation
+    - Concurrent operations (thread safety)
+    - Edge cases
 
 **Test Results:**
+
 ```
 BUILD SUCCESSFUL
 All 14 tests passed
@@ -121,38 +129,39 @@ All 14 tests passed
 #### Best Practices Compliance ✅
 
 1. **Clean Architecture**: Strict separation of concerns
-2. **Naming Conventions**: 
-   - PascalCase for classes (e.g., `ModerationAction`)
-   - camelCase for methods (e.g., `getUserHistory()`)
-   - UPPER_SNAKE_CASE for constants
-   - Package naming: `com.tatumgames.mikros.*`
+2. **Naming Conventions**:
+    - PascalCase for classes (e.g., `ModerationAction`)
+    - camelCase for methods (e.g., `getUserHistory()`)
+    - UPPER_SNAKE_CASE for constants
+    - Package naming: `com.tatumgames.mikros.*`
 
 3. **Documentation**:
-   - All public classes have Javadoc
-   - All public methods have Javadoc with @param and @return
-   - Clear, concise comments
+    - All public classes have Javadoc
+    - All public methods have Javadoc with @param and @return
+    - Clear, concise comments
 
 4. **OOP Principles**:
-   - Encapsulation with private fields
-   - Interface-based design
-   - Composition over inheritance
-   - Single Responsibility Principle
+    - Encapsulation with private fields
+    - Interface-based design
+    - Composition over inheritance
+    - Single Responsibility Principle
 
 5. **Error Handling**:
-   - Proper exception handling
-   - Contextual logging
-   - User-friendly error messages
-   - No swallowed exceptions
+    - Proper exception handling
+    - Contextual logging
+    - User-friendly error messages
+    - No swallowed exceptions
 
 6. **Testing**:
-   - Comprehensive unit tests
-   - JUnit 5 with Mockito
-   - Test class naming: `XyzServiceTest.java`
-   - Tests match source structure
+    - Comprehensive unit tests
+    - JUnit 5 with Mockito
+    - Test class naming: `XyzServiceTest.java`
+    - Tests match source structure
 
 ### Documentation
 
 **API Documentation** ✅
+
 - Created `docs/admin-tools-api.md`
 - Complete command reference
 - Service layer documentation
@@ -164,6 +173,7 @@ All 14 tests passed
 ### Configuration & Deployment
 
 **BotMain Entry Point** ✅
+
 - Clean initialization
 - Proper error handling
 - Command registration
@@ -171,12 +181,14 @@ All 14 tests passed
 - Logging throughout
 
 **ConfigLoader** ✅
+
 - Reads from .env or environment variables
 - Fallback mechanism
 - Required vs optional configuration
 - Validation with clear error messages
 
 **Logging** ✅
+
 - Console output (INFO level)
 - File logging with rotation (`logs/bot.log`)
 - Debug level for bot code
@@ -185,6 +197,7 @@ All 14 tests passed
 ### Git & Version Control
 
 **Repository Setup** ✅
+
 - Comprehensive .gitignore
 - Excludes sensitive data (.env)
 - Excludes build artifacts
@@ -255,7 +268,8 @@ Test Summary:
 
 ## Ready for Next Phase
 
-The foundation is complete and ready for TASKS_02.md. The modular architecture makes it easy to add new features without modifying existing code.
+The foundation is complete and ready for TASKS_02.md. The modular architecture makes it easy to add new features without
+modifying existing code.
 
 ---
 

@@ -6,14 +6,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 /**
  * Service for detecting promotional triggers in messages.
  * Uses regex patterns to identify launch-related phrases.
- * 
+ * <p>
  * TODO: Future Features
  * - Integrate Google Generative AI API for NLP message classification
  * - More sophisticated pattern matching
@@ -23,7 +25,7 @@ import java.util.regex.Pattern;
  */
 public class PromoDetectionService {
     private static final Logger logger = LoggerFactory.getLogger(PromoDetectionService.class);
-    
+
     // Launch-related trigger patterns (case-insensitive)
     private static final Pattern[] TRIGGER_PATTERNS = {
             // Game launch patterns
@@ -38,7 +40,7 @@ public class PromoDetectionService {
             Pattern.compile("(?i)\\b(pre-?order|preorder|pre-?purchase)\\s+(is|starts|begins|now)\\s+(available|open|live)"),
             Pattern.compile("(?i)\\b(trailer|announcement|reveal)\\s+(drops|releases|is|goes)\\s+(live|up|out)")
     };
-    
+
     // Pattern descriptions for logging
     private static final String[] PATTERN_DESCRIPTIONS = {
             "Game launch announcement",
@@ -52,16 +54,16 @@ public class PromoDetectionService {
             "Pre-order availability",
             "Trailer/announcement release"
     };
-    
+
     // Guild configurations: guildId -> PromoConfig
     private final Map<String, PromoConfig> guildConfigs;
-    
+
     // User cooldown tracking: userId -> last prompt timestamp
     private final Map<String, Instant> userCooldowns;
-    
+
     // Recent triggers: userId -> list of recent triggers (for duplicate prevention)
     private final Map<String, List<PromoTrigger>> recentTriggers;
-    
+
     /**
      * Creates a new PromoDetectionService.
      */
@@ -71,10 +73,10 @@ public class PromoDetectionService {
         this.recentTriggers = new ConcurrentHashMap<>();
         logger.info("PromoDetectionService initialized with {} trigger patterns", TRIGGER_PATTERNS.length);
     }
-    
+
     /**
      * Checks if a message contains promotional triggers.
-     * 
+     *
      * @param messageContent the message content
      * @return the matched pattern description, or null if no match
      */
@@ -82,20 +84,20 @@ public class PromoDetectionService {
         if (messageContent == null || messageContent.trim().isEmpty()) {
             return null;
         }
-        
+
         for (int i = 0; i < TRIGGER_PATTERNS.length; i++) {
             if (TRIGGER_PATTERNS[i].matcher(messageContent).find()) {
                 return PATTERN_DESCRIPTIONS[i];
             }
         }
-        
+
         return null;
     }
-    
+
     /**
      * Checks if a user is on cooldown for promotional prompts.
-     * 
-     * @param userId the user ID
+     *
+     * @param userId  the user ID
      * @param guildId the guild ID
      * @return true if user can receive a prompt
      */
@@ -104,78 +106,78 @@ public class PromoDetectionService {
         if (!config.isEnabled()) {
             return false;
         }
-        
+
         Instant lastPrompt = userCooldowns.get(userId);
         if (lastPrompt == null) {
             return true;
         }
-        
+
         Instant cooldownEnd = lastPrompt.plusSeconds(config.getCooldownDays() * 86400L);
         return Instant.now().isAfter(cooldownEnd);
     }
-    
+
     /**
      * Records that a prompt was sent to a user.
-     * 
+     *
      * @param userId the user ID
      */
     public void recordPromptSent(String userId) {
         userCooldowns.put(userId, Instant.now());
     }
-    
+
     /**
      * Creates a promotional trigger from a detected message.
-     * 
-     * @param userId the user ID
-     * @param username the username
-     * @param guildId the guild ID
-     * @param channelId the channel ID
-     * @param messageContent the message content
+     *
+     * @param userId          the user ID
+     * @param username        the username
+     * @param guildId         the guild ID
+     * @param channelId       the channel ID
+     * @param messageContent  the message content
      * @param detectedPattern the detected pattern
      * @return the promo trigger
      */
     public PromoTrigger createTrigger(String userId, String username, String guildId,
-                                     String channelId, String messageContent, String detectedPattern) {
+                                      String channelId, String messageContent, String detectedPattern) {
         PromoTrigger trigger = new PromoTrigger(userId, username, guildId, channelId,
                 messageContent, detectedPattern, Instant.now());
-        
+
         // Track recent triggers for duplicate prevention
         recentTriggers.computeIfAbsent(userId, k -> new ArrayList<>()).add(trigger);
-        
+
         // Keep only last 5 triggers per user
         List<PromoTrigger> triggers = recentTriggers.get(userId);
         if (triggers.size() > 5) {
             triggers.remove(0);
         }
-        
+
         return trigger;
     }
-    
+
     /**
      * Gets the promotional configuration for a guild.
      * Creates default config if none exists.
-     * 
+     *
      * @param guildId the guild ID
      * @return the promo config
      */
     public PromoConfig getConfig(String guildId) {
         return guildConfigs.computeIfAbsent(guildId, PromoConfig::new);
     }
-    
+
     /**
      * Updates the promotional configuration for a guild.
-     * 
+     *
      * @param config the new configuration
      */
     public void updateConfig(PromoConfig config) {
         guildConfigs.put(config.getGuildId(), config);
         logger.info("Updated promo config for guild {}", config.getGuildId());
     }
-    
+
     /**
      * Gets the time remaining until a user can receive another prompt.
-     * 
-     * @param userId the user ID
+     *
+     * @param userId  the user ID
      * @param guildId the guild ID
      * @return seconds remaining, or 0 if ready
      */
@@ -184,7 +186,7 @@ public class PromoDetectionService {
         if (lastPrompt == null) {
             return 0;
         }
-        
+
         PromoConfig config = getConfig(guildId);
         Instant cooldownEnd = lastPrompt.plusSeconds(config.getCooldownDays() * 86400L);
         long remaining = cooldownEnd.getEpochSecond() - Instant.now().getEpochSecond();

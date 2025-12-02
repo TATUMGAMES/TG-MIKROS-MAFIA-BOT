@@ -41,6 +41,7 @@ BOT_OWNER_ID=your_discord_user_id_here
 **Security Note:** The `.env` file is already in `.gitignore`. Never commit your bot token to version control.
 
 **File Permissions (Linux/Mac):**
+
 ```bash
 chmod 600 .env
 ```
@@ -50,12 +51,14 @@ chmod 600 .env
 You can also set environment variables directly in your system:
 
 **Windows (PowerShell):**
+
 ```powershell
 $env:DISCORD_BOT_TOKEN="your_token_here"
 $env:BOT_OWNER_ID="your_user_id_here"
 ```
 
 **Linux/Mac:**
+
 ```bash
 export DISCORD_BOT_TOKEN="your_token_here"
 export BOT_OWNER_ID="your_user_id_here"
@@ -64,57 +67,58 @@ export BOT_OWNER_ID="your_user_id_here"
 ### How to Set Up a Discord Bot
 
 1. **Go to Discord Developer Portal**
-   - Visit: https://discord.com/developers/applications
-   - Log in with your Discord account
+    - Visit: https://discord.com/developers/applications
+    - Log in with your Discord account
 
 2. **Create a New Application**
-   - Click "New Application"
-   - Enter a name (e.g., "MIKROS Bot - Test")
-   - Click "Create"
+    - Click "New Application"
+    - Enter a name (e.g., "MIKROS Bot - Test")
+    - Click "Create"
 
 3. **Create a Bot**
-   - Navigate to the "Bot" section in the left sidebar
-   - Click "Add Bot"
-   - Confirm by clicking "Yes, do it!"
+    - Navigate to the "Bot" section in the left sidebar
+    - Click "Add Bot"
+    - Confirm by clicking "Yes, do it!"
 
 4. **Get Your Bot Token**
-   - Under the "Token" section, click "Reset Token" or "Copy"
-   - **Important:** Save this token securely - you won't be able to see it again!
-   - Copy the token to your `.env` file as `DISCORD_BOT_TOKEN`
+    - Under the "Token" section, click "Reset Token" or "Copy"
+    - **Important:** Save this token securely - you won't be able to see it again!
+    - Copy the token to your `.env` file as `DISCORD_BOT_TOKEN`
 
 5. **Configure Bot Settings**
-   - Under "Privileged Gateway Intents", enable:
-     - ✅ **MESSAGE CONTENT INTENT** (Required for message analysis)
-     - ✅ **SERVER MEMBERS INTENT** (Required for member tracking)
-   - Click "Save Changes"
+    - Under "Privileged Gateway Intents", enable:
+        - ✅ **MESSAGE CONTENT INTENT** (Required for message analysis)
+        - ✅ **SERVER MEMBERS INTENT** (Required for member tracking)
+    - Click "Save Changes"
 
 6. **Get Your User ID (Optional)**
-   - Enable Developer Mode in Discord (User Settings → Advanced → Developer Mode)
-   - Right-click your username → "Copy ID"
-   - Add to `.env` as `BOT_OWNER_ID`
+    - Enable Developer Mode in Discord (User Settings → Advanced → Developer Mode)
+    - Right-click your username → "Copy ID"
+    - Add to `.env` as `BOT_OWNER_ID`
 
 7. **Invite Bot to Your Test Server**
-   - Go to "OAuth2" → "URL Generator"
-   - Select scopes:
-     - ✅ `bot`
-     - ✅ `applications.commands`
-   - Select bot permissions:
-     - ✅ **Administrator** (for testing) OR individually:
-       - ✅ Kick Members
-       - ✅ Ban Members
-       - ✅ Moderate Members
-       - ✅ Manage Messages
-       - ✅ Read Message History
-       - ✅ Send Messages
-       - ✅ Embed Links
-       - ✅ Attach Files
-   - Copy the generated URL
-   - Open in browser and select your test server
-   - Click "Authorize"
+    - Go to "OAuth2" → "URL Generator"
+    - Select scopes:
+        - ✅ `bot`
+        - ✅ `applications.commands`
+    - Select bot permissions:
+        - ✅ **Administrator** (for testing) OR individually:
+            - ✅ Kick Members
+            - ✅ Ban Members
+            - ✅ Moderate Members
+            - ✅ Manage Messages
+            - ✅ Read Message History
+            - ✅ Send Messages
+            - ✅ Embed Links
+            - ✅ Attach Files
+    - Copy the generated URL
+    - Open in browser and select your test server
+    - Click "Authorize"
 
 ### Gradle Commands
 
-The project uses **Gradle** (not npm) for build and run tasks. Use the Gradle Wrapper (`./gradlew` on Linux/Mac, `gradlew.bat` on Windows):
+The project uses **Gradle** (not npm) for build and run tasks. Use the Gradle Wrapper (`./gradlew` on Linux/Mac,
+`gradlew.bat` on Windows):
 
 #### Build Commands
 
@@ -187,6 +191,7 @@ The bot **automatically runs in mock mode** by default. All external API calls a
 3. Adding environment variables for API keys/endpoints
 
 **Current Mock Services:**
+
 - ✅ All analytics commands return mock data
 - ✅ Reputation scores calculated locally
 - ✅ Game promotions stored in memory
@@ -201,140 +206,125 @@ The bot **automatically runs in mock mode** by default. All external API calls a
 
 #### Moderation Commands
 
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/admin-warn` | Warn a user with reason | Warning logged, confirmation message | Check `/admin-history` to verify |
-| `/admin-warn` | Warn same user 3 times | Auto-escalation triggers (kick) | Requires 3 warnings threshold |
-| `/admin-kick` | Kick a user | User removed, action logged | Bot must have KICK_MEMBERS permission |
-| `/admin-ban` | Ban a user | User banned, action logged | Bot must have BAN_MEMBERS permission |
-| `/admin-ban` | Ban with delete_days:7 | Messages deleted, user banned | Deletes last 7 days of messages |
-| `/admin-history` | View user history | Shows all actions, reputation score | Includes warnings, kicks, bans |
+| Command       | Test Case               | Expected Result                      | Notes                                 |
+|---------------|-------------------------|--------------------------------------|---------------------------------------|
+| `/admin-warn` | Warn a user with reason | Warning logged, confirmation message | Warning is logged                     |
+| `/admin-warn` | Warn same user 3 times  | Auto-escalation triggers (kick)      | Requires 3 warnings threshold         |
+| `/admin-kick` | Kick a user             | User removed, action logged          | Bot must have KICK_MEMBERS permission |
+| `/admin-ban`  | Ban a user              | User banned, action logged           | Bot must have BAN_MEMBERS permission  |
+| `/admin-ban`  | Ban with delete_days:7  | Messages deleted, user banned        | Deletes last 7 days of messages       |
 
 #### Enhanced Moderation
 
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/warn-suggestions` | Analyze channel messages | List of concerning messages | Analyzes last 200 messages by default |
-| `/ban-suggestions` | Analyze for severe violations | High/Critical severity messages only | Stricter filtering than warn-suggestions |
-| `/server-stats` | View server statistics | Activity stats, top channels | Requires MODERATE_MEMBERS permission |
-| `/top-contributors` | View top 10 users | Leaderboard by message count | Based on tracked activity |
+| Command             | Test Case                     | Expected Result                      | Notes                                    |
+|---------------------|-------------------------------|--------------------------------------|------------------------------------------|
+| `/warn-suggestions` | Analyze channel messages      | List of concerning messages          | Analyzes last 200 messages by default    |
+| `/ban-suggestions`  | Analyze for severe violations | High/Critical severity messages only | Stricter filtering than warn-suggestions |
+| `/server-stats`     | View server statistics        | Activity stats, top channels         | Requires MODERATE_MEMBERS permission     |
+| `/top-contributors` | View top 10 users             | Leaderboard by message count         | Based on tracked activity                |
 
 #### Reputation System
 
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/praise` | Praise a user | Reputation score increases | Uses BehaviorCategory enum |
-| `/report` | Report negative behavior | Reputation score decreases | Uses BehaviorCategory enum |
-| `/score` | Check user reputation | Shows local and global score | Global shows "API not available" in mock mode |
+| Command   | Test Case                     | Expected Result            | Notes                                  |
+|-----------|-------------------------------|----------------------------|----------------------------------------|
+| `/praise` | Praise a user                 | Reputation score increases | Uses BehaviorCategory enum             |
+| `/report` | Report negative behavior      | Reputation score decreases | Uses BehaviorCategory enum             |
+| `/lookup` | Lookup user reputation scores | Shows reputation from API  | Admin only, accepts multiple usernames |
 
 ### Games Testing
 
 #### Community Games Setup
 
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/admin-game-setup` | Configure games channel | Channel set, games enabled | Admin only |
-| `/admin-game-setup` | Set reset time to 00:00 UTC | Daily reset scheduled | Time in UTC |
-| `/admin-game-config` | Enable/disable specific games | Game status updated | Can toggle individual games |
+| Command              | Test Case                     | Expected Result            | Notes                       |
+|----------------------|-------------------------------|----------------------------|-----------------------------|
+| `/admin-game-setup`  | Configure games channel       | Channel set, games enabled | Admin only                  |
+| `/admin-game-setup`  | Set reset time to 00:00 UTC   | Daily reset scheduled      | Time in UTC                 |
+| `/admin-game-config` | Enable/disable specific games | Game status updated        | Can toggle individual games |
 
 #### Word Unscramble Game
 
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/guess gameplay` | Correct guess | Public announcement, game ends | First correct guess wins |
-| `/guess wrongword` | Incorrect guess | Private error message | Can try again |
-| `/game-stats` | View game status | Shows current game, leaderboard | Displays time until reset |
-
-#### Dice Battle Game
-
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/roll` | Roll dice | D20 result shown | Tracks highest roll of day |
-| `/roll` | Multiple rolls | Each roll tracked | Leaderboard shows top roller |
-| `/game-stats` | View dice leaderboard | Top rollers displayed | Resets daily |
-
-#### Emoji Match Game
-
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/match 🎮🎲🎯` | Correct match | Public announcement, game ends | First correct match wins |
-| `/match ❌❌❌` | Incorrect match | Private error message | Can try again |
+| Command            | Test Case        | Expected Result                 | Notes                     |
+|--------------------|------------------|---------------------------------|---------------------------|
+| `/guess gameplay`  | Correct guess    | Public announcement, game ends  | First correct guess wins  |
+| `/guess wrongword` | Incorrect guess  | Private error message           | Can try again             |
+| `/game-stats`      | View game status | Shows current game, leaderboard | Displays time until reset |
 
 ### RPG Testing
 
 #### Character Creation
 
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/rpg-register name:Aragorn class:WARRIOR` | Create character | Character created with stats | One character per user |
-| `/rpg-register` | Try to register twice | Error: already registered | Must use `/rpg-profile` to view |
-| `/rpg-register` | Invalid class name | Error: invalid class | Must be WARRIOR, MAGE, or ROGUE |
+| Command                                    | Test Case             | Expected Result              | Notes                           |
+|--------------------------------------------|-----------------------|------------------------------|---------------------------------|
+| `/rpg-register name:Aragorn class:WARRIOR` | Create character      | Character created with stats | One character per user          |
+| `/rpg-register`                            | Try to register twice | Error: already registered    | Must use `/rpg-profile` to view |
+| `/rpg-register`                            | Invalid class name    | Error: invalid class         | Must be WARRIOR, MAGE, or ROGUE |
 
 #### Character Management
 
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/rpg-profile` | View own profile | Character stats, level, XP | Shows cooldown status |
-| `/rpg-profile user:@Player` | View other player | Their character profile | Public profile view |
-| `/rpg-leaderboard` | View top players | Sorted by level, then XP | Server-wide leaderboard |
+| Command                     | Test Case         | Expected Result            | Notes                   |
+|-----------------------------|-------------------|----------------------------|-------------------------|
+| `/rpg-profile`              | View own profile  | Character stats, level, XP | Shows cooldown status   |
+| `/rpg-profile user:@Player` | View other player | Their character profile    | Public profile view     |
+| `/rpg-leaderboard`          | View top players  | Sorted by level, then XP   | Server-wide leaderboard |
 
 #### RPG Actions
 
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/rpg-action type:explore` | Explore action | Narrative encounter, XP gained | Cooldown: 24 hours default |
-| `/rpg-action type:train` | Train action | Stat increase, XP gained | Random stat boosted |
-| `/rpg-action type:battle` | Battle action | Combat outcome, XP/HP changes | Can win or lose |
-| `/rpg-action` | Action before cooldown | Error: cooldown active | Shows time remaining |
+| Command                    | Test Case              | Expected Result                | Notes                      |
+|----------------------------|------------------------|--------------------------------|----------------------------|
+| `/rpg-action type:explore` | Explore action         | Narrative encounter, XP gained | Cooldown: 24 hours default |
+| `/rpg-action type:train`   | Train action           | Stat increase, XP gained       | Random stat boosted        |
+| `/rpg-action type:battle`  | Battle action          | Combat outcome, XP/HP changes  | Can win or lose            |
+| `/rpg-action`              | Action before cooldown | Error: cooldown active         | Shows time remaining       |
 
 #### RPG Configuration
 
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/admin-rpg-config toggle enable` | Enable RPG | RPG system enabled | Admin only |
-| `/admin-rpg-config set-cooldown 12` | Set cooldown | Cooldown changed to 12 hours | Affects all players |
-| `/admin-rpg-config set-xp-multiplier 1.5` | Set XP multiplier | XP gains increased by 50% | 0.5x to 2.0x range |
+| Command                                   | Test Case         | Expected Result              | Notes               |
+|-------------------------------------------|-------------------|------------------------------|---------------------|
+| `/admin-rpg-config toggle enable`         | Enable RPG        | RPG system enabled           | Admin only          |
+| `/admin-rpg-config set-cooldown 12`       | Set cooldown      | Cooldown changed to 12 hours | Affects all players |
+| `/admin-rpg-config set-xp-multiplier 1.5` | Set XP multiplier | XP gains increased by 50%    | 0.5x to 2.0x range  |
 
 ### Spelling Testing
 
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/spell-challenge` | View daily challenge | Scrambled word displayed | Auto-creates if none exists |
-| `/guess gaming` | Correct guess | Points awarded (3 or 1) | First solver gets 3 pts |
-| `/guess wrong` | Incorrect guess | Error, attempt counted | 3 attempts per day |
-| `/guess` | 4th attempt | Error: no attempts remaining | Resets daily |
-| `/spell-leaderboard` | View rankings | Top 10 players by points | All-time cumulative |
+| Command              | Test Case            | Expected Result              | Notes                       |
+|----------------------|----------------------|------------------------------|-----------------------------|
+| `/spell-challenge`   | View daily challenge | Scrambled word displayed     | Auto-creates if none exists |
+| `/guess gaming`      | Correct guess        | Points awarded (3 or 1)      | First solver gets 3 pts     |
+| `/guess wrong`       | Incorrect guess      | Error, attempt counted       | 3 attempts per day          |
+| `/guess`             | 4th attempt          | Error: no attempts remaining | Resets daily                |
+| `/spell-leaderboard` | View rankings        | Top 10 players by points     | All-time cumulative         |
 
 ### Analytics Testing
 
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/gamestats trending-game-genres` | Get trending genres | Top 3 genres with growth % | Returns mock data |
-| `/gamestats popular-content` | Get popular content | Top 5 content types | Returns mock data |
-| `/gamestats total-users` | Get total users | User count displayed | Returns mock data (3,240,567) |
-| `/gamestats avg-session-time genre:Action` | Get avg session | Average time for genre | Returns mock data |
+| Command                                    | Test Case           | Expected Result            | Notes                         |
+|--------------------------------------------|---------------------|----------------------------|-------------------------------|
+| `/gamestats trending-game-genres`          | Get trending genres | Top 3 genres with growth % | Returns mock data             |
+| `/gamestats popular-content`               | Get popular content | Top 5 content types        | Returns mock data             |
+| `/gamestats total-users`                   | Get total users     | User count displayed       | Returns mock data (3,240,567) |
+| `/gamestats avg-session-time genre:Action` | Get avg session     | Average time for genre     | Returns mock data             |
 
-**Note:** All analytics commands return **mock/placeholder data** in local testing mode. Real API integration is marked with TODO comments.
+**Note:** All analytics commands return **mock/placeholder data** in local testing mode. Real API integration is marked
+with TODO comments.
 
 ### Promotions Testing
 
 #### Promotional Detection
 
-| Test Case | Expected Result | Notes |
-|-----------|-----------------|-------|
+| Test Case                                        | Expected Result                        | Notes                     |
+|--------------------------------------------------|----------------------------------------|---------------------------|
 | User posts: "We're launching our game next week" | Bot prompts: "Want MIKROS promo code?" | Passive detection enabled |
-| User posts: "My Steam page is live" | Bot prompts with promo offer | Regex pattern matching |
-| User posts: "Need help promoting" | Bot prompts | Multiple trigger phrases |
-| `/setup-promotions toggle disable` | Detection disabled | Admin command |
-| `/set-promo-frequency 7` | Cooldown set to 7 days | Per-user cooldown |
+| User posts: "My Steam page is live"              | Bot prompts with promo offer           | Regex pattern matching    |
+| User posts: "Need help promoting"                | Bot prompts                            | Multiple trigger phrases  |
+| `/setup-promotions toggle disable`               | Detection disabled                     | Admin command             |
+| `/set-promo-frequency 7`                         | Cooldown set to 7 days                 | Per-user cooldown         |
 
 #### Promotional Commands
 
-| Command | Test Case | Expected Result | Notes |
-|---------|-----------|-----------------|-------|
-| `/promo-help` | Request help | DM with lead form | Collects email (TODO: API) |
-| `/setup-promotions` | Configure detection | Settings updated | Admin only |
-| `/set-promo-frequency` | Set cooldown | Cooldown updated | 1-30 days range |
+| Command                | Test Case           | Expected Result   | Notes                      |
+|------------------------|---------------------|-------------------|----------------------------|
+| `/promo-help`          | Request help        | DM with lead form | Collects email (TODO: API) |
+| `/setup-promotions`    | Configure detection | Settings updated  | Admin only                 |
+| `/set-promo-frequency` | Set cooldown        | Cooldown updated  | 1-30 days range            |
 
 ---
 
@@ -347,6 +337,7 @@ The bot **automatically runs in mock mode** by default. All external API calls a
 **Location:** `src/test/java/com/tatumgames/mikros/services/InMemoryModerationLogServiceTest.java`
 
 **Test Coverage:**
+
 - ✅ Logging moderation actions
 - ✅ Retrieving user history
 - ✅ Filtering by action type
@@ -358,11 +349,13 @@ The bot **automatically runs in mock mode** by default. All external API calls a
 - ✅ Action counting
 
 **Run Tests:**
+
 ```bash
 ./gradlew test --tests "InMemoryModerationLogServiceTest"
 ```
 
 **Test Results:**
+
 - View HTML report: `build/reports/tests/test/index.html`
 - All tests should pass ✅
 
@@ -429,7 +422,8 @@ To add a new test:
 
 ### Overview
 
-The bot runs in **mock mode by default** for local testing. All external API dependencies are replaced with in-memory or mock implementations that return placeholder data.
+The bot runs in **mock mode by default** for local testing. All external API dependencies are replaced with in-memory or
+mock implementations that return placeholder data.
 
 ### Mock Services
 
@@ -440,6 +434,7 @@ The bot runs in **mock mode by default** for local testing. All external API dep
 **Location:** `src/main/java/com/tatumgames/mikros/services/MockGameStatsService.java`
 
 **Mock Data Returned:**
+
 - Trending genres: Roguelike (+43.2%), Puzzle (+31.5%), Sandbox (+29.1%)
 - Popular genres: Action (2.1M), RPG (1.8M), Strategy (1.5M)
 - Total MIKROS Apps: 1,247
@@ -449,6 +444,7 @@ The bot runs in **mock mode by default** for local testing. All external API dep
 - Average session time: 15-35 minutes (varies by genre)
 
 **How to Test:**
+
 ```bash
 # Run bot
 ./gradlew run
@@ -468,20 +464,21 @@ The bot runs in **mock mode by default** for local testing. All external API dep
 **Location:** `src/main/java/com/tatumgames/mikros/services/InMemoryReputationService.java`
 
 **Features:**
+
 - Calculates local reputation based on moderation actions
 - Tracks positive/negative behavior
 - Returns "API not available" for global reputation (expected in mock mode)
 
 **How to Test:**
+
 ```bash
 # Run bot
 ./gradlew run
 
 # In Discord:
-/praise @user behavior:GOOD_SPORTSMANSHIP
-/report @user behavior:TROLLING
-/score @user
-/admin-history @user  # Shows reputation score
+/praise @user behavior:ACTIVE_PARTICIPATE
+/report @user behavior:TROLL
+/lookup username1 username2  # Lookup reputation scores
 ```
 
 #### 3. InMemoryGamePromotionService
@@ -491,11 +488,13 @@ The bot runs in **mock mode by default** for local testing. All external API dep
 **Location:** `src/main/java/com/tatumgames/mikros/services/InMemoryGamePromotionService.java`
 
 **Features:**
+
 - Stores promotion channel per server
 - Stores verbosity settings
 - Returns empty list for active promotions (no API integration)
 
 **How to Test:**
+
 ```bash
 # Run bot
 ./gradlew run
@@ -513,19 +512,21 @@ The bot runs in **mock mode by default** for local testing. All external API dep
 **Location:** `src/main/java/com/tatumgames/mikros/services/InMemoryModerationLogService.java`
 
 **Features:**
+
 - Stores all moderation actions
 - Per-guild isolation
 - Per-user history tracking
 - Thread-safe operations
 
 **How to Test:**
+
 ```bash
 # Run bot
 ./gradlew run
 
 # In Discord:
 /admin-warn @user reason:Test warning
-/admin-history @user  # Shows the warning
+# Warning is logged in moderation system
 ```
 
 **Note:** Data is lost when bot restarts (in-memory storage).
@@ -548,7 +549,7 @@ The bot runs in **mock mode by default** for local testing. All external API dep
 ✅ **RPG:** Complete RPG system  
 ✅ **Spelling:** Spelling challenge works  
 ✅ **Analytics:** Returns mock statistics  
-✅ **Promotions:** Detection and commands work (no API submission)  
+✅ **Promotions:** Detection and commands work (no API submission)
 
 #### What Doesn't Work (Expected)
 
@@ -556,16 +557,16 @@ The bot runs in **mock mode by default** for local testing. All external API dep
 ❌ **Global Reputation:** Shows "API not available"  
 ❌ **Game Promotions:** No real promotions fetched  
 ❌ **API Submissions:** Lead submissions not sent (TODO in code)  
-❌ **Persistence:** Data lost on bot restart (in-memory)  
+❌ **Persistence:** Data lost on bot restart (in-memory)
 
 ### Switching to Real APIs (Future)
 
 When APIs are ready:
 
 1. **Implement Real Services:**
-   - Create `RealGameStatsService` implementing `GameStatsService`
-   - Create `RealReputationService` implementing `ReputationService`
-   - Create `RealGamePromotionService` implementing `GamePromotionService`
+    - Create `RealGameStatsService` implementing `GameStatsService`
+    - Create `RealReputationService` implementing `ReputationService`
+    - Create `RealGamePromotionService` implementing `GamePromotionService`
 
 2. **Update BotMain.java:**
    ```java
@@ -584,8 +585,8 @@ When APIs are ready:
    ```
 
 4. **Update ConfigLoader:**
-   - Add methods to load API configuration
-   - Add validation for API keys
+    - Add methods to load API configuration
+    - Add validation for API keys
 
 ### Mock Mode Verification
 
@@ -599,12 +600,12 @@ To verify you're in mock mode:
    ```
 
 2. **Test Analytics:**
-   - Run `/gamestats trending-game-genres`
-   - Should return same data every time (mock data)
+    - Run `/gamestats trending-game-genres`
+    - Should return same data every time (mock data)
 
 3. **Test Reputation:**
-   - Run `/score @user`
-   - Global reputation should show "API not available"
+    - Run `/lookup username` to check reputation scores
+    - Scores are retrieved from API
 
 ---
 
@@ -615,6 +616,7 @@ To verify you're in mock mode:
 **Issue:** `Required configuration missing: DISCORD_BOT_TOKEN`
 
 **Solution:**
+
 - Check `.env` file exists in project root
 - Verify `DISCORD_BOT_TOKEN` is set
 - Ensure no extra spaces in token
@@ -625,6 +627,7 @@ To verify you're in mock mode:
 **Issue:** Slash commands not showing in Discord
 
 **Solution:**
+
 - Wait 1-5 minutes (Discord caches commands)
 - Try in different channel
 - Check bot has `applications.commands` scope
@@ -636,6 +639,7 @@ To verify you're in mock mode:
 **Issue:** Tests fail with errors
 
 **Solution:**
+
 - Run `./gradlew clean test`
 - Check Java version: `java -version` (must be 17+)
 - Verify Gradle wrapper: `./gradlew --version`
@@ -646,6 +650,7 @@ To verify you're in mock mode:
 **Issue:** Commands return errors instead of mock data
 
 **Solution:**
+
 - Verify `MockGameStatsService` is used in `BotMain.java`
 - Check logs for service initialization messages
 - Ensure no real API services are configured
@@ -683,10 +688,10 @@ BOT_OWNER_ID=your_user_id
 1. Create test Discord server
 2. Invite bot with Administrator permissions (for testing)
 3. Create test channels:
-   - `#general` - General testing
-   - `#games` - Game commands
-   - `#rpg` - RPG commands (optional)
-   - `#admin` - Admin commands
+    - `#general` - General testing
+    - `#games` - Game commands
+    - `#rpg` - RPG commands (optional)
+    - `#admin` - Admin commands
 
 ---
 
