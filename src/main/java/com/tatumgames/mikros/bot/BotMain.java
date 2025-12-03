@@ -2,6 +2,7 @@ package com.tatumgames.mikros.bot;
 
 import com.tatumgames.mikros.admin.commands.*;
 import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.api.TatumGamesApiClient;
 import com.tatumgames.mikros.config.ConfigLoader;
 import com.tatumgames.mikros.games.rpg.commands.*;
 import com.tatumgames.mikros.games.rpg.service.ActionService;
@@ -21,6 +22,7 @@ import com.tatumgames.mikros.promo.commands.SetupPromotionsCommand;
 import com.tatumgames.mikros.promo.listener.PromoMessageListener;
 import com.tatumgames.mikros.promo.service.PromoDetectionService;
 import com.tatumgames.mikros.services.*;
+import com.tatumgames.mikros.services.RealGamePromotionService;
 import com.tatumgames.mikros.services.scheduler.GamePromotionScheduler;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -74,14 +76,36 @@ public class BotMain extends ListenerAdapter {
     public BotMain() {
         this.commandHandlers = new HashMap<>();
 
+        // Load configuration
+        ConfigLoader config = new ConfigLoader();
+
+        // Initialize API client
+        TatumGamesApiClient apiClient = new TatumGamesApiClient(
+                config.getMikrosApiUrl(),
+                config.getMikrosApiKey()
+        );
+
         // Initialize services
         this.moderationLogService = new InMemoryModerationLogService();
-        this.reputationService = new InMemoryReputationService();
+        this.reputationService = new InMemoryReputationService(
+                apiClient,
+                config.getReputationApiUrl(),
+                config.getReputationApiKey()
+        );
         this.activityTrackingService = new ActivityTrackingService();
         this.messageAnalysisService = new MessageAnalysisService();
         this.autoEscalationService = new AutoEscalationService(moderationLogService);
         this.monthlyReportService = new MonthlyReportService(moderationLogService, activityTrackingService);
-        this.gamePromotionService = new InMemoryGamePromotionService();
+
+        // Initialize game promotion service (use real API if key is configured, otherwise use mock)
+        if (config.getMikrosApiKey() != null && !config.getMikrosApiKey().isBlank()) {
+            this.gamePromotionService = new RealGamePromotionService(apiClient);
+            logger.info("Using RealGamePromotionService with API integration");
+        } else {
+            logger.warn("MIKROS_API_KEY not set, using InMemoryGamePromotionService (mock mode)");
+            this.gamePromotionService = new InMemoryGamePromotionService();
+        }
+
         this.gamePromotionScheduler = new GamePromotionScheduler(gamePromotionService);
         this.gameStatsService = new MockGameStatsService();
         this.wordUnscrambleService = new WordUnscrambleService();

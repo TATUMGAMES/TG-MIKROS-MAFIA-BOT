@@ -15,6 +15,10 @@ public class ConfigLoader {
     private final String botToken;
     private final String botOwnerId;
     private final String mafiaGuildId;
+    private final String mikrosApiKey;
+    private final String mikrosApiUrl;
+    private final String reputationApiKey;
+    private final String reputationApiUrl;
 
     /**
      * Creates a new ConfigLoader instance and loads configuration.
@@ -38,6 +42,27 @@ public class ConfigLoader {
         this.botToken = getRequiredEnv("DISCORD_BOT_TOKEN");
         this.botOwnerId = getEnv("BOT_OWNER_ID", "");
         this.mafiaGuildId = getEnv("MIKROS_MAFIA_GUILD_ID", "");
+
+        // Load API configuration (optional - can be empty for mock mode)
+        this.mikrosApiKey = getEnv("MIKROS_API_KEY", "");
+        this.mikrosApiUrl = getEnv("MIKROS_API_URL", "https://api.tatumgames.com");
+
+        if (mikrosApiKey == null || mikrosApiKey.isBlank()) {
+            logger.warn("MIKROS_API_KEY not set - API client will operate in mock mode");
+        } else {
+            logger.info("MIKROS API configuration loaded");
+        }
+
+        // Load reputation API configuration (optional - can be empty for mock mode)
+        this.reputationApiKey = getEnv("REPUTATION_API_KEY", "");
+        this.reputationApiUrl = getEnv("REPUTATION_API_URL",
+                "https://tg-api-new-stage.uc.r.appspot.com/mikros/marketing/discord");
+
+        if (reputationApiKey == null || reputationApiKey.isBlank()) {
+            logger.warn("REPUTATION_API_KEY not set - reputation service will use stub responses");
+        } else {
+            logger.info("Reputation API configuration loaded");
+        }
 
         logger.info("Configuration loaded successfully");
     }
@@ -108,5 +133,41 @@ public class ConfigLoader {
      */
     public String getMafiaGuildId() {
         return mafiaGuildId;
+    }
+
+    /**
+     * Gets the MIKROS API key for authentication.
+     *
+     * @return the API key, or empty string if not configured
+     */
+    public String getMikrosApiKey() {
+        return mikrosApiKey;
+    }
+
+    /**
+     * Gets the MIKROS API base URL.
+     *
+     * @return the API base URL (defaults to https://api.tatumgames.com)
+     */
+    public String getMikrosApiUrl() {
+        return mikrosApiUrl;
+    }
+
+    /**
+     * Gets the reputation API key for authentication.
+     *
+     * @return the API key, or empty string if not configured
+     */
+    public String getReputationApiKey() {
+        return reputationApiKey;
+    }
+
+    /**
+     * Gets the reputation API base URL.
+     *
+     * @return the API base URL (defaults to https://tg-api-new-stage.uc.r.appspot.com/mikros/marketing/discord)
+     */
+    public String getReputationApiUrl() {
+        return reputationApiUrl;
     }
 }

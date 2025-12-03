@@ -1,6 +1,7 @@
 package com.tatumgames.mikros.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tatumgames.mikros.api.TatumGamesApiClient;
 import com.tatumgames.mikros.models.BehaviorReport;
 import com.tatumgames.mikros.models.api.GetUserScoreDetailResponse;
 import com.tatumgames.mikros.models.api.TrackPlayerRatingRequest;
@@ -29,13 +30,23 @@ public class InMemoryReputationService implements ReputationService {
     // Key format: "guildId:userId" -> List of behavior reports
     private final Map<String, List<BehaviorReport>> reportStore;
     private final ObjectMapper objectMapper;
+    private final TatumGamesApiClient apiClient;
+    private final String reputationApiUrl;
+    private final String reputationApiKey;
 
     /**
      * Creates a new InMemoryReputationService.
+     *
+     * @param apiClient        the API client for making requests
+     * @param reputationApiUrl the reputation API base URL
+     * @param reputationApiKey the reputation API key
      */
-    public InMemoryReputationService() {
+    public InMemoryReputationService(TatumGamesApiClient apiClient, String reputationApiUrl, String reputationApiKey) {
         this.reportStore = new ConcurrentHashMap<>();
         this.objectMapper = new ObjectMapper();
+        this.apiClient = apiClient;
+        this.reputationApiUrl = reputationApiUrl;
+        this.reputationApiKey = reputationApiKey;
         logger.info("InMemoryReputationService initialized");
     }
 
@@ -49,9 +60,6 @@ public class InMemoryReputationService implements ReputationService {
         reportStore.computeIfAbsent(key, k -> new ArrayList<>()).add(report);
 
         logger.info("Recorded behavior report: {}", report);
-
-        // TODO: Call Tatum Games Reputation Score Update API
-        // reportToExternalAPI(report);
     }
 
     @Override
@@ -93,12 +101,56 @@ public class InMemoryReputationService implements ReputationService {
         participant.setValue(report.behaviorCategory().getWeight());
         request.setParticipants(List.of(participant));
 
+        // Set platform to "discord" (currently defaults to "ios")
+        request.setPlatform("discord");
+
         // Call trackPlayerRating API
         return trackPlayerRating(request);
     }
 
     @Override
     public boolean trackPlayerRating(TrackPlayerRatingRequest request) {
+        // If API key not configured, fall back to stub
+        if (reputationApiKey == null || reputationApiKey.isBlank()) {
+            logger.warn("Reputation API key not configured, using stub response");
+            return loadStubResponse();
+        }
+
+        try {
+            TrackPlayerRatingResponse response = apiClient.postWithApiKey(
+                    reputationApiUrl,
+                    "/trackUserRating",
+                    request,
+                    reputationApiKey,
+                    TrackPlayerRatingResponse.class
+            );
+
+            if (response != null && response.getStatus() != null &&
+                    response.getStatus().getStatusCode() == 200) {
+                logger.info("Successfully tracked player rating via API: {}", request);
+                return true;
+            } else {
+                logger.warn("API returned non-200 status: {}",
+                        response != null ? response.getStatus() : "null response");
+                return false;
+            }
+
+        } catch (TatumGamesApiClient.ApiException e) {
+            logger.error("Error calling trackUserRating API (status: {}): {}",
+                    e.getStatusCode(), e.getMessage(), e);
+            return false;
+        } catch (Exception e) {
+            logger.error("Unexpected error calling trackUserRating API", e);
+            return false;
+        }
+    }
+
+    /**
+     * Loads stub response as fallback when API is not available.
+     *
+     * @return true if stub response indicates success, false otherwise
+     */
+    private boolean loadStubResponse() {
         try {
             InputStream inputStream = getClass().getClassLoader()
                     .getResourceAsStream("stubs/trackPlayerRating.json");
@@ -111,10 +163,10 @@ public class InMemoryReputationService implements ReputationService {
             TrackPlayerRatingResponse response = objectMapper.readValue(inputStream, TrackPlayerRatingResponse.class);
 
             if (response.getStatus() != null && response.getStatus().getStatusCode() == 200) {
-                logger.info("Successfully tracked player rating for request: {}", request);
+                logger.info("Successfully tracked player rating using stub response");
                 return true;
             } else {
-                logger.warn("Track player rating returned non-200 status: {}", response.getStatus());
+                logger.warn("Stub response returned non-200 status: {}", response.getStatus());
                 return false;
             }
 
@@ -182,4 +234,3 @@ public class InMemoryReputationService implements ReputationService {
         logger.warn("All behavior reports have been cleared");
     }
 }
-
