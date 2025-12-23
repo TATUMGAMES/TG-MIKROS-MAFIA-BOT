@@ -3,6 +3,7 @@ package com.tatumgames.mikros.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tatumgames.mikros.api.TatumGamesApiClient;
 import com.tatumgames.mikros.models.BehaviorReport;
+import com.tatumgames.mikros.models.api.GetUserScoreDetailRequest;
 import com.tatumgames.mikros.models.api.GetUserScoreDetailResponse;
 import com.tatumgames.mikros.models.api.TrackPlayerRatingRequest;
 import com.tatumgames.mikros.models.api.TrackPlayerRatingResponse;
@@ -33,6 +34,7 @@ public class InMemoryReputationService implements ReputationService {
     private final TatumGamesApiClient apiClient;
     private final String reputationApiUrl;
     private final String reputationApiKey;
+    private final String apiKeyType;
 
     /**
      * Creates a new InMemoryReputationService.
@@ -40,14 +42,17 @@ public class InMemoryReputationService implements ReputationService {
      * @param apiClient        the API client for making requests
      * @param reputationApiUrl the reputation API base URL
      * @param reputationApiKey the reputation API key
+     * @param apiKeyType       the API key type (dev or prod)
      */
-    public InMemoryReputationService(TatumGamesApiClient apiClient, String reputationApiUrl, String reputationApiKey) {
+    public InMemoryReputationService(TatumGamesApiClient apiClient, String reputationApiUrl,
+                                     String reputationApiKey, String apiKeyType) {
         this.reportStore = new ConcurrentHashMap<>();
         this.objectMapper = new ObjectMapper();
         this.apiClient = apiClient;
         this.reputationApiUrl = reputationApiUrl;
         this.reputationApiKey = reputationApiKey;
-        logger.info("InMemoryReputationService initialized");
+        this.apiKeyType = apiKeyType;
+        logger.info("InMemoryReputationService initialized with API key type: {}", apiKeyType);
     }
 
     @Override
@@ -101,8 +106,11 @@ public class InMemoryReputationService implements ReputationService {
         participant.setValue(report.behaviorCategory().getWeight());
         request.setParticipants(List.of(participant));
 
-        // Set platform to "discord" (currently defaults to "ios")
+        // Set platform to "discord"
         request.setPlatform("discord");
+
+        // Set apiKeyType based on environment
+        request.setApiKeyType(apiKeyType);
 
         // Call trackPlayerRating API
         return trackPlayerRating(request);
@@ -178,6 +186,64 @@ public class InMemoryReputationService implements ReputationService {
 
     @Override
     public GetUserScoreDetailResponse getUserScoreDetail(List<String> usernames) {
+        // If API key not configured, fall back to stub
+        if (reputationApiKey == null || reputationApiKey.isBlank()) {
+            logger.warn("Reputation API key not configured, using stub response");
+            return loadStubResponse(usernames);
+        }
+
+        try {
+            // Build request
+            GetUserScoreDetailRequest request = new GetUserScoreDetailRequest();
+            request.setApiKeyType(apiKeyType);
+
+            // Set discordUserId (optional - can be null)
+            // API may use first username if it's a user ID format, but for now leave null
+            request.setDiscordUserId(null);
+
+            // Set usernames list
+            request.setDiscordUsernames(usernames);
+
+            // Make API call
+            GetUserScoreDetailResponse response = apiClient.postWithApiKey(
+                    reputationApiUrl,
+                    "/getUserScoreDetails", // Note: plural "Details"
+                    request,
+                    reputationApiKey,
+                    GetUserScoreDetailResponse.class
+            );
+
+            if (response != null && response.getStatus() != null &&
+                    response.getStatus().getStatusCode() == 200) {
+                logger.info("Successfully retrieved user score details for {} usernames",
+                        usernames != null ? usernames.size() : 0);
+                return response;
+            } else {
+                logger.warn("API returned non-200 status: {}",
+                        response != null ? response.getStatus() : "null response");
+                // Fall back to stub on non-200 response
+                return loadStubResponse(usernames);
+            }
+
+        } catch (TatumGamesApiClient.ApiException e) {
+            logger.error("Error calling getUserScoreDetails API (status: {}): {}",
+                    e.getStatusCode(), e.getMessage(), e);
+            // Fall back to stub on API error
+            return loadStubResponse(usernames);
+        } catch (Exception e) {
+            logger.error("Unexpected error calling getUserScoreDetails API", e);
+            // Fall back to stub on unexpected error
+            return loadStubResponse(usernames);
+        }
+    }
+
+    /**
+     * Loads stub response as fallback when API is not available.
+     *
+     * @param usernames the list of usernames to filter (optional)
+     * @return the stub response, or null if stub loading fails
+     */
+    private GetUserScoreDetailResponse loadStubResponse(List<String> usernames) {
         try {
             InputStream inputStream = getClass().getClassLoader()
                     .getResourceAsStream("stubs/getUserScoreDetail.json");
@@ -187,22 +253,22 @@ public class InMemoryReputationService implements ReputationService {
                 return null;
             }
 
-            GetUserScoreDetailResponse response = objectMapper.readValue(inputStream, GetUserScoreDetailResponse.class);
+            GetUserScoreDetailResponse response = objectMapper.readValue(
+                    inputStream, GetUserScoreDetailResponse.class);
 
             // Filter results by requested usernames if provided
-            if (usernames != null && !usernames.isEmpty() && response.getData() != null && response.getData().getScores() != null) {
-                List<GetUserScoreDetailResponse.UserScore> filteredScores = response.getData().getScores().stream()
-                        .filter(score -> usernames.contains(score.getDiscordUsername()))
+            if (usernames != null && !usernames.isEmpty() && response.getData() != null) {
+                List<GetUserScoreDetailResponse.UserScore> filteredScores = response.getData().stream()
+                        .filter(score -> usernames.contains(score.getUsername()))
                         .collect(Collectors.toList());
 
                 // Create new response with filtered scores
                 GetUserScoreDetailResponse filteredResponse = new GetUserScoreDetailResponse();
                 filteredResponse.setStatus(response.getStatus());
-                GetUserScoreDetailResponse.Data data = new GetUserScoreDetailResponse.Data();
-                data.setScores(filteredScores);
-                filteredResponse.setData(data);
+                filteredResponse.setData(filteredScores);
 
-                logger.info("Found {} matching scores for usernames: {}", filteredScores.size(), usernames);
+                logger.info("Found {} matching scores for usernames: {} (from stub)",
+                        filteredScores.size(), usernames);
                 return filteredResponse;
             }
 

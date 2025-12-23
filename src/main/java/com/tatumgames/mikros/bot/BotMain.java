@@ -90,7 +90,8 @@ public class BotMain extends ListenerAdapter {
         this.reputationService = new InMemoryReputationService(
                 apiClient,
                 config.getReputationApiUrl(),
-                config.getReputationApiKey()
+                config.getReputationApiKey(),
+                config.getApiKeyType()
         );
         this.activityTrackingService = new ActivityTrackingService();
         this.messageAnalysisService = new MessageAnalysisService();

@@ -84,7 +84,7 @@ public class LookupCommand implements CommandHandler {
         // Call API to get user score details
         GetUserScoreDetailResponse response = reputationService.getUserScoreDetail(usernames);
 
-        if (response == null || response.getData() == null || response.getData().getScores() == null) {
+        if (response == null || response.getData() == null) {
             event.reply("❌ Failed to retrieve user score details. Please try again later.")
                     .setEphemeral(true)
                     .queue();
@@ -97,8 +97,9 @@ public class LookupCommand implements CommandHandler {
         embed.setTitle("🔍 Reputation Score Lookup");
         embed.setColor(Color.BLUE);
         embed.setDescription(String.format("Results for **%d** user(s)", usernames.size()));
-        // List of scores
-        List<GetUserScoreDetailResponse.UserScore> scores = response.getData().getScores();
+
+        // List of scores (data is now a direct array, not data.scores)
+        List<GetUserScoreDetailResponse.UserScore> scores = response.getData();
 
         if (scores.isEmpty()) {
             embed.addField("⚠️ No Results",
@@ -109,26 +110,15 @@ public class LookupCommand implements CommandHandler {
             // Add field for each user found
             for (GetUserScoreDetailResponse.UserScore score : scores) {
                 StringBuilder fieldValue = new StringBuilder();
-                fieldValue.append("**Discord ID:** `").append(score.getDiscordUserId()).append("`\n");
+                fieldValue.append("**Username:** `").append(score.getUsername()).append("`\n");
                 fieldValue.append("**Reputation Score:** `").append(score.getReputationScore()).append("`\n");
 
-                if (score.getEmail() != null && !score.getEmail().isBlank()) {
-                    fieldValue.append("**Email:** `").append(score.getEmail()).append("`\n");
-                }
-
-                if (score.getDiscordServers() != null && !score.getDiscordServers().isEmpty()) {
-                    String serversList = score.getDiscordServers().stream()
-                            .map(String::valueOf)
-                            .collect(Collectors.joining(", "));
-                    fieldValue.append("**Servers:** `").append(serversList).append("`\n");
-                }
-
-                embed.addField("👤 " + score.getDiscordUsername(), fieldValue.toString(), false);
+                embed.addField("👤 " + score.getUsername(), fieldValue.toString(), false);
             }
 
             // Check for usernames not found
             List<String> foundUsernames = scores.stream()
-                    .map(GetUserScoreDetailResponse.UserScore::getDiscordUsername)
+                    .map(GetUserScoreDetailResponse.UserScore::getUsername)
                     .toList();
 
             List<String> notFound = usernames.stream()

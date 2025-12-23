@@ -11,12 +11,60 @@ import org.slf4j.LoggerFactory;
 public class ConfigLoader {
     private static final Logger logger = LoggerFactory.getLogger(ConfigLoader.class);
 
+    /**
+     * Environment type for the application.
+     */
+    public enum Environment {
+        /**
+         * Development environment.
+         */
+        DEV("dev"),
+
+        /**
+         * Production environment.
+         */
+        PROD("prod");
+
+        private final String value;
+
+        Environment(String value) {
+            this.value = value;
+        }
+
+        /**
+         * Gets the string value of the environment.
+         *
+         * @return the environment value
+         */
+        public String getValue() {
+            return value;
+        }
+
+        /**
+         * Converts a string to an Environment enum.
+         * Defaults to PROD if value is null, blank, or unrecognized.
+         *
+         * @param value the string value to convert
+         * @return the Environment enum, defaults to PROD
+         */
+        public static Environment fromString(String value) {
+            if (value == null || value.isBlank()) {
+                return PROD; // Default to prod for safety
+            }
+            String lower = value.toLowerCase().trim();
+            return "dev".equals(lower) ? DEV : PROD;
+        }
+    }
+
     private final Dotenv dotenv;
+    private final Environment environment;
     private final String botToken;
     private final String botOwnerId;
     private final String mafiaGuildId;
     private final String mikrosApiKey;
     private final String mikrosApiUrl;
+    private final String reputationApiKeyDev;
+    private final String reputationApiKeyProd;
     private final String reputationApiKey;
     private final String reputationApiUrl;
 
@@ -38,6 +86,10 @@ public class ConfigLoader {
         }
         this.dotenv = tempDotenv;
 
+        // Load environment configuration
+        String envValue = getEnv("ENVIRONMENT", "prod");
+        this.environment = Environment.fromString(envValue);
+
         // Load required configuration
         this.botToken = getRequiredEnv("DISCORD_BOT_TOKEN");
         this.botOwnerId = getEnv("BOT_OWNER_ID", "");
@@ -54,14 +106,33 @@ public class ConfigLoader {
         }
 
         // Load reputation API configuration (optional - can be empty for mock mode)
-        this.reputationApiKey = getEnv("REPUTATION_API_KEY", "");
+        // Load dev and prod keys separately
+        this.reputationApiKeyDev = getEnv("REPUTATION_API_KEY_DEV",
+                "e12afd908f7c19a64bca41e6657fae90e001bd55");
+        this.reputationApiKeyProd = getEnv("REPUTATION_API_KEY_PROD",
+                "a37f9c1de42b5089f6c2d8e14bb97f30e5ab47cc");
+
+        // Select key based on environment, but allow override with legacy variable
+        String legacyKey = getEnv("REPUTATION_API_KEY", "");
+        if (legacyKey != null && !legacyKey.isBlank()) {
+            // Legacy variable takes precedence for backward compatibility
+            this.reputationApiKey = legacyKey;
+            logger.info("Using REPUTATION_API_KEY from legacy environment variable");
+        } else {
+            // Use environment-based key
+            this.reputationApiKey = environment == Environment.DEV
+                    ? reputationApiKeyDev
+                    : reputationApiKeyProd;
+        }
+
         this.reputationApiUrl = getEnv("REPUTATION_API_URL",
                 "https://tg-api-new-stage.uc.r.appspot.com/mikros/marketing/discord");
 
         if (reputationApiKey == null || reputationApiKey.isBlank()) {
             logger.warn("REPUTATION_API_KEY not set - reputation service will use stub responses");
         } else {
-            logger.info("Reputation API configuration loaded");
+            logger.info("Reputation API configuration loaded - Environment: {} | Using {} API key",
+                    environment.getValue(), environment == Environment.DEV ? "DEV" : "PROD");
         }
 
         logger.info("Configuration loaded successfully");
@@ -169,5 +240,23 @@ public class ConfigLoader {
      */
     public String getReputationApiUrl() {
         return reputationApiUrl;
+    }
+
+    /**
+     * Gets the current environment (dev or prod).
+     *
+     * @return the environment
+     */
+    public Environment getEnvironment() {
+        return environment;
+    }
+
+    /**
+     * Gets the API key type string based on the current environment.
+     *
+     * @return "dev" or "prod"
+     */
+    public String getApiKeyType() {
+        return environment.getValue();
     }
 }
