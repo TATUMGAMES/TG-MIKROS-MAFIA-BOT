@@ -4,6 +4,12 @@ import io.github.cdimascio.dotenv.Dotenv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+
 /**
  * Configuration loader for the Discord bot.
  * Reads configuration values from environment variables and .env file.
@@ -79,10 +85,57 @@ public class ConfigLoader {
         try {
             tempDotenv = Dotenv.configure()
                     .ignoreIfMissing()
+                    .systemProperties()  // Also load into system properties as fallback
                     .load();
         } catch (Exception e) {
-            logger.warn("Could not load .env file, will use system environment variables only", e);
+            // Check if it's an encoding issue
+            if (e.getCause() instanceof java.nio.charset.MalformedInputException) {
+                logger.error("Your .env file has encoding issues (MalformedInputException). " +
+                        "Please save your .env file as UTF-8 without BOM. " +
+                        "You can do this in VS Code: Click encoding in bottom right → 'Save with Encoding' → 'UTF-8'. " +
+                        "Or in IntelliJ: File → File Encoding → 'UTF-8' → 'Remove BOM if any'. " +
+                        "Falling back to system environment variables and manual file reading.");
+            } else {
+                logger.warn("Could not load .env file, will use system environment variables only. " +
+                        "Error: {}", e.getMessage());
+            }
             tempDotenv = null;
+            
+            // Try manual fallback: read .env file directly with UTF-8
+            try {
+                Path envPath = Paths.get(".env");
+                if (Files.exists(envPath)) {
+                    logger.info("Attempting to manually read .env file with UTF-8 encoding...");
+                    List<String> lines = Files.readAllLines(envPath, StandardCharsets.UTF_8);
+                    // Parse manually and set as system properties
+                    int loadedCount = 0;
+                    for (String line : lines) {
+                        line = line.trim();
+                        if (line.isEmpty() || line.startsWith("#")) {
+                            continue;
+                        }
+                        int equalsIndex = line.indexOf('=');
+                        if (equalsIndex > 0) {
+                            String key = line.substring(0, equalsIndex).trim();
+                            String value = line.substring(equalsIndex + 1).trim();
+                            // Remove quotes if present
+                            if (value.startsWith("\"") && value.endsWith("\"") && value.length() > 1) {
+                                value = value.substring(1, value.length() - 1);
+                            } else if (value.startsWith("'") && value.endsWith("'") && value.length() > 1) {
+                                value = value.substring(1, value.length() - 1);
+                            }
+                            System.setProperty(key, value);
+                            loadedCount++;
+                            logger.debug("Loaded {} from .env file (manual fallback)", key);
+                        }
+                    }
+                    if (loadedCount > 0) {
+                        logger.info("Successfully loaded {} variables from .env file using manual UTF-8 fallback", loadedCount);
+                    }
+                }
+            } catch (Exception fallbackException) {
+                logger.warn("Manual .env file reading also failed: {}", fallbackException.getMessage());
+            }
         }
         this.dotenv = tempDotenv;
 
@@ -161,7 +214,7 @@ public class ConfigLoader {
      * @return the value or default
      */
     private String getEnv(String key, String defaultValue) {
-        // First try .env file
+        // First try .env file (via dotenv)
         if (dotenv != null) {
             String value = dotenv.get(key);
             if (value != null && !value.isBlank()) {
@@ -169,8 +222,14 @@ public class ConfigLoader {
             }
         }
 
+        // Try system properties (set by manual fallback or dotenv.systemProperties())
+        String value = System.getProperty(key);
+        if (value != null && !value.isBlank()) {
+            return value;
+        }
+
         // Fall back to system environment variables
-        String value = System.getenv(key);
+        value = System.getenv(key);
         if (value != null && !value.isBlank()) {
             return value;
         }
