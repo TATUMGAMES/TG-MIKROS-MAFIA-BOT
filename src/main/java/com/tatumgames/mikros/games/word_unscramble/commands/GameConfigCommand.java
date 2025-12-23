@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -23,7 +23,7 @@ import java.awt.*;
 import java.time.LocalTime;
 
 /**
- * Command handler for /admin-game-config.
+ * Command handler for /admin-scramble-config.
  * Allows administrators to modify Word Unscramble game settings.
  */
 public class GameConfigCommand implements CommandHandler {
@@ -41,7 +41,7 @@ public class GameConfigCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("admin-game-config", "Configure Word Unscramble game settings (admin only)")
+        return Commands.slash("admin-scramble-config", "Configure Word Unscramble game settings (admin only)")
                 .addSubcommands(
                         new SubcommandData("view", "View current game configuration"),
                         new SubcommandData("set-channel", "Change the game channel")
@@ -93,7 +93,7 @@ public class GameConfigCommand implements CommandHandler {
     private void handleView(SlashCommandInteractionEvent event, String guildId) {
         WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
         if (config == null) {
-            event.reply("❌ Games not configured yet. Use `/admin-game-setup` first.")
+            event.reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -125,14 +125,14 @@ public class GameConfigCommand implements CommandHandler {
     private void handleSetChannel(SlashCommandInteractionEvent event, String guildId) {
         WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
         if (config == null) {
-            event.reply("❌ Games not configured yet. Use `/admin-game-setup` first.")
+            event.reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
                     .setEphemeral(true)
                     .queue();
             return;
         }
 
         // Get the channel option
-        TextChannel channel = AdminUtils.getValidTextChannel(event, "channel");
+        MessageChannel channel = AdminUtils.getValidTextChannel(event, "channel");
         if (channel == null) return;
 
         config.setGameChannelId(channel.getId());
@@ -145,7 +145,7 @@ public class GameConfigCommand implements CommandHandler {
     private void handleSetResetTime(SlashCommandInteractionEvent event, String guildId) {
         WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
         if (config == null) {
-            event.reply("❌ Games not configured yet. Use `/admin-game-setup` first.")
+            event.reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -170,7 +170,7 @@ public class GameConfigCommand implements CommandHandler {
     private void handleEnableGame(SlashCommandInteractionEvent event, String guildId) {
         WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
         if (config == null) {
-            event.reply("❌ Games not configured yet. Use `/admin-game-setup` first.")
+            event.reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -205,7 +205,7 @@ public class GameConfigCommand implements CommandHandler {
     private void handleDisableGame(SlashCommandInteractionEvent event, String guildId) {
         WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
         if (config == null) {
-            event.reply("❌ Games not configured yet. Use `/admin-game-setup` first.")
+            event.reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -247,7 +247,7 @@ public class GameConfigCommand implements CommandHandler {
 
     @Override
     public String getCommandName() {
-        return "admin-game-config";
+        return "admin-scramble-config";
     }
 }
 

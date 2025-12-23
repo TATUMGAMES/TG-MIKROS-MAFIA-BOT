@@ -2,8 +2,10 @@ package com.tatumgames.mikros.admin.utils;
 
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.NewsChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 
@@ -46,37 +48,43 @@ public class AdminUtils {
     }
 
     /**
-     * Safely gets a TextChannel from a slash command option and validates bot permissions.
+     * Safely gets a MessageChannel (TextChannel or NewsChannel) from a slash command option and validates bot permissions.
      *
      * @param event      The slash command event
      * @param optionName The name of the channel option
-     * @return The valid TextChannel, or null if invalid (error reply is sent automatically)
+     * @return The valid MessageChannel, or null if invalid (error reply is sent automatically)
      */
-    public static TextChannel getValidTextChannel(SlashCommandInteractionEvent event, String optionName) {
+    public static MessageChannel getValidTextChannel(SlashCommandInteractionEvent event, String optionName) {
         OptionMapping channelOption = event.getOption(optionName);
 
         if (channelOption == null) {
-            event.reply("❌ You must select a text channel.")
+            event.reply("❌ You must select a text channel or announcement channel.")
                     .setEphemeral(true)
                     .queue();
             return null;
         }
 
         GuildChannel guildChannel = channelOption.getAsChannel();
-        if (!(guildChannel instanceof TextChannel textChannel)) {
-            event.reply("❌ Please select a text channel.")
+        MessageChannel messageChannel = null;
+        
+        if (guildChannel instanceof TextChannel textChannel) {
+            messageChannel = textChannel;
+        } else if (guildChannel instanceof NewsChannel newsChannel) {
+            messageChannel = newsChannel;
+        } else {
+            event.reply("❌ Please select a text channel or announcement channel.")
                     .setEphemeral(true)
                     .queue();
             return null;
         }
 
-        if (!textChannel.canTalk()) {
-            event.reply("❌ I don't have permission to send messages in " + textChannel.getAsMention() + ".")
+        if (!messageChannel.canTalk()) {
+            event.reply("❌ I don't have permission to send messages in " + messageChannel.getAsMention() + ".")
                     .setEphemeral(true)
                     .queue();
             return null;
         }
 
-        return textChannel;
+        return messageChannel;
     }
 }

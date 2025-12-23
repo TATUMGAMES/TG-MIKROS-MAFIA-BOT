@@ -6,7 +6,8 @@ import com.tatumgames.mikros.honeypot.service.HoneypotService;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -65,11 +66,12 @@ public class AlertChannelCommand implements CommandHandler {
         }
 
         // Get the channel option
-        TextChannel channel = AdminUtils.getValidTextChannel(event, "channel");
+        MessageChannel channel = AdminUtils.getValidTextChannel(event, "channel");
         if (channel == null) return;
 
-        // Check bot permissions
-        if (!guild.getSelfMember().hasPermission(channel, Permission.MESSAGE_SEND, Permission.MESSAGE_EMBED_LINKS)) {
+        // Check bot permissions (MessageChannel extends GuildChannel, so this is safe)
+        if (channel instanceof GuildChannel guildChannel &&
+                !guild.getSelfMember().hasPermission(guildChannel, Permission.MESSAGE_SEND, Permission.MESSAGE_EMBED_LINKS)) {
             event.reply("❌ I don't have permission to send messages in that channel.")
                     .setEphemeral(true)
                     .queue();

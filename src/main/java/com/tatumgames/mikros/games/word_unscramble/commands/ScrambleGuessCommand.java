@@ -55,7 +55,7 @@ public class ScrambleGuessCommand implements CommandHandler {
             event.reply("""
                             ❌ No active word unscramble game!
                             
-                            • Check `/game-stats` for community games
+                            • Check `/scramble-stats` for community games
                             • Wait for the next hourly game reset
                             """)
                     .setEphemeral(true)

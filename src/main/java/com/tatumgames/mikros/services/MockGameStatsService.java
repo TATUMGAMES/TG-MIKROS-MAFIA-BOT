@@ -1,5 +1,6 @@
 package com.tatumgames.mikros.services;
 
+import com.tatumgames.mikros.admin.config.MikrosEcosystemConfig;
 import com.tatumgames.mikros.models.ContentStat;
 import com.tatumgames.mikros.models.GameplayTypeStat;
 import com.tatumgames.mikros.models.GenreStat;
@@ -8,6 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Mock implementation of GameStatsService.
@@ -16,10 +19,14 @@ import java.util.List;
 public class MockGameStatsService implements GameStatsService {
     private static final Logger logger = LoggerFactory.getLogger(MockGameStatsService.class);
 
+    // Guild configurations: guildId -> MikrosEcosystemConfig
+    private final Map<String, MikrosEcosystemConfig> guildConfigs;
+
     /**
      * Creates a new MockGameStatsService.
      */
     public MockGameStatsService() {
+        this.guildConfigs = new ConcurrentHashMap<>();
         logger.info("MockGameStatsService initialized (using placeholder data)");
     }
 
@@ -181,6 +188,30 @@ public class MockGameStatsService implements GameStatsService {
         }
 
         return 32.4; // Average across all genres
+    }
+
+    @Override
+    public void setupEcosystem(String guildId, String channelId) {
+        MikrosEcosystemConfig config = new MikrosEcosystemConfig(guildId, true, channelId);
+        guildConfigs.put(guildId, config);
+        logger.info("MIKROS Ecosystem setup complete for guild {}: channel={}", guildId, channelId);
+    }
+
+    @Override
+    public MikrosEcosystemConfig getConfig(String guildId) {
+        return guildConfigs.get(guildId);
+    }
+
+    @Override
+    public void updateConfig(MikrosEcosystemConfig config) {
+        guildConfigs.put(config.getGuildId(), config);
+        logger.info("MIKROS Ecosystem config updated for guild {}", config.getGuildId());
+    }
+
+    @Override
+    public String getEcosystemChannel(String guildId) {
+        MikrosEcosystemConfig config = guildConfigs.get(guildId);
+        return config != null ? config.getChannelId() : null;
     }
 }
 

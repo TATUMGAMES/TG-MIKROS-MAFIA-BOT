@@ -48,6 +48,7 @@ public class BotMain extends ListenerAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BotMain.class);
 
     private final Map<String, CommandHandler> commandHandlers;
+    private final ConfigLoader config;
     private final ModerationLogService moderationLogService;
     private final ReputationService reputationService;
     private final ActivityTrackingService activityTrackingService;
@@ -77,7 +78,7 @@ public class BotMain extends ListenerAdapter {
         this.commandHandlers = new HashMap<>();
 
         // Load configuration
-        ConfigLoader config = new ConfigLoader();
+        this.config = new ConfigLoader();
 
         // Initialize API client
         TatumGamesApiClient apiClient = new TatumGamesApiClient(
@@ -179,15 +180,14 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new TopContributorsCommand(activityTrackingService));
         registerHandler(new PraiseCommand(reputationService));
         registerHandler(new ReportCommand(reputationService));
-        registerHandler(new LookupCommand(reputationService));
+        registerHandler(new LookupCommand(reputationService, config));
 
         // Game Promotion commands
         registerHandler(new SetupPromotionChannelCommand(gamePromotionService));
-        registerHandler(new SetPromotionVerbosityCommand(gamePromotionService));
-        registerHandler(new ForcePromotionCheckCommand(gamePromotionScheduler, gamePromotionService));
-        registerHandler(new DisablePromotionsCommand(gamePromotionService));
+        registerHandler(new PromotionConfigCommand(gamePromotionService, gamePromotionScheduler));
 
         // Game Stats/Analytics commands
+        registerHandler(new com.tatumgames.mikros.admin.commands.MikrosEcosystemSetupCommand(gameStatsService));
         registerHandler(new com.tatumgames.mikros.admin.commands.GameStatsCommand(gameStatsService));
 
         // Word Unscramble commands
@@ -202,7 +202,8 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new RPGActionCommand(characterService, actionService));
         registerHandler(new RPGResurrectCommand(characterService));
         registerHandler(new RPGBossBattleCommand(characterService, bossService));
-        registerHandler(new RPGLeaderboardCommand(characterService));
+        registerHandler(new RPGLeaderboardCommand(characterService, config));
+        registerHandler(new RPGSetupCommand(characterService));
         registerHandler(new RPGConfigCommand(characterService));
         registerHandler(new RPGResetCommand(characterService, bossService));
         registerHandler(new RPGStatsCommand(characterService));

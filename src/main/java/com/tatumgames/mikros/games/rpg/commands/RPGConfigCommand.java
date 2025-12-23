@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 
 /**
- * Command handler for /rpg-config.
+ * Command handler for /admin-rpg-config.
  * Allows administrators to configure RPG settings for their server.
  */
 @SuppressWarnings("ClassCanBeRecord")
@@ -40,7 +40,7 @@ public class RPGConfigCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("rpg-config", "Configure RPG settings (admin only)")
+        return Commands.slash("admin-rpg-config", "Configure RPG settings (admin only)")
                 .addSubcommands(
                         new SubcommandData("view", "View current RPG configuration"),
                         new SubcommandData("toggle", "Enable or disable RPG system")
@@ -156,7 +156,7 @@ public class RPGConfigCommand implements CommandHandler {
         }
 
         // Get the channel option
-        TextChannel channel = AdminUtils.getValidTextChannel(event, "channel");
+        MessageChannel channel = AdminUtils.getValidTextChannel(event, "channel");
         if (channel == null) return;
 
         config.setRpgChannelId(channel.getId());

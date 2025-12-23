@@ -61,7 +61,7 @@ public class ForcePromotionCheckCommand implements CommandHandler {
             String message = """
                     ️⚠️ **Promotion channel not configured**
                     
-                    Please use `/setup-promotion-channel` first to designate a channel for promotions.
+                    Please use `/admin-setup-promotion` first to designate a channel for promotions.
                     """;
 
             event.reply(message)

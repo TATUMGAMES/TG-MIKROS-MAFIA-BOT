@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 /**
- * Command handler for /game-stats.
+ * Command handler for /scramble-stats.
  * Shows the current Word Unscramble game status and leaderboard.
  */
 @SuppressWarnings("ClassCanBeRecord")
@@ -40,7 +40,7 @@ public class GameStatsCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("game-stats", "View current Word Unscramble game status and leaderboard")
+        return Commands.slash("scramble-stats", "View current Word Unscramble game status and leaderboard")
                 .setGuildOnly(true);
     }
 
@@ -63,7 +63,7 @@ public class GameStatsCommand implements CommandHandler {
             event.reply("""
                             ❌ Word Unscramble game is not set up yet!
                             
-                            An administrator can set it up with `/admin-game-setup`
+                            An administrator can set it up with `/admin-scramble-setup`
                             """)
                     .setEphemeral(true)
                     .queue();
@@ -175,7 +175,7 @@ public class GameStatsCommand implements CommandHandler {
 
     @Override
     public String getCommandName() {
-        return "game-stats";
+        return "scramble-stats";
     }
 }
 

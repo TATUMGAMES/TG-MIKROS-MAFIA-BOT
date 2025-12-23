@@ -20,9 +20,9 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Command handler for /gamestats with multiple subcommands.
+ * Command handler for /mikros-ecosystem with multiple subcommands.
  * Provides real-time industry metrics powered by MIKROS Analytics.
- * Admin-only command.
+ * Requires channel setup via /admin-mikros-ecosystem-setup.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class GameStatsCommand implements CommandHandler {
@@ -40,7 +40,7 @@ public class GameStatsCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("gamestats", "View MIKROS Analytics game industry statistics")
+        return Commands.slash("mikros-ecosystem", "View MIKROS Analytics game industry statistics")
                 .addSubcommands(
                         new SubcommandData("trending-game-genres", "Top 3 fastest-growing game genres"),
                         new SubcommandData("trending-content-genres", "Top 3 fastest-growing content types"),
@@ -62,6 +62,32 @@ public class GameStatsCommand implements CommandHandler {
 
     @Override
     public void handle(SlashCommandInteractionEvent event) {
+        // Check if in a guild
+        if (event.getGuild() == null) {
+            event.reply("❌ This command can only be used in a server.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        String guildId = event.getGuild().getId();
+
+        // Get guild config
+        com.tatumgames.mikros.admin.config.MikrosEcosystemConfig config = gameStatsService.getConfig(guildId);
+        if (config == null || config.getChannelId() == null) {
+            event.reply("❌ MIKROS Ecosystem is not configured. Use `/admin-mikros-ecosystem-setup` first.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        // Check if in correct channel
+        if (!event.getChannel().getId().equals(config.getChannelId())) {
+            event.reply(String.format("❌ MIKROS Ecosystem commands must be used in <#%s>",
+                    config.getChannelId())).setEphemeral(true).queue();
+            return;
+        }
+
         String subcommand = event.getSubcommandName();
         if (subcommand == null) {
             event.reply("❌ Please specify a subcommand.").setEphemeral(true).queue();
@@ -86,7 +112,7 @@ public class GameStatsCommand implements CommandHandler {
                 default -> event.reply("❌ Unknown subcommand.").setEphemeral(true).queue();
             }
         } catch (Exception e) {
-            logger.error("Error handling gamestats subcommand: {}", subcommand, e);
+            logger.error("Error handling mikros-ecosystem subcommand: {}", subcommand, e);
             event.reply("❌ An error occurred while fetching statistics.").setEphemeral(true).queue();
         }
     }
@@ -506,7 +532,7 @@ public class GameStatsCommand implements CommandHandler {
 
     @Override
     public String getCommandName() {
-        return "gamestats";
+        return "mikros-ecosystem";
     }
 }
 
