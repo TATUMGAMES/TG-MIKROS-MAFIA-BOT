@@ -4,6 +4,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -101,40 +102,72 @@ public class ConfigLoader {
             }
             tempDotenv = null;
             
-            // Try manual fallback: read .env file directly with UTF-8
+            // Try manual fallback: read .env file directly with multiple encoding attempts
             try {
                 Path envPath = Paths.get(".env");
                 if (Files.exists(envPath)) {
-                    logger.info("Attempting to manually read .env file with UTF-8 encoding...");
-                    List<String> lines = Files.readAllLines(envPath, StandardCharsets.UTF_8);
-                    // Parse manually and set as system properties
-                    int loadedCount = 0;
-                    for (String line : lines) {
-                        line = line.trim();
-                        if (line.isEmpty() || line.startsWith("#")) {
-                            continue;
-                        }
-                        int equalsIndex = line.indexOf('=');
-                        if (equalsIndex > 0) {
-                            String key = line.substring(0, equalsIndex).trim();
-                            String value = line.substring(equalsIndex + 1).trim();
-                            // Remove quotes if present
-                            if (value.startsWith("\"") && value.endsWith("\"") && value.length() > 1) {
-                                value = value.substring(1, value.length() - 1);
-                            } else if (value.startsWith("'") && value.endsWith("'") && value.length() > 1) {
-                                value = value.substring(1, value.length() - 1);
-                            }
-                            System.setProperty(key, value);
-                            loadedCount++;
-                            logger.debug("Loaded {} from .env file (manual fallback)", key);
+                    logger.info("Attempting to manually read .env file with multiple encoding attempts...");
+                    
+                    // Try multiple encodings in order of likelihood
+                    Charset[] encodingsToTry = {
+                        StandardCharsets.UTF_8,
+                        Charset.forName("Windows-1252"),  // Common Windows encoding
+                        Charset.forName("ISO-8859-1"),    // Latin-1
+                        StandardCharsets.US_ASCII,
+                        Charset.defaultCharset()          // System default as last resort
+                    };
+                    
+                    List<String> lines = null;
+                    Charset successfulEncoding = null;
+                    
+                    for (Charset encoding : encodingsToTry) {
+                        try {
+                            lines = Files.readAllLines(envPath, encoding);
+                            successfulEncoding = encoding;
+                            logger.info("Successfully read .env file using encoding: {}", encoding.name());
+                            break;
+                        } catch (Exception encodingException) {
+                            // Try next encoding
+                            logger.debug("Failed to read .env with {}: {}", encoding.name(), encodingException.getMessage());
                         }
                     }
-                    if (loadedCount > 0) {
-                        logger.info("Successfully loaded {} variables from .env file using manual UTF-8 fallback", loadedCount);
+                    
+                    if (lines != null && successfulEncoding != null) {
+                        // Parse manually and set as system properties
+                        int loadedCount = 0;
+                        for (String line : lines) {
+                            line = line.trim();
+                            if (line.isEmpty() || line.startsWith("#")) {
+                                continue;
+                            }
+                            int equalsIndex = line.indexOf('=');
+                            if (equalsIndex > 0) {
+                                String key = line.substring(0, equalsIndex).trim();
+                                String value = line.substring(equalsIndex + 1).trim();
+                                // Remove quotes if present
+                                if (value.startsWith("\"") && value.endsWith("\"") && value.length() > 1) {
+                                    value = value.substring(1, value.length() - 1);
+                                } else if (value.startsWith("'") && value.endsWith("'") && value.length() > 1) {
+                                    value = value.substring(1, value.length() - 1);
+                                }
+                                System.setProperty(key, value);
+                                loadedCount++;
+                                logger.debug("Loaded {} from .env file (manual fallback)", key);
+                            }
+                        }
+                        if (loadedCount > 0) {
+                            logger.info("Successfully loaded {} variables from .env file using {} encoding", 
+                                    loadedCount, successfulEncoding.name());
+                        } else {
+                            logger.warn("Read .env file but found no valid key-value pairs");
+                        }
+                    } else {
+                        logger.error("Failed to read .env file with all attempted encodings. " +
+                                "Please save your .env file as UTF-8 without BOM.");
                     }
                 }
             } catch (Exception fallbackException) {
-                logger.warn("Manual .env file reading also failed: {}", fallbackException.getMessage());
+                logger.warn("Manual .env file reading failed completely: {}", fallbackException.getMessage());
             }
         }
         this.dotenv = tempDotenv;
