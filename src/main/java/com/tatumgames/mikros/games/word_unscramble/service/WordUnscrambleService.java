@@ -250,3 +250,5 @@ public class WordUnscrambleService {
         return wordGame.generateAnnouncement(session, progression.getLevel());
     }
 }
+
+

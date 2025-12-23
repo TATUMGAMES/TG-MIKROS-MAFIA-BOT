@@ -152,4 +152,3 @@ For issues, check:
 3. Discord bot status at https://discord.com/developers/applications
 
 Happy moderating! 🎮
-
