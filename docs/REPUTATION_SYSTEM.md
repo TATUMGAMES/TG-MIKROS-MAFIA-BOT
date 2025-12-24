@@ -253,6 +253,34 @@ Score = max(0, min(200, Score))
 **Note:** Warn/Kick/Ban commands are separate from reputation and do not affect reputation scores. They use Discord's
 native moderation features.
 
+### Bot Detection Integration
+
+**Status:** ✅ **Implemented**
+
+The bot detection system automatically reports detected bots to the reputation system:
+
+- **Automatic Reporting:** When a bot is detected, the system automatically creates a `BehaviorReport` with `BehaviorCategory.SPAMMER`
+- **Reporter:** Reports are attributed to "Bot Detection System" (system-generated)
+- **Notes:** Include detection reason and details (e.g., "Auto-detected: ACCOUNT_TOO_NEW - Account age: 5 days, posted link")
+- **Visibility:** Reports appear in `/history` command and affect reputation scores visible in `/lookup`
+- **No Positive Reports:** Only negative reports are made for bots (no positive behavior tracking)
+
+**Detection Methods That Trigger Reports:**
+
+1. Account Age + Link (HIGH confidence)
+2. Multi-Channel Spam (HIGH confidence)
+3. Join + Link (HIGH confidence)
+4. Suspicious Domain (MEDIUM confidence)
+5. URL Shortener (MEDIUM confidence)
+
+**Configuration:**
+
+- Admins can enable/disable reputation reporting via `/admin-bot-detection-config toggle-reputation-reporting`
+- Cooldown system prevents spam reporting (5-minute cooldown per user)
+- Only HIGH confidence detections trigger auto-actions by default
+
+**See Also:** `/docs/ADMIN_COMMANDS.md` - Bot Detection Commands section
+
 ---
 
 ## API Integration
@@ -378,7 +406,8 @@ native moderation features.
 
 ---
 
-**Last Updated:** 2025-01-27  
+**Last Updated:** 2025-12-24  
 **Commands:** 3 (`praise`, `report`, `lookup`)  
-**Status:** ✅ Fully functional with API integration
+**Status:** ✅ Fully functional with API integration  
+**Bot Detection Integration:** ✅ Automatic reporting enabled
 

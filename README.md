@@ -76,7 +76,7 @@ for game developers and studios.
 
 **Community Features:**
 
-- `/server-stats` - Server activity statistics and insights
+- `/server-stats` - Server activity statistics and insights (includes bot prevention count)
 - `/top-contributors` - Leaderboard of most active members
 - `/praise` - Award positive reputation points (Admin only)
 - `/report` - Report users for negative behavior (Admin only)
@@ -87,6 +87,7 @@ for game developers and studios.
 - Behavior tracking and scoring
 - Positive/negative reputation points
 - Integration with moderation actions
+- Automatic bot detection reporting
 
 ### 🎮 Game Promotion System (TASKS_03)
 
@@ -141,6 +142,36 @@ for game developers and studios.
 - Mock data with TODO for API integration
 
 **TODO:** Integration with MIKROS Analytics API (see `/docs/API_*.md`)
+
+### 🤖 Bot Detection System (TASKS_31)
+
+**Automated Bot & Spam Detection:**
+
+- `/admin-bot-detection-setup` - Enable/disable bot detection system
+- `/admin-bot-detection-config` - Configure bot detection settings (8 subcommands)
+
+**Detection Methods:**
+
+- **Account Age + Link:** Detects new accounts (< 30 days) posting links
+- **Multi-Channel Spam:** Detects same message posted in multiple channels
+- **Join + Link:** Detects users posting links immediately after joining
+- **Suspicious Domains:** Detects known spam TLDs and URL shorteners
+- **Dynamic Domain Tracking:** Learns and blocks suspicious domains over time
+
+**Features:**
+
+- Automatic reputation reporting (uses `BehaviorCategory.SPAMMER`)
+- Configurable auto-actions (DELETE, WARN, MUTE, KICK)
+- Per-guild configuration
+- Bot prevention count tracking (visible in `/server-stats`)
+- Admin exemption (administrators bypass detection)
+- Cooldown system prevents spam reporting
+
+**Integration:**
+
+- Automatically reports detected bots to reputation system
+- Builds negative reputation scores visible in `/lookup` and `/history`
+- No positive reports for bots (only negative)
 
 ### 🎲 Community Games Engine (TASKS_05)
 
@@ -421,7 +452,7 @@ Includes:
 | `/history`                       | Moderation | View user moderation history                                             | Moderate Members |
 | `/warn-suggestions`              | Moderation | Get AI-powered warning suggestions                                       | Moderate Members |
 | `/ban-suggestions`               | Moderation | Get AI-powered ban suggestions                                           | Moderate Members |
-| `/server-stats`                  | Community  | View server activity statistics                                          | Everyone         |
+| `/server-stats`                  | Community  | View server activity statistics (includes bot prevention count)           | Moderate Members |
 | `/top-contributors`              | Community  | View most active members                                                 | Everyone         |
 | `/praise`                        | Reputation | Award positive reputation                                                | Admin Only       |
 | `/report`                        | Reputation | Report negative behavior                                                 | Admin Only       |
@@ -450,8 +481,10 @@ Includes:
 | `/set-promo-frequency`           | Promo      | Set promo cooldown                                                       | Administrator    |
 | `/admin-promotion-setup`         | Admin      | Configure game promotion channel                                         | Administrator    |
 | `/admin-promotion-config`        | Admin      | Configure promotion settings (view, update-channel, set-verbosity, disable, force-check) | Administrator    |
+| `/admin-bot-detection-setup`     | Moderation | Enable/disable bot detection system                                     | Administrator    |
+| `/admin-bot-detection-config`    | Moderation | Configure bot detection settings (8 subcommands)                      | Administrator    |
 
-**Total Commands:** 34+ (including subcommands)
+**Total Commands:** 36+ (including subcommands)
 
 ### Example Usage
 
@@ -495,6 +528,16 @@ Includes:
 /mikros-ecosystem trending-game-genres
 /mikros-ecosystem popular-content
 /mikros-ecosystem trending-gameplay-types
+```
+
+#### Bot Detection
+
+```
+/admin-bot-detection-setup enabled:true
+/admin-bot-detection-config view
+/admin-bot-detection-config set-account-age-threshold days:30
+/admin-bot-detection-config set-auto-action action:DELETE
+/server-stats
 ```
 
 ---

@@ -71,6 +71,8 @@ public class BotMain extends ListenerAdapter {
     private final HoneypotService honeypotService;
     private final MessageDeletionService messageDeletionService;
     private final HoneypotMessageListener honeypotListener;
+    private final com.tatumgames.mikros.botdetection.service.BotDetectionService botDetectionService;
+    private final com.tatumgames.mikros.botdetection.listener.BotDetectionMessageListener botDetectionListener;
 
     /**
      * Creates a new BotMain instance.
@@ -122,6 +124,9 @@ public class BotMain extends ListenerAdapter {
         this.honeypotService = new HoneypotService();
         this.messageDeletionService = new MessageDeletionService();
         this.honeypotListener = new HoneypotMessageListener(honeypotService, moderationLogService, messageDeletionService);
+        this.botDetectionService = new com.tatumgames.mikros.botdetection.service.BotDetectionService();
+        this.botDetectionListener = new com.tatumgames.mikros.botdetection.listener.BotDetectionMessageListener(
+                botDetectionService, reputationService);
 
         // Register command handlers
         registerCommandHandlers();
@@ -151,7 +156,7 @@ public class BotMain extends ListenerAdapter {
                             GatewayIntent.MESSAGE_CONTENT
                     )
                     .setActivity(Activity.playing("Moderating with style 🎮"))
-                    .addEventListeners(bot, bot.promoListener, bot.honeypotListener)
+                    .addEventListeners(bot, bot.promoListener, bot.honeypotListener, bot.botDetectionListener)
                     .build();
 
             // Wait for JDA to be ready
@@ -177,7 +182,7 @@ public class BotMain extends ListenerAdapter {
         // Admin & Server commands
         registerHandler(new WarnSuggestionsCommand(messageAnalysisService));
         registerHandler(new BanSuggestionsCommand(messageAnalysisService));
-        registerHandler(new ServerStatsCommand(activityTrackingService));
+        registerHandler(new ServerStatsCommand(activityTrackingService, botDetectionService));
         registerHandler(new TopContributorsCommand(activityTrackingService));
         registerHandler(new PraiseCommand(reputationService));
         registerHandler(new ReportCommand(reputationService));
@@ -223,6 +228,10 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new CleanupCommand(messageDeletionService));
         registerHandler(new AlertChannelCommand(honeypotService));
         registerHandler(new ListBansCommand(moderationLogService));
+
+        // Bot Detection commands
+        registerHandler(new com.tatumgames.mikros.botdetection.commands.BotDetectionSetupCommand(botDetectionService));
+        registerHandler(new com.tatumgames.mikros.botdetection.commands.BotDetectionConfigCommand(botDetectionService));
 
         logger.info("Registered {} command handlers", commandHandlers.size());
     }
