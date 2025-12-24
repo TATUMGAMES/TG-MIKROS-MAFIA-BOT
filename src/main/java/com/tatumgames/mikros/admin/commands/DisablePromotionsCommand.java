@@ -58,7 +58,7 @@ public class DisablePromotionsCommand implements CommandHandler {
                     
                     Game promotions are not currently enabled for this server.
                     
-                    To enable promotions, use `/admin-setup-promotion`.
+                    To enable promotions, use `/admin-promotion-setup`.
                     """;
 
             event.reply(message)
@@ -88,7 +88,7 @@ public class DisablePromotionsCommand implements CommandHandler {
                 • Promotion verbosity settings
                 • All promotion tracking data
                 
-                To re-enable promotions, use `/admin-setup-promotion`.
+                To re-enable promotions, use `/admin-promotion-setup`.
                 """;
 
         event.reply(message)

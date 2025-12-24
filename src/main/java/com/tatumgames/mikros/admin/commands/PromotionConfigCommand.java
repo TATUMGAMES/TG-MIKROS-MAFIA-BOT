@@ -1,6 +1,7 @@
 package com.tatumgames.mikros.admin.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.models.PromotionVerbosity;
 import com.tatumgames.mikros.services.GamePromotionService;
 import com.tatumgames.mikros.services.scheduler.GamePromotionScheduler;
@@ -8,6 +9,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -55,6 +57,8 @@ public class PromotionConfigCommand implements CommandHandler {
         return Commands.slash("admin-promotion-config", "Configure game promotion settings (admin only)")
                 .addSubcommands(
                         new SubcommandData("view", "View current promotion configuration"),
+                        new SubcommandData("update-channel", "Update the promotion channel (requires setup first)")
+                                .addOption(OptionType.CHANNEL, "channel", "New promotion channel", true),
                         new SubcommandData("set-verbosity", "Set promotion frequency")
                                 .addOptions(verbosityOption),
                         new SubcommandData("disable", "Disable game promotions for this server"),
@@ -89,6 +93,7 @@ public class PromotionConfigCommand implements CommandHandler {
 
         switch (subcommand) {
             case "view" -> handleView(event, guildId);
+            case "update-channel" -> handleUpdateChannel(event, guildId);
             case "set-verbosity" -> handleSetVerbosity(event, guildId);
             case "disable" -> handleDisable(event, guildId);
             case "force-check" -> handleForceCheck(event, guild);
@@ -127,13 +132,41 @@ public class PromotionConfigCommand implements CommandHandler {
         event.replyEmbeds(embed.build()).queue();
     }
 
+    private void handleUpdateChannel(SlashCommandInteractionEvent event, String guildId) {
+        // Check if promotion system was set up first (channel must be set)
+        if (gamePromotionService.getPromotionChannel(guildId) == null) {
+            event.reply("❌ Promotion system not set up yet. Use `/admin-promotion-setup` first.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        // Get the channel option
+        MessageChannel channel = AdminUtils.getValidTextChannel(event, "channel");
+        if (channel == null) return;
+
+        // Validate bot can post in channel
+        if (!channel.canTalk()) {
+            event.reply("❌ I don't have permission to send messages in " + channel.getAsMention() + ".")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        // Update channel
+        gamePromotionService.setPromotionChannel(guildId, channel.getId());
+
+        event.reply(String.format("✅ Promotion channel updated to %s", channel.getAsMention())).queue();
+        logger.info("Promotion channel updated to {} for guild {}", channel.getId(), guildId);
+    }
+
     private void handleSetVerbosity(SlashCommandInteractionEvent event, String guildId) {
         // Check if promotion channel is set up
         if (gamePromotionService.getPromotionChannel(guildId) == null) {
             String message = """
                     ⚠️ **Promotion channel not configured**
                     
-                    Please use `/admin-setup-promotion` first to designate a channel for promotions.
+                    Please use `/admin-promotion-setup` first to designate a channel for promotions.
                     """;
             event.reply(message)
                     .setEphemeral(true)
@@ -183,7 +216,7 @@ public class PromotionConfigCommand implements CommandHandler {
                     
                     Game promotions are not currently enabled for this server.
                     
-                    To enable promotions, use `/admin-setup-promotion`.
+                    To enable promotions, use `/admin-promotion-setup`.
                     """;
 
             event.reply(message)
@@ -213,7 +246,7 @@ public class PromotionConfigCommand implements CommandHandler {
                 • Promotion verbosity settings
                 • All promotion tracking data
                 
-                To re-enable promotions, use `/admin-setup-promotion`.
+                To re-enable promotions, use `/admin-promotion-setup`.
                 """;
 
         event.reply(message)
@@ -228,7 +261,7 @@ public class PromotionConfigCommand implements CommandHandler {
             String message = """
                     ⚠️ **Promotion channel not configured**
                     
-                    Please use `/admin-setup-promotion` first to designate a channel for promotions.
+                    Please use `/admin-promotion-setup` first to designate a channel for promotions.
                     """;
 
             event.reply(message)

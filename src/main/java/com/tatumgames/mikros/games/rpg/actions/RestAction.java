@@ -38,7 +38,23 @@ public class RestAction implements CharacterAction {
             "You sip a warm broth that restores your strength.",
             "You whisper a prayer to the ancient guardians before resting.",
             "You relax near glowing mushrooms that emit a comforting warmth.",
-            "You fall asleep listening to the wind howl like distant wolves."
+            "You fall asleep listening to the wind howl like distant wolves.",
+            // New Nilfheim lore narratives (15 additional)
+            "You rest at a Frostgate outpost, the Frostborne warriors sharing their warmth and stories.",
+            "You find shelter in the Grand Library of Nil City, surrounded by ancient knowledge and peace.",
+            "You rest beneath the Moonspire Obelisk, its runic energy soothing your weary body.",
+            "You sleep in a hidden chamber at Starfall Ridge, star fragments providing gentle light.",
+            "You rest at a Stormwarden's camp, the Gale element's energy invigorating your spirit.",
+            "You find peace in the Spirit Veil's liminal space, where time moves differently.",
+            "You rest near a portal to the Arcane Veil, its otherworldly energy healing your wounds.",
+            "You sleep in the ruins of the first civilizations after the Shattering, feeling their history.",
+            "You rest at a shrine to the Eight Elements, each one's energy restoring you in turn.",
+            "You find comfort in a hidden alcove of the Grand Library, surrounded by forbidden tomes.",
+            "You rest at Frostgate's training grounds, the Frostborne's discipline bringing you peace.",
+            "You sleep beneath the twin moons, their alignment blessing you with restorative energy.",
+            "You rest in a chamber filled with Astral element crystals, their power showing you peaceful futures.",
+            "You find shelter in an ancient Frostborne fortress, its walls still strong after centuries.",
+            "You rest at the edge of the Ice Wastes, watching the aurora lights dance across the sky."
     };
 
     @Override

@@ -122,14 +122,29 @@ public class GameStatsCommand implements CommandHandler {
         WordUnscrambleProgression progression = wordUnscrambleService.getProgression(guildId);
         if (progression != null) {
             String progressBar = buildProgressBar(progression.getProgressPercentage());
-            embed.addField("📊 Progression",
-                    String.format("**Level %d**\nXP: %d / %d\n%s\n%.1f%%",
-                            progression.getLevel(),
-                            progression.getXp(),
-                            progression.getXpRequired(),
-                            progressBar,
-                            progression.getProgressPercentage()),
-                    false);
+            int wordsRemaining = progression.getWordsRemaining();
+            int nextLevel = progression.getLevel() + 1;
+            
+            String progressText;
+            if (progression.isMaxLevel()) {
+                progressText = String.format("**Level %d**\nXP: %d / %d\n%s\n%.1f%%\n\n**Progress:** Max level reached!",
+                        progression.getLevel(),
+                        progression.getXp(),
+                        progression.getXpRequired(),
+                        progressBar,
+                        progression.getProgressPercentage());
+            } else {
+                progressText = String.format("**Level %d**\nXP: %d / %d\n%s\n%.1f%%\n\n**Progress:** %d more words needed to reach Level %d",
+                        progression.getLevel(),
+                        progression.getXp(),
+                        progression.getXpRequired(),
+                        progressBar,
+                        progression.getProgressPercentage(),
+                        wordsRemaining,
+                        nextLevel);
+            }
+            
+            embed.addField("📊 Progression", progressText, false);
         }
 
         // Participation stats

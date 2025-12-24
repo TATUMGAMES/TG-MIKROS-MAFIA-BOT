@@ -85,8 +85,8 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 
 - `view` - View current configuration
 - `toggle` - Enable/disable RPG system
-- `set-channel` - Restrict RPG to specific channel
-- `set-cooldown` - Set charge refresh period (hours, default: 12)
+- `update-channel` - Update RPG channel (requires setup first)
+- `set-charge-refresh` - Set charge refresh period (hours, default: 12)
 - `set-xp-multiplier` - Set XP multiplier (0.5x - 2.0x)
 
 ## Character Classes
@@ -98,6 +98,8 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 - **Weaknesses:** INT
 - **Starting Stats:** HP: 110, STR: 17, AGI: 8, INT: 5, LUCK: 7
 - **Best For:** Tanking, melee combat
+- **Unique Ability:** **Berserker Rage** - +10% damage when HP < 50%
+- **Exploration Bonus:** +5% chance to find STR-aligned essences (Ember Shard)
 - **Boss Bonus:** +20% damage vs Beasts
 
 ### Knight 🛡️
@@ -106,7 +108,8 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 - **Strengths:** Massive HP, Defense
 - **Weaknesses:** Low AGI, Low LUCK
 - **Starting Stats:** HP: 135, STR: 13, AGI: 6, INT: 6, LUCK: 5
-- **Special:** 15% damage reduction in combat
+- **Unique Ability:** **Shield Defense** - 10% damage reduction in combat (stacks with AGI defense, max 40% total)
+- **Exploration Bonus:** +5% chance to find HP-aligned essences (Vital Ash)
 - **Boss Bonus:** +20% damage vs Giants & Undead
 
 ### Mage 🔮
@@ -115,7 +118,8 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 - **Strengths:** High INT
 - **Weaknesses:** HP
 - **Starting Stats:** HP: 70, STR: 5, AGI: 7, INT: 20, LUCK: 5
-- **Best For:** Magic damage, spellcasting
+- **Unique Ability:** **Arcane Precision** - +5% critical hit chance (stacks with AGI crits)
+- **Exploration Bonus:** +5% chance to find INT-aligned essences (Mind Crystal)
 - **Boss Bonus:** +20% damage vs Spirits & Elementals
 
 ### Rogue 🗡️
@@ -124,7 +128,8 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 - **Strengths:** AGI + LUCK
 - **Weaknesses:** Low STR, Low HP
 - **Starting Stats:** HP: 85, STR: 8, AGI: 16, INT: 7, LUCK: 12
-- **Best For:** Critical hits, dodging
+- **Unique Ability:** **Lethal Strikes** - Critical hits deal 2.0x damage instead of 1.5x
+- **Exploration Bonus:** AGI-based benefits (already has drop chance and quantity bonuses)
 - **Boss Bonus:** +20% damage vs Humanoids & Beasts
 
 ### Necromancer 💀
@@ -133,7 +138,8 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 - **Strengths:** INT + LUCK
 - **Weaknesses:** HP
 - **Starting Stats:** HP: 75, STR: 6, AGI: 10, INT: 15, LUCK: 10
-- **Special:** 10% chance to apply "Decay" (DoT), doubling XP from battles if triggered
+- **Unique Ability:** **Decay** - 10% chance on battle victory to double XP gained
+- **Exploration Bonus:** +5% chance to find INT-aligned essences (Mind Crystal)
 - **Boss Bonus:** +20% damage vs Spirits & Undead
 
 ### Priest 🙏
@@ -142,8 +148,148 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 - **Strengths:** INT + supportive utility
 - **Weaknesses:** Offense is weak
 - **Starting Stats:** HP: 90, STR: 5, AGI: 6, INT: 15, LUCK: 10
-- **Special:** Can resurrect dead players (free action, no charge cost)
+- **Unique Ability:** **Resurrection** - Can resurrect dead players (free action, no charge cost)
+- **Exploration Bonus:** +5% chance to find INT-aligned essences (Mind Crystal), +3% chance for LUCK-aligned (Fate Clover)
 - **Boss Bonus:** +20% damage vs Undead & Demonic enemies
+
+### Class Comparison Table
+
+| Class | Unique Ability | Exploration Bonus | Best Against | Weak Against |
+|-------|---------------|-------------------|--------------|--------------|
+| **Warrior** | Berserker Rage (+10% damage when HP < 50%) | STR essences (+5%) | Physical, Constructs | Magical, Agile |
+| **Knight** | Shield Defense (10% damage reduction) | HP essences (+5%) | Giants, Undead | All (but tanky) |
+| **Mage** | Arcane Precision (+5% crit chance) | INT essences (+5%) | Magical, Undead | Constructs, Physical |
+| **Rogue** | Lethal Strikes (2.0x crit damage) | AGI benefits (drop chance/quantity) | Agile, Beasts | Physical, Constructs |
+| **Necromancer** | Decay (10% chance to double XP) | INT essences (+5%) | Spirits, Undead | Constructs, Physical |
+| **Priest** | Resurrection (free action) | INT essences (+5%), LUCK essences (+3%) | Undead, Demons | All (but supportive) |
+
+## Stat System
+
+Every stat in the RPG system has **meaningful advantages AND disadvantages**, creating balanced build choices. No single stat dominates - each has clear trade-offs.
+
+### Stat Effectiveness Matrix
+
+Different stats are effective or weak against different enemy types:
+
+| Stat | Strong Against | Weak Against | Special Benefits |
+|------|---------------|--------------|------------------|
+| **STR** | Physical, Constructs (1.3x) | Magical, Agile (0.85x) | Consistent damage, breaks armor |
+| **INT** | Magical, Undead (1.3x) | Constructs, Physical (0.85x) | XP bonus, crafting efficiency |
+| **AGI** | Agile, Beasts (1.3x) | Physical, Constructs (0.85x) | Defense, exploration, critical hits |
+| **LUCK** | All (via rolls) | None (but unreliable) | Item drops, rare items, XP floor |
+| **HP** | All (survivability) | None (no offense) | Pure tanking, death prevention |
+
+### Strength (STR)
+
+**Advantages:**
+- High physical damage (2x multiplier for STR-based classes)
+- Effective against armored/construct enemies (1.3x damage)
+- Can break through physical defenses
+- More consistent damage (less variance)
+
+**Disadvantages:**
+- Weak against magical enemies (0.85x damage) - magic bypasses physical armor
+- Weak against agile enemies (0.85x damage) - too slow to hit
+- No exploration benefits
+- No defense benefits (except Knight class bonus)
+
+**Best For:** Warriors, Knights, physical damage builds
+
+### Agility (AGI)
+
+**Advantages:**
+- **Defense:** 1% damage reduction per point (capped at 30%)
+- Effective against fast/beast enemies (1.3x damage for Rogues)
+- **Exploration Bonus:** +0.5% item drop chance per AGI (max +15%)
+- **Loot Quantity:** AGI ≥ 20 gives +1 essence when drops occur
+- **Critical Hits:** AGI/2% chance for 1.5x damage
+
+**Disadvantages:**
+- Weak against heavily armored enemies (0.85x damage) - can't pierce armor
+- Weak against constructs (0.85x damage) - precision strikes ineffective
+- Defense cap at 30% means diminishing returns
+- Lower base HP pool for AGI-focused classes
+
+**Best For:** Rogues, dodge tanks, exploration-focused builds
+
+### Intelligence (INT)
+
+**Advantages:**
+- High magical damage (2x multiplier for INT-based classes)
+- Effective against magical/undead enemies (1.3x damage)
+- Can bypass physical armor
+- **XP Efficiency:** INT/10% bonus XP (capped at 15%)
+- **Crafting Bonus:** INT/2% chance to preserve catalyst when crafting
+
+**Disadvantages:**
+- Weak against constructs (0.85x damage) - magic doesn't affect machines
+- Weak against heavily armored enemies (0.85x damage) - armor resists magic
+- Lower base HP pool for INT-focused classes
+- No defense benefits
+
+**Best For:** Mages, Priests, Necromancers, efficiency-focused builds
+
+### Luck (LUCK)
+
+**Advantages:**
+- **Battle Roll Bonus:** +2 per point (affects victory chance)
+- **Item Drop Chance:** +0.3% per LUCK point (capped at +10%)
+- **Rare Item Bonus:** LUCK/10% chance for catalysts instead of essences
+- **XP Floor:** Minimum XP = baseXP × (1 + LUCK/20) - prevents bad rolls
+- Affects all combat outcomes
+
+**Disadvantages:**
+- **Unreliable:** High variance means inconsistent performance
+- No direct damage scaling (only affects rolls, not base damage)
+- No defense benefits
+- No exploration benefits beyond drops
+- Diminishing returns after ~15 LUCK
+
+**Best For:** High-risk, high-reward builds, item farming builds
+
+### HP (Hit Points)
+
+**Advantages:**
+- **Survivability:** More HP = more battles before death
+- **Tank Role:** Essential for Knight/Warrior builds
+- **Death Prevention:** Higher HP = less risk of dying and losing progress
+- No caps or diminishing returns
+
+**Disadvantages:**
+- **No Offensive Benefits:** Doesn't increase damage
+- **No Exploration Benefits:** Doesn't help with item drops
+- **Opportunity Cost:** Points in HP = points not in damage stats
+- Death still costly even with high HP (resurrection time, XP loss)
+
+**Best For:** Tanks, survivability-focused builds
+
+### Critical Hit System
+
+**AGI-based Critical Hits:**
+- Crit chance: AGI/2% (e.g., 16 AGI = 8% crit chance)
+- Crit damage: 1.5x multiplier
+- Applied after stat effectiveness multipliers
+- High crit chance = less consistent base damage (trade-off)
+
+**Example:** A Rogue with 20 AGI has a 10% chance to deal 1.5x damage, but their base damage against armored enemies is reduced (0.85x effectiveness).
+
+### Build Examples
+
+**Glass Cannon (High INT, Low HP):**
+- High damage, good XP efficiency, better crafting
+- Very squishy, weak to constructs
+
+**Tank (High HP, High STR):**
+- Very survivable, consistent damage
+- Slow, weak to magic, no exploration benefits
+
+**Balanced (Moderate all stats):**
+- Versatile, no major weaknesses
+- No major strengths either
+
+**Lucky Explorer (High LUCK, High AGI):**
+- Great drops, good exploration, decent defense
+- Unreliable damage, weak to tanks
 
 ## Actions
 
@@ -152,9 +298,12 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 - **Type:** Safe exploration
 - **XP Gain:** 30 + (level × 5) ± 10
 - **Risk:** None (no damage)
-- **Narratives:** 40+ unique encounter stories (Nilfheim-themed)
-- **Item Drops:** 10-15% chance to find 1-2 random essences
-- **Best For:** Consistent XP without risk, item collection
+- **Narratives:** 65+ unique encounter stories (Nilfheim-themed)
+- **Item Drops:** 
+  - Base: 12.5% chance to find 1-2 random essences
+  - **AGI Bonus:** +0.5% drop chance per AGI point (max +15%, total: 12.5-27.5%)
+  - **AGI ≥ 20:** +1 essence when drops occur (now 2-3 essences)
+- **Best For:** Consistent XP without risk, item collection (especially with high AGI)
 - **Charge Cost:** 1
 
 ### Train 💪
@@ -163,7 +312,7 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 - **XP Gain:** 25 + (level × 4) ± 7
 - **Stat Gain:** +1 to +3 random stat (STR, AGI, INT, or LUCK)
 - **Risk:** None
-- **Narratives:** 18 training scenarios
+- **Narratives:** 20 training scenarios per stat (80 total)
 - **Best For:** Building stats over time
 - **Charge Cost:** 1
 
@@ -173,13 +322,24 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 - **XP Gain (Victory):** 50 + (level × 10)
 - **XP Gain (Defeat):** 20 + (level × 4)
 - **XP Gain (Death):** 50% of victory XP
-- **Damage (Victory):** Low (5-15 HP)
-- **Damage (Defeat):** High (20-40 HP)
+- **XP Bonuses:**
+  - **INT Bonus:** INT/10% bonus XP (capped at 15%)
+  - **LUCK Floor:** Minimum XP = baseXP × (1 + LUCK/20) - prevents bad rolls
+- **Damage (Victory):** Low (scales with enemy power, ±25% variance)
+- **Damage (Defeat):** High (scales with enemy power, ±25% variance)
+- **Damage Reduction:**
+  - **AGI Defense:** 1% reduction per AGI point (capped at 30%)
+  - **Knight Class:** Additional 15% reduction (stacks with AGI)
 - **Death:** Characters can now die (HP reaches 0)
-- **Enemies:** 36 enemy types, level-scaled
-- **Item Drops:** 20% chance on victory, 5% chance on defeat (1 essence)
+- **Enemies:** 66 enemy types with different types (Physical, Magical, Agile, Undead, Beast, Construct)
+- **Stat Effectiveness:** STR/INT/AGI have 1.3x effectiveness vs certain enemy types, 0.85x vs others
+- **Critical Hits:** AGI/2% chance for 1.5x damage
+- **Item Drops:**
+  - Base: 20% chance on victory, 5% chance on defeat
+  - **LUCK Bonus:** +0.3% per LUCK point (capped at +10%)
+  - **LUCK Rare Items:** LUCK/10% chance for catalysts instead of essences
 - **Risk:** High damage on defeat, possible death
-- **Best For:** High XP rewards, but risky
+- **Best For:** High XP rewards, but risky. Effectiveness depends on enemy type and your stats.
 - **Charge Cost:** 1
 
 ### Rest 💤
@@ -188,7 +348,7 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 - **XP Gain:** 0
 - **HP Restored:** Full HP
 - **Risk:** None
-- **Narratives:** 25 rest scenarios
+- **Narratives:** 40 rest scenarios
 - **Best For:** Recovering after battles
 - **Charge Cost:** 1
 
@@ -351,6 +511,10 @@ Players can craft permanent stat bonuses using essences and catalysts:
 | **Mind Sigil** | 🔮 | 4x Mind Crystal + 1x Runic Binding | +1 INT |
 | **Charm of Fortune** | 🍀 | 4x Fate Clover + 1x Runic Binding | +1 LUCK |
 | **Vital Rune** | 🩸 | 3x Vital Ash + 1x Monster Core | +5 HP |
+
+**Crafting Bonuses:**
+- **INT Bonus:** INT/2% chance to preserve catalyst when crafting (essence still consumed)
+- Higher intelligence = more efficient crafting (saves rare catalysts)
 
 ### Crafting Rules
 
@@ -607,5 +771,5 @@ are fewer. Yet fate stirs… and your journey begins.
 **Realm:** Nilfheim  
 **Command Prefix:** `rpg-*`  
 **Action System:** Dynamic charges (3-10 based on level), 12h refresh  
-**Boss System:** 24 normal + 12 super bosses  
+**Boss System:** 48 normal + 20 super bosses  
 **Features:** Dual System, Item & Crafting System, Dynamic Charges

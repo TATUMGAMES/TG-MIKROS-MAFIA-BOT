@@ -45,7 +45,7 @@ public class RPGConfigCommand implements CommandHandler {
                         new SubcommandData("view", "View current RPG configuration"),
                         new SubcommandData("toggle", "Enable or disable RPG system")
                                 .addOption(OptionType.BOOLEAN, "enabled", "Enable RPG?", true),
-                        new SubcommandData("set-channel", "Set RPG-specific channel")
+                        new SubcommandData("update-channel", "Update RPG-specific channel")
                                 .addOption(OptionType.CHANNEL, "channel", "RPG channel (or leave empty for any)", false),
                         new SubcommandData("set-charge-refresh", "Set charge refresh period in hours")
                                 .addOption(OptionType.INTEGER, "hours", "Charge refresh period in hours (1-168)", true),
@@ -84,7 +84,7 @@ public class RPGConfigCommand implements CommandHandler {
         switch (subcommand) {
             case "view" -> handleView(event, guildId);
             case "toggle" -> handleToggle(event, guildId);
-            case "set-channel" -> handleSetChannel(event, guildId);
+            case "update-channel" -> handleSetChannel(event, guildId);
             case "set-charge-refresh" -> handleSetChargeRefresh(event, guildId);
             case "set-xp-multiplier" -> handleSetXpMultiplier(event, guildId);
             case "set-allow-no-role" -> handleSetAllowNoRole(event, guildId);
@@ -155,6 +155,14 @@ public class RPGConfigCommand implements CommandHandler {
     private void handleSetChannel(SlashCommandInteractionEvent event, String guildId) {
         RPGConfig config = characterService.getConfig(guildId);
 
+        // Check if RPG system was set up first (channel must be set)
+        if (config.getRpgChannelId() == null) {
+            event.reply("❌ RPG system not set up yet. Use `/admin-rpg-setup` first.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
         if (event.getOption("channel") == null) {
             // Clear channel restriction
             config.setRpgChannelId(null);
@@ -172,11 +180,11 @@ public class RPGConfigCommand implements CommandHandler {
         characterService.updateConfig(config);
 
         event.reply(String.format(
-                "✅ RPG commands restricted to %s",
+                "✅ RPG channel updated to %s",
                 channel.getAsMention()
         )).queue();
 
-        logger.info("RPG channel set to {} for guild {}", channel.getId(), guildId);
+        logger.info("RPG channel updated to {} for guild {}", channel.getId(), guildId);
     }
 
     private void handleSetChargeRefresh(SlashCommandInteractionEvent event, String guildId) {

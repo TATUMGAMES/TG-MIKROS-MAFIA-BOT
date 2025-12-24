@@ -7,23 +7,23 @@ launch-related phrases in messages and offers promotional assistance.
 
 **Commands:**
 
-- `/admin-setup-promotion` - Set the channel for promotion posts
-- `/admin-promotion-config` - Configure promotion settings (subcommands: view, set-verbosity, disable, force-check)
+- `/admin-promotion-setup` - Initial setup for promotion channel
+- `/admin-promotion-config` - Configure promotion settings (subcommands: view, update-channel, set-verbosity, disable, force-check)
 
 ---
 
 ## Admin Commands
 
-### `/admin-setup-promotion`
+### `/admin-promotion-setup`
 
-**Purpose:** Set the channel for game promotion posts.
+**Purpose:** Initial setup for game promotion system.
 
 **Permission Required:** `ADMINISTRATOR`
 
 **Syntax:**
 
 ```
-/admin-setup-promotion channel:<#channel>
+/admin-promotion-setup channel:<#channel>
 ```
 
 **Parameters:**
@@ -35,11 +35,12 @@ launch-related phrases in messages and offers promotional assistance.
 - Configures promotion channel
 - Validates bot permissions
 - Stores per-server configuration
+- Enables promotion system
 
 **Example:**
 
 ```
-/admin-setup-promotion channel:#promotions
+/admin-promotion-setup channel:#promotions
 ```
 
 **Output:**
@@ -64,6 +65,7 @@ Next Steps:
 **Subcommands:**
 
 - `view` - View current promotion configuration
+- `update-channel` - Update the promotion channel (requires setup first)
 - `set-verbosity` - Set how often promotions are posted (QUIET/NORMAL/VERBOSE)
 - `disable` - Disable promotional detection
 - `force-check` - Manually trigger a promotion check
@@ -78,6 +80,7 @@ Next Steps:
 
 ```
 /admin-promotion-config view
+/admin-promotion-config update-channel channel:#new-promotions
 /admin-promotion-config set-verbosity level:NORMAL
 /admin-promotion-config disable
 /admin-promotion-config force-check
@@ -145,7 +148,7 @@ Contact MIKROS for promotional assistance!
 
 **Channel Setup:**
 
-- Set via `/admin-setup-promotion`
+- Set via `/admin-promotion-setup`
 - Required before promotions can be posted
 
 **Verbosity:**
@@ -233,5 +236,5 @@ Contact MIKROS for promotional assistance!
 
 **Last Updated:** 2025-01-27  
 **Admin Commands:** 
-- `/admin-setup-promotion` - Channel setup
+- `/admin-promotion-setup` - Channel setup
 - `/admin-promotion-config` - Configuration (4 subcommands)

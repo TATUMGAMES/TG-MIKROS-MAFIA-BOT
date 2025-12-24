@@ -44,7 +44,7 @@ public class GameConfigCommand implements CommandHandler {
         return Commands.slash("admin-scramble-config", "Configure Word Unscramble game settings (admin only)")
                 .addSubcommands(
                         new SubcommandData("view", "View current game configuration"),
-                        new SubcommandData("set-channel", "Change the game channel")
+                        new SubcommandData("update-channel", "Update the game channel")
                                 .addOption(OptionType.CHANNEL, "channel", "New game channel", true),
                         new SubcommandData("set-reset-time", "Change daily reset time")
                                 .addOption(OptionType.INTEGER, "hour", "Reset hour (0-23 UTC)", true),
@@ -84,7 +84,7 @@ public class GameConfigCommand implements CommandHandler {
 
         switch (subcommand) {
             case "view" -> handleView(event, guildId);
-            case "set-channel" -> handleSetChannel(event, guildId);
+            case "update-channel" -> handleSetChannel(event, guildId);
             case "set-reset-time" -> handleSetResetTime(event, guildId);
             case "enable-game" -> handleEnableGame(event, guildId);
             case "disable-game" -> handleDisableGame(event, guildId);

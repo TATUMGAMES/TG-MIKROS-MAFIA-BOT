@@ -92,8 +92,8 @@ for game developers and studios.
 
 **Admin Commands:**
 
-- `/admin-setup-promotion` - Configure promotion posting channel
-- `/admin-promotion-config` - Configure promotion settings (view, set-verbosity, disable, force-check)
+- `/admin-promotion-setup` - Configure promotion posting channel
+- `/admin-promotion-config` - Configure promotion settings (view, update-channel, set-verbosity, disable, force-check)
 
 **Features:**
 
@@ -172,8 +172,14 @@ for game developers and studios.
 - **Six classes:** Warrior, Knight, Mage, Rogue, Necromancer, Priest
 - Persistent character progression
 - Level and XP system
-- Stat growth (HP, STR, AGI, INT, LUCK)
-- **Action Charge System:** 3 charges, refresh every 12 hours
+- **Balanced Stat System:** Every stat (STR, AGI, INT, LUCK, HP) has meaningful advantages AND disadvantages
+  - Stat effectiveness against different enemy types (1.3x effective, 0.85x weak)
+  - AGI: Defense + exploration bonuses + critical hits
+  - INT: XP efficiency + crafting bonuses
+  - LUCK: Item drops + rare items + XP floor
+  - STR: Consistent physical damage
+  - HP: Pure survivability
+- **Action Charge System:** Dynamic charges (3-10 based on level), refresh every 12 hours
 - **Death & Recovery:** Characters can die, Priests can resurrect
 
 **Player Commands:**
@@ -437,8 +443,8 @@ Includes:
 | `/rpg-reset`                     | RPG        | Reset all RPG data for server                                            | Administrator    |
 | `/setup-promotions`              | Promo      | Enable/disable promo detection                                           | Administrator    |
 | `/set-promo-frequency`           | Promo      | Set promo cooldown                                                       | Administrator    |
-| `/admin-setup-promotion`         | Admin      | Configure game promotion channel                                         | Administrator    |
-| `/admin-promotion-config`        | Admin      | Configure promotion settings (view, set-verbosity, disable, force-check) | Administrator    |
+| `/admin-promotion-setup`         | Admin      | Configure game promotion channel                                         | Administrator    |
+| `/admin-promotion-config`        | Admin      | Configure promotion settings (view, update-channel, set-verbosity, disable, force-check) | Administrator    |
 
 **Total Commands:** 33+ (including subcommands)
 

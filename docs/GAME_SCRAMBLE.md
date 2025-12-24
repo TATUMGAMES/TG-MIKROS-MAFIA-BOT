@@ -39,7 +39,7 @@ scrambled word is posted, and players compete to be the first to solve it.
 **Admin Subcommands:**
 
 - `view` - View current configuration
-- `set-channel` - Change game channel
+- `update-channel` - Update the game channel (requires setup first)
 - `set-reset-time` - Change daily reset hour
 - `enable-game` - Enable Scramble game
 - `disable-game` - Disable Scramble game

@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Command handler for /admin-setup-promotion.
+ * Command handler for /admin-promotion-setup.
  * Allows server administrators to designate a channel for game promotions.
  * Admin-only command.
  */
@@ -35,7 +35,7 @@ public class SetupPromotionChannelCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("admin-setup-promotion", "Set the channel for game promotion posts")
+        return Commands.slash("admin-promotion-setup", "Configure the promotion channel for your server")
                 .addOption(OptionType.CHANNEL, "channel", "The channel to post promotions in", true)
                 .setGuildOnly(true)
                 .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
@@ -82,7 +82,7 @@ public class SetupPromotionChannelCommand implements CommandHandler {
 
     @Override
     public String getCommandName() {
-        return "admin-setup-promotion";
+        return "admin-promotion-setup";
     }
 }
 

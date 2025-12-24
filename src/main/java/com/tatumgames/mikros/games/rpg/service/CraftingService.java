@@ -7,6 +7,8 @@ import com.tatumgames.mikros.games.rpg.model.RPGStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Random;
+
 /**
  * Service for handling item crafting.
  * Validates materials, checks stat caps, and applies permanent stat bonuses.
@@ -14,13 +16,14 @@ import org.slf4j.LoggerFactory;
 public class CraftingService {
     private static final Logger logger = LoggerFactory.getLogger(CraftingService.class);
     private static final int MAX_CRAFTED_BONUS_PER_STAT = 5;
+    private static final Random random = new Random();
 
     /**
      * Crafts an item for a character.
      *
      * @param character the character crafting
      * @param itemType  the item to craft
-     * @return the crafting result
+     * @return the crafting result with catalyst preservation info
      */
     public CraftingResult craft(RPGCharacter character, CraftedItemType itemType) {
         var inventory = character.getInventory();
@@ -37,11 +40,23 @@ public class CraftingService {
             return CraftingResult.STAT_CAPPED;
         }
 
-        // Craft item
+        // INT-based catalyst preservation chance (INT/2% chance)
+        RPGStats stats = character.getStats();
+        int intelligence = stats.getIntelligence();
+        double catalystPreserveChance = intelligence / 2.0 / 100.0; // INT/2%
+        boolean catalystPreserved = random.nextDouble() < catalystPreserveChance;
+
+        // Craft item (consumes materials)
         inventory.craft(itemType);
 
+        // If catalyst was preserved, restore it
+        if (catalystPreserved) {
+            inventory.addCatalyst(itemType.getRequiredCatalyst(), itemType.getCatalystCount());
+            logger.info("Character {} crafted {} - catalyst preserved due to high intelligence!",
+                    character.getName(), itemType.getDisplayName());
+        }
+
         // Apply bonus to character stats
-        RPGStats stats = character.getStats();
         stats.increaseStat(statName, itemType.getStatBonus());
 
         logger.info("Character {} crafted {} - applied +{} {}",
@@ -50,5 +65,6 @@ public class CraftingService {
 
         return CraftingResult.SUCCESS;
     }
+
 }
 

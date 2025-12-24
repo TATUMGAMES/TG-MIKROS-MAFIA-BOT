@@ -2,6 +2,7 @@ package com.tatumgames.mikros.games.word_unscramble.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
+import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleProgression;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleResult;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleSession;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleType;
@@ -94,18 +95,33 @@ public class ScrambleGuessCommand implements CommandHandler {
             long timeToSolve =
                     result.timestamp().getEpochSecond() - session.getStartTime().getEpochSecond();
 
+            // Get progression info after XP was added
+            WordUnscrambleProgression progression = wordUnscrambleService.getOrCreateProgression(guildId);
+            int wordsRemaining = progression.getWordsRemaining();
+            int currentLevel = progression.getLevel();
+            int nextLevel = progression.isMaxLevel() ? currentLevel : currentLevel + 1;
+            
+            String progressionText;
+            if (progression.isMaxLevel()) {
+                progressionText = "\n\n**Progression:** Max level reached!";
+            } else {
+                progressionText = String.format("\n\n**Progression:** %d more words needed to reach Level %d",
+                        wordsRemaining, nextLevel);
+            }
+
             event.reply(String.format("""
                             🎉 **CORRECT!** 🎉
                             
                             %s guessed it right: **%s**!
                             
                             Score: %d points
-                            Time: %d seconds
+                            Time: %d seconds%s
                             """,
                     member.getAsMention(),
                     guess,
                     result.score(),
-                    timeToSolve
+                    timeToSolve,
+                    progressionText
             )).queue();
 
             session.setActive(false);

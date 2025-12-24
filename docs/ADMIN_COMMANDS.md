@@ -168,7 +168,7 @@ server moderation, configuration, and management.
 **Subcommands:**
 
 - `view` - View current configuration
-- `set-channel` - Change game channel
+- `update-channel` - Update the game channel (requires setup first)
 - `set-reset-time` - Change daily reset hour
 - `enable-game` - Enable Word Unscramble game
 - `disable-game` - Disable Word Unscramble game
@@ -177,7 +177,7 @@ server moderation, configuration, and management.
 
 ```
 /admin-scramble-config view
-/admin-scramble-config set-channel channel:#new-games
+/admin-scramble-config update-channel channel:#new-games
 /admin-scramble-config enable-game
 ```
 
@@ -223,8 +223,8 @@ server moderation, configuration, and management.
 
 - `view` - View current configuration
 - `toggle` - Enable/disable RPG system
-- `set-channel` - Restrict RPG to specific channel
-- `set-cooldown` - Set charge refresh period (hours, default: 12)
+- `update-channel` - Update RPG channel (requires setup first)
+- `set-charge-refresh` - Set charge refresh period (hours, default: 12)
 - `set-xp-multiplier` - Set XP multiplier (0.5x - 2.0x)
 
 **Example:**
@@ -237,16 +237,16 @@ server moderation, configuration, and management.
 
 ---
 
-### `/admin-setup-promotion`
+### `/admin-promotion-setup`
 
-**Purpose:** Set the channel for game promotion posts.
+**Purpose:** Initial setup for game promotion system.
 
 **Permission Required:** `ADMINISTRATOR`
 
 **Syntax:**
 
 ```
-/admin-setup-promotion channel:<#channel>
+/admin-promotion-setup channel:<#channel>
 ```
 
 **Parameters:**
@@ -258,11 +258,12 @@ server moderation, configuration, and management.
 - Configures promotion channel
 - Validates bot permissions
 - Stores per-server configuration
+- Enables promotion system
 
 **Example:**
 
 ```
-/admin-setup-promotion channel:#promotions
+/admin-promotion-setup channel:#promotions
 ```
 
 ---
@@ -276,6 +277,7 @@ server moderation, configuration, and management.
 **Subcommands:**
 
 - `view` - View current promotion configuration
+- `update-channel` - Update the promotion channel (requires setup first)
 - `set-verbosity` - Set how often promotions are posted (QUIET/NORMAL/VERBOSE)
 - `disable` - Disable promotional detection
 - `force-check` - Manually trigger a promotion check
@@ -290,6 +292,7 @@ server moderation, configuration, and management.
 
 ```
 /admin-promotion-config view
+/admin-promotion-config update-channel channel:#new-promotions
 /admin-promotion-config set-verbosity level:NORMAL
 /admin-promotion-config disable
 /admin-promotion-config force-check

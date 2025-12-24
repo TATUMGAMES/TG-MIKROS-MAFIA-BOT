@@ -31,7 +31,13 @@ public class TrainAction implements CharacterAction {
             "You test your might against a Frostbeast in the Ice Wastes",
             "You train with the Frostborne warriors of Frostgate, learning their ancient techniques",
             "You practice lifting fragments from the Shattering of the First Winter",
-            "You build strength by climbing the jagged peaks of Starfall Ridge"
+            "You build strength by climbing the jagged peaks of Starfall Ridge",
+            "You train by breaking through the ice barriers at Frostgate's training grounds",
+            "You practice the Frostborne's signature war cry, channeling the Frost element's power",
+            "You engage in a trial of strength with a Frost Titan, learning from its raw power",
+            "You train with weapons forged in the fires of the Shattering, each swing building your might",
+            "You practice the ancient Frostborne technique of shattering ice with pure force",
+            "You build strength by carrying star fragments from Starfall Ridge to the Grand Library"
     };
 
     // Agility narratives - Fantasy-themed speed training, dodging, and acrobatics
@@ -49,7 +55,13 @@ public class TrainAction implements CharacterAction {
             "You train your agility by evading Frostwraiths in the Spirit Veil",
             "You practice swift movements through the shifting paths of Starfall Ridge",
             "You learn to move between the Mortal and Arcane Veils with grace",
-            "You train with the Stormwardens, mastering the Gale element's speed"
+            "You train with the Stormwardens, mastering the Gale element's speed",
+            "You practice the Stormwarden's wind-walking technique, moving with the Gale element",
+            "You train by dodging lightning strikes during a Stormwarden's training session",
+            "You learn to phase through the Spirit Veil, becoming temporarily intangible",
+            "You practice the art of silent movement through Nil City's shadowy alleys",
+            "You train with a master assassin from Frostgate, learning their evasive techniques",
+            "You master the Gale element's speed, moving faster than the eye can follow"
     };
 
     // Intelligence narratives - Fantasy-themed study, research, and magical learning
@@ -67,7 +79,13 @@ public class TrainAction implements CharacterAction {
             "You study the Eight Elements at the Grand Library of Nil City",
             "You research the ancient Frostborne civilization's runic magic at the Moonspire Obelisk",
             "You learn to channel the Astral element, glimpsing fragments of possible futures",
-            "You decipher the arcane inscriptions left by the first civilizations after the Shattering"
+            "You decipher the arcane inscriptions left by the first civilizations after the Shattering",
+            "You master the Void element's secrets, learning to manipulate nothingness itself",
+            "You study the Ember element's fire magic, understanding how it interacts with Frost",
+            "You research the Astral element's connection to fate at the Grand Library's forbidden section",
+            "You learn to weave multiple Elements together, creating powerful combined spells",
+            "You decipher the Moonspire Obelisk's runes, unlocking knowledge of the first civilizations",
+            "You study the Grand Library's archives on the Shattering, understanding the cataclysm's nature"
     };
 
     // Luck narratives - Fantasy-themed fortune training and fate manipulation
@@ -85,7 +103,13 @@ public class TrainAction implements CharacterAction {
             "You study the Astral element's connection to fate at Starfall Ridge",
             "You learn to read the echoes of the Shattering, sensing patterns in chaos",
             "You train with the Selenites, learning to interpret the moon's omens",
-            "You practice navigating the Spirit Veil, where chance and memory intertwine"
+            "You practice navigating the Spirit Veil, where chance and memory intertwine",
+            "You learn to read the Astral element's glimpses of possible futures at Starfall Ridge",
+            "You practice interpreting the twin moons' alignment, reading omens in their light",
+            "You train with an oracle from Nil City, learning to sense opportunities before they appear",
+            "You study the patterns of the Shattering, learning to find luck in chaos",
+            "You practice the art of being in the right place at the right time using Astral visions",
+            "You learn to manipulate fate itself by channeling the Astral element's power"
     };
 
     @Override
