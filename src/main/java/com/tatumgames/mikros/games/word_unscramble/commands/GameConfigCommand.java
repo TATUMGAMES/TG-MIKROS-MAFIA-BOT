@@ -51,7 +51,9 @@ public class GameConfigCommand implements CommandHandler {
                         new SubcommandData("enable-game", "Enable a specific game")
                                 .addOption(OptionType.STRING, "game", "Game to enable", true),
                         new SubcommandData("disable-game", "Disable a specific game")
-                                .addOption(OptionType.STRING, "game", "Game to disable", true)
+                                .addOption(OptionType.STRING, "game", "Game to disable", true),
+                        new SubcommandData("set-allow-no-role", "Allow or disallow users without roles to play")
+                                .addOption(OptionType.BOOLEAN, "enabled", "Allow users without roles?", true)
                 )
                 .setGuildOnly(true)
                 .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
@@ -86,6 +88,7 @@ public class GameConfigCommand implements CommandHandler {
             case "set-reset-time" -> handleSetResetTime(event, guildId);
             case "enable-game" -> handleEnableGame(event, guildId);
             case "disable-game" -> handleDisableGame(event, guildId);
+            case "set-allow-no-role" -> handleSetAllowNoRole(event, guildId);
             default -> event.reply("❌ Unknown subcommand.").setEphemeral(true).queue();
         }
     }
@@ -106,6 +109,7 @@ public class GameConfigCommand implements CommandHandler {
         embed.addField("Game Channel", "<#" + config.getGameChannelId() + ">", true);
         embed.addField("Reset Time", config.getResetTime().toString() + " UTC", true);
         embed.addField("Enabled Games", String.valueOf(config.getEnabledGames().size()), true);
+        embed.addField("Allow No-Role Users", config.isAllowNoRoleUsers() ? "✅ Enabled" : "❌ Disabled", true);
 
         StringBuilder games = new StringBuilder();
         for (WordUnscrambleType type : WordUnscrambleType.values()) {
@@ -243,6 +247,29 @@ public class GameConfigCommand implements CommandHandler {
                     .setEphemeral(true)
                     .queue();
         }
+    }
+
+    private void handleSetAllowNoRole(SlashCommandInteractionEvent event, String guildId) {
+        WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
+        if (config == null) {
+            event.reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        OptionMapping enabledOption = event.getOption("enabled");
+        boolean enabled = (enabledOption != null) && enabledOption.getAsBoolean();
+
+        config.setAllowNoRoleUsers(enabled);
+        wordUnscrambleService.updateConfig(guildId, config);
+
+        event.reply(String.format(
+                "✅ Users without roles are now **%s** to play Word Unscramble games.",
+                enabled ? "allowed" : "not allowed"
+        )).queue();
+
+        logger.info("Word Unscramble allowNoRoleUsers set to {} for guild {}", enabled, guildId);
     }
 
     @Override

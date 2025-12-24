@@ -139,6 +139,23 @@ public class RPGProfileCommand implements CommandHandler {
 
         embed.addField("⚡ Action Status", cooldownStatus, true);
 
+        // Crafted bonuses
+        var inventory = character.getInventory();
+        StringBuilder craftedBonuses = new StringBuilder();
+        craftedBonuses.append(String.format("STR: **+%d/5** | ", inventory.getCraftedBonus("STR")));
+        craftedBonuses.append(String.format("AGI: **+%d/5** | ", inventory.getCraftedBonus("AGI")));
+        craftedBonuses.append(String.format("INT: **+%d/5**\n", inventory.getCraftedBonus("INT")));
+        craftedBonuses.append(String.format("LUCK: **+%d/5** | ", inventory.getCraftedBonus("LUCK")));
+        craftedBonuses.append(String.format("HP: **+%d/5**", inventory.getCraftedBonus("HP")));
+        
+        embed.addField("✨ Crafted Bonuses", craftedBonuses.toString(), false);
+
+        // Duel record
+        embed.addField("⚔️ Duels",
+                String.format("**%d Wins** | **%d Losses**",
+                        character.getDuelsWon(), character.getDuelsLost()),
+                true);
+
         // Footer
         embed.setFooter(String.format(
                 "Character created • Total: %d characters",

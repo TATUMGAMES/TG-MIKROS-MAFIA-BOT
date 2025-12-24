@@ -127,16 +127,16 @@ server moderation, configuration, and management.
 
 ## Configuration Commands
 
-### `/admin-game-setup`
+### `/admin-scramble-setup`
 
-**Purpose:** Initial setup for community games.
+**Purpose:** Initial setup for Word Unscramble game.
 
 **Permission Required:** `ADMINISTRATOR`
 
 **Syntax:**
 
 ```
-/admin-game-setup channel:<#channel> [reset_hour:<0-23>]
+/admin-scramble-setup channel:<#channel> [reset_hour:<0-23>]
 ```
 
 **Parameters:**
@@ -148,20 +148,20 @@ server moderation, configuration, and management.
 
 - Configures game channel
 - Sets daily reset time
-- Enables all games by default
+- Enables Word Unscramble game
 - Posts first game immediately
 
 **Example:**
 
 ```
-/admin-game-setup channel:#games reset_hour:0
+/admin-scramble-setup channel:#games reset_hour:0
 ```
 
 ---
 
-### `/admin-game-config`
+### `/admin-scramble-config`
 
-**Purpose:** Configure community game settings.
+**Purpose:** Configure Word Unscramble game settings.
 
 **Permission Required:** `ADMINISTRATOR`
 
@@ -170,15 +170,45 @@ server moderation, configuration, and management.
 - `view` - View current configuration
 - `set-channel` - Change game channel
 - `set-reset-time` - Change daily reset hour
-- `enable-game` - Enable a specific game
-- `disable-game` - Disable a specific game
+- `enable-game` - Enable Word Unscramble game
+- `disable-game` - Disable Word Unscramble game
 
 **Example:**
 
 ```
-/admin-game-config view
-/admin-game-config set-channel channel:#new-games
-/admin-game-config enable-game game:SCRAMBLE
+/admin-scramble-config view
+/admin-scramble-config set-channel channel:#new-games
+/admin-scramble-config enable-game
+```
+
+---
+
+### `/admin-rpg-setup`
+
+**Purpose:** Initial setup for RPG system.
+
+**Permission Required:** `ADMINISTRATOR`
+
+**Syntax:**
+
+```
+/admin-rpg-setup channel:<#channel>
+```
+
+**Parameters:**
+
+- `channel` (required): Channel for RPG commands and boss spawns
+
+**Behavior:**
+
+- Configures RPG channel
+- Enables RPG system
+- Sets up initial configuration
+
+**Example:**
+
+```
+/admin-rpg-setup channel:#rpg
 ```
 
 ---
@@ -194,7 +224,7 @@ server moderation, configuration, and management.
 - `view` - View current configuration
 - `toggle` - Enable/disable RPG system
 - `set-channel` - Restrict RPG to specific channel
-- `set-cooldown` - Set action cooldown (hours)
+- `set-cooldown` - Set charge refresh period (hours, default: 12)
 - `set-xp-multiplier` - Set XP multiplier (0.5x - 2.0x)
 
 **Example:**
@@ -207,7 +237,7 @@ server moderation, configuration, and management.
 
 ---
 
-### `/admin-setup-promotion-channel`
+### `/admin-setup-promotion`
 
 **Purpose:** Set the channel for game promotion posts.
 
@@ -216,7 +246,7 @@ server moderation, configuration, and management.
 **Syntax:**
 
 ```
-/admin-setup-promotion-channel channel:<#channel>
+/admin-setup-promotion channel:<#channel>
 ```
 
 **Parameters:**
@@ -232,24 +262,25 @@ server moderation, configuration, and management.
 **Example:**
 
 ```
-/admin-setup-promotion-channel channel:#promotions
+/admin-setup-promotion channel:#promotions
 ```
 
 ---
 
-### `/admin-set-promotion-verbosity`
+### `/admin-promotion-config`
 
-**Purpose:** Set how often game promotions are posted.
+**Purpose:** Configure game promotion settings.
 
 **Permission Required:** `ADMINISTRATOR`
 
-**Syntax:**
+**Subcommands:**
 
-```
-/admin-set-promotion-verbosity verbosity:<QUIET|NORMAL|VERBOSE>
-```
+- `view` - View current promotion configuration
+- `set-verbosity` - Set how often promotions are posted (QUIET/NORMAL/VERBOSE)
+- `disable` - Disable promotional detection
+- `force-check` - Manually trigger a promotion check
 
-**Options:**
+**Verbosity Options:**
 
 - `QUIET` - Every 24 hours
 - `NORMAL` - Every 12 hours
@@ -258,62 +289,10 @@ server moderation, configuration, and management.
 **Example:**
 
 ```
-/admin-set-promotion-verbosity verbosity:NORMAL
-```
-
----
-
-### `/admin-force-promotion-check`
-
-**Purpose:** Manually trigger a game promotion check.
-
-**Permission Required:** `ADMINISTRATOR`
-
-**Syntax:**
-
-```
-/admin-force-promotion-check
-```
-
-**Behavior:**
-
-- Immediately checks for promotions
-- Posts if promotions are available
-- Respects verbosity settings
-
-**Example:**
-
-```
-/admin-force-promotion-check
-```
-
----
-
-### `/admin-setup-promotions`
-
-**Purpose:** Enable or disable smart promotional detection.
-
-**Permission Required:** `ADMINISTRATOR`
-
-**Syntax:**
-
-```
-/admin-setup-promotions enabled:<true|false>
-```
-
-**Parameters:**
-
-- `enabled` (required): Enable or disable detection
-
-**Behavior:**
-
-- Enables/disables promotional message detection
-- Per-server configuration
-
-**Example:**
-
-```
-/admin-setup-promotions enabled:true
+/admin-promotion-config view
+/admin-promotion-config set-verbosity level:NORMAL
+/admin-promotion-config disable
+/admin-promotion-config force-check
 ```
 
 ---
@@ -593,7 +572,7 @@ native moderation features.
 
 ---
 
-**Last Updated:** 2025-10-08  
+**Last Updated:** 2025-01-27  
 **Total Admin Commands:** 15+ commands
 
 

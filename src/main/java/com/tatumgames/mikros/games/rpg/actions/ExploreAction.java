@@ -1,6 +1,7 @@
 package com.tatumgames.mikros.games.rpg.actions;
 
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
+import com.tatumgames.mikros.games.rpg.model.EssenceType;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 
@@ -101,16 +102,38 @@ public class ExploreAction implements CharacterAction {
         // Add XP and check for level up
         boolean leveledUp = character.addXp(xpGained);
 
-        // Record the action
-        character.recordAction();
-
-        return RPGActionOutcome.builder()
+        // Roll for item drops (10-15% chance, 1-2 essences)
+        RPGActionOutcome.Builder outcomeBuilder = RPGActionOutcome.builder()
                 .narrative(narrative)
                 .xpGained(xpGained)
                 .leveledUp(leveledUp)
                 .hpRestored(0)
-                .success(true)
-                .build();
+                .success(true);
+
+        // 12.5% average chance (10-15% range)
+        if (random.nextDouble() < 0.125) {
+            int essenceCount = random.nextInt(2) + 1; // 1-2 essences
+            EssenceType essence = getRandomEssence();
+            outcomeBuilder.addItemDrop(essence, essenceCount);
+            
+            // Add to character inventory
+            character.getInventory().addEssence(essence, essenceCount);
+        }
+
+        // Record the action
+        character.recordAction();
+
+        return outcomeBuilder.build();
+    }
+
+    /**
+     * Gets a random essence type.
+     *
+     * @return random essence type
+     */
+    private EssenceType getRandomEssence() {
+        EssenceType[] essences = EssenceType.values();
+        return essences[random.nextInt(essences.length)];
     }
 }
 

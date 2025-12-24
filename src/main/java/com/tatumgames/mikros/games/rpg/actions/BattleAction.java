@@ -1,6 +1,7 @@
 package com.tatumgames.mikros.games.rpg.actions;
 
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
+import com.tatumgames.mikros.games.rpg.model.EssenceType;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.model.RPGStats;
@@ -126,17 +127,39 @@ public class BattleAction implements CharacterAction {
             leveledUp = character.addXp(xpGained);
         }
 
-        // Record the action
-        character.recordAction();
-
-        return RPGActionOutcome.builder()
+        // Roll for item drops
+        RPGActionOutcome.Builder outcomeBuilder = RPGActionOutcome.builder()
                 .narrative(narrative)
                 .xpGained(xpGained)
                 .leveledUp(leveledUp)
                 .damageTaken(damageTaken)
                 .hpRestored(0)
-                .success(victory)
-                .build();
+                .success(victory);
+
+        // Victory: 20% chance, Defeat: 5% chance
+        double dropChance = victory ? 0.20 : 0.05;
+        if (random.nextDouble() < dropChance) {
+            EssenceType essence = getRandomEssence();
+            outcomeBuilder.addItemDrop(essence, 1);
+            
+            // Add to character inventory
+            character.getInventory().addEssence(essence, 1);
+        }
+
+        // Record the action
+        character.recordAction();
+
+        return outcomeBuilder.build();
+    }
+
+    /**
+     * Gets a random essence type.
+     *
+     * @return random essence type
+     */
+    private EssenceType getRandomEssence() {
+        EssenceType[] essences = EssenceType.values();
+        return essences[random.nextInt(essences.length)];
     }
 
     /**

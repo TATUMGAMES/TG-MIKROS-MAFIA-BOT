@@ -4,8 +4,8 @@
 
 The **RPG System** is a text-based role-playing game set in the realm of **Nilfheim** — a world wrapped in cold
 twilight, plagued by rising horrors. Players create characters, level up, perform actions, and battle community bosses.
-The system features 6 character classes, an action charge system (3 charges every 12 hours), death and recovery
-mechanics, and epic boss battles.
+The system features 6 character classes, a dynamic action charge system (3-10 charges based on level), death and recovery
+mechanics, epic boss battles, player vs player duels, and an item crafting system for permanent stat bonuses.
 
 ## How to Play
 
@@ -22,8 +22,9 @@ mechanics, and epic boss battles.
 3. **Perform Actions:**
     - Use `/rpg-action type:<action>`
     - Actions: `explore`, `train`, `battle`, or `rest`
-    - **3 action charges** that refresh every **12 hours**
+    - **Dynamic action charges** (3-10 based on level) that refresh every **12 hours**
     - Use them however you want: all at once or spread out
+    - Actions may drop collectible items (essences and catalysts)
 
 4. **Battle Community Bosses:**
     - Use `/rpg-boss-battle attack` to attack the current boss
@@ -34,6 +35,18 @@ mechanics, and epic boss battles.
 5. **Check Leaderboard:**
     - Use `/rpg-leaderboard` to see top players
     - Sorted by level, then XP
+
+6. **Challenge Players to Duels:**
+    - Use `/rpg-duel target:@player` to challenge another player
+    - Free action (no charge cost), but limited to 3 duels per 24 hours
+    - Narrative-driven outcomes based on character stats and classes
+    - Win/loss tracking for bragging rights
+
+7. **Collect Items and Craft Bonuses:**
+    - Items drop from explore, battle, and boss actions
+    - Use `/rpg-inventory` to view your collected essences, catalysts, and crafted bonuses
+    - Use `/rpg-craft item:<name>` to craft permanent stat bonuses
+    - Hard cap: +5 per stat (STR, AGI, INT, LUCK, HP)
 
 ## Commands
 
@@ -46,8 +59,11 @@ mechanics, and epic boss battles.
 | `/rpg-profile user:<user>` | View another player's profile                  | `/rpg-profile user:@Player`                |
 | `/rpg-action`              | Perform an action (uses 1 charge)              | `/rpg-action type:explore`                 |
 | `/rpg-resurrect`           | Resurrect a dead player (Priest-only, free)    | `/rpg-resurrect target:@Player`            |
+| `/rpg-duel`                | Challenge another player to a duel (free, 3x/24h) | `/rpg-duel target:@Player`              |
 | `/rpg-boss-battle`         | Attack boss, check status, or view leaderboard | `/rpg-boss-battle attack`                  |
 | `/rpg-leaderboard`         | View top players                               | `/rpg-leaderboard`                         |
+| `/rpg-inventory`           | View your collected items and crafted bonuses  | `/rpg-inventory`                           |
+| `/rpg-craft`               | Craft permanent stat-boosting items             | `/rpg-craft item:Ember Infusion`           |
 
 **Boss Battle Subcommands:**
 
@@ -57,11 +73,15 @@ mechanics, and epic boss battles.
 
 ### Admin Commands
 
-| Command       | Description          | Permission    |
-|---------------|----------------------|---------------|
-| `/rpg-config` | Configure RPG system | Administrator |
+| Command              | Description          | Permission    |
+|----------------------|----------------------|---------------|
+| `/admin-rpg-setup`   | Setup RPG system     | Administrator |
+| `/admin-rpg-config`  | Configure RPG system | Administrator |
 
-**Admin Subcommands:**
+**Setup Command:**
+- `/admin-rpg-setup channel:#channel` - Initial setup to configure RPG channel
+
+**Config Subcommands:**
 
 - `view` - View current configuration
 - `toggle` - Enable/disable RPG system
@@ -133,7 +153,8 @@ mechanics, and epic boss battles.
 - **XP Gain:** 30 + (level × 5) ± 10
 - **Risk:** None (no damage)
 - **Narratives:** 40+ unique encounter stories (Nilfheim-themed)
-- **Best For:** Consistent XP without risk
+- **Item Drops:** 10-15% chance to find 1-2 random essences
+- **Best For:** Consistent XP without risk, item collection
 - **Charge Cost:** 1
 
 ### Train 💪
@@ -156,6 +177,7 @@ mechanics, and epic boss battles.
 - **Damage (Defeat):** High (20-40 HP)
 - **Death:** Characters can now die (HP reaches 0)
 - **Enemies:** 36 enemy types, level-scaled
+- **Item Drops:** 20% chance on victory, 5% chance on defeat (1 essence)
 - **Risk:** High damage on defeat, possible death
 - **Best For:** High XP rewards, but risky
 - **Charge Cost:** 1
@@ -178,28 +200,180 @@ mechanics, and epic boss battles.
 - **Charge Cost:** **FREE** (does not consume action charges)
 - **Usage:** `/rpg-resurrect target:@Player`
 
-## Action Charge System
+### Duel ⚔️ (Free Action, Rate Limited)
 
-**NEW:** The action system has been overhauled!
+- **Type:** Player vs Player combat
+- **XP Gain:** None
+- **HP Damage:** None (no damage or death from duels)
+- **Rate Limit:** 3 duels per 24 hours
+- **Charge Cost:** **FREE** (does not consume action charges)
+- **Outcome:** Narrative-driven based on character stats, classes, and luck
+- **Rewards:** Win/loss record tracking only
+- **Usage:** `/rpg-duel target:@Player`
+
+## Dynamic Action Charge System
+
+**NEW:** The action system has been overhauled with dynamic charges based on level!
 
 - **Old System:** 1 action per 24 hours (cooldown-based)
-- **New System:** 3 action charges, refresh every 12 hours
+- **New System:** Dynamic action charges (3-10 based on level), refresh every 12 hours
 
 ### How It Works:
 
-- Start with **3 action charges**
+- Start with **3 action charges** (levels 1-2)
+- Maximum charges increase as you level up following the **Fibonacci sequence**
 - Each action (explore, train, battle, rest) consumes **1 charge**
-- Charges refresh every **12 hours** (all 3 charges restored)
+- Charges refresh every **12 hours** (all charges restored to current max)
 - Use charges however you want:
-    - All 3 at once: `explore → train → battle`
+    - All at once: `explore → train → battle`
     - Spread out: `battle` (wait) → `rest` (wait) → `explore`
     - Any combination you prefer!
+
+### Charge Progression (Fibonacci Sequence):
+
+| Level | Max Charges | Notes |
+|-------|-------------|-------|
+| 1-2   | 3           | Starting charges |
+| 3     | 4           | +1 charge bonus on level up |
+| 4     | 4           | |
+| 5     | 5           | +1 charge bonus on level up |
+| 6-7   | 5           | |
+| 8     | 6           | +1 charge bonus on level up |
+| 9-12  | 6           | |
+| 13    | 7           | +1 charge bonus on level up |
+| 14-20 | 7           | |
+| 21    | 8           | +1 charge bonus on level up |
+| 22-33 | 8           | |
+| 34    | 9           | +1 charge bonus on level up |
+| 35-54 | 9           | |
+| 55    | 10          | +1 charge bonus on level up (maximum) |
+
+**Key Points:**
+- When you level up to a Fibonacci threshold (3, 5, 8, 13, 21, 34, 55), you immediately receive +1 charge as a bonus
+- Maximum charges cap at **10** (reached at level 55)
+- This system prevents power creep while rewarding long-term players
 
 ### Charge Status:
 
 - View charges in `/rpg-profile`
-- Shows: "Charges: 2/3" and time until next refresh
+- Shows: "Charges: 2/5" (current/max) and time until next refresh
 - Cannot act if dead or in recovery (even with charges)
+
+## Dual System
+
+The Dual System allows players to challenge each other to narrative-driven PvP duels. These are friendly competitions that don't affect HP or XP, but track win/loss records.
+
+### Mechanics
+
+- **No Charge Cost:** Duels are free actions and don't consume action charges
+- **Rate Limit:** Maximum 3 duels per 24 hours per player
+- **No HP Damage:** Duels don't cause HP loss or death
+- **No XP Rewards:** Duels are purely for bragging rights
+- **No Level Restrictions:** Any player can challenge any other player (if both agree)
+
+### How Duels Work
+
+1. **Challenge:** Use `/rpg-duel target:@player` to challenge another player
+2. **Validation:** Both players must have characters and be alive/not recovering
+3. **Calculation:** Winner determined by:
+   - Character stats (STR, AGI, INT, LUCK)
+   - Character class bonuses
+   - Luck modifiers (LUCK × 2 added to power)
+4. **Narrative:** A story is generated explaining the outcome based on classes and stats
+5. **Tracking:** Win/loss records are updated for both players
+
+### Duel Records
+
+- View your duel record in `/rpg-profile`
+- Shows: "Duels: X Wins | Y Losses"
+- Records persist through death/resurrection
+- Rate limit resets every 24 hours
+
+### Example Duel Outcome
+
+> A fierce duel erupted between **Aragorn** (⚔️ Warrior) and **Gandalf** (🔮 Mage)!
+>
+> The Warrior's brute strength proved superior to the Mage's lack of magical defense.
+>
+> **Outcome:** Aragorn emerged victorious!
+
+## Item & Crafting System
+
+The Item & Crafting System allows players to collect essences and catalysts during gameplay, then craft them into permanent stat bonuses.
+
+### Item Types
+
+#### Essences (Common Collectibles)
+
+Essences are stat-aligned collectibles that drop from actions:
+
+| Essence | Emoji | Stat Alignment | Source |
+|---------|-------|---------------|--------|
+| **Ember Shard** | 🔥 | STR | Explore, Battle, Bosses |
+| **Gale Fragment** | 🌪️ | AGI | Explore, Battle, Bosses |
+| **Mind Crystal** | 🔮 | INT | Explore, Battle, Bosses |
+| **Fate Clover** | 🍀 | LUCK | Explore, Battle, Bosses |
+| **Vital Ash** | 🩸 | HP | Explore, Battle, Bosses |
+
+#### Catalysts (Rare Items)
+
+Catalysts are rarer items required for crafting:
+
+| Catalyst | Emoji | Primary Source |
+|----------|-------|----------------|
+| **Ancient Vial** | ⚗️ | Explore, Bosses |
+| **Runic Binding** | 📜 | Bosses |
+| **Monster Core** | 💎 | Bosses |
+| **Frozen Reagent** | ❄️ | Explore, Bosses |
+
+### Drop Rates
+
+**Explore Action:**
+- 10-15% chance to find 1-2 random essences
+
+**Battle Action:**
+- 20% chance on victory (1 essence)
+- 5% chance on defeat (1 essence)
+
+**Boss Battles:**
+- **Normal Boss Victory:** Guaranteed 1 essence + 25% chance for 1 catalyst
+- **Super Boss Victory:** Guaranteed 1 catalyst + 1-3 essences
+- **Note:** Boss drops only occur on victory
+
+### Craftable Items
+
+Players can craft permanent stat bonuses using essences and catalysts:
+
+| Crafted Item | Emoji | Recipe | Stat Bonus |
+|--------------|-------|--------|------------|
+| **Ember Infusion** | 🔥 | 5x Ember Shard + 1x Ancient Vial | +1 STR |
+| **Gale Etching** | 🌪️ | 5x Gale Fragment + 1x Ancient Vial | +1 AGI |
+| **Mind Sigil** | 🔮 | 4x Mind Crystal + 1x Runic Binding | +1 INT |
+| **Charm of Fortune** | 🍀 | 4x Fate Clover + 1x Runic Binding | +1 LUCK |
+| **Vital Rune** | 🩸 | 3x Vital Ash + 1x Monster Core | +5 HP |
+
+### Crafting Rules
+
+- **Hard Cap:** +5 per stat (STR, AGI, INT, LUCK, HP)
+- **No Global Cap:** Each stat has its own +5 cap (total possible: +5 STR, +5 AGI, +5 INT, +5 LUCK, +5 HP)
+- **Permanent:** Crafted bonuses persist through death/resurrection
+- **No Level Requirement:** Any player can craft if they have materials
+- **Materials Consumed:** Crafting consumes the required essences and catalysts
+
+### Commands
+
+- `/rpg-inventory` - View your collected essences, catalysts, and current crafted bonuses
+- `/rpg-craft item:<name>` - Craft a permanent stat-boosting item
+
+### Item Display
+
+Items are displayed inline in action result messages:
+
+> 🧭 You wander the frozen remains of an alchemist's hut...
+> 
+> Amid shattered glass, something glimmers.
+> 
+> **Found:** 🔥 Ember Shard ×2
 
 ## Death and Recovery System
 
@@ -277,6 +451,20 @@ Bosses have types that determine class bonuses:
 - **12 Super Bosses:** Epic world-tier threats
 - Each boss has unique lore, type, and mechanics
 
+### Boss Rewards
+
+**Normal Boss Victory:**
+- Guaranteed 1 essence drop
+- 25% chance for 1 catalyst drop
+- XP rewards based on damage dealt
+
+**Super Boss Victory:**
+- Guaranteed 1 catalyst drop
+- 1-3 random essence drops
+- XP rewards based on damage dealt
+
+**Note:** Boss drops only occur on victory, not defeat.
+
 ## Scoring Rules
 
 ### Level Progression
@@ -291,6 +479,7 @@ Bosses have types that determine class bonuses:
 
 - **Training:** +1 to +3 random stat per action
 - **Level Up:** +5 HP, +1 to all stats
+- **Crafting:** Permanent stat bonuses from crafted items (capped at +5 per stat)
 - **Class Bonuses:** Applied during combat and boss battles
 
 ### Combat Calculation
@@ -326,6 +515,7 @@ Bosses have types that determine class bonuses:
     - When XP threshold reached, character levels up
     - HP increases by 5
     - All stats increase by 1
+    - If leveling to a Fibonacci threshold (3, 5, 8, 13, 21, 34, 55), max charges increase by 1
     - New level unlocks more XP per action
 
 5. **Death and Recovery:**
@@ -338,6 +528,18 @@ Bosses have types that determine class bonuses:
     - Sorted by level (highest first)
     - Secondary sort by XP
     - Shows top 10 players
+
+7. **Item Collection & Crafting:**
+    - Collect essences and catalysts from actions
+    - View inventory with `/rpg-inventory`
+    - Craft permanent stat bonuses with `/rpg-craft`
+    - Bonuses persist through death/resurrection
+
+8. **Player Duels:**
+    - Challenge other players with `/rpg-duel`
+    - Free action (no charge cost)
+    - Rate limited to 3 per 24 hours
+    - Win/loss records tracked in profile
 
 ## Nilfheim Lore
 
@@ -391,20 +593,19 @@ are fewer. Yet fate stirs… and your journey begins.
 
 ## Future TODOs
 
-- 🔮 **Inventory System:** Items, weapons, armor
 - 🔮 **Quests:** Story-driven quest chains
 - 🔮 **Multiplayer:** Party system, guild battles
 - 🔮 **Prestige System:** Reset with bonuses
 - 🔮 **Skills:** Class-specific abilities
-- 🔮 **Crafting:** Create items from materials
 - 🔮 **Dungeons:** Multi-stage challenges
-- 🔮 **PvP:** Player vs player battles
+- 🔮 **Weapons & Armor:** Equipment system with stat bonuses
 
 ---
 
-**Last Updated:** 2025-01-XX  
+**Last Updated:** 2025-01-27  
 **Game Type:** Text-Based RPG  
 **Realm:** Nilfheim  
 **Command Prefix:** `rpg-*`  
-**Action System:** 3 charges, 12h refresh  
-**Boss System:** 24 normal + 12 super bosses
+**Action System:** Dynamic charges (3-10 based on level), 12h refresh  
+**Boss System:** 24 normal + 12 super bosses  
+**Features:** Dual System, Item & Crafting System, Dynamic Charges

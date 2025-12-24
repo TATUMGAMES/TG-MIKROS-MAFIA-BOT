@@ -20,6 +20,7 @@ public class WordUnscrambleConfig {
     private Set<WordUnscrambleType> enabledGames;
     private LocalTime resetTime;
     private WordUnscrambleType activeGameType;
+    private boolean allowNoRoleUsers; // Whether users without roles can play (default: true)
 
     /**
      * Creates a new WordUnscrambleConfig.
@@ -35,6 +36,7 @@ public class WordUnscrambleConfig {
         this.enabledGames = new HashSet<>(enabledGames);
         this.resetTime = resetTime != null ? resetTime : LocalTime.of(0, 0); // Default midnight UTC
         this.activeGameType = enabledGames.isEmpty() ? null : enabledGames.iterator().next();
+        this.allowNoRoleUsers = true; // Allow users without roles by default
     }
 
     /**
@@ -93,6 +95,14 @@ public class WordUnscrambleConfig {
 
     public void setActiveGameType(WordUnscrambleType activeGameType) {
         this.activeGameType = activeGameType;
+    }
+
+    public boolean isAllowNoRoleUsers() {
+        return allowNoRoleUsers;
+    }
+
+    public void setAllowNoRoleUsers(boolean allowNoRoleUsers) {
+        this.allowNoRoleUsers = allowNoRoleUsers;
     }
 }
 

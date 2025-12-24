@@ -1,6 +1,7 @@
 package com.tatumgames.mikros.games.rpg.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.model.Boss;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
@@ -9,6 +10,7 @@ import com.tatumgames.mikros.games.rpg.service.BossService;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -59,11 +61,28 @@ public class RPGBossBattleCommand implements CommandHandler {
             return;
         }
 
+        Member member = event.getMember();
+        if (member == null) {
+            event.reply("❌ Unable to get member information.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
         String userId = event.getUser().getId();
         String guildId = guild.getId();
 
         // Get guild config
         RPGConfig config = characterService.getConfig(guildId);
+
+        // Check role requirement
+        if (config != null && !AdminUtils.canUserPlay(member, config.isAllowNoRoleUsers())) {
+            event.reply("❌ Users without roles cannot play RPG games in this server. Contact an administrator.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
         if (!config.isEnabled()) {
             event.reply("❌ The RPG system is currently disabled in this server.")
                     .setEphemeral(true)

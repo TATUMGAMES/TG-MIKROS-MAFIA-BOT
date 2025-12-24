@@ -1,6 +1,7 @@
 package com.tatumgames.mikros.games.word_unscramble.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleResult;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleSession;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleType;
@@ -47,6 +48,16 @@ public class ScrambleGuessCommand implements CommandHandler {
         }
 
         String guildId = guild.getId();
+
+        // Check role requirement
+        var config = wordUnscrambleService.getConfig(guildId);
+        if (config != null && !AdminUtils.canUserPlay(member, config.isAllowNoRoleUsers())) {
+            event.reply("❌ Users without roles cannot play Word Unscramble games in this server. Contact an administrator.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
         String guess = event.getOption("word", OptionMapping::getAsString);
 
         // Check for active Word Unscramble game

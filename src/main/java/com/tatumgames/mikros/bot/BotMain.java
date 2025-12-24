@@ -203,10 +203,13 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new RPGResurrectCommand(characterService));
         registerHandler(new RPGBossBattleCommand(characterService, bossService));
         registerHandler(new RPGLeaderboardCommand(characterService, config));
-        registerHandler(new RPGSetupCommand(characterService));
+        registerHandler(new RPGSetupCommand(characterService, bossService));
         registerHandler(new RPGConfigCommand(characterService));
         registerHandler(new RPGResetCommand(characterService, bossService));
         registerHandler(new RPGStatsCommand(characterService));
+        registerHandler(new RPGDualCommand(characterService));
+        registerHandler(new RPGInventoryCommand(characterService));
+        registerHandler(new RPGCraftCommand(characterService, new com.tatumgames.mikros.games.rpg.service.CraftingService()));
 
         // Promo commands
         registerHandler(new SetupPromotionsCommand(promoService));

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -23,6 +24,7 @@ public class BossService {
     private final Map<String, Map<String, Integer>> damageTracking;
 
     private final CharacterService characterService;
+    private static final Random random = new Random();
 
     /**
      * Creates a new BossService.
@@ -203,7 +205,7 @@ public class BossService {
             return;
         }
 
-        // Credit kills to all participants who dealt damage
+        // Credit kills and distribute rewards to all participants who dealt damage
         Map<String, Integer> damage = damageTracking.get(guildId);
         if (damage != null) {
             for (String userId : damage.keySet()) {
@@ -214,6 +216,9 @@ public class BossService {
                     } else {
                         character.incrementSuperBossesKilled();
                     }
+                    
+                    // Distribute boss rewards
+                    distributeBossRewards(character, isNormalBoss);
                 }
             }
         }
@@ -348,6 +353,59 @@ public class BossService {
         public void setCurrentSuperBoss(SuperBoss currentSuperBoss) {
             this.currentSuperBoss = currentSuperBoss;
         }
+    }
+
+    /**
+     * Distributes boss rewards to a character.
+     * Normal boss: guaranteed 1 essence + 25% catalyst
+     * Super boss: guaranteed catalyst + 1-3 essences
+     *
+     * @param character  the character receiving rewards
+     * @param isNormalBoss whether it was a normal boss
+     */
+    private void distributeBossRewards(RPGCharacter character, boolean isNormalBoss) {
+        RPGInventory inventory = character.getInventory();
+        
+        if (isNormalBoss) {
+            // Normal boss: guaranteed 1 essence + 25% catalyst
+            EssenceType essence = getRandomEssence();
+            inventory.addEssence(essence, 1);
+            
+            if (random.nextDouble() < 0.25) {
+                CatalystType catalyst = getRandomCatalyst();
+                inventory.addCatalyst(catalyst, 1);
+            }
+        } else {
+            // Super boss: guaranteed catalyst + 1-3 essences
+            CatalystType catalyst = getRandomCatalyst();
+            inventory.addCatalyst(catalyst, 1);
+            
+            int essenceCount = random.nextInt(3) + 1; // 1-3 essences
+            for (int i = 0; i < essenceCount; i++) {
+                EssenceType essence = getRandomEssence();
+                inventory.addEssence(essence, 1);
+            }
+        }
+    }
+
+    /**
+     * Gets a random essence type.
+     *
+     * @return random essence type
+     */
+    private EssenceType getRandomEssence() {
+        EssenceType[] essences = EssenceType.values();
+        return essences[random.nextInt(essences.length)];
+    }
+
+    /**
+     * Gets a random catalyst type.
+     *
+     * @return random catalyst type
+     */
+    private CatalystType getRandomCatalyst() {
+        CatalystType[] catalysts = CatalystType.values();
+        return catalysts[random.nextInt(catalysts.length)];
     }
 }
 

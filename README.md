@@ -182,8 +182,11 @@ for game developers and studios.
 - `/rpg-profile` - View character stats, charges, recovery status
 - `/rpg-action` - Perform actions (explore, train, battle, rest)
 - `/rpg-resurrect` - Resurrect dead players (Priest-only, free action)
+- `/rpg-duel` - Challenge another player to a duel (free action, 3x/24h limit)
 - `/rpg-boss-battle` - Attack community bosses (attack, status, leaderboard)
 - `/rpg-leaderboard` - View top players
+- `/rpg-inventory` - View your collected items and crafted bonuses
+- `/rpg-craft` - Craft permanent stat-boosting items from materials
 
 **Admin Commands:**
 
@@ -400,38 +403,41 @@ Includes:
 
 ### Command Reference
 
-| Command                          | Category   | Description                                | Permission       |
-|----------------------------------|------------|--------------------------------------------|------------------|
-| `/warn`                          | Moderation | Warn a user with reason                    | Moderate Members |
-| `/kick`                          | Moderation | Kick a user from server                    | Kick Members     |
-| `/ban`                           | Moderation | Ban a user (optional message deletion)     | Ban Members      |
-| `/history`                       | Moderation | View user moderation history               | Moderate Members |
-| `/warn-suggestions`              | Moderation | Get AI-powered warning suggestions         | Moderate Members |
-| `/ban-suggestions`               | Moderation | Get AI-powered ban suggestions             | Moderate Members |
-| `/server-stats`                  | Community  | View server activity statistics            | Everyone         |
-| `/top-contributors`              | Community  | View most active members                   | Everyone         |
-| `/praise`                        | Reputation | Award positive reputation                  | Admin Only       |
-| `/report`                        | Reputation | Report negative behavior                   | Admin Only       |
-| `/lookup`                        | Reputation | Lookup user scores by username             | Admin Only       |
-| `/admin-mikros-ecosystem-setup`  | Analytics  | Setup MIKROS Ecosystem channel            | Administrator    |
-| `/mikros-ecosystem`               | Analytics  | View MIKROS Analytics (13 subcommands, requires channel setup) | Everyone         |
-| `/admin-scramble-setup`          | Games      | Setup word unscramble game                 | Administrator    |
-| `/admin-scramble-config`         | Games      | Configure games (5 subcommands)            | Administrator    |
-| `/scramble-guess`                 | Games      | Submit word unscramble guess               | Everyone         |
-| `/scramble-stats`                 | Games      | View game leaderboard                      | Everyone         |
-| `/rpg-register`                  | RPG        | Create RPG character (6 classes)           | Everyone         |
-| `/rpg-profile`                   | RPG        | View character profile                     | Everyone         |
-| `/rpg-action`                    | RPG        | Perform action (explore/train/battle/rest) | Everyone         |
-| `/rpg-resurrect`                 | RPG        | Resurrect dead player (Priest-only)        | Everyone         |
-| `/rpg-boss-battle`               | RPG        | Attack boss, check status, leaderboard     | Everyone         |
-| `/rpg-leaderboard`               | RPG        | View RPG leaderboard                       | Everyone         |
-| `/rpg-stats`                     | RPG        | View detailed RPG statistics               | Everyone         |
-| `/admin-rpg-setup`               | RPG        | Setup RPG system                           | Administrator    |
-| `/admin-rpg-config`              | RPG        | Configure RPG (5 subcommands)              | Administrator    |
-| `/rpg-reset`                     | RPG        | Reset all RPG data for server              | Administrator    |
-| `/setup-promotions`              | Promo      | Enable/disable promo detection             | Administrator    |
-| `/set-promo-frequency`           | Promo      | Set promo cooldown                         | Administrator    |
-| `/admin-setup-promotion`         | Admin      | Configure game promotion channel           | Administrator    |
+| Command                          | Category   | Description                                                              | Permission       |
+|----------------------------------|------------|--------------------------------------------------------------------------|------------------|
+| `/warn`                          | Moderation | Warn a user with reason                                                  | Moderate Members |
+| `/kick`                          | Moderation | Kick a user from server                                                  | Kick Members     |
+| `/ban`                           | Moderation | Ban a user (optional message deletion)                                   | Ban Members      |
+| `/history`                       | Moderation | View user moderation history                                             | Moderate Members |
+| `/warn-suggestions`              | Moderation | Get AI-powered warning suggestions                                       | Moderate Members |
+| `/ban-suggestions`               | Moderation | Get AI-powered ban suggestions                                           | Moderate Members |
+| `/server-stats`                  | Community  | View server activity statistics                                          | Everyone         |
+| `/top-contributors`              | Community  | View most active members                                                 | Everyone         |
+| `/praise`                        | Reputation | Award positive reputation                                                | Admin Only       |
+| `/report`                        | Reputation | Report negative behavior                                                 | Admin Only       |
+| `/lookup`                        | Reputation | Lookup user scores by username                                           | Admin Only       |
+| `/admin-mikros-ecosystem-setup`  | Analytics  | Setup MIKROS Ecosystem channel                                           | Administrator    |
+| `/mikros-ecosystem`               | Analytics  | View MIKROS Analytics (13 subcommands, requires channel setup)           | Everyone         |
+| `/admin-scramble-setup`          | Games      | Setup word unscramble game                                               | Administrator    |
+| `/admin-scramble-config`         | Games      | Configure games (5 subcommands)                                          | Administrator    |
+| `/scramble-guess`                 | Games      | Submit word unscramble guess                                             | Everyone         |
+| `/scramble-stats`                 | Games      | View game leaderboard                                                    | Everyone         |
+| `/rpg-register`                  | RPG        | Create RPG character (6 classes)                                         | Everyone         |
+| `/rpg-profile`                   | RPG        | View character profile                                                   | Everyone         |
+| `/rpg-action`                    | RPG        | Perform action (explore/train/battle/rest)                               | Everyone         |
+| `/rpg-resurrect`                 | RPG        | Resurrect dead player (Priest-only)                                      | Everyone         |
+| `/rpg-duel`                      | RPG        | Challenge another player to a duel (free, 3x/24h limit)                  | Everyone         |
+| `/rpg-boss-battle`               | RPG        | Attack boss, check status, leaderboard                                   | Everyone         |
+| `/rpg-leaderboard`               | RPG        | View RPG leaderboard                                                     | Everyone         |
+| `/rpg-inventory`                 | RPG        | View collected items and crafted bonuses                                 | Everyone         |
+| `/rpg-craft`                     | RPG        | Craft permanent stat-boosting items                                      | Everyone         |
+| `/rpg-stats`                     | RPG        | View detailed RPG statistics                                             | Everyone         |
+| `/admin-rpg-setup`               | RPG        | Setup RPG system                                                         | Administrator    |
+| `/admin-rpg-config`              | RPG        | Configure RPG (5 subcommands)                                            | Administrator    |
+| `/rpg-reset`                     | RPG        | Reset all RPG data for server                                            | Administrator    |
+| `/setup-promotions`              | Promo      | Enable/disable promo detection                                           | Administrator    |
+| `/set-promo-frequency`           | Promo      | Set promo cooldown                                                       | Administrator    |
+| `/admin-setup-promotion`         | Admin      | Configure game promotion channel                                         | Administrator    |
 | `/admin-promotion-config`        | Admin      | Configure promotion settings (view, set-verbosity, disable, force-check) | Administrator    |
 
 **Total Commands:** 33+ (including subcommands)
@@ -463,6 +469,9 @@ Includes:
 /rpg-action type:explore
 /rpg-action type:battle
 /rpg-action type:rest
+/rpg-duel target:@Player
+/rpg-inventory
+/rpg-craft item:Ember Infusion
 /rpg-boss-battle attack
 /rpg-resurrect target:@Player
 /rpg-leaderboard

@@ -8,7 +8,7 @@ scrambled word is posted, and players compete to be the first to solve it.
 ## How to Play
 
 1. **View Today's Challenge:**
-    - Check `/game-stats` to see the current game
+    - Check `/scramble-stats` to see the current game
     - The bot posts the scrambled word in the game channel daily
 
 2. **Submit Your Guess:**
@@ -27,14 +27,14 @@ scrambled word is posted, and players compete to be the first to solve it.
 | Command           | Description                              | Example                         |
 |-------------------|------------------------------------------|---------------------------------|
 | `/scramble-guess` | Submit your word guess                   | `/scramble-guess word:GAMEPLAY` |
-| `/game-stats`     | View current game status and leaderboard | `/game-stats`                   |
+| `/scramble-stats` | View current game status and leaderboard | `/scramble-stats`               |
 
 ### Admin Commands
 
-| Command              | Description                              | Permission    |
-|----------------------|------------------------------------------|---------------|
-| `/admin-game-setup`  | Initial game setup (channel, reset time) | Administrator |
-| `/admin-game-config` | Configure game settings                  | Administrator |
+| Command                  | Description                              | Permission    |
+|--------------------------|------------------------------------------|---------------|
+| `/admin-scramble-setup`  | Initial game setup (channel, reset time) | Administrator |
+| `/admin-scramble-config` | Configure game settings                  | Administrator |
 
 **Admin Subcommands:**
 
@@ -77,7 +77,7 @@ Current word pool includes 20 gaming-themed words:
 
 3. **Leaderboard:**
     - Shows winner with time and score
-    - View via `/game-stats`
+    - View via `/scramble-stats`
 
 ## Narrative/Explanations
 

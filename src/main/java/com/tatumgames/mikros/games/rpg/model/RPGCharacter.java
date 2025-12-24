@@ -38,6 +38,15 @@ public class RPGCharacter {
     private int bossesKilled = 0;
     private int superBossesKilled = 0;
 
+    // Inventory system
+    private RPGInventory inventory;
+
+    // Dual system
+    private int duelsWon = 0;
+    private int duelsLost = 0;
+    private Instant lastDuelTime;
+    private int duelsInLast24Hours = 0;
+
     /**
      * Creates a new RPG character.
      *
@@ -56,8 +65,8 @@ public class RPGCharacter {
         this.lastActionTime = null;
         this.createdAt = Instant.now();
 
-        // Initialize action charge system (3 charges max)
-        this.actionCharges = 3;
+        // Initialize action charge system (dynamic max based on level)
+        this.actionCharges = getMaxActionCharges(); // Will return 3 for level 1
         this.lastChargeRefreshTime = Instant.now();
 
         // Initialize death/recovery system
@@ -69,6 +78,15 @@ public class RPGCharacter {
         this.enemiesKilled = 0;
         this.bossesKilled = 0;
         this.superBossesKilled = 0;
+
+        // Initialize inventory
+        this.inventory = new RPGInventory();
+
+        // Initialize dual tracking
+        this.duelsWon = 0;
+        this.duelsLost = 0;
+        this.lastDuelTime = null;
+        this.duelsInLast24Hours = 0;
     }
 
     /**
@@ -93,10 +111,19 @@ public class RPGCharacter {
      * Levels up the character.
      */
     private void levelUp() {
+        int oldMaxCharges = getMaxActionCharges();
+        
         this.level++;
         this.xp -= this.xpToNextLevel;
         this.xpToNextLevel = calculateXpForNextLevel(this.level);
         this.stats.applyLevelUpGrowth(this.characterClass);
+        
+        // Check if max charges increased (Fibonacci threshold reached)
+        int newMaxCharges = getMaxActionCharges();
+        if (newMaxCharges > oldMaxCharges) {
+            // Player gained a charge slot - give +1 charge immediately as level-up bonus
+            this.actionCharges = Math.min(newMaxCharges, this.actionCharges + 1);
+        }
     }
 
     /**
@@ -109,6 +136,28 @@ public class RPGCharacter {
     private int calculateXpForNextLevel(int currentLevel) {
         // Formula: 100 * level^1.5
         return (int) (100 * Math.pow(currentLevel, 1.5));
+    }
+
+    /**
+     * Calculates the maximum action charges based on character level.
+     * Uses Fibonacci sequence thresholds: 3, 5, 8, 13, 21, 34, 55
+     * Max level is 55, so maximum charges is 10.
+     *
+     * @return maximum charges for current level (3-10)
+     */
+    public int getMaxActionCharges() {
+        int[] fibonacciThresholds = {3, 5, 8, 13, 21, 34, 55};
+        int baseCharges = 3;
+
+        for (int threshold : fibonacciThresholds) {
+            if (level >= threshold) {
+                baseCharges++;
+            } else {
+                break;
+            }
+        }
+
+        return baseCharges;
     }
 
     /**
@@ -136,9 +185,11 @@ public class RPGCharacter {
      * @param refreshHours the charge refresh period in hours (default: 12)
      */
     public void refreshCharges(int refreshHours) {
+        int maxCharges = getMaxActionCharges();
+        
         if (lastChargeRefreshTime == null) {
             lastChargeRefreshTime = Instant.now();
-            actionCharges = 3;
+            actionCharges = maxCharges;
             return;
         }
 
@@ -148,7 +199,7 @@ public class RPGCharacter {
         if (hoursSinceRefresh >= refreshHours) {
             // Calculate how many full refresh cycles have passed
             int refreshCycles = (int) (hoursSinceRefresh / refreshHours);
-            actionCharges = Math.min(3, actionCharges + refreshCycles * 3);
+            actionCharges = Math.min(maxCharges, actionCharges + refreshCycles * maxCharges);
             lastChargeRefreshTime = now;
         }
     }
@@ -175,7 +226,8 @@ public class RPGCharacter {
      * @return seconds remaining, or 0 if charges are full
      */
     public long getSecondsUntilChargeRefresh(int refreshHours) {
-        if (actionCharges >= 3) {
+        int maxCharges = getMaxActionCharges();
+        if (actionCharges >= maxCharges) {
             return 0;
         }
 
@@ -278,7 +330,8 @@ public class RPGCharacter {
     }
 
     public void setActionCharges(int actionCharges) {
-        this.actionCharges = Math.max(0, Math.min(3, actionCharges));
+        int maxCharges = getMaxActionCharges();
+        this.actionCharges = Math.max(0, Math.min(maxCharges, actionCharges));
     }
 
     public Instant getLastChargeRefreshTime() {
@@ -364,5 +417,72 @@ public class RPGCharacter {
      */
     public void incrementSuperBossesKilled() {
         this.superBossesKilled++;
+    }
+
+    // Inventory system getters/setters
+
+    public RPGInventory getInventory() {
+        return inventory;
+    }
+
+    public void setInventory(RPGInventory inventory) {
+        this.inventory = Objects.requireNonNull(inventory);
+    }
+
+    // Dual system getters/setters
+
+    public int getDuelsWon() {
+        return duelsWon;
+    }
+
+    public int getDuelsLost() {
+        return duelsLost;
+    }
+
+    public Instant getLastDuelTime() {
+        return lastDuelTime;
+    }
+
+    public int getDuelsInLast24Hours() {
+        refreshDuelCount();
+        return duelsInLast24Hours;
+    }
+
+    /**
+     * Checks if the character can perform a duel.
+     *
+     * @return true if can duel (rate limit not exceeded, alive, not recovering)
+     */
+    public boolean canDuel() {
+        refreshDuelCount();
+        return duelsInLast24Hours < 3 && !isDead && !isRecovering;
+    }
+
+    /**
+     * Records a duel result.
+     *
+     * @param won whether the character won
+     */
+    public void recordDuel(boolean won) {
+        if (won) {
+            duelsWon++;
+        } else {
+            duelsLost++;
+        }
+        lastDuelTime = Instant.now();
+        duelsInLast24Hours++;
+    }
+
+    /**
+     * Refreshes the duel count if 24 hours have passed.
+     */
+    public void refreshDuelCount() {
+        if (lastDuelTime == null) {
+            return;
+        }
+        long hoursSince = java.time.temporal.ChronoUnit.HOURS.between(lastDuelTime, Instant.now());
+        if (hoursSince >= 24) {
+            duelsInLast24Hours = 0;
+        }
     }
 }

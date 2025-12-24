@@ -1,6 +1,7 @@
 package com.tatumgames.mikros.games.rpg.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.games.rpg.actions.CharacterAction;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
@@ -9,6 +10,7 @@ import com.tatumgames.mikros.games.rpg.service.ActionService;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -58,8 +60,27 @@ public class RPGActionCommand implements CommandHandler {
             return;
         }
 
+        Member member = event.getMember();
+        if (member == null) {
+            event.reply("❌ Unable to get member information.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
         String userId = event.getUser().getId();
         String guildId = guild.getId();
+
+        // Get guild config
+        RPGConfig config = characterService.getConfig(guildId);
+
+        // Check role requirement
+        if (config != null && !AdminUtils.canUserPlay(member, config.isAllowNoRoleUsers())) {
+            event.reply("❌ Users without roles cannot play RPG games in this server. Contact an administrator.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
 
         // Check if user has a character
         RPGCharacter character = characterService.getCharacter(userId);
@@ -69,9 +90,6 @@ public class RPGActionCommand implements CommandHandler {
                     .queue();
             return;
         }
-
-        // Get guild config
-        RPGConfig config = characterService.getConfig(guildId);
 
         // Check if RPG is enabled
         if (!config.isEnabled()) {
@@ -130,12 +148,13 @@ public class RPGActionCommand implements CommandHandler {
             event.reply(String.format("""
                             ⏳ **No Action Charges Available**
                             
-                            Charges remaining: **%d/3**
+                            Charges remaining: **%d/%d**
                             Next charge refresh in: **%dh %dm**
                             
                             Use this time to check `/rpg-profile` or `/rpg-leaderboard`
                             """,
                     character.getActionCharges(),
+                    character.getMaxActionCharges(),
                     hours, minutes
             )).setEphemeral(true).queue();
             return;
@@ -210,6 +229,24 @@ public class RPGActionCommand implements CommandHandler {
 
             embed.addField("📊 Results", results.toString(), false);
 
+            // Display item drops inline
+            if (!outcome.itemDrops().isEmpty() || !outcome.catalystDrops().isEmpty()) {
+                StringBuilder loot = new StringBuilder();
+                for (com.tatumgames.mikros.games.rpg.model.ItemDrop drop : outcome.itemDrops()) {
+                    loot.append(String.format("%s %s ×%d\n",
+                            drop.essence().getEmoji(),
+                            drop.essence().getDisplayName(),
+                            drop.count()));
+                }
+                for (com.tatumgames.mikros.games.rpg.model.CatalystDrop drop : outcome.catalystDrops()) {
+                    loot.append(String.format("%s %s ×%d\n",
+                            drop.catalyst().getEmoji(),
+                            drop.catalyst().getDisplayName(),
+                            drop.count()));
+                }
+                embed.addField("💎 Loot Found", loot.toString().trim(), false);
+            }
+
             // Current stats
             embed.addField(
                     "Character Status",
@@ -226,8 +263,9 @@ public class RPGActionCommand implements CommandHandler {
             );
 
             embed.setFooter(String.format(
-                    "Action Charges: %d/3 • Next refresh in %d hours",
+                    "Action Charges: %d/%d • Next refresh in %d hours",
                     character.getActionCharges(),
+                    character.getMaxActionCharges(),
                     refreshHours
             ));
             embed.setTimestamp(java.time.Instant.now());

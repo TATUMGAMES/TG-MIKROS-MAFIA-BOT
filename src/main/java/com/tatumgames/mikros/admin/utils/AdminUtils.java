@@ -87,4 +87,33 @@ public class AdminUtils {
 
         return messageChannel;
     }
+
+    /**
+     * Checks if a user can play games based on role requirements.
+     * <p>
+     * A user can play if:
+     * <ul>
+     *     <li>They have at least one role (excluding @everyone), OR</li>
+     *     <li>No-role users are allowed (allowNoRoleUsers = true)</li>
+     * </ul>
+     * <p>
+     * Note: The @everyone role is not counted as a role for this check.
+     *
+     * @param member           The member to check (can be null)
+     * @param allowNoRoleUsers Whether users without roles are allowed to play
+     * @return {@code true} if the user can play, {@code false} otherwise
+     */
+    public static boolean canUserPlay(Member member, boolean allowNoRoleUsers) {
+        // If member is null, cannot play
+        if (member == null) {
+            return false;
+        }
+
+        // Check if user has any roles (excluding @everyone)
+        // getRoles() returns all roles except @everyone
+        boolean hasRoles = !member.getRoles().isEmpty();
+
+        // User can play if they have roles OR no-role users are allowed
+        return hasRoles || allowNoRoleUsers;
+    }
 }

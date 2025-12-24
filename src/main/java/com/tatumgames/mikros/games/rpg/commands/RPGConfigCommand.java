@@ -50,7 +50,9 @@ public class RPGConfigCommand implements CommandHandler {
                         new SubcommandData("set-charge-refresh", "Set charge refresh period in hours")
                                 .addOption(OptionType.INTEGER, "hours", "Charge refresh period in hours (1-168)", true),
                         new SubcommandData("set-xp-multiplier", "Set XP gain multiplier")
-                                .addOption(OptionType.NUMBER, "multiplier", "XP multiplier (0.1-10.0)", true)
+                                .addOption(OptionType.NUMBER, "multiplier", "XP multiplier (0.1-10.0)", true),
+                        new SubcommandData("set-allow-no-role", "Allow or disallow users without roles to play")
+                                .addOption(OptionType.BOOLEAN, "enabled", "Allow users without roles?", true)
                 )
                 .setGuildOnly(true)
                 .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
@@ -85,6 +87,7 @@ public class RPGConfigCommand implements CommandHandler {
             case "set-channel" -> handleSetChannel(event, guildId);
             case "set-charge-refresh" -> handleSetChargeRefresh(event, guildId);
             case "set-xp-multiplier" -> handleSetXpMultiplier(event, guildId);
+            case "set-allow-no-role" -> handleSetAllowNoRole(event, guildId);
             default -> event.reply("❌ Unknown subcommand.").setEphemeral(true).queue();
         }
     }
@@ -119,6 +122,12 @@ public class RPGConfigCommand implements CommandHandler {
         embed.addField(
                 "XP Multiplier",
                 String.format("%.1fx", config.getXpMultiplier()),
+                true
+        );
+
+        embed.addField(
+                "Allow No-Role Users",
+                config.isAllowNoRoleUsers() ? "✅ Enabled" : "❌ Disabled",
                 true
         );
 
@@ -219,6 +228,22 @@ public class RPGConfigCommand implements CommandHandler {
         )).queue();
 
         logger.info("RPG XP multiplier set to {}x for guild {}", multiplier, guildId);
+    }
+
+    private void handleSetAllowNoRole(SlashCommandInteractionEvent event, String guildId) {
+        RPGConfig config = characterService.getConfig(guildId);
+        OptionMapping enabledOption = event.getOption("enabled");
+        boolean enabled = (enabledOption != null) && enabledOption.getAsBoolean();
+
+        config.setAllowNoRoleUsers(enabled);
+        characterService.updateConfig(config);
+
+        event.reply(String.format(
+                "✅ Users without roles are now **%s** to play RPG games.",
+                enabled ? "allowed" : "not allowed"
+        )).queue();
+
+        logger.info("RPG allowNoRoleUsers set to {} for guild {}", enabled, guildId);
     }
 
     @Override

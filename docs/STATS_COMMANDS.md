@@ -1,13 +1,15 @@
-# Stats Commands Documentation
+# MIKROS Ecosystem Commands Documentation
 
 ## Overview
 
-The **Stats Commands** (`stats-*`) provide real-time game industry metrics powered by MIKROS Analytics. These commands
+The **MIKROS Ecosystem Commands** (`/mikros-ecosystem`) provide real-time game industry metrics powered by MIKROS Analytics. These commands
 are useful for game developers, marketers, server admins, and community members.
 
-**Command:** `/stats` with subcommands
+**Command:** `/mikros-ecosystem` with subcommands
 
-**Permission:** Everyone (no restrictions)
+**Permission:** Everyone (requires channel setup via `/admin-mikros-ecosystem-setup`)
+
+**Note:** All `/mikros-ecosystem` commands must be used in the configured channel.
 
 ---
 
@@ -15,14 +17,14 @@ are useful for game developers, marketers, server admins, and community members.
 
 ### Trending Metrics
 
-#### `/stats trending-game-genres`
+#### `/mikros-ecosystem trending-game-genres`
 
 **Description:** Shows the top 3 fastest-growing game genres based on player engagement.
 
 **Syntax:**
 
 ```
-/stats trending-game-genres
+/mikros-ecosystem trending-game-genres
 ```
 
 **Output:**
@@ -45,14 +47,14 @@ are useful for game developers, marketers, server admins, and community members.
 
 ---
 
-#### `/stats trending-content-genres`
+#### `/mikros-ecosystem trending-content-genres`
 
 **Description:** Shows trending content-type genres (e.g., action, story, co-op).
 
 **Syntax:**
 
 ```
-/stats trending-content-genres
+/mikros-ecosystem trending-content-genres
 ```
 
 **Output:**
@@ -75,14 +77,14 @@ are useful for game developers, marketers, server admins, and community members.
 
 ---
 
-#### `/stats trending-content`
+#### `/mikros-ecosystem trending-content`
 
 **Description:** Shows actual in-game content (e.g., dungeon levels, bosses, characters) seeing spikes in playtime.
 
 **Syntax:**
 
 ```
-/stats trending-content
+/mikros-ecosystem trending-content
 ```
 
 **Output:**
@@ -107,14 +109,14 @@ are useful for game developers, marketers, server admins, and community members.
 
 ---
 
-#### `/stats trending-gameplay-types`
+#### `/mikros-ecosystem trending-gameplay-types`
 
 **Description:** Shows trending gameplay types (casual, competitive, hyper-casual).
 
 **Syntax:**
 
 ```
-/stats trending-gameplay-types
+/mikros-ecosystem trending-gameplay-types
 ```
 
 **Output:**
@@ -139,14 +141,14 @@ are useful for game developers, marketers, server admins, and community members.
 
 ### Popular Metrics
 
-#### `/stats popular-game-genres`
+#### `/mikros-ecosystem popular-game-genres`
 
 **Description:** Shows the top 3 most-played game genres overall.
 
 **Syntax:**
 
 ```
-/stats popular-game-genres
+/mikros-ecosystem popular-game-genres
 ```
 
 **Output:**
@@ -169,14 +171,14 @@ are useful for game developers, marketers, server admins, and community members.
 
 ---
 
-#### `/stats popular-content-genres`
+#### `/mikros-ecosystem popular-content-genres`
 
 **Description:** Shows most-played content genres.
 
 **Syntax:**
 
 ```
-/stats popular-content-genres
+/mikros-ecosystem popular-content-genres
 ```
 
 **Output:**
@@ -189,14 +191,14 @@ are useful for game developers, marketers, server admins, and community members.
 
 ---
 
-#### `/stats popular-content`
+#### `/mikros-ecosystem popular-content`
 
 **Description:** Shows most popular in-game content experiences.
 
 **Syntax:**
 
 ```
-/stats popular-content
+/mikros-ecosystem popular-content
 ```
 
 **Output:**
@@ -209,14 +211,14 @@ are useful for game developers, marketers, server admins, and community members.
 
 ---
 
-#### `/stats popular-gameplay-types`
+#### `/mikros-ecosystem popular-gameplay-types`
 
 **Description:** Shows most popular gameplay types overall.
 
 **Syntax:**
 
 ```
-/stats popular-gameplay-types
+/mikros-ecosystem popular-gameplay-types
 ```
 
 **Output:**
@@ -231,14 +233,14 @@ are useful for game developers, marketers, server admins, and community members.
 
 ### Platform Metrics
 
-#### `/stats total-mikros-apps`
+#### `/mikros-ecosystem total-mikros-apps`
 
 **Description:** Shows total number of apps using MIKROS Analytics.
 
 **Syntax:**
 
 ```
-/stats total-mikros-apps
+/mikros-ecosystem total-mikros-apps
 ```
 
 **Output:**
@@ -260,14 +262,14 @@ Growth: +23 this month
 
 ---
 
-#### `/stats total-mikros-contributors`
+#### `/mikros-ecosystem total-mikros-contributors`
 
 **Description:** Shows total number of MIKROS ecosystem contributors.
 
 **Syntax:**
 
 ```
-/stats total-mikros-contributors
+/mikros-ecosystem total-mikros-contributors
 ```
 
 **Output:**
@@ -279,14 +281,14 @@ Growth: +23 this month
 
 ---
 
-#### `/stats total-users`
+#### `/mikros-ecosystem total-users`
 
 **Description:** Shows unique user profiles tracked across MIKROS.
 
 **Syntax:**
 
 ```
-/stats total-users
+/mikros-ecosystem total-users
 ```
 
 **Output:**
@@ -310,14 +312,14 @@ Growth: +2.3M this quarter
 
 ### Time Metrics
 
-#### `/stats avg-gameplay-time`
+#### `/mikros-ecosystem avg-gameplay-time`
 
 **Description:** Shows average gameplay time per app.
 
 **Syntax:**
 
 ```
-/stats avg-gameplay-time [genre:<string>]
+/mikros-ecosystem avg-gameplay-time [genre:<string>]
 ```
 
 **Parameters:**
@@ -333,22 +335,22 @@ Growth: +2.3M this quarter
 **Example:**
 
 ```
-/stats avg-gameplay-time
-/stats avg-gameplay-time genre:Action
+/mikros-ecosystem avg-gameplay-time
+/mikros-ecosystem avg-gameplay-time genre:Action
 ```
 
 **Status:** ⚠️ Mock data (TODO: API integration)
 
 ---
 
-#### `/stats avg-session-time`
+#### `/mikros-ecosystem avg-session-time`
 
 **Description:** Shows average session length.
 
 **Syntax:**
 
 ```
-/stats avg-session-time [genre:<string>]
+/mikros-ecosystem avg-session-time [genre:<string>]
 ```
 
 **Parameters:**
@@ -364,8 +366,8 @@ Growth: +2.3M this quarter
 **Example:**
 
 ```
-/stats avg-session-time
-/stats avg-session-time genre:RPG
+/mikros-ecosystem avg-session-time
+/mikros-ecosystem avg-session-time genre:RPG
 ```
 
 **Status:** ⚠️ Mock data (TODO: API integration)
@@ -376,13 +378,15 @@ Growth: +2.3M this quarter
 
 ### Command Structure
 
-All stats commands:
+All MIKROS Ecosystem commands:
 
-- Use `/stats` as base command
+- Use `/mikros-ecosystem` as base command
 - Have subcommands for specific metrics
 - Return formatted Discord embeds
 - Include emojis and color coding
 - Show mock data (until API integration)
+- Require channel setup via `/admin-mikros-ecosystem-setup`
+- Must be used in the configured channel
 
 ### Error Handling
 
@@ -405,6 +409,18 @@ All stats commands:
 ```
 
 ---
+
+## Setup
+
+### Channel Configuration
+
+Before using `/mikros-ecosystem` commands, an administrator must set up the channel:
+
+```
+/admin-mikros-ecosystem-setup channel:#analytics
+```
+
+This ensures all analytics commands are used in a dedicated channel, preventing spam across multiple channels.
 
 ## API Integration Status
 
@@ -465,9 +481,10 @@ All commands currently return mock/dummy data with `TODO` markers for API integr
 
 ---
 
-**Last Updated:** 2025-10-08  
-**Command Prefix:** `stats-*`  
-**Total Subcommands:** 13
+**Last Updated:** 2025-01-27  
+**Command:** `/mikros-ecosystem`  
+**Total Subcommands:** 13  
+**Setup Command:** `/admin-mikros-ecosystem-setup`
 
 
 
