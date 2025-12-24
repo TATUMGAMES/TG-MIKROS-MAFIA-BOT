@@ -35,6 +35,9 @@ public class WordUnscrambleService {
     // Word Unscramble progression: guildId -> WordUnscrambleProgression
     private final Map<String, WordUnscrambleProgression> wordUnscrambleProgression;
 
+    // Player statistics: "guildId_userId" -> WordUnscramblePlayerStats
+    private final Map<String, WordUnscramblePlayerStats> playerStats;
+
     /**
      * Creates a new WordUnscrambleService.
      */
@@ -43,6 +46,7 @@ public class WordUnscrambleService {
         this.guildConfigs = new ConcurrentHashMap<>();
         this.activeSessions = new ConcurrentHashMap<>();
         this.wordUnscrambleProgression = new ConcurrentHashMap<>();
+        this.playerStats = new ConcurrentHashMap<>();
 
         logger.info("WordUnscrambleService initialized");
     }
@@ -131,13 +135,24 @@ public class WordUnscrambleService {
 
         WordUnscrambleResult result = game.handleAttempt(session, userId, username, input);
 
-        // If correct answer, add XP and check for level up
-        if (result != null && result.isCorrect()) {
-            WordUnscrambleProgression progression = getOrCreateProgression(guildId);
-            boolean leveledUp = progression.addXp();
+        // Update player statistics
+        if (result != null) {
+            WordUnscramblePlayerStats stats = getOrCreatePlayerStats(guildId, userId);
+            
+            if (result.isCorrect()) {
+                // Calculate time in seconds
+                long timeSeconds = result.timestamp().getEpochSecond() - session.getStartTime().getEpochSecond();
+                stats.recordCorrectAnswer(result.score(), timeSeconds);
+                
+                // Also add XP to community progression and check for level up
+                WordUnscrambleProgression progression = getOrCreateProgression(guildId);
+                boolean leveledUp = progression.addXp();
 
-            if (leveledUp) {
-                logger.info("Word Unscramble level up for guild {}: Level {} reached!", guildId, progression.getLevel());
+                if (leveledUp) {
+                    logger.info("Word Unscramble level up for guild {}: Level {} reached!", guildId, progression.getLevel());
+                }
+            } else {
+                stats.recordWrongGuess();
             }
         }
 
@@ -248,6 +263,30 @@ public class WordUnscrambleService {
         WordUnscrambleProgression progression = getOrCreateProgression(guildId);
         WordUnscrambleGame wordGame = (WordUnscrambleGame) game;
         return wordGame.generateAnnouncement(session, progression.getLevel());
+    }
+
+    /**
+     * Gets or creates player statistics for a user in a guild.
+     *
+     * @param guildId the guild ID
+     * @param userId  the user ID
+     * @return the player statistics
+     */
+    public WordUnscramblePlayerStats getOrCreatePlayerStats(String guildId, String userId) {
+        String key = guildId + "_" + userId;
+        return playerStats.computeIfAbsent(key, k -> new WordUnscramblePlayerStats(userId, guildId));
+    }
+
+    /**
+     * Gets player statistics for a user in a guild.
+     *
+     * @param guildId the guild ID
+     * @param userId  the user ID
+     * @return the player statistics, or null if not found
+     */
+    public WordUnscramblePlayerStats getPlayerStats(String guildId, String userId) {
+        String key = guildId + "_" + userId;
+        return playerStats.get(key);
     }
 }
 

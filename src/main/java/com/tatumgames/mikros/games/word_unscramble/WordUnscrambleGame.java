@@ -41,7 +41,8 @@ public class WordUnscrambleGame implements WordUnscrambleInterface {
                 "SKILL", "SPELL", "BUILD", "CLASS", "GUILD", "TRADE", "CRAFT", "FORGE", "SMITH", "MERGE",
                 "SWORD", "SHIELD", "BOW", "STAFF", "WAND", "AXE", "MACE", "DAGGER", "SPEAR", "HAMMER",
                 "HELMET", "CHEST", "BOOTS", "GLOVES", "PANTS", "RING", "AMULET", "BRACER", "BELT", "CAPE",
-                "POTION", "ELIXIR", "SCROLL", "GEM", "RUNE", "TOKEN", "KEY", "CHEST", "LOOT", "DROPS"
+                "POTION", "ELIXIR", "SCROLL", "GEM", "RUNE", "TOKEN", "KEY", "CHEST", "LOOT", "DROPS",
+                "MIKROS"
         ));
 
         // Level 3: Easy-Medium (6-7 letters)
@@ -113,7 +114,8 @@ public class WordUnscrambleGame implements WordUnscrambleInterface {
         LEVEL_WORDS.put(11, Arrays.asList(
                 "FINAL BOSS", "LEVEL UP", "SIDE QUEST", "NEW GAME", "TOP SCORE", "HARD MODE",
                 "EASY MODE", "NORMAL MODE", "BOSS FIGHT", "CUT SCENE", "LOAD SCREEN", "SAVE POINT",
-                "CHECK POINT", "SPAWN POINT", "RESPAWN", "GAME OVER", "CONTINUE", "RESTART", "QUIT GAME", "PAUSE MENU"
+                "CHECK POINT", "SPAWN POINT", "RESPAWN", "GAME OVER", "CONTINUE", "RESTART", "QUIT GAME", "PAUSE MENU",
+                "TATUM GAMES", "TATUM TECH"
         ));
 
         // Level 12: Short phrases (2 words)

@@ -24,10 +24,11 @@ scrambled word is posted, and players compete to be the first to solve it.
 
 ### Player Commands
 
-| Command           | Description                              | Example                         |
-|-------------------|------------------------------------------|---------------------------------|
-| `/scramble-guess` | Submit your word guess                   | `/scramble-guess word:GAMEPLAY` |
-| `/scramble-stats` | View current game status and leaderboard | `/scramble-stats`               |
+| Command             | Description                              | Example                         |
+|---------------------|------------------------------------------|---------------------------------|
+| `/scramble-guess`   | Submit your word guess                   | `/scramble-guess word:GAMEPLAY` |
+| `/scramble-stats`   | View current game status and leaderboard | `/scramble-stats`               |
+| `/scramble-profile` | View your individual statistics          | `/scramble-profile`             |
 
 ### Admin Commands
 
@@ -46,21 +47,35 @@ scrambled word is posted, and players compete to be the first to solve it.
 
 ## Scoring Rules
 
-- **Time-Based Scoring:** Faster solves = more points
+- **Time-Based Scoring:** Faster solves = more points (100-1000 points based on solve time)
 - **First Solver Bonus:** Extra points for being first
 - **Game Ends:** When first correct guess is submitted
-- **Daily Reset:** New word every day at configured time (default: 00:00 UTC)
+- **Hourly Reset:** New word every hour at the top of the hour (00:00 UTC format)
+- **Individual Statistics:** All players have persistent stats tracking:
+  - Total words solved
+  - Total points earned
+  - Highest single-word score
+  - Fastest solve time
+  - Total attempts and wrong guesses
+  - Accuracy percentage
+  - Average score per word
 
 ## Word List
 
-Current word pool includes 20 gaming-themed words:
+The game features 20 levels with progressively longer words and phrases:
 
-- GAMEPLAY, STREAMER, GIVEAWAY, CHAMPION, TREASURE
-- ADVENTURE, VICTORY, PLATFORM, CHALLENGE, COMMUNITY
-- DISCORD, CREATIVE, STRATEGY, TOURNAMENT, LEGENDARY
-- MULTIPLAYER, CAMPAIGN, CHARACTER, ACHIEVEMENT, DEVELOPER
+- **Levels 1-10:** Single words (4-12+ letters)
+- **Levels 11-14:** Short phrases (2-3 words)
+- **Levels 15-20:** Longer phrases (3-6+ words)
 
-**Word Length:** 7-11 characters
+**Word Pool:** 500+ gaming-themed words and phrases across all levels
+
+**Branding Words Included:**
+- "MIKROS" (Level 2)
+- "TATUM GAMES" (Level 11)
+- "TATUM TECH" (Level 11)
+
+**Community Progression:** Server-wide level system (Level 1-20) determines word difficulty
 
 ## Game Flow
 
@@ -125,6 +140,23 @@ Try again!
 - Reset time: 00:00 UTC
 - All games enabled by default
 
+## Individual Player Statistics
+
+Each player has persistent statistics tracked across all game sessions:
+
+**Available via `/scramble-profile`:**
+
+- **Total Words Solved** - Cumulative correct answers
+- **Total Points Earned** - Sum of all scores
+- **Highest Score** - Best single-word score achieved
+- **Fastest Time** - Quickest solve time (formatted as minutes/seconds)
+- **Total Attempts** - All guesses (correct + incorrect)
+- **Wrong Guesses** - Total incorrect attempts
+- **Accuracy Percentage** - (Words Solved / Total Attempts) × 100
+- **Average Score** - Total Points / Words Solved
+
+**Note:** Statistics are tracked per-guild, so each server maintains separate stats for players.
+
 ## Future TODOs
 
 - 🔮 **Custom Word Lists:** Allow admins to upload custom word lists per guild
@@ -136,7 +168,7 @@ Try again!
 
 ---
 
-**Last Updated:** 2025-10-08  
+**Last Updated:** 2025-12-24  
 **Game Type:** Word Unscramble  
 **Command Prefix:** `scramble-*`
 

@@ -169,12 +169,16 @@ public class RPGBossBattleCommand implements CommandHandler {
         int maxHp = boss != null ? boss.getMaxHp() : superBoss.getMaxHp();
         boolean defeated = boss != null ? boss.isDefeated() : superBoss.isDefeated();
 
+        // Use "slain" when defeated, "attacks" when not defeated
+        String actionVerb = defeated ? "has slain" : "attacks";
+        
         embed.setDescription(String.format("""
-                        **%s** attacks **%s**!
+                        **%s** %s **%s**!
                         
                         💥 **Damage Dealt: %d**
                         """,
                 character.getName(),
+                actionVerb,
                 bossName,
                 damage
         ));
@@ -195,9 +199,64 @@ public class RPGBossBattleCommand implements CommandHandler {
 
         if (defeated) {
             embed.setColor(Color.GREEN);
-            embed.addField("🎉 Victory!",
-                    "The shadows spread across Nilfheim… but this boss has fallen! A heroic roar echoes through the realm as hope flickers brighter.",
-                    false);
+            
+            // Enhanced defeat message with lore
+            String loreMessage = String.format("""
+                    **%s** has etched their name into the annals of Nilfheim's history!
+                    
+                    The shadows spread across the realm… but this boss has fallen! A heroic roar echoes through the frozen wastes as hope flickers brighter. The people of Nilfheim sing songs of **%s**'s valor, and bards will tell this tale for generations to come.
+                    
+                    🏛️ **Legacy:** Your name is now whispered in the halls of heroes.
+                    """,
+                    character.getName(),
+                    character.getName()
+            );
+            
+            embed.addField("🎉 Victory!", loreMessage, false);
+
+            // Add XP reward info (if this player is in top 30% of participants)
+            // Calculate 30% of participants (same logic as BossService)
+            // Get all damage dealers to calculate total participants
+            Map<String, Integer> allDamage = bossService.getTopDamageDealers(guildId, Integer.MAX_VALUE);
+            int totalParticipants = allDamage.size();
+            int rewardCount = (int) Math.ceil(totalParticipants * 0.30); // Top 30%, rounded up
+            int limit = Math.max(1, rewardCount); // At least 1 person gets rewarded
+            
+            Map<String, Integer> topDamage = bossService.getTopDamageDealers(guildId, limit);
+            int playerRank = -1;
+            int playerXpReward = 0;
+            
+            // Find player's rank and calculate their XP reward
+            if (!topDamage.isEmpty() && topDamage.containsKey(userId)) {
+                int rank = 1;
+                int totalTopDamage = topDamage.values().stream().mapToInt(Integer::intValue).sum();
+                
+                // Calculate XP pool (same as in BossService)
+                int bossLevel = boss != null ? boss.getLevel() : superBoss.getLevel();
+                int totalXpPool = boss != null 
+                    ? 500 + (bossLevel * 100) 
+                    : 1000 + (bossLevel * 200);
+                
+                for (Map.Entry<String, Integer> entry : topDamage.entrySet()) {
+                    if (entry.getKey().equals(userId)) {
+                        playerRank = rank;
+                        int playerDamage = entry.getValue();
+                        double damageRatio = (double) playerDamage / totalTopDamage;
+                        int baseXp = (int) (totalXpPool * damageRatio);
+                        double rankBonus = (rank == 1) ? 1.20 : (rank == 2) ? 1.10 : 1.0;
+                        playerXpReward = (int) (baseXp * rankBonus);
+                        break;
+                    }
+                    rank++;
+                }
+            }
+            
+            if (playerRank > 0 && playerRank <= limit) {
+                embed.addField("✨ XP Reward",
+                        String.format("You ranked **#%d** in damage dealt!\n**+%,d XP** awarded for your contribution.",
+                                playerRank, playerXpReward),
+                        true);
+            }
 
             // Add concise kill count
             if (boss != null) {

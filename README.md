@@ -157,6 +157,7 @@ for game developers and studios.
 
 - `/scramble-guess <word>` - Submit word unscramble guess
 - `/scramble-stats` - View leaderboard and time remaining
+- `/scramble-profile` - View your individual statistics (words solved, points, fastest time, accuracy, etc.)
 
 **Features:**
 
@@ -206,9 +207,10 @@ for game developers and studios.
 - **40+ narrative encounters** (Nilfheim-themed)
 - **36 enemy types** for battles
 - **Death System:** Characters can die, enter recovery
-- **Boss System:** 24 normal bosses + 12 super bosses
+- **Boss System:** 48 normal bosses + 20 super bosses
 - **Community Boss Battles:** Shared HP pool, damage tracking
 - **Boss Progression:** Levels increase based on defeats
+- **Boss XP Rewards:** Top 30% of participants receive proportional XP rewards (scales with participation)
 - **Class Bonuses:** Each class gets +20% damage vs specific boss types
 - Exponential XP progression
 - **Nilfheim Lore:** Full realm integration
@@ -234,7 +236,9 @@ for game developers and studios.
 
 - Hourly game resets
 - Leaderboard tracking
+- Individual player statistics tracking (words solved, points, fastest time, accuracy)
 - Beautiful embed formatting
+- Branding words included: "MIKROS", "TATUM GAMES", "TATUM TECH"
 
 **TODO:** Hint system, RPG integration, difficulty levels
 
@@ -428,6 +432,7 @@ Includes:
 | `/admin-scramble-config`         | Games      | Configure games (5 subcommands)                                          | Administrator    |
 | `/scramble-guess`                 | Games      | Submit word unscramble guess                                             | Everyone         |
 | `/scramble-stats`                 | Games      | View game leaderboard                                                    | Everyone         |
+| `/scramble-profile`                | Games      | View your individual statistics (words solved, points, fastest time, etc.) | Everyone         |
 | `/rpg-register`                  | RPG        | Create RPG character (6 classes)                                         | Everyone         |
 | `/rpg-profile`                   | RPG        | View character profile                                                   | Everyone         |
 | `/rpg-action`                    | RPG        | Perform action (explore/train/battle/rest)                               | Everyone         |
@@ -446,7 +451,7 @@ Includes:
 | `/admin-promotion-setup`         | Admin      | Configure game promotion channel                                         | Administrator    |
 | `/admin-promotion-config`        | Admin      | Configure promotion settings (view, update-channel, set-verbosity, disable, force-check) | Administrator    |
 
-**Total Commands:** 33+ (including subcommands)
+**Total Commands:** 34+ (including subcommands)
 
 ### Example Usage
 
@@ -465,6 +470,7 @@ Includes:
 /admin-scramble-setup channel:#games reset_hour:0
 /scramble-guess gameplay
 /scramble-stats
+/scramble-profile
 ```
 
 #### RPG System

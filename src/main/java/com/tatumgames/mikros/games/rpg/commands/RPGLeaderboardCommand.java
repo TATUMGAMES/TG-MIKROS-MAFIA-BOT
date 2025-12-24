@@ -89,18 +89,30 @@ public class RPGLeaderboardCommand implements CommandHandler {
         List<RPGCharacter> pageCharacters = allCharacters.subList(startIndex, endIndex);
 
         // Get MIKROS Mafia guild for member checking
+        // Use current guild if MIKROS_MAFIA_GUILD_ID matches or is not configured
         String mafiaGuildId = configLoader.getMafiaGuildId();
+        Guild currentGuild = event.getGuild();
         Guild mafiaGuild = null;
-        if (mafiaGuildId != null && !mafiaGuildId.isBlank()) {
-            mafiaGuild = event.getJDA().getGuildById(mafiaGuildId);
-            if (mafiaGuild == null) {
-                logger.warn("MIKROS Mafia guild not found with ID: {}. Mafia member status will not be checked.", mafiaGuildId);
+        
+        if (currentGuild != null) {
+            // If MIKROS_MAFIA_GUILD_ID is configured and matches current guild, use it
+            // Otherwise, if not configured, assume current guild is the Mafia guild
+            if (mafiaGuildId != null && !mafiaGuildId.isBlank()) {
+                if (mafiaGuildId.equals(currentGuild.getId())) {
+                    mafiaGuild = currentGuild;
+                    logger.debug("Using current guild as MIKROS Mafia guild: {} ({})", currentGuild.getName(), mafiaGuildId);
+                } else {
+                    mafiaGuild = event.getJDA().getGuildById(mafiaGuildId);
+                    if (mafiaGuild == null) {
+                        logger.warn("MIKROS Mafia guild not found with ID: {}. Falling back to current guild.", mafiaGuildId);
+                        mafiaGuild = currentGuild; // Fallback to current guild
+                    }
+                }
             } else {
-                logger.debug("MIKROS Mafia guild found: {} ({}). Checking member status for leaderboard.",
-                        mafiaGuild.getName(), mafiaGuildId);
+                // Not configured, assume current guild is the Mafia guild
+                mafiaGuild = currentGuild;
+                logger.debug("MIKROS_MAFIA_GUILD_ID not configured. Using current guild as Mafia guild: {}", currentGuild.getName());
             }
-        } else {
-            logger.debug("MIKROS_MAFIA_GUILD_ID not configured. Mafia member status will not be checked.");
         }
 
         // Build leaderboard embed

@@ -8,7 +8,9 @@ import com.tatumgames.mikros.services.GamePromotionService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.channel.concrete.NewsChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,11 +136,17 @@ public class GamePromotionScheduler {
             return;
         }
 
-        TextChannel channel = guild.getTextChannelById(channelId);
-        if (channel == null) {
-            logger.warn("Configured promotion channel {} not found in guild {}", channelId, guildId);
+        // Try TextChannel first, then NewsChannel
+        TextChannel textChannel = guild.getTextChannelById(channelId);
+        NewsChannel newsChannel = guild.getNewsChannelById(channelId);
+        
+        if (textChannel == null && newsChannel == null) {
+            logger.warn("Configured promotion channel {} not found in guild {} (tried TextChannel and NewsChannel)", channelId, guildId);
             return;
         }
+        
+        // Use whichever channel was found
+        MessageChannel channel = textChannel != null ? textChannel : newsChannel;
 
         postPromotionsToChannel(guild, channel);
     }
@@ -159,11 +167,17 @@ public class GamePromotionScheduler {
             return 0;
         }
 
-        TextChannel channel = guild.getTextChannelById(channelId);
-        if (channel == null) {
-            logger.warn("Configured promotion channel {} not found in guild {}", channelId, guildId);
+        // Try TextChannel first, then NewsChannel
+        TextChannel textChannel = guild.getTextChannelById(channelId);
+        NewsChannel newsChannel = guild.getNewsChannelById(channelId);
+        
+        if (textChannel == null && newsChannel == null) {
+            logger.warn("Configured promotion channel {} not found in guild {} (tried TextChannel and NewsChannel)", channelId, guildId);
             return 0;
         }
+        
+        // Use whichever channel was found
+        MessageChannel channel = textChannel != null ? textChannel : newsChannel;
 
         return postPromotionsToChannel(guild, channel);
     }
@@ -176,7 +190,7 @@ public class GamePromotionScheduler {
      * @param channel the channel to post in
      * @return number of promotions posted
      */
-    private int postPromotionsToChannel(Guild guild, TextChannel channel) {
+    private int postPromotionsToChannel(Guild guild, MessageChannel channel) {
         String guildId = guild.getId();
 
         // Check verbosity to determine if we should check for promotions
@@ -454,7 +468,7 @@ public class GamePromotionScheduler {
      * @param step    the promotion step (1, 2, or 4)
      * @param allApps all active apps (for context)
      */
-    private void postAppPromotion(TextChannel channel, AppPromotion app, int step, List<AppPromotion> allApps) {
+    private void postAppPromotion(MessageChannel channel, AppPromotion app, int step, List<AppPromotion> allApps) {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("🎮 " + app.getAppName());
         embed.setColor(Color.CYAN);
@@ -516,7 +530,7 @@ public class GamePromotionScheduler {
      * @param channel the channel
      * @param apps    list of active apps to promote
      */
-    private void postMultiGamePromotion(TextChannel channel, List<AppPromotion> apps) {
+    private void postMultiGamePromotion(MessageChannel channel, List<AppPromotion> apps) {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("🌟 MIKROS Top Picks for this month");
         embed.setColor(Color.MAGENTA);

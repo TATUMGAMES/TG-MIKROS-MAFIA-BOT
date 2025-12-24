@@ -620,14 +620,23 @@ Bosses have types that determine class bonuses:
 **Normal Boss Victory:**
 - Guaranteed 1 essence drop
 - 25% chance for 1 catalyst drop
-- XP rewards based on damage dealt
+- XP rewards for top 30% of participants (proportional to damage dealt)
+  - Normal boss XP pool: 500 + (bossLevel × 100) XP
+  - Rank #1 gets 20% bonus, Rank #2 gets 10% bonus
+  - Example: 10 participants → top 3 get XP; 100 participants → top 30 get XP
 
 **Super Boss Victory:**
 - Guaranteed 1 catalyst drop
 - 1-3 random essence drops
-- XP rewards based on damage dealt
+- XP rewards for top 30% of participants (proportional to damage dealt)
+  - Super boss XP pool: 1000 + (superBossLevel × 200) XP
+  - Rank #1 gets 20% bonus, Rank #2 gets 10% bonus
+  - Scales with participation count
 
-**Note:** Boss drops only occur on victory, not defeat.
+**Note:** 
+- Boss drops only occur on victory, not defeat
+- XP rewards scale dynamically: top 30% of participants (rounded up) receive rewards
+- All participants who dealt damage receive item rewards, but only top performers get XP
 
 ## Scoring Rules
 
@@ -766,7 +775,7 @@ are fewer. Yet fate stirs… and your journey begins.
 
 ---
 
-**Last Updated:** 2025-01-27  
+**Last Updated:** 2025-12-24  
 **Game Type:** Text-Based RPG  
 **Realm:** Nilfheim  
 **Command Prefix:** `rpg-*`  

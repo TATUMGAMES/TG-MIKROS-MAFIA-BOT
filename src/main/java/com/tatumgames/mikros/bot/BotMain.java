@@ -12,6 +12,7 @@ import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import com.tatumgames.mikros.games.word_unscramble.commands.GameConfigCommand;
 import com.tatumgames.mikros.games.word_unscramble.commands.GameSetupCommand;
 import com.tatumgames.mikros.games.word_unscramble.commands.ScrambleGuessCommand;
+import com.tatumgames.mikros.games.word_unscramble.commands.ScrambleProfileCommand;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleResetScheduler;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleService;
 import com.tatumgames.mikros.honeypot.commands.*;
@@ -194,6 +195,7 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new GameSetupCommand(wordUnscrambleService, wordUnscrambleResetScheduler));
         registerHandler(new ScrambleGuessCommand(wordUnscrambleService));
         registerHandler(new com.tatumgames.mikros.games.word_unscramble.commands.GameStatsCommand(wordUnscrambleService));
+        registerHandler(new ScrambleProfileCommand(wordUnscrambleService));
         registerHandler(new GameConfigCommand(wordUnscrambleService));
 
         // RPG System commands
