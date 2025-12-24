@@ -2,7 +2,8 @@
 
 ## Feature Overview
 
-Returns the total number of developers, testers, and players registered in the MIKROS ecosystem, showcasing community size and engagement.
+Returns the total number of developers, testers, and players registered in the MIKROS ecosystem, showcasing community
+size and engagement.
 
 ---
 

@@ -2,13 +2,16 @@
 
 ## Purpose
 
-Used to submit structured user behavior reports (positive or negative) tied to moderation commands issued in Discord via the MIKROS bot. This updates the user's MIKROS Reputation Score using weighted behavior categories based on Fibonacci values.
+Used to submit structured user behavior reports (positive or negative) tied to moderation commands issued in Discord via
+the MIKROS bot. This updates the user's MIKROS Reputation Score using weighted behavior categories based on Fibonacci
+values.
 
 ---
 
 ## Feature Overview
 
-This API endpoint allows Discord bots to report user behavior to the central MIKROS reputation system. Each behavior is categorized and weighted, contributing to the user's global reputation score across all servers in the MIKROS network.
+This API endpoint allows Discord bots to report user behavior to the central MIKROS reputation system. Each behavior is
+categorized and weighted, contributing to the user's global reputation score across all servers in the MIKROS network.
 
 ## Why API is Needed
 
@@ -35,19 +38,19 @@ Content-Type: application/json
 
 ### Body Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `discord_id` | string | Yes | Discord ID of the user being reported |
-| `server_id` | string | Yes | Discord ID of the server where behavior occurred |
-| `server_name` | string | No | Name of the server (for display purposes) |
-| `reported_by_id` | string | Yes | Discord ID of the reporter/moderator |
-| `reported_by_name` | string | No | Username of the reporter |
-| `behavior_category` | string | Yes | Enum value (see Behavior Categories below) |
-| `weight` | integer | Yes | Score weight based on category (-5 to +5) |
-| `notes` | string | No | Additional context or details |
-| `timestamp` | string | Yes | ISO 8601 UTC datetime of the behavior |
-| `action_type` | string | No | Type of action: "warn", "kick", "ban", "praise", "report" |
-| `message_link` | string | No | Discord message link if applicable |
+| Name                | Type    | Required | Description                                               |
+|---------------------|---------|----------|-----------------------------------------------------------|
+| `discord_id`        | string  | Yes      | Discord ID of the user being reported                     |
+| `server_id`         | string  | Yes      | Discord ID of the server where behavior occurred          |
+| `server_name`       | string  | No       | Name of the server (for display purposes)                 |
+| `reported_by_id`    | string  | Yes      | Discord ID of the reporter/moderator                      |
+| `reported_by_name`  | string  | No       | Username of the reporter                                  |
+| `behavior_category` | string  | Yes      | Enum value (see Behavior Categories below)                |
+| `weight`            | integer | Yes      | Score weight based on category (-5 to +5)                 |
+| `notes`             | string  | No       | Additional context or details                             |
+| `timestamp`         | string  | Yes      | ISO 8601 UTC datetime of the behavior                     |
+| `action_type`       | string  | No       | Type of action: "warn", "kick", "ban", "praise", "report" |
+| `message_link`      | string  | No       | Discord message link if applicable                        |
 
 ---
 
@@ -55,21 +58,21 @@ Content-Type: application/json
 
 ### Negative Behaviors (Fibonacci-weighted)
 
-| Category | Enum Value | Weight | Description |
-|----------|-----------|--------|-------------|
-| Poor Sportsmanship | `POOR_SPORTSMANSHIP` | -1 | Unsportsmanlike conduct |
-| Trolling / Constant Pinging | `TROLLING` | -2 | Deliberately annoying others |
-| AFK / Complaining | `AFK_COMPLAINING` | -3 | Frequently AFK or excessive complaining |
-| Bad Language / Cheating | `BAD_LANGUAGE_CHEATING` | -5 | Profanity, slurs, or cheating |
+| Category                    | Enum Value              | Weight | Description                             |
+|-----------------------------|-------------------------|--------|-----------------------------------------|
+| Poor Sportsmanship          | `POOR_SPORTSMANSHIP`    | -1     | Unsportsmanlike conduct                 |
+| Trolling / Constant Pinging | `TROLLING`              | -2     | Deliberately annoying others            |
+| AFK / Complaining           | `AFK_COMPLAINING`       | -3     | Frequently AFK or excessive complaining |
+| Bad Language / Cheating     | `BAD_LANGUAGE_CHEATING` | -5     | Profanity, slurs, or cheating           |
 
 ### Positive Behaviors (Fibonacci-weighted)
 
-| Category | Enum Value | Weight | Description |
-|----------|-----------|--------|-------------|
-| Good Sportsmanship | `GOOD_SPORTSMANSHIP` | +1 | Positive attitude and fair play |
-| Great Leadership | `GREAT_LEADERSHIP` | +2 | Shows leadership qualities |
-| Excellent Teammate | `EXCELLENT_TEAMMATE` | +3 | Supportive and cooperative |
-| MVP | `MVP` | +5 | Exceptional contribution |
+| Category           | Enum Value           | Weight | Description                     |
+|--------------------|----------------------|--------|---------------------------------|
+| Good Sportsmanship | `GOOD_SPORTSMANSHIP` | +1     | Positive attitude and fair play |
+| Great Leadership   | `GREAT_LEADERSHIP`   | +2     | Shows leadership qualities      |
+| Excellent Teammate | `EXCELLENT_TEAMMATE` | +3     | Supportive and cooperative      |
+| MVP                | `MVP`                | +5     | Exceptional contribution        |
 
 ---
 
@@ -190,23 +193,23 @@ Content-Type: application/json
 
 ## Response Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `success` | boolean | Whether the operation succeeded |
-| `message` | string | Human-readable status message |
-| `discord_id` | string | User's Discord ID |
-| `reputation_score` | integer | Updated reputation score |
-| `previous_score` | integer | Score before this report |
-| `score_change` | integer | Change in score (can be negative) |
-| `behavior_category` | string | The behavior category that was reported |
-| `weight_applied` | integer | The weight that was applied |
-| `total_reports` | integer | Total number of reports for this user |
-| `global_rank` | integer | User's rank among all MIKROS users |
-| `rank_change` | integer | Change in rank (negative = dropped) |
-| `is_flagged` | boolean | Whether user is now flagged |
-| `tier` | string | Reputation tier after update |
-| `is_new_user` | boolean | Whether this created a new user profile |
-| `timestamp` | ISO 8601 string | When the update was processed |
+| Field               | Type            | Description                             |
+|---------------------|-----------------|-----------------------------------------|
+| `success`           | boolean         | Whether the operation succeeded         |
+| `message`           | string          | Human-readable status message           |
+| `discord_id`        | string          | User's Discord ID                       |
+| `reputation_score`  | integer         | Updated reputation score                |
+| `previous_score`    | integer         | Score before this report                |
+| `score_change`      | integer         | Change in score (can be negative)       |
+| `behavior_category` | string          | The behavior category that was reported |
+| `weight_applied`    | integer         | The weight that was applied             |
+| `total_reports`     | integer         | Total number of reports for this user   |
+| `global_rank`       | integer         | User's rank among all MIKROS users      |
+| `rank_change`       | integer         | Change in rank (negative = dropped)     |
+| `is_flagged`        | boolean         | Whether user is now flagged             |
+| `tier`              | string          | Reputation tier after update            |
+| `is_new_user`       | boolean         | Whether this created a new user profile |
+| `timestamp`         | ISO 8601 string | When the update was processed           |
 
 ---
 
@@ -221,6 +224,7 @@ Authorization: Bearer YOUR_API_KEY
 ```
 
 Each bot has a unique API key tied to its Discord application ID. Keys can be:
+
 - Generated in the MIKROS Bot Dashboard
 - Rotated for security
 - Revoked if compromised
@@ -243,6 +247,7 @@ X-RateLimit-Tier: standard
 ```
 
 When rate limited:
+
 - HTTP 429 status code
 - `Retry-After` header indicates seconds to wait
 - Requests are queued (premium tier only)
@@ -252,6 +257,7 @@ When rate limited:
 ## Scalability and Security Notes
 
 ### Scalability
+
 - **Asynchronous Processing**: Reports are queued for processing
 - **Database Sharding**: User data distributed across multiple databases
 - **Caching Layer**: Redis cache for frequently accessed scores
@@ -260,6 +266,7 @@ When rate limited:
 - **Auto-Scaling**: Horizontal scaling based on load
 
 ### Security
+
 - **HTTPS Only**: All communication encrypted with TLS 1.3
 - **API Key Validation**: Keys validated against whitelist
 - **IP Whitelisting**: Optional IP restriction per key
@@ -271,6 +278,7 @@ When rate limited:
 - **GDPR Compliance**: Right to deletion, data export
 
 ### Data Validation
+
 - Discord ID format validation (snowflake)
 - Timestamp validation (not in future)
 - Weight validation (must match category)

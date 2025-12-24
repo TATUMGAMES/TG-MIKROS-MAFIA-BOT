@@ -14,14 +14,16 @@
         "gameGenre": "Action",
         "gameplayType": "Casual",
         "contentGenre": "Adventure",
-        "contentTheme": "Fantasy",
+        "contentTheme": "Superhero",
         "campaign": {
           "campaignId": "cmp_hv_nemesis_jan",
           "campaignName": "January Promo",
           "startDate": "29-11-25:08:00:00",
           "endDate": "26-12-25:08:00:00",
           "images": [
-            { "appLogo": ".../hv-nemesis.png" }
+            {
+              "appLogo": ".../hv-nemesis.png"
+            }
           ],
           "ctas": {
             "google_store": "https://play.google.com/store/apps/details?id=<package_name>",
@@ -61,14 +63,16 @@
         "gameGenre": "Strategy",
         "gameplayType": "Card",
         "contentGenre": "Adventure",
-        "contentTheme": "Fantasy",
+        "contentTheme": "Superhero",
         "campaign": {
           "campaignId": "cmp_hv_nervo_jan",
           "campaignName": "January Promo",
           "startDate": "29-11-25:08:00:00",
           "endDate": "02-12-25:08:00:00",
           "images": [
-            { "appLogo": ".../hv-nervo.png" }
+            {
+              "appLogo": ".../hv-nervo.png"
+            }
           ],
           "ctas": {
             "google_store": "https://play.google.com/store/apps/details?id=<package_name>",

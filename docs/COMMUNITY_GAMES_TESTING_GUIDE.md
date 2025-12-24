@@ -9,13 +9,16 @@ This guide will help you test the Community Games Engine implemented in TASKS_05
 ## 🚀 Setup
 
 ### 1. Ensure Bot Has Proper Permissions
+
 The bot needs these permissions in your test server:
+
 - Send Messages
 - Embed Links
 - Use Slash Commands
 - View Channels
 
 ### 2. Start the Bot
+
 ```bash
 # Set your Discord bot token in .env file
 DISCORD_BOT_TOKEN=your_token_here
@@ -25,6 +28,7 @@ DISCORD_BOT_TOKEN=your_token_here
 ```
 
 ### 3. Wait for Bot to Come Online
+
 The bot will register all slash commands when it starts up.
 
 ---
@@ -34,30 +38,30 @@ The bot will register all slash commands when it starts up.
 ### Phase 1: Initial Setup (Admin)
 
 1. **Test `/game-setup`**
-   - Run: `/game-setup channel:#game-channel reset_hour:0`
-   - ✅ Verify: Bot confirms setup with embed
-   - ✅ Verify: First game is posted immediately in the channel
-   - ✅ Verify: Game announcement includes instructions
+    - Run: `/game-setup channel:#game-channel reset_hour:0`
+    - ✅ Verify: Bot confirms setup with embed
+    - ✅ Verify: First game is posted immediately in the channel
+    - ✅ Verify: Game announcement includes instructions
 
 2. **Test `/game-config view`**
-   - Run: `/game-config view`
-   - ✅ Verify: Shows channel, reset time, and enabled games
-   - ✅ Verify: All three games are enabled by default
+    - Run: `/game-config view`
+    - ✅ Verify: Shows channel, reset time, and enabled games
+    - ✅ Verify: All three games are enabled by default
 
 3. **Test `/game-config set-channel`**
-   - Run: `/game-config set-channel channel:#different-channel`
-   - ✅ Verify: Channel is updated
-   - ✅ Verify: View shows new channel
+    - Run: `/game-config set-channel channel:#different-channel`
+    - ✅ Verify: Channel is updated
+    - ✅ Verify: View shows new channel
 
 4. **Test `/game-config set-reset-time`**
-   - Run: `/game-config set-reset-time hour:12`
-   - ✅ Verify: Reset time is updated to 12:00 UTC
-   - ✅ Verify: View shows new time
+    - Run: `/game-config set-reset-time hour:12`
+    - ✅ Verify: Reset time is updated to 12:00 UTC
+    - ✅ Verify: View shows new time
 
 5. **Test `/game-config disable-game`**
-   - Run: `/game-config disable-game game:WORD_UNSCRAMBLE`
-   - ✅ Verify: Cannot disable the last game (error message)
-   - ✅ Verify: View shows updated status
+    - Run: `/game-config disable-game game:WORD_UNSCRAMBLE`
+    - ✅ Verify: Cannot disable the last game (error message)
+    - ✅ Verify: View shows updated status
 
 ---
 
@@ -66,34 +70,34 @@ The bot will register all slash commands when it starts up.
 **Setup:** Ensure Word Unscramble is the active game (or wait/reset for it)
 
 1. **Test `/guess` with correct answer**
-   - Look at the scrambled word
-   - Figure out the correct word
-   - Run: `/guess word:CORRECT_WORD`
-   - ✅ Verify: Public announcement with emoji
-   - ✅ Verify: Shows player mention, score, and time
-   - ✅ Verify: Game is marked as won
+    - Look at the scrambled word
+    - Figure out the correct word
+    - Run: `/guess word:CORRECT_WORD`
+    - ✅ Verify: Public announcement with emoji
+    - ✅ Verify: Shows player mention, score, and time
+    - ✅ Verify: Game is marked as won
 
 2. **Test `/guess` with incorrect answer**
-   - Run: `/guess word:WRONG`
-   - ✅ Verify: Ephemeral error message (only you see it)
-   - ✅ Verify: No public announcement
-   - ✅ Verify: Encourages trying again
+    - Run: `/guess word:WRONG`
+    - ✅ Verify: Ephemeral error message (only you see it)
+    - ✅ Verify: No public announcement
+    - ✅ Verify: Encourages trying again
 
 3. **Test `/guess` after game is won**
-   - Run: `/guess word:anything`
-   - ✅ Verify: Game ended message
-   - ✅ Verify: Tells user to wait for reset
+    - Run: `/guess word:anything`
+    - ✅ Verify: Game ended message
+    - ✅ Verify: Tells user to wait for reset
 
 4. **Test `/guess` for wrong game type**
-   - Start a different game type
-   - Run: `/guess word:test`
-   - ✅ Verify: Error message about no active word game
+    - Start a different game type
+    - Run: `/guess word:test`
+    - ✅ Verify: Error message about no active word game
 
 5. **Test `/game-stats` during word game**
-   - Run: `/game-stats`
-   - ✅ Verify: Shows Word Unscramble as active game
-   - ✅ Verify: Shows time until reset
-   - ✅ Verify: Shows winner if won, or attempt count if not
+    - Run: `/game-stats`
+    - ✅ Verify: Shows Word Unscramble as active game
+    - ✅ Verify: Shows time until reset
+    - ✅ Verify: Shows winner if won, or attempt count if not
 
 ---
 
@@ -104,6 +108,7 @@ The bot will register all slash commands when it starts up.
 **Note:** This is difficult to test in real-time. Options:
 
 #### Option A: Wait for scheduled reset
+
 - Set reset time to soon (e.g., next hour)
 - Wait for reset time
 - ✅ Verify: Previous game winner is announced
@@ -111,11 +116,13 @@ The bot will register all slash commands when it starts up.
 - ✅ Verify: Game type may be different
 
 #### Option B: Modify reset time to be immediate
+
 - Use `/game-config set-reset-time hour:CURRENT_HOUR`
 - Wait up to an hour for reset check
 - ✅ Verify: Reset occurs
 
 #### Option C: Use `/force-promotion-check` as inspiration
+
 - Could implement a `/force-game-reset` admin command for testing
 - This is not part of TASKS_05, but useful for debugging
 
@@ -124,36 +131,40 @@ The bot will register all slash commands when it starts up.
 ### Phase 6: Edge Cases
 
 1. **Test commands without setup**
-   - In a fresh server, try `/guess`, `/roll`, `/match`
-   - ✅ Verify: Error message directing to `/game-setup`
+    - In a fresh server, try `/guess`, `/roll`, `/match`
+    - ✅ Verify: Error message directing to `/game-setup`
 
 2. **Test `/game-stats` with no active game**
-   - After reset, before new game starts (if this state exists)
-   - ✅ Verify: Appropriate error message
+    - After reset, before new game starts (if this state exists)
+    - ✅ Verify: Appropriate error message
 
 3. **Test admin commands as non-admin**
-   - As regular user, try `/game-setup` or `/game-config`
-   - ✅ Verify: Permission error
+    - As regular user, try `/game-setup` or `/game-config`
+    - ✅ Verify: Permission error
 
 4. **Test with invalid bot permissions**
-   - Remove bot's send message permission
-   - Try `/game-setup`
-   - ✅ Verify: Error about missing permissions
+    - Remove bot's send message permission
+    - Try `/game-setup`
+    - ✅ Verify: Error about missing permissions
 
 ---
 
 ## 🐛 Common Issues & Solutions
 
 ### Issue: Commands not appearing
+
 - **Solution:** Bot may still be registering commands. Wait 1-5 minutes.
 
 ### Issue: Bot doesn't respond
+
 - **Solution:** Check bot has proper permissions and is online.
 
 ### Issue: Game doesn't reset
+
 - **Solution:** Scheduler checks every hour on the hour. Reset must fall within that hour.
 
 ### Issue: Multiple games active
+
 - **Solution:** Only one game should be active per guild. Check logs for errors.
 
 ---
@@ -161,6 +172,7 @@ The bot will register all slash commands when it starts up.
 ## 📊 Expected Behavior Summary
 
 ### Word Unscramble
+
 - **Win Condition:** First correct guess
 - **Scoring:** Time-based (faster = higher score)
 - **Attempts:** Unlimited until someone wins
@@ -170,6 +182,7 @@ The bot will register all slash commands when it starts up.
 ## 🎯 Success Criteria
 
 All tests pass when:
+
 - ✅ All commands execute without errors
 - ✅ Games function as designed
 - ✅ Leaderboards display correctly

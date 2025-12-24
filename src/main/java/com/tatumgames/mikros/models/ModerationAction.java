@@ -6,27 +6,19 @@ import java.util.Objects;
 /**
  * Represents a moderation action taken against a user.
  */
-public class ModerationAction {
-    private final String targetUserId;
-    private final String targetUsername;
-    private final String moderatorId;
-    private final String moderatorUsername;
-    private final ActionType actionType;
-    private final String reason;
-    private final Instant timestamp;
-    private final String guildId;
-    
+public record ModerationAction(String targetUserId, String targetUsername, String moderatorId, String moderatorUsername,
+                               ActionType actionType, String reason, Instant timestamp, String guildId) {
     /**
      * Creates a new ModerationAction.
-     * 
-     * @param targetUserId the ID of the user who was moderated
-     * @param targetUsername the username of the user who was moderated
-     * @param moderatorId the ID of the moderator who performed the action
+     *
+     * @param targetUserId      the ID of the user who was moderated
+     * @param targetUsername    the username of the user who was moderated
+     * @param moderatorId       the ID of the moderator who performed the action
      * @param moderatorUsername the username of the moderator
-     * @param actionType the type of moderation action
-     * @param reason the reason for the action
-     * @param timestamp when the action occurred
-     * @param guildId the ID of the guild where the action occurred
+     * @param actionType        the type of moderation action
+     * @param reason            the reason for the action
+     * @param timestamp         when the action occurred
+     * @param guildId           the ID of the guild where the action occurred
      */
     public ModerationAction(
             String targetUserId,
@@ -47,79 +39,87 @@ public class ModerationAction {
         this.timestamp = Objects.requireNonNull(timestamp, "timestamp cannot be null");
         this.guildId = Objects.requireNonNull(guildId, "guildId cannot be null");
     }
-    
+
     /**
      * Gets the target user's ID.
-     * 
+     *
      * @return the target user ID
      */
-    public String getTargetUserId() {
+    @Override
+    public String targetUserId() {
         return targetUserId;
     }
-    
+
     /**
      * Gets the target user's username.
-     * 
+     *
      * @return the target username
      */
-    public String getTargetUsername() {
+    @Override
+    public String targetUsername() {
         return targetUsername;
     }
-    
+
     /**
      * Gets the moderator's ID.
-     * 
+     *
      * @return the moderator ID
      */
-    public String getModeratorId() {
+    @Override
+    public String moderatorId() {
         return moderatorId;
     }
-    
+
     /**
      * Gets the moderator's username.
-     * 
+     *
      * @return the moderator username
      */
-    public String getModeratorUsername() {
+    @Override
+    public String moderatorUsername() {
         return moderatorUsername;
     }
-    
+
     /**
      * Gets the type of action.
-     * 
+     *
      * @return the action type
      */
-    public ActionType getActionType() {
+    @Override
+    public ActionType actionType() {
         return actionType;
     }
-    
+
     /**
      * Gets the reason for the action.
-     * 
+     *
      * @return the reason
      */
-    public String getReason() {
+    @Override
+    public String reason() {
         return reason;
     }
-    
+
     /**
      * Gets the timestamp when the action occurred.
-     * 
+     *
      * @return the timestamp
      */
-    public Instant getTimestamp() {
+    @Override
+    public Instant timestamp() {
         return timestamp;
     }
-    
+
     /**
      * Gets the guild ID where the action occurred.
-     * 
+     *
      * @return the guild ID
      */
-    public String getGuildId() {
+    @Override
+    public String guildId() {
         return guildId;
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -131,12 +131,12 @@ public class ModerationAction {
                 Objects.equals(timestamp, that.timestamp) &&
                 Objects.equals(guildId, that.guildId);
     }
-    
+
     @Override
     public int hashCode() {
         return Objects.hash(targetUserId, moderatorId, actionType, timestamp, guildId);
     }
-    
+
     @Override
     public String toString() {
         return String.format(

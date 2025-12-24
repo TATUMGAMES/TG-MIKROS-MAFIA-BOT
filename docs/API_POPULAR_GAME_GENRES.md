@@ -2,7 +2,8 @@
 
 ## Feature Overview
 
-Returns the most-played game genres overall by total active player count, providing insights into the current gaming landscape and established market leaders.
+Returns the most-played game genres overall by total active player count, providing insights into the current gaming
+landscape and established market leaders.
 
 ## Why API is Needed
 
@@ -20,10 +21,10 @@ Returns the most-played game genres overall by total active player count, provid
 
 ### Query Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `limit` | integer | No | Number of genres to return (default: 3, max: 20) |
-| `platform` | string | No | Filter: "pc", "mobile", "web", "all" (default: "all") |
+| Name       | Type    | Required | Description                                           |
+|------------|---------|----------|-------------------------------------------------------|
+| `limit`    | integer | No       | Number of genres to return (default: 3, max: 20)      |
+| `platform` | string  | No       | Filter: "pc", "mobile", "web", "all" (default: "all") |
 
 ---
 

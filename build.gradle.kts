@@ -21,18 +21,18 @@ java {
 dependencies {
     // JDA (Java Discord API)
     implementation("net.dv8tion:JDA:5.0.0-beta.20")
-    
+
     // SLF4J for logging
     implementation("org.slf4j:slf4j-api:2.0.9")
     implementation("ch.qos.logback:logback-classic:1.4.14")
-    
+
     // Dotenv for environment variable management
     implementation("io.github.cdimascio:dotenv-java:3.0.0")
-    
+
     // Jackson for JSON processing
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
-    
+
     // Testing
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")

@@ -1,44 +1,38 @@
 package com.tatumgames.mikros.games.rpg.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Represents the outcome of an RPG action.
  * Used to generate Discord message responses.
  */
-public class RPGActionOutcome {
-    private final String narrative;
-    private final int xpGained;
-    private final boolean leveledUp;
-    private final String statIncreased;
-    private final int statAmount;
-    private final int damageTaken;
-    private final int hpRestored;
-    private final boolean success;
-    
+public record RPGActionOutcome(String narrative, int xpGained, boolean leveledUp, String statIncreased, int statAmount,
+                               int damageTaken, int hpRestored, boolean success,
+                               List<ItemDrop> itemDrops, List<CatalystDrop> catalystDrops) {
     /**
      * Creates an RPG action outcome.
-     * 
-     * @param narrative the story/narrative text
-     * @param xpGained experience points gained
-     * @param leveledUp whether the character leveled up
-     * @param statIncreased name of stat increased (or null)
-     * @param statAmount amount stat was increased
-     * @param damageTaken damage taken during action
-     * @param hpRestored HP restored during action (e.g., from rest)
-     * @param success whether the action was successful
+     *
+     * @param narrative      the story/narrative text
+     * @param xpGained       experience points gained
+     * @param leveledUp      whether the character leveled up
+     * @param statIncreased  name of stat increased (or null)
+     * @param statAmount     amount stat was increased
+     * @param damageTaken    damage taken during action
+     * @param hpRestored     HP restored during action (e.g., from rest)
+     * @param success        whether the action was successful
+     * @param itemDrops      list of essence drops
+     * @param catalystDrops  list of catalyst drops
      */
-    public RPGActionOutcome(String narrative, int xpGained, boolean leveledUp,
-                           String statIncreased, int statAmount, int damageTaken, 
-                           int hpRestored, boolean success) {
-        this.narrative = narrative;
-        this.xpGained = xpGained;
-        this.leveledUp = leveledUp;
-        this.statIncreased = statIncreased;
-        this.statAmount = statAmount;
-        this.damageTaken = damageTaken;
-        this.hpRestored = hpRestored;
-        this.success = success;
+    public RPGActionOutcome {
+        if (itemDrops == null) {
+            itemDrops = new ArrayList<>();
+        }
+        if (catalystDrops == null) {
+            catalystDrops = new ArrayList<>();
+        }
     }
-    
+
     /**
      * Builder for creating RPGActionOutcome instances.
      */
@@ -51,85 +45,66 @@ public class RPGActionOutcome {
         private int damageTaken = 0;
         private int hpRestored = 0;
         private boolean success = true;
-        
+        private List<ItemDrop> itemDrops = new ArrayList<>();
+        private List<CatalystDrop> catalystDrops = new ArrayList<>();
+
         public Builder narrative(String narrative) {
             this.narrative = narrative;
             return this;
         }
-        
+
         public Builder xpGained(int xpGained) {
             this.xpGained = xpGained;
             return this;
         }
-        
+
         public Builder leveledUp(boolean leveledUp) {
             this.leveledUp = leveledUp;
             return this;
         }
-        
+
         public Builder statIncreased(String statIncreased, int amount) {
             this.statIncreased = statIncreased;
             this.statAmount = amount;
             return this;
         }
-        
+
         public Builder damageTaken(int damageTaken) {
             this.damageTaken = damageTaken;
             return this;
         }
-        
+
         public Builder hpRestored(int hpRestored) {
             this.hpRestored = hpRestored;
             return this;
         }
-        
+
         public Builder success(boolean success) {
             this.success = success;
             return this;
         }
-        
+
+        public Builder addItemDrop(EssenceType essence, int count) {
+            this.itemDrops.add(new ItemDrop(essence, count));
+            return this;
+        }
+
+        public Builder addCatalystDrop(CatalystType catalyst, int count) {
+            this.catalystDrops.add(new CatalystDrop(catalyst, count));
+            return this;
+        }
+
         public RPGActionOutcome build() {
             return new RPGActionOutcome(narrative, xpGained, leveledUp,
-                    statIncreased, statAmount, damageTaken, hpRestored, success);
+                    statIncreased, statAmount, damageTaken, hpRestored, success,
+                    itemDrops, catalystDrops);
         }
     }
-    
+
     public static Builder builder() {
         return new Builder();
     }
-    
+
     // Getters
-    
-    public String getNarrative() {
-        return narrative;
-    }
-    
-    public int getXpGained() {
-        return xpGained;
-    }
-    
-    public boolean isLeveledUp() {
-        return leveledUp;
-    }
-    
-    public String getStatIncreased() {
-        return statIncreased;
-    }
-    
-    public int getStatAmount() {
-        return statAmount;
-    }
-    
-    public int getDamageTaken() {
-        return damageTaken;
-    }
-    
-    public boolean isSuccess() {
-        return success;
-    }
-    
-    public int getHpRestored() {
-        return hpRestored;
-    }
 }
 

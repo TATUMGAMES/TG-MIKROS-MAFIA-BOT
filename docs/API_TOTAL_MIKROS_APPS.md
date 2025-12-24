@@ -2,7 +2,8 @@
 
 ## Feature Overview
 
-Returns the total number of games and applications currently using MIKROS Analytics SDK, providing insight into the platform's growth and ecosystem size.
+Returns the total number of games and applications currently using MIKROS Analytics SDK, providing insight into the
+platform's growth and ecosystem size.
 
 ## Why API is Needed
 
@@ -49,14 +50,14 @@ Returns the total number of games and applications currently using MIKROS Analyt
 
 ## Response Fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `total_apps` | integer | Total apps with MIKROS SDK integrated |
-| `active_apps_30d` | integer | Apps with activity in last 30 days |
-| `new_apps_this_month` | integer | Apps added this month |
-| `growth_month_over_month` | number | Percentage growth vs. last month |
-| `breakdown_by_platform` | object | Apps per platform |
-| `breakdown_by_category` | object | Apps per category |
+| Field                     | Type    | Description                           |
+|---------------------------|---------|---------------------------------------|
+| `total_apps`              | integer | Total apps with MIKROS SDK integrated |
+| `active_apps_30d`         | integer | Apps with activity in last 30 days    |
+| `new_apps_this_month`     | integer | Apps added this month                 |
+| `growth_month_over_month` | number  | Percentage growth vs. last month      |
+| `breakdown_by_platform`   | object  | Apps per platform                     |
+| `breakdown_by_category`   | object  | Apps per category                     |
 
 ---
 

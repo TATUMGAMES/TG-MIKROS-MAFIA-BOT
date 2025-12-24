@@ -1,7 +1,9 @@
 # TASKS_07.md
 
 ## Objective
+
 Introduce a lightweight, daily, community-wide game that:
+
 - Requires no registration
 - Encourages repeat visits
 - Resets daily
@@ -16,6 +18,7 @@ This game is focused on accessibility, engagement, and low-friction fun.
 ### Game Type: Daily Word Guessing Challenge
 
 Each day, the bot:
+
 - Picks a random word (length 4–8 letters) from a dictionary
 - Posts a scrambled version in the assigned game channel
 - Users try to unscramble it using `/guess <word>`
@@ -41,10 +44,10 @@ Each day, the bot:
 
 ### Commands
 
-| Command | Description |
-|---------|-------------|
-| `/spelling-challenge` | Posts today’s scrambled word |
-| `/guess <word>` | Allows user to submit a guess |
+| Command                 | Description                           |
+|-------------------------|---------------------------------------|
+| `/spelling-challenge`   | Posts today’s scrambled word          |
+| `/guess <word>`         | Allows user to submit a guess         |
 | `/spelling-leaderboard` | Shows top players (by correct solves) |
 
 - Game resets every 24 hours (configurable)
@@ -78,7 +81,6 @@ Unscramble this word: gamin
 
 Use /guess to try! First correct solver gets bonus points!
 
-
 User: `/guess aming`  
 Bot: ❌  
 User: `/guess gaming`  
@@ -86,4 +88,5 @@ Bot: ✅ Correct! You earned 3 points.
 
 ---
 
-> Reminder: Keep BEST_CODING_PRACTICES.md in mind when implementing game state management, rate limiting, and configuration per server.
+> Reminder: Keep BEST_CODING_PRACTICES.md in mind when implementing game state management, rate limiting, and
+> configuration per server.

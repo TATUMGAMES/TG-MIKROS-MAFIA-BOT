@@ -2,7 +2,8 @@
 
 ## Feature Overview
 
-This API provides data on the fastest-growing content-type genres (e.g., action, story-driven, co-op multiplayer) based on player engagement and playtime metrics over a 30-day period.
+This API provides data on the fastest-growing content-type genres (e.g., action, story-driven, co-op multiplayer) based
+on player engagement and playtime metrics over a 30-day period.
 
 ## Why API is Needed
 
@@ -21,10 +22,10 @@ This API provides data on the fastest-growing content-type genres (e.g., action,
 
 ### Query Parameters
 
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `limit` | integer | No | Number of content genres to return (default: 3, max: 20) |
-| `period` | string | No | Time period: "7d", "30d", "90d" (default: "30d") |
+| Name     | Type    | Required | Description                                              |
+|----------|---------|----------|----------------------------------------------------------|
+| `limit`  | integer | No       | Number of content genres to return (default: 3, max: 20) |
+| `period` | string  | No       | Time period: "7d", "30d", "90d" (default: "30d")         |
 
 ---
 

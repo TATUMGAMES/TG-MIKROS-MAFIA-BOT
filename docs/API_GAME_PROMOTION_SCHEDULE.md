@@ -2,7 +2,9 @@
 
 ## Feature Overview
 
-This API delivers a list of active games/apps that should be promoted by the MIKROS Bot. The bot uses the `/getAllApps` endpoint to fetch app data with campaign information, then automatically schedules and posts promotions using a 4-step story format while respecting campaign dates and verbosity settings.
+This API delivers a list of active games/apps that should be promoted by the MIKROS Bot. The bot uses the `/getAllApps`
+endpoint to fetch app data with campaign information, then automatically schedules and posts promotions using a 4-step
+story format while respecting campaign dates and verbosity settings.
 
 ## Why This API is Needed
 
@@ -109,58 +111,58 @@ Content-Type: application/json
 
 ## Response Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `status` | object | Yes | Response status information |
-| `status.statusCode` | integer | Yes | HTTP status code (200 for success) |
-| `status.statusMessage` | string | Yes | Status message ("SUCCESS") |
-| `data` | object | Yes | Response data container |
-| `data.apps` | array | Yes | List of app promotions |
+| Field                  | Type    | Required | Description                        |
+|------------------------|---------|----------|------------------------------------|
+| `status`               | object  | Yes      | Response status information        |
+| `status.statusCode`    | integer | Yes      | HTTP status code (200 for success) |
+| `status.statusMessage` | string  | Yes      | Status message ("SUCCESS")         |
+| `data`                 | object  | Yes      | Response data container            |
+| `data.apps`            | array   | Yes      | List of app promotions             |
 
 ### App Object Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `appId` | string | Yes | Unique app identifier (e.g., "hv-nemesis") |
-| `appGameId` | string | Yes | Game ID (e.g., "tg-nemesis-001") |
-| `appName` | string | Yes | Display name of the app |
-| `shortDescription` | string | Yes | Brief description for step 1 and 4 |
-| `longDescription` | string | Yes | Detailed description for step 2 |
-| `gameGenre` | string | No | Game genre (e.g., "Action", "Strategy") |
-| `gameplayType` | string | No | Gameplay type (e.g., "Casual", "Card") |
-| `contentGenre` | string | No | Content genre (e.g., "Adventure") |
-| `contentTheme` | string | No | Content theme (e.g., "Fantasy") |
-| `campaign` | object | Yes | Campaign information |
+| Field              | Type   | Required | Description                                |
+|--------------------|--------|----------|--------------------------------------------|
+| `appId`            | string | Yes      | Unique app identifier (e.g., "hv-nemesis") |
+| `appGameId`        | string | Yes      | Game ID (e.g., "tg-nemesis-001")           |
+| `appName`          | string | Yes      | Display name of the app                    |
+| `shortDescription` | string | Yes      | Brief description for step 1 and 4         |
+| `longDescription`  | string | Yes      | Detailed description for step 2            |
+| `gameGenre`        | string | No       | Game genre (e.g., "Action", "Strategy")    |
+| `gameplayType`     | string | No       | Gameplay type (e.g., "Casual", "Card")     |
+| `contentGenre`     | string | No       | Content genre (e.g., "Adventure")          |
+| `contentTheme`     | string | No       | Content theme (e.g., "Fantasy")            |
+| `campaign`         | object | Yes      | Campaign information                       |
 
 ### Campaign Object Fields
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `campaignId` | string | Yes | Unique campaign identifier |
-| `campaignName` | string | Yes | Campaign display name |
-| `startDate` | integer | Yes | Unix timestamp (seconds) - campaign start |
-| `endDate` | integer | Yes | Unix timestamp (seconds) - campaign end |
-| `images` | array | No | List of image objects |
-| `images[].appLogo` | string | No | App logo URL |
-| `ctas` | object | Yes | Call-to-action links |
-| `ctas.google_store` | string | No | Google Play Store URL |
-| `ctas.apple_store` | string | No | Apple App Store URL |
-| `ctas.steam_store` | string | No | Steam Store URL |
-| `ctas.samsung_store` | string | No | Samsung Store URL |
-| `ctas.amazon_store` | string | No | Amazon Appstore URL |
-| `ctas.website` | string | No | Website URL |
-| `ctas.other` | string | No | Other store/platform URL |
-| `screenshotUrls` | array | No | List of screenshot URLs |
-| `videoUrls` | array | No | List of video URLs |
-| `socialMedia` | object | No | Social media links |
-| `socialMedia.facebook` | string | No | Facebook page URL |
-| `socialMedia.x` | string | No | Twitter/X profile URL |
-| `socialMedia.instagram` | string | No | Instagram profile URL |
-| `socialMedia.linkedin` | string | No | LinkedIn company URL |
-| `socialMedia.tiktok` | string | No | TikTok profile URL |
-| `socialMedia.youtube` | string | No | YouTube channel URL |
-| `socialMedia.discord` | string | No | Discord server invite URL |
-| `socialMedia.twitch` | string | No | Twitch channel URL |
+| Field                   | Type    | Required | Description                               |
+|-------------------------|---------|----------|-------------------------------------------|
+| `campaignId`            | string  | Yes      | Unique campaign identifier                |
+| `campaignName`          | string  | Yes      | Campaign display name                     |
+| `startDate`             | integer | Yes      | Unix timestamp (seconds) - campaign start |
+| `endDate`               | integer | Yes      | Unix timestamp (seconds) - campaign end   |
+| `images`                | array   | No       | List of image objects                     |
+| `images[].appLogo`      | string  | No       | App logo URL                              |
+| `ctas`                  | object  | Yes      | Call-to-action links                      |
+| `ctas.google_store`     | string  | No       | Google Play Store URL                     |
+| `ctas.apple_store`      | string  | No       | Apple App Store URL                       |
+| `ctas.steam_store`      | string  | No       | Steam Store URL                           |
+| `ctas.samsung_store`    | string  | No       | Samsung Store URL                         |
+| `ctas.amazon_store`     | string  | No       | Amazon Appstore URL                       |
+| `ctas.website`          | string  | No       | Website URL                               |
+| `ctas.other`            | string  | No       | Other store/platform URL                  |
+| `screenshotUrls`        | array   | No       | List of screenshot URLs                   |
+| `videoUrls`             | array   | No       | List of video URLs                        |
+| `socialMedia`           | object  | No       | Social media links                        |
+| `socialMedia.facebook`  | string  | No       | Facebook page URL                         |
+| `socialMedia.x`         | string  | No       | Twitter/X profile URL                     |
+| `socialMedia.instagram` | string  | No       | Instagram profile URL                     |
+| `socialMedia.linkedin`  | string  | No       | LinkedIn company URL                      |
+| `socialMedia.tiktok`    | string  | No       | TikTok profile URL                        |
+| `socialMedia.youtube`   | string  | No       | YouTube channel URL                       |
+| `socialMedia.discord`   | string  | No       | Discord server invite URL                 |
+| `socialMedia.twitch`    | string  | No       | Twitch channel URL                        |
 
 ---
 
@@ -179,21 +181,21 @@ The bot checks for new promotions every 60 minutes. However, actual posting resp
 The bot posts 4 promotions per app across the campaign period:
 
 1. **Step 1: Introduce the game** (at campaign start)
-   - Uses `shortDescription`
-   - Template: "🎮 Introducing <app_name>! <short_description>"
+    - Uses `shortDescription`
+    - Template: "🎮 Introducing <app_name>! <short_description>"
 
 2. **Step 2: Add more details** (33% through campaign)
-   - Uses `longDescription`
-   - Template: "Dive deeper into <app_name>: <long_description>"
+    - Uses `longDescription`
+    - Template: "Dive deeper into <app_name>: <long_description>"
 
 3. **Step 3: Multiple games promotion** (66% through campaign, only if 2+ games exist)
-   - Combines multiple active apps
-   - Template: "🌟 MIKROS Top Picks for this month: <game_list>"
-   - Only posts once per guild, not per app
+    - Combines multiple active apps
+    - Template: "🌟 MIKROS Top Picks for this month: <game_list>"
+    - Only posts once per guild, not per app
 
 4. **Step 4: Final chance** (90% through campaign)
-   - Uses `shortDescription`
-   - Template: "⏰ Last chance to check out <app_name>! <short_description>"
+    - Uses `shortDescription`
+    - Template: "⏰ Last chance to check out <app_name>! <short_description>"
 
 ### Filtering Logic
 
@@ -213,6 +215,7 @@ if (now.isAfter(campaign.startDate) && now.isBefore(campaign.endDate)) {
 ```
 
 **Conditions:**
+
 1. Campaign is active (current time between `startDate` and `endDate`)
 2. Minimum 24 hours since last post for this app in this guild
 3. Step target time has been reached
@@ -221,6 +224,7 @@ if (now.isAfter(campaign.startDate) && now.isBefore(campaign.endDate)) {
 ### Message Formatting
 
 **Step 1, 2, 4 (Single App):**
+
 - Random template selection from step-specific templates
 - Placeholder replacement: `<app_name>`, `<short_description>`, `<long_description>`
 - At least one CTA link (randomly selected from available CTAs)
@@ -228,11 +232,13 @@ if (now.isAfter(campaign.startDate) && now.isBefore(campaign.endDate)) {
 - App logo image if available
 
 **Step 3 (Multi-Game):**
+
 - Combines all active apps in campaign
 - Lists each app with short description and primary CTA
 - Social media links from first app
 
 **Embed Format:**
+
 ```java
 EmbedBuilder embed = new EmbedBuilder();
 embed.setTitle("🎮 " + appName);
@@ -253,6 +259,7 @@ embed.setTimestamp(Instant.now());
 ## Error Handling
 
 ### HTTP 401 Unauthorized
+
 ```json
 {
   "error": "Unauthorized",
@@ -263,6 +270,7 @@ embed.setTimestamp(Instant.now());
 **Bot Action**: Log error, retry with backoff, alert admin if persistent
 
 ### HTTP 429 Too Many Requests
+
 ```json
 {
   "error": "Rate limit exceeded",
@@ -273,6 +281,7 @@ embed.setTimestamp(Instant.now());
 **Bot Action**: Respect `retry_after` header, skip this check cycle
 
 ### HTTP 500 Server Error
+
 ```json
 {
   "error": "Internal server error",
@@ -283,6 +292,7 @@ embed.setTimestamp(Instant.now());
 **Bot Action**: Log error, retry after 5 minutes, continue normal operation
 
 ### Empty Response
+
 ```json
 {
   "status": { "statusCode": 200, "statusMessage": "SUCCESS" },
@@ -301,6 +311,7 @@ embed.setTimestamp(Instant.now());
 - **Burst**: 10 requests/minute
 
 Rate limit headers:
+
 ```
 X-RateLimit-Limit: 60
 X-RateLimit-Remaining: 58

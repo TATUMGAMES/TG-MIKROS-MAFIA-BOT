@@ -19,16 +19,16 @@ public class SuperBoss {
     private final Instant spawnTime;
     private final Instant expiresAt;
     private boolean defeated;
-    
+
     /**
      * Creates a new SuperBoss.
-     * 
-     * @param bossId unique boss identifier
-     * @param name boss name
-     * @param type boss type
-     * @param level super boss level
-     * @param maxHp maximum HP (50,000 × level)
-     * @param attack attack power
+     *
+     * @param bossId          unique boss identifier
+     * @param name            boss name
+     * @param type            boss type
+     * @param level           super boss level
+     * @param maxHp           maximum HP (50,000 × level)
+     * @param attack          attack power
      * @param specialMechanic description of special mechanic
      */
     public SuperBoss(String bossId, String name, BossType type, int level, int maxHp, int attack, String specialMechanic) {
@@ -44,10 +44,10 @@ public class SuperBoss {
         this.expiresAt = spawnTime.plusSeconds(24 * 3600); // 24 hours
         this.defeated = false;
     }
-    
+
     /**
      * Applies damage to the super boss.
-     * 
+     *
      * @param damage damage amount
      * @return true if boss is defeated
      */
@@ -59,62 +59,62 @@ public class SuperBoss {
         }
         return false;
     }
-    
+
     /**
      * Checks if super boss has expired (24 hours passed).
-     * 
+     *
      * @return true if expired
      */
     public boolean isExpired() {
         return Instant.now().isAfter(expiresAt);
     }
-    
+
     // Getters
-    
+
     public String getBossId() {
         return bossId;
     }
-    
+
     public String getName() {
         return name;
     }
-    
+
     public BossType getType() {
         return type;
     }
-    
+
     public int getLevel() {
         return level;
     }
-    
+
     public int getMaxHp() {
         return maxHp;
     }
-    
+
     public int getCurrentHp() {
         return currentHp;
     }
-    
+
     public int getAttack() {
         return attack;
     }
-    
+
     public String getSpecialMechanic() {
         return specialMechanic;
     }
-    
+
     public Instant getSpawnTime() {
         return spawnTime;
     }
-    
+
     public Instant getExpiresAt() {
         return expiresAt;
     }
-    
+
     public boolean isDefeated() {
         return defeated;
     }
-    
+
     public void setDefeated(boolean defeated) {
         this.defeated = defeated;
     }

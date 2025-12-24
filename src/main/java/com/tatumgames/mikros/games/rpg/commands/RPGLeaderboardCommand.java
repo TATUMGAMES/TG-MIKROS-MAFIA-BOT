@@ -1,74 +1,79 @@
 package com.tatumgames.mikros.games.rpg.commands;
 
-import com.tatumgames.mikros.commands.CommandHandler;
+import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.config.ConfigLoader;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.Color;
+import java.awt.*;
+import java.time.Instant;
 import java.util.List;
 
 /**
  * Command handler for /rpg-leaderboard.
  * Shows top characters by level and XP with Mafia Member status and pagination.
  */
+@SuppressWarnings("ClassCanBeRecord")
 public class RPGLeaderboardCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RPGLeaderboardCommand.class);
     private final CharacterService characterService;
+    private final ConfigLoader configLoader;
     private static final int ENTRIES_PER_PAGE = 25;
-    
-    // MIKROS Mafia Server ID - Loaded from environment variable
-    // Set MIKROS_MAFIA_GUILD_ID in .env file or environment variables
-    private static final String MIKROS_MAFIA_GUILD_ID = System.getenv("MIKROS_MAFIA_GUILD_ID");
-    
+
     /**
      * Creates a new RPGLeaderboardCommand handler.
-     * 
+     *
      * @param characterService the character service
+     * @param configLoader the configuration loader
      */
-    public RPGLeaderboardCommand(CharacterService characterService) {
+    public RPGLeaderboardCommand(CharacterService characterService, ConfigLoader configLoader) {
         this.characterService = characterService;
+        this.configLoader = configLoader;
     }
-    
+
     @Override
     public CommandData getCommandData() {
         return Commands.slash("rpg-leaderboard", "View top RPG characters by level and XP")
                 .addOption(OptionType.INTEGER, "page", "Page number (default: 1)", false);
     }
-    
+
     @Override
     public void handle(SlashCommandInteractionEvent event) {
         // Get page number (default: 1)
-        int page = event.getOption("page") != null 
-                ? (int) event.getOption("page").getAsLong() 
-                : 1;
-        
+        OptionMapping pageOption = event.getOption("page");
+        int page = (pageOption != null) ? (int) pageOption.getAsLong() : 1;
+
         if (page < 1) {
             event.reply("❌ Page number must be 1 or greater!")
                     .setEphemeral(true)
                     .queue();
             return;
         }
-        
+
         // Get all characters and calculate pagination
         List<RPGCharacter> allCharacters = characterService.getLeaderboard(Integer.MAX_VALUE);
-        
+
         if (allCharacters.isEmpty()) {
-            event.reply("❌ No characters have been registered yet!\n\n" +
-                    "Be the first to start your adventure with `/rpg-register`")
-                    .setEphemeral(true)
-                    .queue();
+            String message = """
+                    ❌ No characters have been registered yet!
+                    
+                    Be the first to start your adventure with `/rpg-register`
+                    """;
+
+            event.reply(message).setEphemeral(true).queue();
             return;
         }
-        
+
         // Calculate pagination
         int totalPages = (int) Math.ceil((double) allCharacters.size() / ENTRIES_PER_PAGE);
         if (page > totalPages) {
@@ -77,39 +82,52 @@ public class RPGLeaderboardCommand implements CommandHandler {
                     .queue();
             return;
         }
-        
+
         // Get characters for this page
         int startIndex = (page - 1) * ENTRIES_PER_PAGE;
         int endIndex = Math.min(startIndex + ENTRIES_PER_PAGE, allCharacters.size());
         List<RPGCharacter> pageCharacters = allCharacters.subList(startIndex, endIndex);
-        
+
         // Get MIKROS Mafia guild for member checking
+        // Use current guild if MIKROS_MAFIA_GUILD_ID matches or is not configured
+        String mafiaGuildId = configLoader.getMafiaGuildId();
+        Guild currentGuild = event.getGuild();
         Guild mafiaGuild = null;
-        if (MIKROS_MAFIA_GUILD_ID != null && !MIKROS_MAFIA_GUILD_ID.isBlank()) {
-            mafiaGuild = event.getJDA().getGuildById(MIKROS_MAFIA_GUILD_ID);
-            if (mafiaGuild == null) {
-                logger.warn("MIKROS Mafia guild not found with ID: {}. Mafia member status will not be checked.", MIKROS_MAFIA_GUILD_ID);
-            } else {
-                logger.debug("MIKROS Mafia guild found: {} ({}). Checking member status for leaderboard.", 
-                        mafiaGuild.getName(), MIKROS_MAFIA_GUILD_ID);
-            }
-        } else {
-            logger.debug("MIKROS_MAFIA_GUILD_ID not configured. Mafia member status will not be checked.");
-        }
         
+        if (currentGuild != null) {
+            // If MIKROS_MAFIA_GUILD_ID is configured and matches current guild, use it
+            // Otherwise, if not configured, assume current guild is the Mafia guild
+            if (mafiaGuildId != null && !mafiaGuildId.isBlank()) {
+                if (mafiaGuildId.equals(currentGuild.getId())) {
+                    mafiaGuild = currentGuild;
+                    logger.debug("Using current guild as MIKROS Mafia guild: {} ({})", currentGuild.getName(), mafiaGuildId);
+                } else {
+                    mafiaGuild = event.getJDA().getGuildById(mafiaGuildId);
+                    if (mafiaGuild == null) {
+                        logger.warn("MIKROS Mafia guild not found with ID: {}. Falling back to current guild.", mafiaGuildId);
+                        mafiaGuild = currentGuild; // Fallback to current guild
+                    }
+                }
+            } else {
+                // Not configured, assume current guild is the Mafia guild
+                mafiaGuild = currentGuild;
+                logger.debug("MIKROS_MAFIA_GUILD_ID not configured. Using current guild as Mafia guild: {}", currentGuild.getName());
+            }
+        }
+
         // Build leaderboard embed
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("🏆 RPG Leaderboard - Top Adventurers");
         embed.setColor(new Color(255, 215, 0)); // Gold color
         embed.setDescription("The strongest characters across all servers");
-        
+
         StringBuilder leaderboard = new StringBuilder();
         int rank = startIndex + 1;
-        
+
         for (RPGCharacter character : pageCharacters) {
             String medal = getMedal(rank - 1);
             String classEmoji = character.getCharacterClass().getEmoji();
-            
+
             // Check if user is in MIKROS Mafia
             String mafiaStatus = "❌ No";
             if (mafiaGuild != null) {
@@ -125,15 +143,17 @@ public class RPGLeaderboardCommand implements CommandHandler {
                 } catch (Exception e) {
                     // Member not found or error retrieving - not in Mafia
                     // This is expected for most users, so we don't log it at info level
-                    logger.trace("User {} ({}) is not a Mafia member or error checking: {}", 
+                    logger.trace("User {} ({}) is not a Mafia member or error checking: {}",
                             character.getDiscordId(), character.getName(), e.getMessage());
                 }
             }
-            
-            leaderboard.append(String.format(
-                    "%s **#%d** - %s **%s**\n" +
-                    "└ %s Level %d • %,d XP • HP: %d/%d\n" +
-                    "└ Mafia Member? %s\n\n",
+
+            leaderboard.append(String.format("""
+                            %s **#%d** - %s **%s**
+                            └ %s Level %d • %,d XP • HP: %d/%d
+                            └ Mafia Member? %s
+                            
+                            """,
                     medal,
                     rank,
                     classEmoji,
@@ -145,36 +165,40 @@ public class RPGLeaderboardCommand implements CommandHandler {
                     character.getStats().getMaxHp(),
                     mafiaStatus
             ));
-            
+
             rank++;
         }
-        
+
         embed.addField("Top Characters", leaderboard.toString(), false);
-        
+
         // Pagination footer
-        String footerText;
+        String footerText = buildFooterText(page, totalPages);
+        embed.setFooter(footerText);
+        embed.setTimestamp(Instant.now());
+
+        event.replyEmbeds(embed.build()).queue();
+
+        logger.debug("Leaderboard requested - showing page {} ({} characters)", page, pageCharacters.size());
+    }
+
+    private String buildFooterText(int page, int totalPages) {
+        int totalCharacters = characterService.getCharacterCount();
         if (totalPages > 1) {
-            footerText = String.format(
+            return String.format(
                     "Page %d/%d • Total Characters: %d • Use /rpg-leaderboard page:%d for next page",
                     page,
                     totalPages,
-                    characterService.getCharacterCount(),
+                    totalCharacters,
                     page < totalPages ? page + 1 : page
             );
         } else {
-            footerText = String.format(
+            return String.format(
                     "Total Characters: %d • Join the adventure with /rpg-register",
-                    characterService.getCharacterCount()
+                    totalCharacters
             );
         }
-        embed.setFooter(footerText);
-        embed.setTimestamp(java.time.Instant.now());
-        
-        event.replyEmbeds(embed.build()).queue();
-        
-        logger.debug("Leaderboard requested - showing page {} ({} characters)", page, pageCharacters.size());
     }
-    
+
     /**
      * Gets medal emoji for rank.
      */
@@ -186,7 +210,7 @@ public class RPGLeaderboardCommand implements CommandHandler {
             default -> "  ";
         };
     }
-    
+
     @Override
     public String getCommandName() {
         return "rpg-leaderboard";

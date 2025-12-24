@@ -1,13 +1,16 @@
 # TASKS_08.md
 
 ## Objective
-Implement a smart, respectful, opt-in-based promotional system inside Discord to promote MIKROS services to developers and studios based on trigger phrases and smart detection.
+
+Implement a smart, respectful, opt-in-based promotional system inside Discord to promote MIKROS services to developers
+and studios based on trigger phrases and smart detection.
 
 ---
 
 ## Feature Summary: Passive Smart Lead Generator
 
 Detect when users say phrases like:
+
 - “We’re launching our game…”
 - “Our Steam page is live”
 - “Kickstarter is ending in 2 days”
@@ -16,7 +19,8 @@ Detect when users say phrases like:
 
 And *gently prompt*:
 
-> “🚀 Looks like you’re launching a game! Want help promoting with MIKROS? Type `/promo-help` to get a free promo code or speak with a partner.”
+> “🚀 Looks like you’re launching a game! Want help promoting with MIKROS? Type `/promo-help` to get a free promo code or
+> speak with a partner.”
 
 ---
 
@@ -35,6 +39,7 @@ And *gently prompt*:
 ### 🔹 Command: `/promo-help`
 
 Allows user to request personalized promo help:
+
 - Bot sends DM with:
     - A custom message (e.g. “Tell us more!”)
     - Option to submit email (if needed)
@@ -44,9 +49,9 @@ Allows user to request personalized promo help:
 
 ### 🔹 Admin Controls
 
-| Command | Description |
-|---------|-------------|
-| `/setup-promotions` | Enable/disable smart promo detection |
+| Command                | Description                                    |
+|------------------------|------------------------------------------------|
+| `/setup-promotions`    | Enable/disable smart promo detection           |
 | `/set-promo-frequency` | Set cooldown (e.g. 1 prompt per user per week) |
 
 ---
@@ -54,6 +59,7 @@ Allows user to request personalized promo help:
 ### 🔹 TODO: Create API Docs in `/docs`
 
 When AI-based detection or lead submission is needed, Cursor AI must:
+
 - Add a `TODO` in the code
 - Generate an API request doc such as:
 

@@ -13,6 +13,7 @@ All tasks from TASKS_13.md have been successfully completed.
 All commands have been systematically renamed to use consistent dashed prefixes:
 
 **Admin Commands → `admin-*`:**
+
 - ✅ `/warn` → `/admin-warn`
 - ✅ `/kick` → `/admin-kick`
 - ✅ `/ban` → `/admin-ban`
@@ -27,23 +28,28 @@ All commands have been systematically renamed to use consistent dashed prefixes:
 - ✅ `/set-promo-frequency` → `/admin-set-promo-frequency`
 
 **Community Games → Game-Specific Prefixes:**
+
 - ✅ `/guess` → Split into `/scramble-guess` and `/spell-guess`
 - ✅ `/game-stats` → Kept as unified command (shows active game)
 
 **Spelling Commands → `spell-*`:**
+
 - ✅ `/spelling-challenge` → `/spell-challenge`
 - ✅ `/spelling-leaderboard` → `/spell-leaderboard`
 - ✅ `/guess` (spelling) → `/spell-guess`
 
 **Promo Commands:**
+
 - ✅ `/promo-help` → `/promo-help` (unchanged)
 - ✅ `/setup-promotions` → `/admin-setup-promotions`
 - ✅ `/set-promo-frequency` → `/admin-set-promo-frequency`
 
 **Stats Commands → `stats-*`:**
+
 - ✅ `/gamestats` → `/stats` (with subcommands)
 
 **RPG Commands:**
+
 - ✅ All RPG commands already use `rpg-*` prefix (no changes needed)
 
 ---
@@ -53,6 +59,7 @@ All commands have been systematically renamed to use consistent dashed prefixes:
 ### Command Files Updated (38 files)
 
 **Admin Commands:**
+
 1. `WarnCommand.java` - Renamed to `admin-warn`
 2. `KickCommand.java` - Renamed to `admin-kick`
 3. `BanCommand.java` - Renamed to `admin-ban`
@@ -67,21 +74,26 @@ All commands have been systematically renamed to use consistent dashed prefixes:
 12. `SetPromoFrequencyCommand.java` - Renamed to `admin-set-promo-frequency`
 
 **Community Games:**
+
 13. `GuessCommand.java` - Split into two commands (see below)
 16. `GameStatsCommand.java` - Updated references
 
 **Spelling:**
+
 17. `SpellingChallengeCommand.java` - Renamed to `spell-challenge`
 18. `SpellingLeaderboardCommand.java` - Renamed to `spell-leaderboard`
 
 **Stats:**
+
 19. `GameStatsCommand.java` - Renamed to `stats`
 
 **New Commands Created:**
+
 20. `ScrambleGuessCommand.java` - New command for word unscramble
 21. `SpellGuessCommand.java` - New command for spelling challenge
 
 **Bot Integration:**
+
 22. `BotMain.java` - Updated command registration
 
 **Total Files Modified:** 22 files
@@ -93,13 +105,16 @@ All commands have been systematically renamed to use consistent dashed prefixes:
 ### `/guess` Command Split
 
 **Before:**
+
 - Single `/guess` command routed to both word unscramble and spelling challenge
 
 **After:**
+
 - `/scramble-guess` - Handles word unscramble games only
 - `/spell-guess` - Handles spelling challenges only
 
 **Implementation:**
+
 - Created `ScrambleGuessCommand.java` for word unscramble
 - Created `SpellGuessCommand.java` for spelling challenge
 - Removed old `GuessCommand` from registration
@@ -110,17 +125,20 @@ All commands have been systematically renamed to use consistent dashed prefixes:
 ## ✅ Verification
 
 ### Build Status
+
 - ✅ Compilation successful
 - ✅ No errors
 - ✅ All commands registered correctly
 
 ### Command Registration
+
 - ✅ All commands updated in `getCommandData()`
 - ✅ All `getCommandName()` methods updated
 - ✅ All references in error messages updated
 - ✅ BotMain registration updated
 
 ### Command Prefixes Verified
+
 - ✅ Admin commands: `admin-*`
 - ✅ Community games: `scramble-*`
 - ✅ Spelling: `spell-*`
@@ -142,16 +160,16 @@ All commands have been systematically renamed to use consistent dashed prefixes:
 
 ## 🎯 Task Requirements Met
 
-| Requirement | Status |
-|-------------|--------|
-| Apply prefix rules to all commands | ✅ Complete |
-| Update command definitions | ✅ Complete |
-| Update services referencing old names | ✅ Complete |
-| Update slash command registration | ✅ Complete |
-| Update help menus | ✅ Complete (error messages) |
-| Update routing behavior | ✅ Complete |
-| Ensure Discord commands regenerate | ✅ Ready |
-| Ensure no duplicates/collisions | ✅ Verified |
+| Requirement                           | Status                      |
+|---------------------------------------|-----------------------------|
+| Apply prefix rules to all commands    | ✅ Complete                  |
+| Update command definitions            | ✅ Complete                  |
+| Update services referencing old names | ✅ Complete                  |
+| Update slash command registration     | ✅ Complete                  |
+| Update help menus                     | ✅ Complete (error messages) |
+| Update routing behavior               | ✅ Complete                  |
+| Ensure Discord commands regenerate    | ✅ Ready                     |
+| Ensure no duplicates/collisions       | ✅ Verified                  |
 
 ---
 

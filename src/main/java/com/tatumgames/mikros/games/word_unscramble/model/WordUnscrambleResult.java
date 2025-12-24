@@ -6,26 +6,20 @@ import java.util.Objects;
 /**
  * Represents a Word Unscramble game result for a single player attempt.
  */
-public class WordUnscrambleResult {
-    private final String userId;
-    private final String username;
-    private final String answer;
-    private final int score;
-    private final boolean isCorrect;
-    private final Instant timestamp;
-    
+public record WordUnscrambleResult(String userId, String username, String answer, int score, boolean isCorrect,
+                                   Instant timestamp) {
     /**
      * Creates a new WordUnscrambleResult.
-     * 
-     * @param userId the user's Discord ID
-     * @param username the user's username
-     * @param answer the answer provided
-     * @param score the score achieved
+     *
+     * @param userId    the user's Discord ID
+     * @param username  the user's username
+     * @param answer    the answer provided
+     * @param score     the score achieved
      * @param isCorrect whether the answer was correct
      * @param timestamp when the attempt was made
      */
-    public WordUnscrambleResult(String userId, String username, String answer, 
-                      int score, boolean isCorrect, Instant timestamp) {
+    public WordUnscrambleResult(String userId, String username, String answer,
+                                int score, boolean isCorrect, Instant timestamp) {
         this.userId = Objects.requireNonNull(userId);
         this.username = Objects.requireNonNull(username);
         this.answer = answer != null ? answer : "";
@@ -33,29 +27,6 @@ public class WordUnscrambleResult {
         this.isCorrect = isCorrect;
         this.timestamp = Objects.requireNonNull(timestamp);
     }
-    
-    public String getUserId() {
-        return userId;
-    }
-    
-    public String getUsername() {
-        return username;
-    }
-    
-    public String getAnswer() {
-        return answer;
-    }
-    
-    public int getScore() {
-        return score;
-    }
-    
-    public boolean isCorrect() {
-        return isCorrect;
-    }
-    
-    public Instant getTimestamp() {
-        return timestamp;
-    }
 }
+
 

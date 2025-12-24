@@ -1,6 +1,7 @@
 # Deployment Guide: TG-MIKROS Discord Bot on Google Cloud Platform
 
-This guide provides step-by-step instructions for deploying the TG-MIKROS Discord Bot on Google Cloud Platform (GCP) using a Compute Engine Virtual Machine.
+This guide provides step-by-step instructions for deploying the TG-MIKROS Discord Bot on Google Cloud Platform (GCP)
+using a Compute Engine Virtual Machine.
 
 ---
 
@@ -17,6 +18,7 @@ Before starting, ensure you have:
 - ✅ **SSH client** for connecting to the VM
 
 ### Required Information
+
 - Discord Bot Token
 - GCP Project ID
 - Preferred VM region/zone
@@ -37,29 +39,29 @@ Before starting, ensure you have:
 1. Click **"Create Instance"** button
 
 2. **Configure the VM:**
-   - **Name:** `mikros-bot-vm` (or your preferred name)
-   - **Region:** Choose closest to your users (e.g., `us-central1`)
-   - **Zone:** Any zone in selected region
+    - **Name:** `mikros-bot-vm` (or your preferred name)
+    - **Region:** Choose closest to your users (e.g., `us-central1`)
+    - **Zone:** Any zone in selected region
 
 3. **Machine Configuration:**
-   - **Machine family:** General-purpose
-   - **Machine type:** `e2-micro` (free tier eligible) or `e2-small` for better performance
-     - **Note:** `e2-micro` may be throttled under load; consider `e2-small` for production
+    - **Machine family:** General-purpose
+    - **Machine type:** `e2-micro` (free tier eligible) or `e2-small` for better performance
+        - **Note:** `e2-micro` may be throttled under load; consider `e2-small` for production
 
 4. **Boot Disk:**
-   - **Operating System:** Ubuntu
-   - **Version:** Ubuntu 22.04 LTS
-   - **Boot disk type:** Standard persistent disk
-   - **Size:** 20 GB (minimum) or 30 GB (recommended)
+    - **Operating System:** Ubuntu
+    - **Version:** Ubuntu 22.04 LTS
+    - **Boot disk type:** Standard persistent disk
+    - **Size:** 20 GB (minimum) or 30 GB (recommended)
 
 5. **Firewall:**
-   - ✅ **Allow HTTP traffic** (optional, for future webhooks)
-   - ✅ **Allow HTTPS traffic** (optional, for future webhooks)
-   - **Note:** Discord bot doesn't require incoming HTTP/HTTPS, but enabling won't hurt
+    - ✅ **Allow HTTP traffic** (optional, for future webhooks)
+    - ✅ **Allow HTTPS traffic** (optional, for future webhooks)
+    - **Note:** Discord bot doesn't require incoming HTTP/HTTPS, but enabling won't hurt
 
 6. **Advanced Options (Optional):**
-   - **Networking:** Default VPC is fine
-   - **Access scopes:** Default (full access) or "Allow default access"
+    - **Networking:** Default VPC is fine
+    - **Access scopes:** Default (full access) or "Allow default access"
 
 7. Click **"Create"** and wait for the VM to be created (1-2 minutes)
 
@@ -137,6 +139,7 @@ cd TG-MIKROS-BOT-discord
 ```
 
 **Alternative:** If using private repository:
+
 ```bash
 # Use SSH or HTTPS with authentication
 git clone git@github.com:TATUMGAMES/TG-MIKROS-BOT-discord.git
@@ -150,12 +153,14 @@ nano .env
 ```
 
 Add the following content:
+
 ```env
 DISCORD_BOT_TOKEN=your_bot_token_here
 BOT_OWNER_ID=your_discord_user_id_here
 ```
 
 **Security:** Set proper file permissions:
+
 ```bash
 chmod 600 .env
 ```
@@ -445,6 +450,7 @@ services:
 ```
 
 Run with:
+
 ```bash
 docker-compose up -d
 ```
@@ -454,6 +460,7 @@ docker-compose up -d
 ## 🔐 7. TODO: Secrets Management (Future)
 
 ### Current Implementation
+
 - Secrets stored in `.env` file
 - File permissions set to `600` (owner read/write only)
 - `.env` file should be in `.gitignore` (already configured)
@@ -463,6 +470,7 @@ docker-compose up -d
 **TODO:** Integrate with Google Secret Manager for secure secret storage.
 
 #### Benefits:
+
 - Centralized secret management
 - Automatic rotation support
 - Audit logging
@@ -470,6 +478,7 @@ docker-compose up -d
 - No secrets in file system
 
 #### Implementation Steps (Future):
+
 1. Enable Secret Manager API in GCP
 2. Create secrets in Secret Manager:
    ```bash
@@ -486,6 +495,7 @@ docker-compose up -d
 5. Update systemd service or Dockerfile to use Secret Manager
 
 #### Manual Fallback (Current):
+
 ```bash
 # Secure .env file
 chmod 600 .env
@@ -501,6 +511,7 @@ ls -la .env
 ## 📊 8. TODO: Logging & Monitoring
 
 ### Current Implementation
+
 - Logging via SLF4J/Logback
 - Logs written to `logs/bot.log` (if configured)
 - Console output available
@@ -511,12 +522,14 @@ ls -la .env
 **TODO:** Integrate with Google Cloud Logging (formerly Stackdriver).
 
 #### Benefits:
+
 - Centralized log aggregation
 - Log retention and search
 - Alerting on errors
 - Integration with monitoring
 
 #### Implementation Steps (Future):
+
 1. Enable Cloud Logging API
 2. Install Cloud Logging agent:
    ```bash
@@ -533,6 +546,7 @@ ls -la .env
 **TODO:** Set up monitoring and alerting.
 
 #### Metrics to Monitor:
+
 - Bot uptime
 - Command execution rate
 - Error rate
@@ -541,12 +555,14 @@ ls -la .env
 - Discord API rate limits
 
 #### Implementation Steps (Future):
+
 1. Enable Cloud Monitoring API
 2. Install monitoring agent
 3. Create custom metrics
 4. Set up alerting policies
 
 ### Manual Fallback (Current):
+
 ```bash
 # View application logs
 tail -f logs/bot.log
@@ -611,7 +627,7 @@ logrotate -f /etc/logrotate.d/mikros-bot
    ```
 
 2. **Upgrade VM instance:**
-   - Consider upgrading from `e2-micro` to `e2-small` or higher
+    - Consider upgrading from `e2-micro` to `e2-small` or higher
 
 3. **Check network connectivity:**
    ```bash
@@ -687,11 +703,13 @@ echo "Bot updated and restarted successfully"
 ```
 
 Make executable:
+
 ```bash
 chmod +x update-bot.sh
 ```
 
 Run:
+
 ```bash
 ./update-bot.sh
 ```
@@ -717,6 +735,7 @@ docker run -d --name mikros-bot --restart=always \
 ## 🛡️ 11. Security Best Practices
 
 ### File Permissions
+
 ```bash
 # Secure .env file
 chmod 600 .env
@@ -727,16 +746,19 @@ chmod 700 ~/TG-MIKROS-BOT-discord
 ```
 
 ### Firewall Rules
+
 - Discord bot doesn't require incoming connections
 - Consider restricting SSH access to specific IPs
 - Use GCP firewall rules for additional security
 
 ### Service Account
+
 - Use dedicated service account for bot (future enhancement)
 - Grant minimum required permissions
 - Rotate credentials regularly
 
 ### Regular Updates
+
 - Keep system packages updated: `sudo apt update && sudo apt upgrade`
 - Keep Java updated
 - Monitor security advisories
@@ -746,6 +768,7 @@ chmod 700 ~/TG-MIKROS-BOT-discord
 ## 📈 12. Performance Optimization
 
 ### VM Sizing
+
 - **Development/Testing:** `e2-micro` (free tier)
 - **Small Community:** `e2-small` (1 vCPU, 2 GB RAM)
 - **Medium Community:** `e2-medium` (2 vCPU, 4 GB RAM)
@@ -754,11 +777,13 @@ chmod 700 ~/TG-MIKROS-BOT-discord
 ### JVM Tuning (Optional)
 
 Add to systemd service `ExecStart`:
+
 ```ini
 ExecStart=/usr/bin/java -Xms512m -Xmx1024m -jar /path/to/bot.jar
 ```
 
 Or create `jvm-options.txt`:
+
 ```
 -Xms512m
 -Xmx1024m
@@ -767,6 +792,7 @@ Or create `jvm-options.txt`:
 ```
 
 Use with:
+
 ```bash
 java @jvm-options.txt -jar bot.jar
 ```
@@ -787,6 +813,7 @@ After deployment, verify:
 - [ ] Logs are accessible
 
 ### Test Commands
+
 ```bash
 # In Discord, test:
 /warn @user test
@@ -809,6 +836,7 @@ After deployment, verify:
 ## 🆘 Support
 
 For issues or questions:
+
 1. Check logs first: `sudo journalctl -u mikros-bot -n 100`
 2. Review this documentation
 3. Check project README.md

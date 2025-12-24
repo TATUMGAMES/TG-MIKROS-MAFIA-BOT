@@ -3,32 +3,19 @@
     "statusCode": 200,
     "statusMessage": "SUCCESS"
   },
-  "data": {
-    "scores": [
-      {
-        "id": "1",
-        "email": "abc@gmail.com",
-        "discordUserId": "123456789012345678",
-        "discordUsername": "drxeno02",
-        "reputationScore": 0,
-        "discordServers": [
-          987654321098765432,
-          887654321098765432,
-          787654321098765432,
-          687654321098765432
-        ]
-      },
-      {
-        "id": "12",
-        "email": "xyz@gmail.com",
-        "discordUserId": "123456789012345678",
-        "discordUsername": "drxeno02",
-        "reputationScore": 10,
-        "discordServers": [
-          987654321098765432
-        ]
-      }
-    ]
-  }
+  "data": [
+    {
+      "username": "123456789012345678",
+      "reputationScore": 10
+    },
+    {
+      "username": "023456789012345678",
+      "reputationScore": 1
+    },
+    {
+      "username": "923456789012345678",
+      "reputationScore": 10
+    }
+  ]
 }
 

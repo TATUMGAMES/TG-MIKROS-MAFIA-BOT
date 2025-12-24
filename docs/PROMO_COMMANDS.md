@@ -2,78 +2,92 @@
 
 ## Overview
 
-The **Promo Commands** (`admin-promo-*`) manage the smart promotional detection system. This system passively detects launch-related phrases in messages and offers promotional assistance.
+The **Promo Commands** manage the smart promotional detection system. This system passively detects
+launch-related phrases in messages and offers promotional assistance.
 
-**Command Prefixes:**
-- `admin-promo-*` - Admin configuration commands
+**Commands:**
+
+- `/admin-promotion-setup` - Initial setup for promotion channel
+- `/admin-promotion-config` - Configure promotion settings (subcommands: view, update-channel, set-verbosity, disable, force-check)
 
 ---
 
 ## Admin Commands
 
-### `/admin-setup-promotions`
+### `/admin-promotion-setup`
 
-**Purpose:** Enable or disable smart promotional detection.
+**Purpose:** Initial setup for game promotion system.
 
 **Permission Required:** `ADMINISTRATOR`
 
 **Syntax:**
+
 ```
-/admin-setup-promotions enabled:<true|false>
+/admin-promotion-setup channel:<#channel>
 ```
 
 **Parameters:**
-- `enabled` (required): Enable or disable detection
+
+- `channel` (required): Channel for promotion posts
 
 **Behavior:**
-- Enables/disables passive message monitoring
-- Per-server configuration
-- When enabled, bot monitors messages for launch-related phrases
+
+- Configures promotion channel
+- Validates bot permissions
+- Stores per-server configuration
+- Enables promotion system
 
 **Example:**
+
 ```
-/admin-setup-promotions enabled:true
+/admin-promotion-setup channel:#promotions
 ```
 
 **Output:**
-```
-✅ Promotional detection enabled for this server.
 
-The bot will now detect launch-related phrases and offer assistance.
+```
+✅ Promotion channel configured!
+
+Promotions will now be posted in #promotions.
+
+Next Steps:
+• Use `/admin-promotion-config` to customize settings
 ```
 
 ---
 
-### `/admin-set-promo-frequency`
+### `/admin-promotion-config`
 
-**Purpose:** Set how often users can receive promotional prompts.
+**Purpose:** Configure game promotion settings.
 
 **Permission Required:** `ADMINISTRATOR`
 
-**Syntax:**
+**Subcommands:**
+
+- `view` - View current promotion configuration
+- `update-channel` - Update the promotion channel (requires setup first)
+- `set-verbosity` - Set how often promotions are posted (QUIET/NORMAL/VERBOSE)
+- `disable` - Disable promotional detection
+- `force-check` - Manually trigger a promotion check
+
+**Verbosity Options:**
+
+- `QUIET` - Every 24 hours
+- `NORMAL` - Every 12 hours
+- `VERBOSE` - Every 6 hours
+
+**Examples:**
+
 ```
-/admin-set-promo-frequency days:<1-30>
+/admin-promotion-config view
+/admin-promotion-config update-channel channel:#new-promotions
+/admin-promotion-config set-verbosity level:NORMAL
+/admin-promotion-config disable
+/admin-promotion-config force-check
 ```
 
-**Parameters:**
-- `days` (required): Cooldown in days (1-30, default: 7)
+---
 
-**Behavior:**
-- Sets cooldown period between prompts
-- Prevents spam and annoyance
-- Per-user, per-server tracking
-
-**Example:**
-```
-/admin-set-promo-frequency days:14
-```
-
-**Output:**
-```
-✅ Promotional prompt cooldown set to 14 days.
-
-Users will receive prompts at most once every 14 days.
-```
 
 ---
 
@@ -84,6 +98,7 @@ Users will receive prompts at most once every 14 days.
 The bot passively monitors messages for launch-related phrases:
 
 **Trigger Patterns:**
+
 - "launching my game"
 - "game release"
 - "coming soon"
@@ -96,11 +111,13 @@ The bot passively monitors messages for launch-related phrases:
 - "play store"
 
 **Detection:**
+
 - Case-insensitive regex matching
 - 10 trigger patterns
 - Monitors all text channels (when enabled)
 
 **Response:**
+
 - Sends gentle, opt-in prompt
 - DM or channel delivery (configurable)
 - Respects cooldown period
@@ -108,11 +125,13 @@ The bot passively monitors messages for launch-related phrases:
 ### Detection Example
 
 **User Message:**
+
 ```
 I'm launching my game next month! Excited to share it with everyone.
 ```
 
 **Bot Response (if enabled and cooldown passed):**
+
 ```
 🚀 Game Launch Detected!
 
@@ -127,18 +146,21 @@ Contact MIKROS for promotional assistance!
 
 ### Per-Server Settings
 
+**Channel Setup:**
+
+- Set via `/admin-promotion-setup`
+- Required before promotions can be posted
+
+**Verbosity:**
+
+- Set via `/admin-promotion-config set-verbosity`
+- Options: QUIET (24h), NORMAL (12h), VERBOSE (6h)
+- Default: NORMAL
+
 **Enabled/Disabled:**
-- Toggle via `/admin-setup-promotions`
-- Default: Disabled (must be enabled by admin)
 
-**Cooldown:**
-- Set via `/admin-set-promo-frequency`
-- Default: 7 days
-- Range: 1-30 days
-
-**Delivery Method:**
-- Currently: DM or channel (configurable in future)
-- Default: DM
+- Toggle via `/admin-promotion-config disable`
+- Default: Enabled after channel setup
 
 ---
 
@@ -147,27 +169,29 @@ Contact MIKROS for promotional assistance!
 ### Detection Rules
 
 1. **Message Monitoring:**
-   - Only monitors guild messages (not DMs)
-   - Skips bot messages
-   - Case-insensitive matching
+    - Only monitors guild messages (not DMs)
+    - Skips bot messages
+    - Case-insensitive matching
 
 2. **Cooldown Enforcement:**
-   - Tracks per-user, per-server
-   - Prevents spam
-   - Respects configured cooldown period
+    - Tracks per-user, per-server
+    - Prevents spam
+    - Respects configured cooldown period
 
 3. **Prompt Delivery:**
-   - Gentle, non-intrusive
-   - Opt-in approach
-   - Clear value proposition
+    - Gentle, non-intrusive
+    - Opt-in approach
+    - Clear value proposition
 
 ### Error Handling
 
 **Detection Disabled:**
+
 - No prompts sent
 - Silent operation
 
 **Cooldown Active:**
+
 - No prompt sent
 - Logged for debugging
 
@@ -176,11 +200,13 @@ Contact MIKROS for promotional assistance!
 ## Use Cases
 
 ### For Server Admins
+
 - Enable promotional assistance for community
 - Control detection frequency
 - Manage cooldown periods
 
 ### For Community
+
 - Discover promotional opportunities
 - Learn about game launches
 - Support indie developers
@@ -200,6 +226,7 @@ Contact MIKROS for promotional assistance!
 ## Best Practices
 
 ### For Admins
+
 1. **Enable Thoughtfully:** Only enable if community benefits
 2. **Set Appropriate Cooldown:** Balance helpfulness with spam prevention
 3. **Monitor Usage:** Check if prompts are well-received
@@ -207,5 +234,7 @@ Contact MIKROS for promotional assistance!
 
 ---
 
-**Last Updated:** 2025-10-08  
-**Admin Commands:** 2 (`admin-promo-*`)
+**Last Updated:** 2025-01-27  
+**Admin Commands:** 
+- `/admin-promotion-setup` - Channel setup
+- `/admin-promotion-config` - Configuration (4 subcommands)

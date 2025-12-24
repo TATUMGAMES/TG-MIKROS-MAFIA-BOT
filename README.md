@@ -5,7 +5,9 @@
 [![JDA](https://img.shields.io/badge/JDA-5.0.0--beta.20-5865F2.svg)](https://github.com/DV8FromTheWorld/JDA)
 [![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 
-A comprehensive, modular Discord bot built with Java and JDA (Java Discord API) for the Tatum Games MIKROS ecosystem. The bot provides moderation tools, community engagement features, game analytics, promotional lead generation, and interactive gaming experiences.
+A comprehensive, modular Discord bot built with Java and JDA (Java Discord API) for the Tatum Games MIKROS ecosystem.
+The bot provides moderation tools, community engagement features, game analytics, promotional lead generation, and
+interactive gaming experiences.
 
 ---
 
@@ -34,7 +36,8 @@ The **MIKROS Discord Bot** is a production-ready Discord bot designed to serve g
 - **Marketing Support** - Smart promotional lead generation
 - **Reputation System** - User behavior tracking and scoring
 
-The bot integrates with the **MIKROS Analytics & Marketing Platform**, providing insights and promotional opportunities for game developers and studios.
+The bot integrates with the **MIKROS Analytics & Marketing Platform**, providing insights and promotional opportunities
+for game developers and studios.
 
 ### Goals
 
@@ -51,12 +54,14 @@ The bot integrates with the **MIKROS Analytics & Marketing Platform**, providing
 ### 🔨 Admin Tools (TASKS_01)
 
 **Moderation Commands:**
+
 - `/warn` - Issue warnings with logged reasons
 - `/kick` - Remove users from the server
 - `/ban` - Ban users with optional message deletion
 - `/history` - View complete moderation history for any user
 
 **Features:**
+
 - Persistent moderation logging (in-memory, TODO: database)
 - Role hierarchy validation
 - Permission checks
@@ -65,10 +70,12 @@ The bot integrates with the **MIKROS Analytics & Marketing Platform**, providing
 ### 🛡️ Enhanced Moderation (TASKS_02)
 
 **Smart Suggestions:**
+
 - `/warn-suggestions` - AI-powered warning recommendations
 - `/ban-suggestions` - Automated ban suggestions based on message analysis
 
 **Community Features:**
+
 - `/server-stats` - Server activity statistics and insights
 - `/top-contributors` - Leaderboard of most active members
 - `/praise` - Award positive reputation points (Admin only)
@@ -76,6 +83,7 @@ The bot integrates with the **MIKROS Analytics & Marketing Platform**, providing
 - `/lookup` - Lookup user reputation scores by username (Admin only)
 
 **Reputation System:**
+
 - Behavior tracking and scoring
 - Positive/negative reputation points
 - Integration with moderation actions
@@ -83,32 +91,50 @@ The bot integrates with the **MIKROS Analytics & Marketing Platform**, providing
 ### 🎮 Game Promotion System (TASKS_03)
 
 **Admin Commands:**
-- `/setup-promotion-channel` - Configure promotion posting channel
-- `/set-promotion-verbosity` - Control promotion frequency
-- `/force-promotion-check` - Manually trigger promotion check
+
+- `/admin-promotion-setup` - Configure promotion posting channel
+- `/admin-promotion-config` - Configure promotion settings (view, update-channel, set-verbosity, disable, force-check)
 
 **Features:**
+
 - Automated game promotion scheduling
-- Configurable verbosity levels (QUIET, NORMAL, VERBOSE)
+- Configurable verbosity levels (LOW, MEDIUM, HIGH)
 - Rich embed formatting
 - Per-server configuration
 
 **TODO:** Integration with MIKROS Game Promotion API
 
-### 📊 Game Analytics (TASKS_04)
+### 📊 MIKROS Ecosystem Analytics (TASKS_04)
 
-**Command:** `/gamestats` with subcommands:
+**Setup:** Use `/admin-mikros-ecosystem-setup` to configure a channel for analytics commands.
 
+**Command:** `/mikros-ecosystem` with 13 subcommands (requires channel setup):
+
+**Trending Analytics:**
 - `trending-game-genres` - Top 3 fastest-growing genres
 - `trending-content-genres` - Trending content types
 - `trending-content` - Top 5 trending in-game content
 - `trending-gameplay-types` - Casual, competitive, etc.
+
+**Popular Analytics:**
+- `popular-game-genres` - Most played game genres
+- `popular-content-genres` - Most engaging content genres
+- `popular-content` - Top 5 in-game content experiences
+- `popular-gameplay-types` - Most popular gameplay types
+
+**Ecosystem Metrics:**
+- `total-mikros-apps` - Total apps using MIKROS Analytics
+- `total-mikros-contributors` - Total ecosystem contributors
+- `total-users` - Unique user profiles tracked
+- `avg-gameplay-time` - Average gameplay time (optional genre filter)
+- `avg-session-time` - Average session length (optional genre filter)
 - `popular-game-genres` - Most-played genres overall
 - `popular-content-genres` - Most-played content types
 - `popular-content` - Most popular in-game content
 - `popular-gameplay-types` - Most popular gameplay styles
 
 **Features:**
+
 - Real-time industry metrics
 - Growth percentage calculations
 - Clean Discord embed formatting
@@ -119,18 +145,22 @@ The bot integrates with the **MIKROS Analytics & Marketing Platform**, providing
 ### 🎲 Community Games Engine (TASKS_05)
 
 **Daily Reset Games:**
+
 - **Word Unscramble** - Unscramble gaming-themed words
 
 **Admin Commands:**
-- `/game-setup` - Initial game configuration
-- `/game-config` - Modify game settings (5 subcommands)
+
+- `/admin-scramble-setup` - Initial game configuration
+- `/admin-scramble-config` - Modify game settings (5 subcommands)
 
 **Player Commands:**
-- `/guess <word>` - Submit word guess
-- `/roll` - Roll dice
-- `/game-stats` - View leaderboard and time remaining
+
+- `/scramble-guess <word>` - Submit word unscramble guess
+- `/scramble-stats` - View leaderboard and time remaining
+- `/scramble-profile` - View your individual statistics (words solved, points, fastest time, accuracy, etc.)
 
 **Features:**
+
 - Daily automatic resets
 - Per-server configuration
 - Rich leaderboards with medals
@@ -139,72 +169,95 @@ The bot integrates with the **MIKROS Analytics & Marketing Platform**, providing
 ### ⚔️ Text-Based RPG System (TASKS_06, TASKS_23)
 
 **Character System:**
+
 - **Six classes:** Warrior, Knight, Mage, Rogue, Necromancer, Priest
 - Persistent character progression
 - Level and XP system
-- Stat growth (HP, STR, AGI, INT, LUCK)
-- **Action Charge System:** 3 charges, refresh every 12 hours
+- **Balanced Stat System:** Every stat (STR, AGI, INT, LUCK, HP) has meaningful advantages AND disadvantages
+  - Stat effectiveness against different enemy types (1.3x effective, 0.85x weak)
+  - AGI: Defense + exploration bonuses + critical hits
+  - INT: XP efficiency + crafting bonuses
+  - LUCK: Item drops + rare items + XP floor
+  - STR: Consistent physical damage
+  - HP: Pure survivability
+- **Action Charge System:** Dynamic charges (3-10 based on level), refresh every 12 hours
 - **Death & Recovery:** Characters can die, Priests can resurrect
 
 **Player Commands:**
+
 - `/rpg-register` - Create your character (6 classes available)
 - `/rpg-profile` - View character stats, charges, recovery status
 - `/rpg-action` - Perform actions (explore, train, battle, rest)
 - `/rpg-resurrect` - Resurrect dead players (Priest-only, free action)
+- `/rpg-duel` - Challenge another player to a duel (free action, 3x/24h limit)
 - `/rpg-boss-battle` - Attack community bosses (attack, status, leaderboard)
 - `/rpg-leaderboard` - View top players
+- `/rpg-inventory` - View your collected items and crafted bonuses
+- `/rpg-craft` - Craft permanent stat-boosting items from materials
 
 **Admin Commands:**
-- `/rpg-config` - Configure RPG system (5 subcommands)
+
+- `/admin-rpg-setup` - Initial RPG system setup
+- `/admin-rpg-config` - Configure RPG system (5 subcommands)
 
 **Features:**
+
 - **Action Charge System:** 3 charges, refresh every 12 hours (not 24h cooldown)
 - **Four Action Types:** Explore, Train, Battle, Rest
 - **40+ narrative encounters** (Nilfheim-themed)
 - **36 enemy types** for battles
 - **Death System:** Characters can die, enter recovery
-- **Boss System:** 24 normal bosses + 12 super bosses
+- **Boss System:** 48 normal bosses + 20 super bosses
 - **Community Boss Battles:** Shared HP pool, damage tracking
 - **Boss Progression:** Levels increase based on defeats
+- **Boss XP Rewards:** Top 30% of participants receive proportional XP rewards (scales with participation)
 - **Class Bonuses:** Each class gets +20% damage vs specific boss types
 - Exponential XP progression
 - **Nilfheim Lore:** Full realm integration
 
 **TODO:** Inventory system, quests, multiplayer, prestige system
 
-### 🧠 Daily Spelling Challenge (TASKS_07)
+### 🧠 Word Unscramble Game (TASKS_05)
 
 **Features:**
+
 - Daily word unscrambling challenge
-- 80 gaming/fantasy-themed words (4-8 letters)
-- 3 attempts per player per day
-- Point-based scoring (3 pts first solver, 1 pt others)
+- Gaming/fantasy-themed words
+- Hourly game resets
+- Point-based scoring
 
 **Commands:**
-- `/spelling-challenge` - View today's challenge
-- `/guess <word>` - Submit guess (works with both Community Games and Spelling Challenge)
-- `/spelling-leaderboard` - All-time top players
+
+- `/scramble-guess <word>` - Submit word unscramble guess
+- `/scramble-stats` - View game leaderboard and status
+- `/admin-scramble-setup` - Setup word unscramble game (Admin only)
 
 **Features:**
-- All-time cumulative leaderboard
-- Smart `/guess` command routing
+
+- Hourly game resets
+- Leaderboard tracking
+- Individual player statistics tracking (words solved, points, fastest time, accuracy)
 - Beautiful embed formatting
+- Branding words included: "MIKROS", "TATUM GAMES", "TATUM TECH"
 
 **TODO:** Hint system, RPG integration, difficulty levels
 
 ### 🚀 Smart Promotional Lead Generator (TASKS_08)
 
 **Passive Detection:**
+
 - Monitors messages for launch-related phrases
 - 10 regex patterns for detection
 - Gentle, opt-in prompts
 - Configurable cooldowns (1-30 days)
 
 **Commands:**
+
 - `/setup-promotions` - Enable/disable detection (admin)
 - `/set-promo-frequency` - Set cooldown days (admin)
 
 **Features:**
+
 - DM or channel delivery options
 - Per-server configuration
 - Respectful, non-intrusive
@@ -220,69 +273,71 @@ The bot integrates with the **MIKROS Analytics & Marketing Platform**, providing
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                   Discord Server                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │   Commands   │  │   Games      │  │   Listeners  │  │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
+│  │   Commands   │  │   Games      │  │   Listeners  │   │
+│  └──────┬───────┘  └───────┬──────┘  └────────┬─────┘   │
 └─────────┼──────────────────┼──────────────────┼─────────┘
           │                  │                  │
           ▼                  ▼                  ▼
 ┌─────────────────────────────────────────────────────────┐
 │              MIKROS Discord Bot (JDA)                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │   Services   │  │   Schedulers │  │   Models     │  │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
+│  │   Services   │  │   Schedulers │  │   Models     │   │
+│  └──────┬───────┘  └───────┬──────┘  └────────┬─────┘   │
 └─────────┼──────────────────┼──────────────────┼─────────┘
           │                  │                  │
           ▼                  ▼                  ▼
 ┌─────────────────────────────────────────────────────────┐
-│         In-Memory Storage (ConcurrentHashMap)            │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │  Characters  │  │   Sessions   │  │   Configs    │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
+│         In-Memory Storage (ConcurrentHashMap)           │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
+│  │  Characters  │  │   Sessions   │  │   Configs    │   │
+│  └──────────────┘  └──────────────┘  └──────────────┘   │
 └─────────────────────────────────────────────────────────┘
           │
           ▼
 ┌─────────────────────────────────────────────────────────┐
-│         TODO: MIKROS Backend APIs                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │  Analytics   │  │  Promotions  │  │   Reputation │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
+│         TODO: MIKROS Backend APIs                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
+│  │  Analytics   │  │  Promotions  │  │   Reputation │   │
+│  └──────────────┘  └──────────────┘  └──────────────┘   │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ### Component Layers
 
 1. **Command Layer** (`commands/`)
-   - Handles user interactions
-   - Validates permissions
-   - Formats responses
-   - Delegates to services
+    - Handles user interactions
+    - Validates permissions
+    - Formats responses
+    - Delegates to services
 
 2. **Service Layer** (`services/`)
-   - Business logic
-   - State management
-   - Schedulers for automation
-   - API integration points (TODO)
+    - Business logic
+    - State management
+    - Schedulers for automation
+    - API integration points (TODO)
 
 3. **Model Layer** (`models/`)
-   - Data structures
-   - Enums and constants
-   - Configuration classes
+    - Data structures
+    - Enums and constants
+    - Configuration classes
 
 4. **Feature Modules**
-   - `communitygames/` - Daily games system
-   - `rpg/` - Text-based RPG
-   - `spelling/` - Spelling challenges
-   - `promo/` - Promotional detection
+    - `communitygames/` - Daily games system
+    - `rpg/` - Text-based RPG
+    - `spelling/` - Spelling challenges
+    - `promo/` - Promotional detection
 
 ### Data Persistence
 
 **Current:** In-memory storage using `ConcurrentHashMap`
+
 - Thread-safe implementations
 - Per-server isolation
 - Fast access
 
 **Future (TODO):**
+
 - Database persistence
 - Google Cloud Storage
 - Redis for caching
@@ -342,9 +397,11 @@ The bot integrates with the **MIKROS Analytics & Marketing Platform**, providing
 ### Production Deployment
 
 For production deployment on Google Cloud Platform, see:
+
 - **[`/docs/DEPLOYMENT_GOOGLE_CLOUD.md`](docs/DEPLOYMENT_GOOGLE_CLOUD.md)** - Complete GCP deployment guide
 
 Includes:
+
 - VM setup instructions
 - systemd service configuration
 - Docker deployment
@@ -356,45 +413,50 @@ Includes:
 
 ### Command Reference
 
-| Command | Category | Description | Permission |
-|---------|----------|-------------|------------|
-| `/warn` | Moderation | Warn a user with reason | Moderate Members |
-| `/kick` | Moderation | Kick a user from server | Kick Members |
-| `/ban` | Moderation | Ban a user (optional message deletion) | Ban Members |
-| `/history` | Moderation | View user moderation history | Moderate Members |
-| `/warn-suggestions` | Moderation | Get AI-powered warning suggestions | Moderate Members |
-| `/ban-suggestions` | Moderation | Get AI-powered ban suggestions | Moderate Members |
-| `/server-stats` | Community | View server activity statistics | Everyone |
-| `/top-contributors` | Community | View most active members | Everyone |
-| `/praise` | Reputation | Award positive reputation | Admin Only |
-| `/report` | Reputation | Report negative behavior | Admin Only |
-| `/lookup` | Reputation | Lookup user scores by username | Admin Only |
-| `/gamestats` | Analytics | View game analytics (10 subcommands) | Everyone |
-| `/game-setup` | Games | Setup community games | Administrator |
-| `/game-config` | Games | Configure games (5 subcommands) | Administrator |
-| `/guess` | Games | Guess word in games | Everyone |
-| `/game-stats` | Games | View game leaderboard | Everyone |
-| `/rpg-register` | RPG | Create RPG character (6 classes) | Everyone |
-| `/rpg-profile` | RPG | View character profile | Everyone |
-| `/rpg-action` | RPG | Perform action (explore/train/battle/rest) | Everyone |
-| `/rpg-resurrect` | RPG | Resurrect dead player (Priest-only) | Everyone |
-| `/rpg-boss-battle` | RPG | Attack boss, check status, leaderboard | Everyone |
-| `/rpg-leaderboard` | RPG | View RPG leaderboard | Everyone |
-| `/rpg-config` | RPG | Configure RPG (5 subcommands) | Administrator |
-| `/spelling-challenge` | Spelling | View daily spelling challenge | Everyone |
-| `/spelling-leaderboard` | Spelling | View spelling leaderboard | Everyone |
-| `/setup-promotions` | Promo | Enable/disable promo detection | Administrator |
-| `/set-promo-frequency` | Promo | Set promo cooldown | Administrator |
-| `/admin-setup-promotion-channel` | Admin | Configure game promotion channel | Administrator |
-| `/admin-set-promotion-verbosity` | Admin | Set promotion frequency | Administrator |
-| `/admin-force-promotion-check` | Admin | Manually trigger promotion | Administrator |
-| `/admin-disable-promotions` | Admin | Disable game promotions | Administrator |
+| Command                          | Category   | Description                                                              | Permission       |
+|----------------------------------|------------|--------------------------------------------------------------------------|------------------|
+| `/warn`                          | Moderation | Warn a user with reason                                                  | Moderate Members |
+| `/kick`                          | Moderation | Kick a user from server                                                  | Kick Members     |
+| `/ban`                           | Moderation | Ban a user (optional message deletion)                                   | Ban Members      |
+| `/history`                       | Moderation | View user moderation history                                             | Moderate Members |
+| `/warn-suggestions`              | Moderation | Get AI-powered warning suggestions                                       | Moderate Members |
+| `/ban-suggestions`               | Moderation | Get AI-powered ban suggestions                                           | Moderate Members |
+| `/server-stats`                  | Community  | View server activity statistics                                          | Everyone         |
+| `/top-contributors`              | Community  | View most active members                                                 | Everyone         |
+| `/praise`                        | Reputation | Award positive reputation                                                | Admin Only       |
+| `/report`                        | Reputation | Report negative behavior                                                 | Admin Only       |
+| `/lookup`                        | Reputation | Lookup user scores by username                                           | Admin Only       |
+| `/admin-mikros-ecosystem-setup`  | Analytics  | Setup MIKROS Ecosystem channel                                           | Administrator    |
+| `/mikros-ecosystem`               | Analytics  | View MIKROS Analytics (13 subcommands, requires channel setup)           | Everyone         |
+| `/admin-scramble-setup`          | Games      | Setup word unscramble game                                               | Administrator    |
+| `/admin-scramble-config`         | Games      | Configure games (5 subcommands)                                          | Administrator    |
+| `/scramble-guess`                 | Games      | Submit word unscramble guess                                             | Everyone         |
+| `/scramble-stats`                 | Games      | View game leaderboard                                                    | Everyone         |
+| `/scramble-profile`                | Games      | View your individual statistics (words solved, points, fastest time, etc.) | Everyone         |
+| `/rpg-register`                  | RPG        | Create RPG character (6 classes)                                         | Everyone         |
+| `/rpg-profile`                   | RPG        | View character profile                                                   | Everyone         |
+| `/rpg-action`                    | RPG        | Perform action (explore/train/battle/rest)                               | Everyone         |
+| `/rpg-resurrect`                 | RPG        | Resurrect dead player (Priest-only)                                      | Everyone         |
+| `/rpg-duel`                      | RPG        | Challenge another player to a duel (free, 3x/24h limit)                  | Everyone         |
+| `/rpg-boss-battle`               | RPG        | Attack boss, check status, leaderboard                                   | Everyone         |
+| `/rpg-leaderboard`               | RPG        | View RPG leaderboard                                                     | Everyone         |
+| `/rpg-inventory`                 | RPG        | View collected items and crafted bonuses                                 | Everyone         |
+| `/rpg-craft`                     | RPG        | Craft permanent stat-boosting items                                      | Everyone         |
+| `/rpg-stats`                     | RPG        | View detailed RPG statistics                                             | Everyone         |
+| `/admin-rpg-setup`               | RPG        | Setup RPG system                                                         | Administrator    |
+| `/admin-rpg-config`              | RPG        | Configure RPG (5 subcommands)                                            | Administrator    |
+| `/rpg-reset`                     | RPG        | Reset all RPG data for server                                            | Administrator    |
+| `/setup-promotions`              | Promo      | Enable/disable promo detection                                           | Administrator    |
+| `/set-promo-frequency`           | Promo      | Set promo cooldown                                                       | Administrator    |
+| `/admin-promotion-setup`         | Admin      | Configure game promotion channel                                         | Administrator    |
+| `/admin-promotion-config`        | Admin      | Configure promotion settings (view, update-channel, set-verbosity, disable, force-check) | Administrator    |
 
-**Total Commands:** 33+ (including subcommands)
+**Total Commands:** 34+ (including subcommands)
 
 ### Example Usage
 
 #### Moderation
+
 ```
 /warn @user Spamming in general channel
 /kick @user Inappropriate behavior
@@ -403,31 +465,36 @@ Includes:
 ```
 
 #### Community Games
+
 ```
-/game-setup channel:#games reset_hour:0
-/guess gameplay
-/roll
-/match 🎮🎲🎯
-/game-stats
+/admin-scramble-setup channel:#games reset_hour:0
+/scramble-guess gameplay
+/scramble-stats
+/scramble-profile
 ```
 
 #### RPG System
+
 ```
 /rpg-register name:Aragorn class:WARRIOR
 /rpg-profile
 /rpg-action type:explore
 /rpg-action type:battle
 /rpg-action type:rest
+/rpg-duel target:@Player
+/rpg-inventory
+/rpg-craft item:Ember Infusion
 /rpg-boss-battle attack
 /rpg-resurrect target:@Player
 /rpg-leaderboard
 ```
 
 #### Analytics
+
 ```
-/gamestats trending-game-genres
-/gamestats popular-content
-/gamestats trending-gameplay-types
+/mikros-ecosystem trending-game-genres
+/mikros-ecosystem popular-content
+/mikros-ecosystem trending-gameplay-types
 ```
 
 ---
@@ -453,6 +520,7 @@ MIKROS_MAFIA_GUILD_ID=1213441992936390666
 ```
 
 **Security:** Set file permissions to `600` (owner read/write only):
+
 ```bash
 chmod 600 .env
 ```
@@ -482,9 +550,11 @@ All configurations are managed via admin commands and stored in-memory.
 ### Code Standards
 
 This project follows strict coding standards defined in:
+
 - **[`BEST_CODING_PRACTICES.md`](BEST_CODING_PRACTICES.md)** - Complete coding standards
 
 **Key Principles:**
+
 - Clean architecture with separation of concerns
 - Javadoc comments for all public classes and methods
 - JUnit 5 for testing with Mockito for mocking
@@ -596,14 +666,17 @@ src/main/java/com/tatumgames/mikros/
 ### API Documentation (`/docs/`)
 
 **Deployment:**
+
 - **[`DEPLOYMENT_GOOGLE_CLOUD.md`](docs/DEPLOYMENT_GOOGLE_CLOUD.md)** - GCP deployment guide
 
 **API Specifications:**
+
 - **[`API_MIKROS_PROMO_SUBMISSION.md`](docs/API_MIKROS_PROMO_SUBMISSION.md)** - Promo lead submission API
 - **[`API_GOOGLE_GENERATIVE_AI.md`](docs/API_GOOGLE_GENERATIVE_AI.md)** - NLP integration API
 - **[`admin-tools-api.md`](docs/admin-tools-api.md)** - Admin tools API
 
 **Analytics APIs (TODO for integration):**
+
 - `API_TRENDING_GAME_GENRES.md`
 - `API_TRENDING_CONTENT_GENRES.md`
 - `API_TRENDING_CONTENT.md`
@@ -624,14 +697,17 @@ src/main/java/com/tatumgames/mikros/
 - `API_GLOBAL_USER_MODERATION_LOG.md`
 
 **Testing Guides:**
+
 - **[`COMMUNITY_GAMES_TESTING_GUIDE.md`](docs/COMMUNITY_GAMES_TESTING_GUIDE.md)** - Community games testing
 
 **System Configuration:**
+
 - **[`docs/systemd/mikros-bot.service`](docs/systemd/mikros-bot.service)** - systemd service file
 
 ### Regenerating Documentation
 
 Documentation can be regenerated using Cursor AI by:
+
 1. Reading the relevant task file (`TASKS_XX.md`)
 2. Following the implementation requirements
 3. Creating or updating documentation files
@@ -648,6 +724,7 @@ Documentation can be regenerated using Cursor AI by:
 **Symptoms:** Commands don't appear or return "Unknown command"
 
 **Solutions:**
+
 1. Wait 1-5 minutes after bot startup (Discord command registration delay)
 2. Check bot is online in Discord
 3. Verify bot has proper permissions
@@ -661,6 +738,7 @@ Documentation can be regenerated using Cursor AI by:
 **Symptoms:** Bot goes offline randomly
 
 **Solutions:**
+
 1. Check VM resources (memory, CPU):
    ```bash
    free -h
@@ -678,6 +756,7 @@ Documentation can be regenerated using Cursor AI by:
 **Symptoms:** "You don't have permission" errors
 
 **Solutions:**
+
 1. Verify user has required Discord permissions
 2. Check role hierarchy (bot role must be above target users)
 3. Ensure bot has necessary permissions in server settings
@@ -687,6 +766,7 @@ Documentation can be regenerated using Cursor AI by:
 **Symptoms:** `./gradlew build` fails
 
 **Solutions:**
+
 1. Verify Java 17+ is installed:
    ```bash
    java -version
@@ -705,6 +785,7 @@ Documentation can be regenerated using Cursor AI by:
 **Symptoms:** "Required configuration missing: DISCORD_BOT_TOKEN"
 
 **Solutions:**
+
 1. Create `.env` file in project root
 2. Add `DISCORD_BOT_TOKEN=your_token`
 3. Set proper permissions:
@@ -715,8 +796,8 @@ Documentation can be regenerated using Cursor AI by:
 ### Debugging Tips
 
 1. **Enable Debug Logging:**
-   - Edit `src/main/resources/logback.xml`
-   - Set root level to `DEBUG`
+    - Edit `src/main/resources/logback.xml`
+    - Set root level to `DEBUG`
 
 2. **Check Bot Status:**
    ```bash
@@ -738,9 +819,9 @@ Documentation can be regenerated using Cursor AI by:
    ```
 
 4. **Test Commands:**
-   - Use `/help` or type `/` in Discord to see available commands
-   - Test in a private channel first
-   - Check bot permissions in server settings
+    - Use `/help` or type `/` in Discord to see available commands
+    - Test in a private channel first
+    - Check bot permissions in server settings
 
 ### FAQ
 
@@ -757,7 +838,7 @@ A: Currently in-memory. Data is lost on restart. Database persistence is planned
 A: Not yet. Custom word lists are planned (TODO). Currently uses built-in word pools.
 
 **Q: How do I disable a feature?**  
-A: Use admin configuration commands (`/rpg-config`, `/setup-promotions`, etc.) or remove command registration in code.
+A: Use admin configuration commands (`/admin-rpg-config`, `/setup-promotions`, etc.) or remove command registration in code.
 
 **Q: Can I add custom commands?**  
 A: Yes! Follow the `CommandHandler` interface pattern. See `BEST_CODING_PRACTICES.md`.
@@ -780,6 +861,7 @@ This software is proprietary and confidential. Unauthorized copying, distributio
 **Developed by:** Tatum Games Development Team
 
 **Technologies:**
+
 - [JDA (Java Discord API)](https://github.com/DV8FromTheWorld/JDA) - Discord bot framework
 - [SLF4J & Logback](https://www.slf4j.org/) - Logging framework
 - [Gradle](https://gradle.org/) - Build automation
@@ -798,29 +880,30 @@ This software is proprietary and confidential. Unauthorized copying, distributio
 For issues, questions, or contributions:
 
 1. **Check Documentation:**
-   - Review this README
-   - Check task summaries (`TASKS_*_SUMMARY.md`)
-   - Review API documentation in `/docs/`
+    - Review this README
+    - Check task summaries (`TASKS_*_SUMMARY.md`)
+    - Review API documentation in `/docs/`
 
 2. **Check Logs:**
-   - Application logs: `logs/bot.log`
-   - systemd logs: `sudo journalctl -u mikros-bot`
-   - Docker logs: `docker logs mikros-bot`
+    - Application logs: `logs/bot.log`
+    - systemd logs: `sudo journalctl -u mikros-bot`
+    - Docker logs: `docker logs mikros-bot`
 
 3. **Common Resources:**
-   - [Discord Developer Portal](https://discord.com/developers/applications)
-   - [JDA Documentation](https://docs.jda.wiki/)
-   - [BEST_CODING_PRACTICES.md](BEST_CODING_PRACTICES.md)
+    - [Discord Developer Portal](https://discord.com/developers/applications)
+    - [JDA Documentation](https://docs.jda.wiki/)
+    - [BEST_CODING_PRACTICES.md](BEST_CODING_PRACTICES.md)
 
 4. **Contact:**
-   - Development team
-   - Repository issues (if applicable)
+    - Development team
+    - Repository issues (if applicable)
 
 ---
 
 ## 🗺️ Roadmap
 
 ### Completed Features ✅
+
 - ✅ Admin moderation tools
 - ✅ Enhanced moderation with AI suggestions
 - ✅ Reputation system
@@ -828,17 +911,18 @@ For issues, questions, or contributions:
 - ✅ Game analytics commands
 - ✅ Community games engine
 - ✅ Text-based RPG system
-- ✅ Daily spelling challenge
+- ✅ Word unscramble game
 - ✅ Smart promotional lead generator
 - ✅ GCP deployment documentation
 
 ### Planned Features 🔮
+
 - 🔮 **Database Persistence** - Migrate from in-memory storage to PostgreSQL/MongoDB for production scalability
-  - Character data persistence
-  - Server configuration persistence
-  - Boss progression persistence
-  - Leaderboard caching and optimization
-  - Support for 1M+ users across 10K+ servers
+    - Character data persistence
+    - Server configuration persistence
+    - Boss progression persistence
+    - Leaderboard caching and optimization
+    - Support for 1M+ users across 10K+ servers
 - 🔮 MIKROS Analytics API integration
 - 🔮 MIKROS Marketing API integration
 - 🔮 Google Generative AI NLP integration

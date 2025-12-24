@@ -2,7 +2,8 @@
 
 ## Feature Overview
 
-Returns the most popular in-game content items (specific levels, bosses, modes) by total engagement across all MIKROS-enabled games.
+Returns the most popular in-game content items (specific levels, bosses, modes) by total engagement across all
+MIKROS-enabled games.
 
 ---
 

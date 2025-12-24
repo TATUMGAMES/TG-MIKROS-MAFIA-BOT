@@ -2,25 +2,30 @@
 
 ## Feature Overview
 
-This feature automatically detects when a Discord user mentions their game's launch or release date, using AI-powered natural language understanding. When detected, the bot offers them a promotional code for MIKROS Marketing services, collects their email, and registers them in the marketing campaign system.
+This feature automatically detects when a Discord user mentions their game's launch or release date, using AI-powered
+natural language understanding. When detected, the bot offers them a promotional code for MIKROS Marketing services,
+collects their email, and registers them in the marketing campaign system.
 
 ## Why This Feature Needs AI (Google Generative AI)
 
 Traditional keyword matching cannot reliably detect intent. Consider these examples:
 
 **Should Trigger:**
+
 - "My game releases on November 5th!"
 - "We're launching our indie game next month"
 - "Our game drops on Steam this Friday"
 - "Can't wait for our release date: Dec 15"
 
 **Should NOT Trigger:**
+
 - "What game releases on Nov 5?" (asking, not announcing)
 - "I wish my game was releasing soon" (hypothetical)
 - "Game releases are expensive" (talking about concept)
 - "Releases from prison next month" (different context)
 
 **Google Generative AI (Gemini)** can:
+
 1. Understand context and intent
 2. Detect variations of phrasing
 3. Distinguish between announcements and questions
@@ -35,6 +40,7 @@ Traditional keyword matching cannot reliably detect intent. Consider these examp
 **⚠️ DO NOT IMPLEMENT THIS FEATURE YET**
 
 This document serves as a specification for future implementation. The feature requires:
+
 - Google Cloud Project with Generative AI API enabled
 - Gemini API key
 - Message event listener
@@ -86,12 +92,14 @@ Send promo code to user
 **Endpoint**: `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`
 
 **Headers:**
+
 ```
 Content-Type: application/json
 x-goog-api-key: YOUR_GEMINI_API_KEY
 ```
 
 **Request Body:**
+
 ```json
 {
   "contents": [{
@@ -109,6 +117,7 @@ x-goog-api-key: YOUR_GEMINI_API_KEY
 ```
 
 **Response:**
+
 ```json
 {
   "candidates": [{
@@ -124,6 +133,7 @@ x-goog-api-key: YOUR_GEMINI_API_KEY
 ### Prompt Engineering
 
 **System Prompt:**
+
 ```
 You are an AI assistant helping a Discord bot detect game launch announcements. 
 
@@ -179,6 +189,7 @@ Examples of FALSE:
 ### Response
 
 **Status: 200 OK**
+
 ```json
 {
   "success": true,
@@ -193,6 +204,7 @@ Examples of FALSE:
 ```
 
 **Status: 400 Bad Request**
+
 ```json
 {
   "success": false,
@@ -202,6 +214,7 @@ Examples of FALSE:
 ```
 
 **Status: 429 Too Many Requests**
+
 ```json
 {
   "success": false,
@@ -379,24 +392,28 @@ MIKROS_MARKETING_API_KEY=your_mikros_api_key_here
 ## Privacy & Compliance
 
 ### Data Collection
+
 - Discord ID and username
 - Email address (with consent)
 - Message content (for AI analysis only, not stored)
 - Server ID (for analytics)
 
 ### User Consent
+
 - Bot clearly states it will analyze messages
 - User must explicitly click "Yes" button
 - User must provide email in DM (additional consent step)
 - Users can opt out any time
 
 ### Data Storage
+
 - Emails encrypted at rest
 - No message content stored permanently
 - AI analysis logs retained for 7 days only
 - Users can request data deletion (GDPR)
 
 ### Terms of Service
+
 - User must accept MIKROS Marketing terms
 - Promo codes are one per user per 30 days
 - Codes expire after 90 days
@@ -407,11 +424,13 @@ MIKROS_MARKETING_API_KEY=your_mikros_api_key_here
 ## Rate Limiting & Cost Management
 
 ### Gemini API Costs (Estimated)
+
 - **Gemini Pro**: $0.0025 per 1K characters
 - **Average message**: ~100 characters = $0.00025
 - **1,000 messages**: ~$0.25
 
 ### Optimization Strategies
+
 1. **Pre-filter with keywords**: Only send likely messages to API
 2. **Cache results**: Cache classification for 24 hours
 3. **Batch processing**: Analyze multiple messages together
@@ -454,16 +473,19 @@ try {
 ## Testing Strategy
 
 ### Unit Tests
+
 - Test email validation
 - Test promo code format
 - Test rate limiting logic
 
 ### Integration Tests
+
 - Mock Gemini API responses
 - Test full workflow with test Discord accounts
 - Test error scenarios
 
 ### A/B Testing
+
 - Compare AI detection vs keyword matching
 - Measure false positive/negative rates
 - Track conversion rates (offers → codes redeemed)
@@ -488,30 +510,30 @@ try {
 ## Metrics to Track
 
 1. **Detection Accuracy**
-   - True positives
-   - False positives
-   - False negatives
-   - Confidence score distribution
+    - True positives
+    - False positives
+    - False negatives
+    - Confidence score distribution
 
 2. **Conversion Funnel**
-   - Messages analyzed
-   - Offers made
-   - Buttons clicked
-   - Emails collected
-   - Codes redeemed
-   - Marketing packages purchased
+    - Messages analyzed
+    - Offers made
+    - Buttons clicked
+    - Emails collected
+    - Codes redeemed
+    - Marketing packages purchased
 
 3. **User Experience**
-   - Time to receive code
-   - Email validation errors
-   - User feedback/complaints
-   - Opt-out rate
+    - Time to receive code
+    - Email validation errors
+    - User feedback/complaints
+    - Opt-out rate
 
 4. **Business Impact**
-   - Revenue from promo codes
-   - Cost per acquisition
-   - Customer lifetime value
-   - ROI of AI detection vs manual
+    - Revenue from promo codes
+    - Cost per acquisition
+    - Customer lifetime value
+    - ROI of AI detection vs manual
 
 ---
 
@@ -522,6 +544,7 @@ try {
 **Message:** "Super excited! My first indie game 'Pixel Quest' launches on Steam November 15th!"
 
 **AI Analysis:**
+
 ```json
 {
   "is_game_launch_announcement": true,
@@ -540,6 +563,7 @@ try {
 **Message:** "Does anyone know when Pixel Quest releases?"
 
 **AI Analysis:**
+
 ```json
 {
   "is_game_launch_announcement": false,
@@ -558,6 +582,7 @@ try {
 **Message:** "I wish my game was releasing soon, but we're still in early development"
 
 **AI Analysis:**
+
 ```json
 {
   "is_game_launch_announcement": false,
