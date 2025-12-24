@@ -1,9 +1,13 @@
 # Spelling Challenge Game Documentation
 
+> ⚠️ **DEPRECATED:** This game has been removed from the bot. This documentation is kept for historical reference only.
+
 ## Description
 
-**Spelling Challenge** is a daily word unscrambling game where players solve a scrambled word from a
-gaming/fantasy-themed dictionary. Players get 3 attempts per day, and points are awarded based on solving order.
+**Spelling Challenge** was a daily word unscrambling game where players solved a scrambled word from a
+gaming/fantasy-themed dictionary. Players got 3 attempts per day, and points were awarded based on solving order.
+
+**Status:** ❌ **Removed** - This feature is no longer available.
 
 ## How to Play
 

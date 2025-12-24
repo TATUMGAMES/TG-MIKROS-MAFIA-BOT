@@ -29,68 +29,93 @@ public class WordUnscrambleGame implements WordUnscrambleInterface {
         // Level 1: Easy (4-5 letters)
         LEVEL_WORDS.put(1, Arrays.asList(
                 "PLAY", "GAME", "TEAM", "LOOT", "BOSS", "QUEST", "BONUS", "LEVEL", "SCORE", "SKILL",
-                "ROLE", "DICE", "CARD", "MODE", "MAP", "ZONE", "ITEM", "GOLD", "COIN", "RANK"
+                "ROLE", "DICE", "CARD", "MODE", "MAP", "ZONE", "ITEM", "GOLD", "COIN", "RANK",
+                "FARM", "GRIND", "RAID", "PVP", "PVE", "HEAL", "BUFF", "DEBUFF", "TANK", "DPS",
+                "CAST", "SPELL", "HIT", "MISS", "CRIT", "DODGE", "BLOCK", "PARRY", "STUN", "SLOW",
+                "FAST", "WEAK", "STRONG", "RARE", "EPIC", "LEGEND", "COMMON", "UNIQUE", "TRADE", "SELL"
         ));
 
         // Level 2: Easy (5-6 letters)
         LEVEL_WORDS.put(2, Arrays.asList(
                 "ARENA", "POWER", "MAGIC", "SPEED", "GRIND", "PARTY", "WEAPON", "ARMOR", "HEROES", "COMBO",
-                "SKILL", "SPELL", "BUILD", "CLASS", "GUILD", "TRADE", "CRAFT", "FORGE", "SMITH", "MERGE"
+                "SKILL", "SPELL", "BUILD", "CLASS", "GUILD", "TRADE", "CRAFT", "FORGE", "SMITH", "MERGE",
+                "SWORD", "SHIELD", "BOW", "STAFF", "WAND", "AXE", "MACE", "DAGGER", "SPEAR", "HAMMER",
+                "HELMET", "CHEST", "BOOTS", "GLOVES", "PANTS", "RING", "AMULET", "BRACER", "BELT", "CAPE",
+                "POTION", "ELIXIR", "SCROLL", "GEM", "RUNE", "TOKEN", "KEY", "CHEST", "LOOT", "DROPS",
+                "MIKROS"
         ));
 
         // Level 3: Easy-Medium (6-7 letters)
         LEVEL_WORDS.put(3, Arrays.asList(
                 "ACTION", "PLAYER", "TARGET", "DAMAGE", "ATTACK", "HEALTH", "RANKED", "MODELS", "COINS", "BOOST",
-                "SHIELD", "SWORD", "BOW", "STAFF", "WAND", "POTION", "SCROLL", "GEM", "RUNE", "ENCHANT"
+                "SHIELD", "SWORD", "BOW", "STAFF", "WAND", "POTION", "SCROLL", "GEM", "RUNE", "ENCHANT",
+                "BATTLE", "COMBAT", "FIGHT", "STRIKE", "SLASH", "PIERCE", "CRUSH", "BURN", "FREEZE", "SHOCK",
+                "HEALER", "TANKER", "DAMAGER", "SUPPORT", "BUFFER", "DEBUFFER", "CONTROL", "DPS", "AOE", "SINGLE",
+                "LEGEND", "EPIC", "RARE", "COMMON", "UNIQUE", "MYTHIC", "ARTIFACT", "RELIC", "TREASURE", "HOARD"
         ));
 
         // Level 4: Medium (7-8 letters)
         LEVEL_WORDS.put(4, Arrays.asList(
                 "MISSION", "ENEMIES", "PORTAL", "FANTASY", "REWARD", "JOURNEY", "ROGUELIKE", "SANDBOX", "VICTORY", "UPGRADE",
-                "DUNGEON", "DRAGON", "WIZARD", "KNIGHT", "RANGER", "PRIEST", "MONK", "ROGUE", "MAGE", "WARRIOR"
+                "DUNGEON", "DRAGON", "WIZARD", "KNIGHT", "RANGER", "PRIEST", "MONK", "ROGUE", "MAGE", "WARRIOR",
+                "BATTLE", "COMBAT", "FIGHT", "STRIKE", "SLASH", "PIERCE", "CRUSH", "BURN", "FREEZE", "SHOCK",
+                "HEALER", "TANKER", "DAMAGER", "SUPPORT", "BUFFER", "DEBUFFER", "CONTROL", "DPS", "AOE", "SINGLE"
         ));
 
         // Level 5: Medium (8-9 letters)
         LEVEL_WORDS.put(5, Arrays.asList(
                 "SURVIVAL", "MULTIPLE", "GRAPHICS", "CREATIVE", "ADVENTURE", "PLATFORM", "CHALLENGE", "WARRIORS", "TACTICAL", "STRATEGY",
-                "CAMPAIGN", "BATTLE", "COMBAT", "DEFENSE", "OFFENSE", "SUPPORT", "HEALER", "TANK", "DPS", "BUFFER"
+                "CAMPAIGN", "BATTLE", "COMBAT", "DEFENSE", "OFFENSE", "SUPPORT", "HEALER", "TANK", "DPS", "BUFFER",
+                "CHARACTER", "INVENTORY", "EQUIPMENT", "WEAPONRY", "ARMOR", "ACCESSORY", "CONSUMABLE", "MATERIAL", "RESOURCE", "CURRENCY",
+                "EXPERIENCE", "PROGRESS", "ACHIEVEMENT", "UNLOCK", "UPGRADE", "ENHANCE", "IMPROVE", "STRENGTHEN", "POWER", "ABILITY"
         ));
 
         // Level 6: Medium-Long (8-10 letters)
         LEVEL_WORDS.put(6, Arrays.asList(
                 "CHARACTER", "INVENTORY", "SOUNDTRACK", "ENCHANTING", "DUNGEON", "MINIMAP", "CHECKPOINT", "PLAYTHROUGH",
-                "NARRATIVE", "STORYLINE", "PROTAGONIST", "ANTAGONIST", "QUESTLINE", "SIDEMISSION", "MAINQUEST", "SIDEQUEST"
+                "NARRATIVE", "STORYLINE", "PROTAGONIST", "ANTAGONIST", "QUESTLINE", "SIDEMISSION", "MAINQUEST", "SIDEQUEST",
+                "EQUIPMENT", "WEAPONRY", "ACCESSORY", "CONSUMABLE", "MATERIAL", "RESOURCE", "CURRENCY", "TREASURE",
+                "EXPERIENCE", "PROGRESS", "ACHIEVEMENT", "UNLOCK", "UPGRADE", "ENHANCE", "IMPROVE", "STRENGTHEN"
         ));
 
         // Level 7: Long (9-11 letters)
         LEVEL_WORDS.put(7, Arrays.asList(
                 "MULTIPLAYER", "PROGRESSION", "OVERDRIVEN", "IMMERSION", "BATTLEGROUND", "SPEEDRUNNER", "ALCHEMIST",
-                "BLACKSMITH", "MERCHANT", "GUARDIAN", "SENTINEL", "CHAMPION", "LEGENDARY", "EPIC", "RARE", "COMMON"
+                "BLACKSMITH", "MERCHANT", "GUARDIAN", "SENTINEL", "CHAMPION", "LEGENDARY", "EPIC", "RARE", "COMMON",
+                "ADVENTURER", "EXPLORER", "TREASURE", "HOARDER", "COLLECTOR", "GATHERER", "HUNTER", "TRACKER",
+                "SURVIVOR", "VETERAN", "MASTER", "EXPERT", "NOVICE", "BEGINNER", "INTERMEDIATE", "ADVANCED"
         ));
 
         // Level 8: Long (10-12 letters)
         LEVEL_WORDS.put(8, Arrays.asList(
                 "CONTROLLER", "DIFFICULTY", "SIMULATION", "EXPLORATION", "TIMETRAVEL", "AGGREGATION", "STEALTHMODE",
-                "NIGHTMODE", "DAYMODE", "WEATHER", "SEASONS", "DYNAMIC", "STATIC", "PROCEDURAL", "GENERATED", "RANDOMIZED"
+                "NIGHTMODE", "DAYMODE", "WEATHER", "SEASONS", "DYNAMIC", "STATIC", "PROCEDURAL", "GENERATED", "RANDOMIZED",
+                "CUSTOMIZATION", "PERSONALIZATION", "SPECIALIZATION", "OPTIMIZATION", "MAXIMIZATION", "MINIMIZATION",
+                "ENHANCEMENT", "IMPROVEMENT", "DEVELOPMENT", "EVOLUTION", "ADAPTATION", "TRANSFORMATION"
         ));
 
         // Level 9: Long (11-13 letters)
         LEVEL_WORDS.put(9, Arrays.asList(
                 "PROCEDURAL", "TRANSMISSION", "COMPETITIVE", "INNOVATION", "ADVENTURING", "STREAMSNIPING",
-                "CROSSPLAY", "CROSSPLATFORM", "MULTIPLATFORM", "EXCLUSIVE", "TIMEDEXCLUSIVE", "LAUNCHTITLE", "INDIE", "AAA"
+                "CROSSPLAY", "CROSSPLATFORM", "MULTIPLATFORM", "EXCLUSIVE", "TIMEDEXCLUSIVE", "LAUNCHTITLE", "INDIE", "AAA",
+                "CUSTOMIZATION", "PERSONALIZATION", "SPECIALIZATION", "OPTIMIZATION", "MAXIMIZATION", "MINIMIZATION",
+                "ENHANCEMENT", "IMPROVEMENT", "DEVELOPMENT", "EVOLUTION", "ADAPTATION", "TRANSFORMATION", "REVOLUTION"
         ));
 
         // Level 10: Very Long (12+ letters) - Last word-only level
         LEVEL_WORDS.put(10, Arrays.asList(
                 "HYPERREALISM", "MICROTRANSACTIONS", "CROSSPLATFORM", "REBALANCING", "METAGAMING",
-                "OPTIMIZATION", "PERFORMANCE", "FRAMERATE", "RESOLUTION", "TEXTURE", "SHADER", "LIGHTING", "RENDERING"
+                "OPTIMIZATION", "PERFORMANCE", "FRAMERATE", "RESOLUTION", "TEXTURE", "SHADER", "LIGHTING", "RENDERING",
+                "CUSTOMIZATION", "PERSONALIZATION", "SPECIALIZATION", "MAXIMIZATION", "MINIMIZATION",
+                "ENHANCEMENT", "IMPROVEMENT", "DEVELOPMENT", "EVOLUTION", "ADAPTATION", "TRANSFORMATION", "REVOLUTION"
         ));
 
         // Level 11: Short phrases (2 words)
         LEVEL_WORDS.put(11, Arrays.asList(
                 "FINAL BOSS", "LEVEL UP", "SIDE QUEST", "NEW GAME", "TOP SCORE", "HARD MODE",
                 "EASY MODE", "NORMAL MODE", "BOSS FIGHT", "CUT SCENE", "LOAD SCREEN", "SAVE POINT",
-                "CHECK POINT", "SPAWN POINT", "RESPAWN", "GAME OVER", "CONTINUE", "RESTART", "QUIT GAME", "PAUSE MENU"
+                "CHECK POINT", "SPAWN POINT", "RESPAWN", "GAME OVER", "CONTINUE", "RESTART", "QUIT GAME", "PAUSE MENU",
+                "TATUM GAMES", "TATUM TECH"
         ));
 
         // Level 12: Short phrases (2 words)

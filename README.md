@@ -92,27 +92,42 @@ for game developers and studios.
 
 **Admin Commands:**
 
-- `/setup-promotion-channel` - Configure promotion posting channel
-- `/set-promotion-verbosity` - Control promotion frequency
-- `/force-promotion-check` - Manually trigger promotion check
+- `/admin-promotion-setup` - Configure promotion posting channel
+- `/admin-promotion-config` - Configure promotion settings (view, update-channel, set-verbosity, disable, force-check)
 
 **Features:**
 
 - Automated game promotion scheduling
-- Configurable verbosity levels (QUIET, NORMAL, VERBOSE)
+- Configurable verbosity levels (LOW, MEDIUM, HIGH)
 - Rich embed formatting
 - Per-server configuration
 
 **TODO:** Integration with MIKROS Game Promotion API
 
-### 📊 Game Analytics (TASKS_04)
+### 📊 MIKROS Ecosystem Analytics (TASKS_04)
 
-**Command:** `/gamestats` with subcommands:
+**Setup:** Use `/admin-mikros-ecosystem-setup` to configure a channel for analytics commands.
 
+**Command:** `/mikros-ecosystem` with 13 subcommands (requires channel setup):
+
+**Trending Analytics:**
 - `trending-game-genres` - Top 3 fastest-growing genres
 - `trending-content-genres` - Trending content types
 - `trending-content` - Top 5 trending in-game content
 - `trending-gameplay-types` - Casual, competitive, etc.
+
+**Popular Analytics:**
+- `popular-game-genres` - Most played game genres
+- `popular-content-genres` - Most engaging content genres
+- `popular-content` - Top 5 in-game content experiences
+- `popular-gameplay-types` - Most popular gameplay types
+
+**Ecosystem Metrics:**
+- `total-mikros-apps` - Total apps using MIKROS Analytics
+- `total-mikros-contributors` - Total ecosystem contributors
+- `total-users` - Unique user profiles tracked
+- `avg-gameplay-time` - Average gameplay time (optional genre filter)
+- `avg-session-time` - Average session length (optional genre filter)
 - `popular-game-genres` - Most-played genres overall
 - `popular-content-genres` - Most-played content types
 - `popular-content` - Most popular in-game content
@@ -135,14 +150,14 @@ for game developers and studios.
 
 **Admin Commands:**
 
-- `/game-setup` - Initial game configuration
-- `/game-config` - Modify game settings (5 subcommands)
+- `/admin-scramble-setup` - Initial game configuration
+- `/admin-scramble-config` - Modify game settings (5 subcommands)
 
 **Player Commands:**
 
-- `/guess <word>` - Submit word guess
-- `/roll` - Roll dice
-- `/game-stats` - View leaderboard and time remaining
+- `/scramble-guess <word>` - Submit word unscramble guess
+- `/scramble-stats` - View leaderboard and time remaining
+- `/scramble-profile` - View your individual statistics (words solved, points, fastest time, accuracy, etc.)
 
 **Features:**
 
@@ -158,8 +173,14 @@ for game developers and studios.
 - **Six classes:** Warrior, Knight, Mage, Rogue, Necromancer, Priest
 - Persistent character progression
 - Level and XP system
-- Stat growth (HP, STR, AGI, INT, LUCK)
-- **Action Charge System:** 3 charges, refresh every 12 hours
+- **Balanced Stat System:** Every stat (STR, AGI, INT, LUCK, HP) has meaningful advantages AND disadvantages
+  - Stat effectiveness against different enemy types (1.3x effective, 0.85x weak)
+  - AGI: Defense + exploration bonuses + critical hits
+  - INT: XP efficiency + crafting bonuses
+  - LUCK: Item drops + rare items + XP floor
+  - STR: Consistent physical damage
+  - HP: Pure survivability
+- **Action Charge System:** Dynamic charges (3-10 based on level), refresh every 12 hours
 - **Death & Recovery:** Characters can die, Priests can resurrect
 
 **Player Commands:**
@@ -168,12 +189,16 @@ for game developers and studios.
 - `/rpg-profile` - View character stats, charges, recovery status
 - `/rpg-action` - Perform actions (explore, train, battle, rest)
 - `/rpg-resurrect` - Resurrect dead players (Priest-only, free action)
+- `/rpg-duel` - Challenge another player to a duel (free action, 3x/24h limit)
 - `/rpg-boss-battle` - Attack community bosses (attack, status, leaderboard)
 - `/rpg-leaderboard` - View top players
+- `/rpg-inventory` - View your collected items and crafted bonuses
+- `/rpg-craft` - Craft permanent stat-boosting items from materials
 
 **Admin Commands:**
 
-- `/rpg-config` - Configure RPG system (5 subcommands)
+- `/admin-rpg-setup` - Initial RPG system setup
+- `/admin-rpg-config` - Configure RPG system (5 subcommands)
 
 **Features:**
 
@@ -182,35 +207,38 @@ for game developers and studios.
 - **40+ narrative encounters** (Nilfheim-themed)
 - **36 enemy types** for battles
 - **Death System:** Characters can die, enter recovery
-- **Boss System:** 24 normal bosses + 12 super bosses
+- **Boss System:** 48 normal bosses + 20 super bosses
 - **Community Boss Battles:** Shared HP pool, damage tracking
 - **Boss Progression:** Levels increase based on defeats
+- **Boss XP Rewards:** Top 30% of participants receive proportional XP rewards (scales with participation)
 - **Class Bonuses:** Each class gets +20% damage vs specific boss types
 - Exponential XP progression
 - **Nilfheim Lore:** Full realm integration
 
 **TODO:** Inventory system, quests, multiplayer, prestige system
 
-### 🧠 Daily Spelling Challenge (TASKS_07)
+### 🧠 Word Unscramble Game (TASKS_05)
 
 **Features:**
 
 - Daily word unscrambling challenge
-- 80 gaming/fantasy-themed words (4-8 letters)
-- 3 attempts per player per day
-- Point-based scoring (3 pts first solver, 1 pt others)
+- Gaming/fantasy-themed words
+- Hourly game resets
+- Point-based scoring
 
 **Commands:**
 
-- `/spelling-challenge` - View today's challenge
-- `/guess <word>` - Submit guess (works with both Community Games and Spelling Challenge)
-- `/spelling-leaderboard` - All-time top players
+- `/scramble-guess <word>` - Submit word unscramble guess
+- `/scramble-stats` - View game leaderboard and status
+- `/admin-scramble-setup` - Setup word unscramble game (Admin only)
 
 **Features:**
 
-- All-time cumulative leaderboard
-- Smart `/guess` command routing
+- Hourly game resets
+- Leaderboard tracking
+- Individual player statistics tracking (words solved, points, fastest time, accuracy)
 - Beautiful embed formatting
+- Branding words included: "MIKROS", "TATUM GAMES", "TATUM TECH"
 
 **TODO:** Hint system, RPG integration, difficulty levels
 
@@ -245,33 +273,33 @@ for game developers and studios.
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                   Discord Server                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │   Commands   │  │   Games      │  │   Listeners  │  │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
+│  │   Commands   │  │   Games      │  │   Listeners  │   │
+│  └──────┬───────┘  └───────┬──────┘  └────────┬─────┘   │
 └─────────┼──────────────────┼──────────────────┼─────────┘
           │                  │                  │
           ▼                  ▼                  ▼
 ┌─────────────────────────────────────────────────────────┐
 │              MIKROS Discord Bot (JDA)                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │   Services   │  │   Schedulers │  │   Models     │  │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
+│  │   Services   │  │   Schedulers │  │   Models     │   │
+│  └──────┬───────┘  └───────┬──────┘  └────────┬─────┘   │
 └─────────┼──────────────────┼──────────────────┼─────────┘
           │                  │                  │
           ▼                  ▼                  ▼
 ┌─────────────────────────────────────────────────────────┐
-│         In-Memory Storage (ConcurrentHashMap)            │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │  Characters  │  │   Sessions   │  │   Configs    │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
+│         In-Memory Storage (ConcurrentHashMap)           │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
+│  │  Characters  │  │   Sessions   │  │   Configs    │   │
+│  └──────────────┘  └──────────────┘  └──────────────┘   │
 └─────────────────────────────────────────────────────────┘
           │
           ▼
 ┌─────────────────────────────────────────────────────────┐
-│         TODO: MIKROS Backend APIs                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │  Analytics   │  │  Promotions  │  │   Reputation │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
+│         TODO: MIKROS Backend APIs                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
+│  │  Analytics   │  │  Promotions  │  │   Reputation │   │
+│  └──────────────┘  └──────────────┘  └──────────────┘   │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -385,41 +413,45 @@ Includes:
 
 ### Command Reference
 
-| Command                          | Category   | Description                                | Permission       |
-|----------------------------------|------------|--------------------------------------------|------------------|
-| `/warn`                          | Moderation | Warn a user with reason                    | Moderate Members |
-| `/kick`                          | Moderation | Kick a user from server                    | Kick Members     |
-| `/ban`                           | Moderation | Ban a user (optional message deletion)     | Ban Members      |
-| `/history`                       | Moderation | View user moderation history               | Moderate Members |
-| `/warn-suggestions`              | Moderation | Get AI-powered warning suggestions         | Moderate Members |
-| `/ban-suggestions`               | Moderation | Get AI-powered ban suggestions             | Moderate Members |
-| `/server-stats`                  | Community  | View server activity statistics            | Everyone         |
-| `/top-contributors`              | Community  | View most active members                   | Everyone         |
-| `/praise`                        | Reputation | Award positive reputation                  | Admin Only       |
-| `/report`                        | Reputation | Report negative behavior                   | Admin Only       |
-| `/lookup`                        | Reputation | Lookup user scores by username             | Admin Only       |
-| `/gamestats`                     | Analytics  | View game analytics (10 subcommands)       | Everyone         |
-| `/game-setup`                    | Games      | Setup community games                      | Administrator    |
-| `/game-config`                   | Games      | Configure games (5 subcommands)            | Administrator    |
-| `/guess`                         | Games      | Guess word in games                        | Everyone         |
-| `/game-stats`                    | Games      | View game leaderboard                      | Everyone         |
-| `/rpg-register`                  | RPG        | Create RPG character (6 classes)           | Everyone         |
-| `/rpg-profile`                   | RPG        | View character profile                     | Everyone         |
-| `/rpg-action`                    | RPG        | Perform action (explore/train/battle/rest) | Everyone         |
-| `/rpg-resurrect`                 | RPG        | Resurrect dead player (Priest-only)        | Everyone         |
-| `/rpg-boss-battle`               | RPG        | Attack boss, check status, leaderboard     | Everyone         |
-| `/rpg-leaderboard`               | RPG        | View RPG leaderboard                       | Everyone         |
-| `/rpg-config`                    | RPG        | Configure RPG (5 subcommands)              | Administrator    |
-| `/spelling-challenge`            | Spelling   | View daily spelling challenge              | Everyone         |
-| `/spelling-leaderboard`          | Spelling   | View spelling leaderboard                  | Everyone         |
-| `/setup-promotions`              | Promo      | Enable/disable promo detection             | Administrator    |
-| `/set-promo-frequency`           | Promo      | Set promo cooldown                         | Administrator    |
-| `/admin-setup-promotion-channel` | Admin      | Configure game promotion channel           | Administrator    |
-| `/admin-set-promotion-verbosity` | Admin      | Set promotion frequency                    | Administrator    |
-| `/admin-force-promotion-check`   | Admin      | Manually trigger promotion                 | Administrator    |
-| `/admin-disable-promotions`      | Admin      | Disable game promotions                    | Administrator    |
+| Command                          | Category   | Description                                                              | Permission       |
+|----------------------------------|------------|--------------------------------------------------------------------------|------------------|
+| `/warn`                          | Moderation | Warn a user with reason                                                  | Moderate Members |
+| `/kick`                          | Moderation | Kick a user from server                                                  | Kick Members     |
+| `/ban`                           | Moderation | Ban a user (optional message deletion)                                   | Ban Members      |
+| `/history`                       | Moderation | View user moderation history                                             | Moderate Members |
+| `/warn-suggestions`              | Moderation | Get AI-powered warning suggestions                                       | Moderate Members |
+| `/ban-suggestions`               | Moderation | Get AI-powered ban suggestions                                           | Moderate Members |
+| `/server-stats`                  | Community  | View server activity statistics                                          | Everyone         |
+| `/top-contributors`              | Community  | View most active members                                                 | Everyone         |
+| `/praise`                        | Reputation | Award positive reputation                                                | Admin Only       |
+| `/report`                        | Reputation | Report negative behavior                                                 | Admin Only       |
+| `/lookup`                        | Reputation | Lookup user scores by username                                           | Admin Only       |
+| `/admin-mikros-ecosystem-setup`  | Analytics  | Setup MIKROS Ecosystem channel                                           | Administrator    |
+| `/mikros-ecosystem`               | Analytics  | View MIKROS Analytics (13 subcommands, requires channel setup)           | Everyone         |
+| `/admin-scramble-setup`          | Games      | Setup word unscramble game                                               | Administrator    |
+| `/admin-scramble-config`         | Games      | Configure games (5 subcommands)                                          | Administrator    |
+| `/scramble-guess`                 | Games      | Submit word unscramble guess                                             | Everyone         |
+| `/scramble-stats`                 | Games      | View game leaderboard                                                    | Everyone         |
+| `/scramble-profile`                | Games      | View your individual statistics (words solved, points, fastest time, etc.) | Everyone         |
+| `/rpg-register`                  | RPG        | Create RPG character (6 classes)                                         | Everyone         |
+| `/rpg-profile`                   | RPG        | View character profile                                                   | Everyone         |
+| `/rpg-action`                    | RPG        | Perform action (explore/train/battle/rest)                               | Everyone         |
+| `/rpg-resurrect`                 | RPG        | Resurrect dead player (Priest-only)                                      | Everyone         |
+| `/rpg-duel`                      | RPG        | Challenge another player to a duel (free, 3x/24h limit)                  | Everyone         |
+| `/rpg-boss-battle`               | RPG        | Attack boss, check status, leaderboard                                   | Everyone         |
+| `/rpg-leaderboard`               | RPG        | View RPG leaderboard                                                     | Everyone         |
+| `/rpg-inventory`                 | RPG        | View collected items and crafted bonuses                                 | Everyone         |
+| `/rpg-craft`                     | RPG        | Craft permanent stat-boosting items                                      | Everyone         |
+| `/rpg-stats`                     | RPG        | View detailed RPG statistics                                             | Everyone         |
+| `/admin-rpg-setup`               | RPG        | Setup RPG system                                                         | Administrator    |
+| `/admin-rpg-config`              | RPG        | Configure RPG (5 subcommands)                                            | Administrator    |
+| `/rpg-reset`                     | RPG        | Reset all RPG data for server                                            | Administrator    |
+| `/setup-promotions`              | Promo      | Enable/disable promo detection                                           | Administrator    |
+| `/set-promo-frequency`           | Promo      | Set promo cooldown                                                       | Administrator    |
+| `/admin-promotion-setup`         | Admin      | Configure game promotion channel                                         | Administrator    |
+| `/admin-promotion-config`        | Admin      | Configure promotion settings (view, update-channel, set-verbosity, disable, force-check) | Administrator    |
 
-**Total Commands:** 33+ (including subcommands)
+**Total Commands:** 34+ (including subcommands)
 
 ### Example Usage
 
@@ -435,11 +467,10 @@ Includes:
 #### Community Games
 
 ```
-/game-setup channel:#games reset_hour:0
-/guess gameplay
-/roll
-/match 🎮🎲🎯
-/game-stats
+/admin-scramble-setup channel:#games reset_hour:0
+/scramble-guess gameplay
+/scramble-stats
+/scramble-profile
 ```
 
 #### RPG System
@@ -450,6 +481,9 @@ Includes:
 /rpg-action type:explore
 /rpg-action type:battle
 /rpg-action type:rest
+/rpg-duel target:@Player
+/rpg-inventory
+/rpg-craft item:Ember Infusion
 /rpg-boss-battle attack
 /rpg-resurrect target:@Player
 /rpg-leaderboard
@@ -458,9 +492,9 @@ Includes:
 #### Analytics
 
 ```
-/gamestats trending-game-genres
-/gamestats popular-content
-/gamestats trending-gameplay-types
+/mikros-ecosystem trending-game-genres
+/mikros-ecosystem popular-content
+/mikros-ecosystem trending-gameplay-types
 ```
 
 ---
@@ -804,7 +838,7 @@ A: Currently in-memory. Data is lost on restart. Database persistence is planned
 A: Not yet. Custom word lists are planned (TODO). Currently uses built-in word pools.
 
 **Q: How do I disable a feature?**  
-A: Use admin configuration commands (`/rpg-config`, `/setup-promotions`, etc.) or remove command registration in code.
+A: Use admin configuration commands (`/admin-rpg-config`, `/setup-promotions`, etc.) or remove command registration in code.
 
 **Q: Can I add custom commands?**  
 A: Yes! Follow the `CommandHandler` interface pattern. See `BEST_CODING_PRACTICES.md`.
@@ -877,7 +911,7 @@ For issues, questions, or contributions:
 - ✅ Game analytics commands
 - ✅ Community games engine
 - ✅ Text-based RPG system
-- ✅ Daily spelling challenge
+- ✅ Word unscramble game
 - ✅ Smart promotional lead generator
 - ✅ GCP deployment documentation
 

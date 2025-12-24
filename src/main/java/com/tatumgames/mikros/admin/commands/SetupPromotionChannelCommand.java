@@ -6,7 +6,7 @@ import com.tatumgames.mikros.services.GamePromotionService;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Command handler for /setup-promotion-channel.
+ * Command handler for /admin-promotion-setup.
  * Allows server administrators to designate a channel for game promotions.
  * Admin-only command.
  */
@@ -35,7 +35,7 @@ public class SetupPromotionChannelCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("admin-setup-promotion-channel", "Set the channel for game promotion posts")
+        return Commands.slash("admin-promotion-setup", "Configure the promotion channel for your server")
                 .addOption(OptionType.CHANNEL, "channel", "The channel to post promotions in", true)
                 .setGuildOnly(true)
                 .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
@@ -56,7 +56,7 @@ public class SetupPromotionChannelCommand implements CommandHandler {
         }
 
         // Get the channel option
-        TextChannel channel = AdminUtils.getValidTextChannel(event, "channel");
+        MessageChannel channel = AdminUtils.getValidTextChannel(event, "channel");
         if (channel == null) return;
 
         // Save the configuration
@@ -70,8 +70,8 @@ public class SetupPromotionChannelCommand implements CommandHandler {
                 "✅ **Game Promotion Channel Configured**\n\n" +
                         "Promotions will now be posted in %s\n\n" +
                         "**Next Steps:**\n" +
-                        "• Use `/set-promotion-verbosity` to control posting frequency\n" +
-                        "• Use `/force-promotion-check` to test immediately\n\n" +
+                        "• Use `/admin-promotion-config set-verbosity` to control posting frequency\n" +
+                        "• Use `/admin-promotion-config force-check` to test immediately\n\n" +
                         "Default frequency: **MEDIUM** (every 12 hours)",
                 channel.getAsMention()
         )).queue();
@@ -82,7 +82,7 @@ public class SetupPromotionChannelCommand implements CommandHandler {
 
     @Override
     public String getCommandName() {
-        return "admin-setup-promotion-channel";
+        return "admin-promotion-setup";
     }
 }
 

@@ -1,5 +1,6 @@
 package com.tatumgames.mikros.services;
 
+import com.tatumgames.mikros.admin.config.MikrosEcosystemConfig;
 import com.tatumgames.mikros.models.ContentStat;
 import com.tatumgames.mikros.models.GameplayTypeStat;
 import com.tatumgames.mikros.models.GenreStat;
@@ -137,5 +138,36 @@ public interface GameStatsService {
      * @return average session time in minutes
      */
     double getAverageSessionTime(String genre);
+
+    /**
+     * Sets up MIKROS Ecosystem for a guild.
+     *
+     * @param guildId   the guild ID
+     * @param channelId the channel ID for ecosystem commands
+     */
+    void setupEcosystem(String guildId, String channelId);
+
+    /**
+     * Gets the MIKROS Ecosystem configuration for a guild.
+     *
+     * @param guildId the guild ID
+     * @return the config, or null if not configured
+     */
+    MikrosEcosystemConfig getConfig(String guildId);
+
+    /**
+     * Updates the MIKROS Ecosystem configuration for a guild.
+     *
+     * @param config the configuration to update
+     */
+    void updateConfig(MikrosEcosystemConfig config);
+
+    /**
+     * Gets the ecosystem channel ID for a guild.
+     *
+     * @param guildId the guild ID
+     * @return the channel ID, or null if not configured
+     */
+    String getEcosystemChannel(String guildId);
 }
 

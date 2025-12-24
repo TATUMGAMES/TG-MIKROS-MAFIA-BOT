@@ -2,6 +2,7 @@ package com.tatumgames.mikros.bot;
 
 import com.tatumgames.mikros.admin.commands.*;
 import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.api.TatumGamesApiClient;
 import com.tatumgames.mikros.config.ConfigLoader;
 import com.tatumgames.mikros.games.rpg.commands.*;
 import com.tatumgames.mikros.games.rpg.service.ActionService;
@@ -11,6 +12,7 @@ import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import com.tatumgames.mikros.games.word_unscramble.commands.GameConfigCommand;
 import com.tatumgames.mikros.games.word_unscramble.commands.GameSetupCommand;
 import com.tatumgames.mikros.games.word_unscramble.commands.ScrambleGuessCommand;
+import com.tatumgames.mikros.games.word_unscramble.commands.ScrambleProfileCommand;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleResetScheduler;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleService;
 import com.tatumgames.mikros.honeypot.commands.*;
@@ -21,6 +23,7 @@ import com.tatumgames.mikros.promo.commands.SetupPromotionsCommand;
 import com.tatumgames.mikros.promo.listener.PromoMessageListener;
 import com.tatumgames.mikros.promo.service.PromoDetectionService;
 import com.tatumgames.mikros.services.*;
+import com.tatumgames.mikros.services.RealGamePromotionService;
 import com.tatumgames.mikros.services.scheduler.GamePromotionScheduler;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -46,6 +49,7 @@ public class BotMain extends ListenerAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BotMain.class);
 
     private final Map<String, CommandHandler> commandHandlers;
+    private final ConfigLoader config;
     private final ModerationLogService moderationLogService;
     private final ReputationService reputationService;
     private final ActivityTrackingService activityTrackingService;
@@ -74,14 +78,37 @@ public class BotMain extends ListenerAdapter {
     public BotMain() {
         this.commandHandlers = new HashMap<>();
 
+        // Load configuration
+        this.config = new ConfigLoader();
+
+        // Initialize API client
+        TatumGamesApiClient apiClient = new TatumGamesApiClient(
+                config.getMikrosApiUrl(),
+                config.getMikrosApiKey()
+        );
+
         // Initialize services
         this.moderationLogService = new InMemoryModerationLogService();
-        this.reputationService = new InMemoryReputationService();
+        this.reputationService = new InMemoryReputationService(
+                apiClient,
+                config.getReputationApiUrl(),
+                config.getReputationApiKey(),
+                config.getApiKeyType()
+        );
         this.activityTrackingService = new ActivityTrackingService();
         this.messageAnalysisService = new MessageAnalysisService();
         this.autoEscalationService = new AutoEscalationService(moderationLogService);
         this.monthlyReportService = new MonthlyReportService(moderationLogService, activityTrackingService);
-        this.gamePromotionService = new InMemoryGamePromotionService();
+
+        // Initialize game promotion service (use real API if key is configured, otherwise use mock)
+        if (config.getMikrosApiKey() != null && !config.getMikrosApiKey().isBlank()) {
+            this.gamePromotionService = new RealGamePromotionService(apiClient);
+            logger.info("Using RealGamePromotionService with API integration");
+        } else {
+            logger.warn("MIKROS_API_KEY not set, using InMemoryGamePromotionService (mock mode)");
+            this.gamePromotionService = new InMemoryGamePromotionService();
+        }
+
         this.gamePromotionScheduler = new GamePromotionScheduler(gamePromotionService);
         this.gameStatsService = new MockGameStatsService();
         this.wordUnscrambleService = new WordUnscrambleService();
@@ -154,21 +181,21 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new TopContributorsCommand(activityTrackingService));
         registerHandler(new PraiseCommand(reputationService));
         registerHandler(new ReportCommand(reputationService));
-        registerHandler(new LookupCommand(reputationService));
+        registerHandler(new LookupCommand(reputationService, config));
 
         // Game Promotion commands
         registerHandler(new SetupPromotionChannelCommand(gamePromotionService));
-        registerHandler(new SetPromotionVerbosityCommand(gamePromotionService));
-        registerHandler(new ForcePromotionCheckCommand(gamePromotionScheduler, gamePromotionService));
-        registerHandler(new DisablePromotionsCommand(gamePromotionService));
+        registerHandler(new PromotionConfigCommand(gamePromotionService, gamePromotionScheduler));
 
         // Game Stats/Analytics commands
+        registerHandler(new com.tatumgames.mikros.admin.commands.MikrosEcosystemSetupCommand(gameStatsService));
         registerHandler(new com.tatumgames.mikros.admin.commands.GameStatsCommand(gameStatsService));
 
         // Word Unscramble commands
         registerHandler(new GameSetupCommand(wordUnscrambleService, wordUnscrambleResetScheduler));
         registerHandler(new ScrambleGuessCommand(wordUnscrambleService));
         registerHandler(new com.tatumgames.mikros.games.word_unscramble.commands.GameStatsCommand(wordUnscrambleService));
+        registerHandler(new ScrambleProfileCommand(wordUnscrambleService));
         registerHandler(new GameConfigCommand(wordUnscrambleService));
 
         // RPG System commands
@@ -177,10 +204,14 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new RPGActionCommand(characterService, actionService));
         registerHandler(new RPGResurrectCommand(characterService));
         registerHandler(new RPGBossBattleCommand(characterService, bossService));
-        registerHandler(new RPGLeaderboardCommand(characterService));
+        registerHandler(new RPGLeaderboardCommand(characterService, config));
+        registerHandler(new RPGSetupCommand(characterService, bossService));
         registerHandler(new RPGConfigCommand(characterService));
         registerHandler(new RPGResetCommand(characterService, bossService));
         registerHandler(new RPGStatsCommand(characterService));
+        registerHandler(new RPGDualCommand(characterService));
+        registerHandler(new RPGInventoryCommand(characterService));
+        registerHandler(new RPGCraftCommand(characterService, new com.tatumgames.mikros.games.rpg.service.CraftingService()));
 
         // Promo commands
         registerHandler(new SetupPromotionsCommand(promoService));

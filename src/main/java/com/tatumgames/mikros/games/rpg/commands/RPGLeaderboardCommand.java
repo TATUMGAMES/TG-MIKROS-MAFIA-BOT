@@ -1,6 +1,7 @@
 package com.tatumgames.mikros.games.rpg.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.config.ConfigLoader;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -26,19 +27,18 @@ import java.util.List;
 public class RPGLeaderboardCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RPGLeaderboardCommand.class);
     private final CharacterService characterService;
+    private final ConfigLoader configLoader;
     private static final int ENTRIES_PER_PAGE = 25;
-
-    // MIKROS Mafia Server ID - Loaded from environment variable
-    // Set MIKROS_MAFIA_GUILD_ID in .env file or environment variables
-    private static final String MIKROS_MAFIA_GUILD_ID = System.getenv("MIKROS_MAFIA_GUILD_ID");
 
     /**
      * Creates a new RPGLeaderboardCommand handler.
      *
      * @param characterService the character service
+     * @param configLoader the configuration loader
      */
-    public RPGLeaderboardCommand(CharacterService characterService) {
+    public RPGLeaderboardCommand(CharacterService characterService, ConfigLoader configLoader) {
         this.characterService = characterService;
+        this.configLoader = configLoader;
     }
 
     @Override
@@ -89,17 +89,30 @@ public class RPGLeaderboardCommand implements CommandHandler {
         List<RPGCharacter> pageCharacters = allCharacters.subList(startIndex, endIndex);
 
         // Get MIKROS Mafia guild for member checking
+        // Use current guild if MIKROS_MAFIA_GUILD_ID matches or is not configured
+        String mafiaGuildId = configLoader.getMafiaGuildId();
+        Guild currentGuild = event.getGuild();
         Guild mafiaGuild = null;
-        if (MIKROS_MAFIA_GUILD_ID != null && !MIKROS_MAFIA_GUILD_ID.isBlank()) {
-            mafiaGuild = event.getJDA().getGuildById(MIKROS_MAFIA_GUILD_ID);
-            if (mafiaGuild == null) {
-                logger.warn("MIKROS Mafia guild not found with ID: {}. Mafia member status will not be checked.", MIKROS_MAFIA_GUILD_ID);
+        
+        if (currentGuild != null) {
+            // If MIKROS_MAFIA_GUILD_ID is configured and matches current guild, use it
+            // Otherwise, if not configured, assume current guild is the Mafia guild
+            if (mafiaGuildId != null && !mafiaGuildId.isBlank()) {
+                if (mafiaGuildId.equals(currentGuild.getId())) {
+                    mafiaGuild = currentGuild;
+                    logger.debug("Using current guild as MIKROS Mafia guild: {} ({})", currentGuild.getName(), mafiaGuildId);
+                } else {
+                    mafiaGuild = event.getJDA().getGuildById(mafiaGuildId);
+                    if (mafiaGuild == null) {
+                        logger.warn("MIKROS Mafia guild not found with ID: {}. Falling back to current guild.", mafiaGuildId);
+                        mafiaGuild = currentGuild; // Fallback to current guild
+                    }
+                }
             } else {
-                logger.debug("MIKROS Mafia guild found: {} ({}). Checking member status for leaderboard.",
-                        mafiaGuild.getName(), MIKROS_MAFIA_GUILD_ID);
+                // Not configured, assume current guild is the Mafia guild
+                mafiaGuild = currentGuild;
+                logger.debug("MIKROS_MAFIA_GUILD_ID not configured. Using current guild as Mafia guild: {}", currentGuild.getName());
             }
-        } else {
-            logger.debug("MIKROS_MAFIA_GUILD_ID not configured. Mafia member status will not be checked.");
         }
 
         // Build leaderboard embed

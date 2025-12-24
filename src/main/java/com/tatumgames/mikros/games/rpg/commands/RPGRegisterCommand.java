@@ -1,10 +1,14 @@
 package com.tatumgames.mikros.games.rpg.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.admin.utils.AdminUtils;
+import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.model.CharacterClass;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -42,7 +46,27 @@ public class RPGRegisterCommand implements CommandHandler {
 
     @Override
     public void handle(SlashCommandInteractionEvent event) {
+        Guild guild = event.getGuild();
+        Member member = event.getMember();
+
+        if (guild == null || member == null) {
+            event.reply("❌ This command can only be used in a server.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
         String userId = event.getUser().getId();
+        String guildId = guild.getId();
+
+        // Check role requirement
+        RPGConfig config = characterService.getConfig(guildId);
+        if (config != null && !AdminUtils.canUserPlay(member, config.isAllowNoRoleUsers())) {
+            event.reply("❌ Users without roles cannot play RPG games in this server. Contact an administrator.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
 
         // Check if user already has a character
         if (characterService.hasCharacter(userId)) {

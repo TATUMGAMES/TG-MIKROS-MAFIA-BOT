@@ -8,7 +8,7 @@ import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleService
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Command handler for /admin-game-setup.
+ * Command handler for /admin-scramble-setup.
  * Allows administrators to configure Word Unscramble game for their server.
  */
 public class GameSetupCommand implements CommandHandler {
@@ -42,7 +42,7 @@ public class GameSetupCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("admin-game-setup", "Configure Word Unscramble game for your server")
+        return Commands.slash("admin-scramble-setup", "Configure Word Unscramble game for your server")
                 .addOption(OptionType.CHANNEL, "channel", "Channel for hourly games", true)
                 .addOption(OptionType.INTEGER, "reset_hour", "Daily reset hour (0-23 UTC, default: 0)", false)
                 .setGuildOnly(true)
@@ -64,7 +64,7 @@ public class GameSetupCommand implements CommandHandler {
         }
 
         // Get the channel option
-        TextChannel channel = AdminUtils.getValidTextChannel(event, "channel");
+        MessageChannel channel = AdminUtils.getValidTextChannel(event, "channel");
         if (channel == null) return;
 
         OptionMapping resetHourOption = event.getOption("reset_hour");
@@ -114,8 +114,8 @@ public class GameSetupCommand implements CommandHandler {
                         🎮 The first game has been posted!
                         
                         **Next Steps:**
-                        • Use `/admin-game-config` to customize settings
-                        • Use `/game-stats` to view the leaderboard
+                        • Use `/admin-scramble-config` to customize settings
+                        • Use `/scramble-stats` to view the leaderboard
                         • Players can join with `/scramble-guess`
                         """,
                 channel.getAsMention(),
@@ -129,6 +129,6 @@ public class GameSetupCommand implements CommandHandler {
 
     @Override
     public String getCommandName() {
-        return "admin-game-setup";
+        return "admin-scramble-setup";
     }
 }

@@ -116,11 +116,12 @@ public class RPGStatsCommand implements CommandHandler {
                 "❤️ Current Status",
                 String.format("""
                         HP: **%d** / %d
-                        Action Charges: **%d** / 3
+                        Action Charges: **%d** / %d
                         Status: **%s**""",
                         character.getStats().getCurrentHp(),
                         character.getStats().getMaxHp(),
                         character.getActionCharges(),
+                        character.getMaxActionCharges(),
                         status),
                 false
         );

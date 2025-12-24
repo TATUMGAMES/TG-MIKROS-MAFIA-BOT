@@ -15,6 +15,7 @@ public class RPGConfig {
     private String rpgChannelId;
     private int chargeRefreshHours; // New: hours until charges refresh (default: 12)
     private double xpMultiplier;
+    private boolean allowNoRoleUsers; // Whether users without roles can play (default: true)
 
     /**
      * Creates an RPG configuration.
@@ -27,6 +28,7 @@ public class RPGConfig {
         this.rpgChannelId = null; // No specific channel by default
         this.chargeRefreshHours = 12; // 12 hour charge refresh by default
         this.xpMultiplier = 1.0;   // Normal XP rate
+        this.allowNoRoleUsers = true; // Allow users without roles by default
     }
 
     /**
@@ -37,14 +39,16 @@ public class RPGConfig {
      * @param rpgChannelId       the channel ID (optional)
      * @param chargeRefreshHours charge refresh period in hours (default: 12)
      * @param xpMultiplier       XP multiplier
+     * @param allowNoRoleUsers   whether users without roles can play (default: true)
      */
     public RPGConfig(String guildId, boolean enabled, String rpgChannelId,
-                     int chargeRefreshHours, double xpMultiplier) {
+                     int chargeRefreshHours, double xpMultiplier, boolean allowNoRoleUsers) {
         this.guildId = guildId;
         this.enabled = enabled;
         this.rpgChannelId = rpgChannelId;
         this.chargeRefreshHours = chargeRefreshHours;
         this.xpMultiplier = xpMultiplier;
+        this.allowNoRoleUsers = allowNoRoleUsers;
     }
 
     // Getters and setters
@@ -93,5 +97,13 @@ public class RPGConfig {
 
     public void setXpMultiplier(double xpMultiplier) {
         this.xpMultiplier = Math.max(0.1, xpMultiplier);
+    }
+
+    public boolean isAllowNoRoleUsers() {
+        return allowNoRoleUsers;
+    }
+
+    public void setAllowNoRoleUsers(boolean allowNoRoleUsers) {
+        this.allowNoRoleUsers = allowNoRoleUsers;
     }
 }

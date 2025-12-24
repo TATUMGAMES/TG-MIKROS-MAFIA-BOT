@@ -124,4 +124,18 @@ public class WordUnscrambleProgression {
     public boolean isMaxLevel() {
         return level >= 20;
     }
+
+    /**
+     * Gets the number of words remaining to reach the next level.
+     *
+     * @return words remaining (0 if at max level)
+     */
+    public int getWordsRemaining() {
+        if (isMaxLevel()) {
+            return 0;
+        }
+        return xpRequired - xp;
+    }
 }
+
+

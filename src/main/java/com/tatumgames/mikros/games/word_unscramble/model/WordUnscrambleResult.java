@@ -28,3 +28,5 @@ public record WordUnscrambleResult(String userId, String username, String answer
         this.timestamp = Objects.requireNonNull(timestamp);
     }
 }
+
+

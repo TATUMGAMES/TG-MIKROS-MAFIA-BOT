@@ -1,12 +1,15 @@
 package com.tatumgames.mikros.admin.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.config.ConfigLoader;
 import com.tatumgames.mikros.models.api.GetUserScoreDetailResponse;
+import com.tatumgames.mikros.models.api.TrackPlayerRatingRequest;
 import com.tatumgames.mikros.services.ReputationService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -18,6 +21,8 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,15 +36,19 @@ import java.util.stream.Collectors;
 @SuppressWarnings("ClassCanBeRecord")
 public class LookupCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(LookupCommand.class);
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final ReputationService reputationService;
+    private final ConfigLoader configLoader;
 
     /**
      * Creates a new LookupCommand handler.
      *
      * @param reputationService the reputation service
+     * @param configLoader      the configuration loader
      */
-    public LookupCommand(ReputationService reputationService) {
+    public LookupCommand(ReputationService reputationService, ConfigLoader configLoader) {
         this.reputationService = reputationService;
+        this.configLoader = configLoader;
     }
 
     @Override
@@ -84,7 +93,7 @@ public class LookupCommand implements CommandHandler {
         // Call API to get user score details
         GetUserScoreDetailResponse response = reputationService.getUserScoreDetail(usernames);
 
-        if (response == null || response.getData() == null || response.getData().getScores() == null) {
+        if (response == null || response.getData() == null) {
             event.reply("❌ Failed to retrieve user score details. Please try again later.")
                     .setEphemeral(true)
                     .queue();
@@ -97,8 +106,9 @@ public class LookupCommand implements CommandHandler {
         embed.setTitle("🔍 Reputation Score Lookup");
         embed.setColor(Color.BLUE);
         embed.setDescription(String.format("Results for **%d** user(s)", usernames.size()));
-        // List of scores
-        List<GetUserScoreDetailResponse.UserScore> scores = response.getData().getScores();
+
+        // List of scores (data is now a direct array, not data.scores)
+        List<GetUserScoreDetailResponse.UserScore> scores = response.getData();
 
         if (scores.isEmpty()) {
             embed.addField("⚠️ No Results",
@@ -109,37 +119,86 @@ public class LookupCommand implements CommandHandler {
             // Add field for each user found
             for (GetUserScoreDetailResponse.UserScore score : scores) {
                 StringBuilder fieldValue = new StringBuilder();
-                fieldValue.append("**Discord ID:** `").append(score.getDiscordUserId()).append("`\n");
+                fieldValue.append("**Username:** `").append(score.getUsername()).append("`\n");
                 fieldValue.append("**Reputation Score:** `").append(score.getReputationScore()).append("`\n");
 
-                if (score.getEmail() != null && !score.getEmail().isBlank()) {
-                    fieldValue.append("**Email:** `").append(score.getEmail()).append("`\n");
-                }
-
-                if (score.getDiscordServers() != null && !score.getDiscordServers().isEmpty()) {
-                    String serversList = score.getDiscordServers().stream()
-                            .map(String::valueOf)
-                            .collect(Collectors.joining(", "));
-                    fieldValue.append("**Servers:** `").append(serversList).append("`\n");
-                }
-
-                embed.addField("👤 " + score.getDiscordUsername(), fieldValue.toString(), false);
+                embed.addField("👤 " + score.getUsername(), fieldValue.toString(), false);
             }
 
             // Check for usernames not found
             List<String> foundUsernames = scores.stream()
-                    .map(GetUserScoreDetailResponse.UserScore::getDiscordUsername)
+                    .map(GetUserScoreDetailResponse.UserScore::getUsername)
                     .toList();
 
             List<String> notFound = usernames.stream()
                     .filter(username -> !foundUsernames.contains(username))
                     .collect(Collectors.toList());
 
+            // Auto-create reputation entries for not-found users
             if (!notFound.isEmpty()) {
-                embed.addField("⚠️ Not Found",
-                        "The following usernames were not found in the system:\n" +
-                                String.join(", ", notFound),
-                        false);
+                List<String> createdUsernames = new ArrayList<>();
+                User adminUser = event.getUser();
+                Member adminMember = event.getMember();
+                
+                for (String username : notFound) {
+                    try {
+                        // Create TrackPlayerRatingRequest for auto-creation
+                        TrackPlayerRatingRequest request = new TrackPlayerRatingRequest();
+                        request.setTimestamp(LocalDateTime.now().format(TIMESTAMP_FORMATTER));
+                        request.setPlatform("discord");
+                        request.setApiKeyType(configLoader.getApiKeyType());
+
+                        // Set sender (admin who executed /lookup)
+                        TrackPlayerRatingRequest.Sender sender = new TrackPlayerRatingRequest.Sender();
+                        sender.setDiscordUserId(adminUser.getId());
+                        sender.setDiscordUsername(adminMember != null ? adminMember.getEffectiveName() : adminUser.getName());
+                        request.setSender(sender);
+
+                        // Set participant (the not-found username)
+                        TrackPlayerRatingRequest.Participant participant = new TrackPlayerRatingRequest.Participant();
+                        participant.setDiscordUsername(username);
+                        // Try to find Discord user ID if possible (for now, just use username)
+                        participant.setDiscordUserId(""); // Backend will handle this
+                        participant.setValue(1); // As specified by user
+                        request.setParticipants(List.of(participant));
+
+                        // Call trackPlayerRating API to create entry
+                        boolean success = reputationService.trackPlayerRating(request);
+                        if (success) {
+                            createdUsernames.add(username);
+                            logger.info("Auto-created reputation entry for username: {} by admin: {}", 
+                                    username, adminUser.getId());
+                        } else {
+                            logger.warn("Failed to auto-create reputation entry for username: {}", username);
+                        }
+                    } catch (Exception e) {
+                        logger.error("Error auto-creating reputation entry for username: {}", username, e);
+                    }
+                }
+
+                // Update embed to show created users with score = 10
+                if (!createdUsernames.isEmpty()) {
+                    StringBuilder createdField = new StringBuilder();
+                    for (String createdUsername : createdUsernames) {
+                        createdField.append("**").append(createdUsername).append("** - Reputation Score: `10`\n");
+                    }
+                    embed.addField("✅ Auto-Created", 
+                            "The following users were automatically created with initial reputation score of 10:\n" + 
+                            createdField.toString(),
+                            false);
+                }
+
+                // Show remaining not-found users (if any failed to create)
+                List<String> stillNotFound = notFound.stream()
+                        .filter(username -> !createdUsernames.contains(username))
+                        .collect(Collectors.toList());
+                
+                if (!stillNotFound.isEmpty()) {
+                    embed.addField("⚠️ Not Found",
+                            "The following usernames were not found and could not be created:\n" +
+                                    String.join(", ", stillNotFound),
+                            false);
+                }
             }
         }
         embed.setTimestamp(Instant.now());

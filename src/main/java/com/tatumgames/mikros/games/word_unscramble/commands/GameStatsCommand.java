@@ -1,6 +1,7 @@
 package com.tatumgames.mikros.games.word_unscramble.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleConfig;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleProgression;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleResult;
@@ -8,6 +9,7 @@ import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleSession;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -21,7 +23,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 /**
- * Command handler for /game-stats.
+ * Command handler for /scramble-stats.
  * Shows the current Word Unscramble game status and leaderboard.
  */
 @SuppressWarnings("ClassCanBeRecord")
@@ -40,7 +42,7 @@ public class GameStatsCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("game-stats", "View current Word Unscramble game status and leaderboard")
+        return Commands.slash("scramble-stats", "View current Word Unscramble game status and leaderboard")
                 .setGuildOnly(true);
     }
 
@@ -49,6 +51,14 @@ public class GameStatsCommand implements CommandHandler {
         Guild guild = event.getGuild();
         if (guild == null) {
             event.reply("❌ This command can only be used in a server.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        Member member = event.getMember();
+        if (member == null) {
+            event.reply("❌ Unable to get member information.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -63,8 +73,16 @@ public class GameStatsCommand implements CommandHandler {
             event.reply("""
                             ❌ Word Unscramble game is not set up yet!
                             
-                            An administrator can set it up with `/admin-game-setup`
+                            An administrator can set it up with `/admin-scramble-setup`
                             """)
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        // Check role requirement
+        if (!AdminUtils.canUserPlay(member, config.isAllowNoRoleUsers())) {
+            event.reply("❌ Users without roles cannot play Word Unscramble games in this server. Contact an administrator.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -104,14 +122,29 @@ public class GameStatsCommand implements CommandHandler {
         WordUnscrambleProgression progression = wordUnscrambleService.getProgression(guildId);
         if (progression != null) {
             String progressBar = buildProgressBar(progression.getProgressPercentage());
-            embed.addField("📊 Progression",
-                    String.format("**Level %d**\nXP: %d / %d\n%s\n%.1f%%",
-                            progression.getLevel(),
-                            progression.getXp(),
-                            progression.getXpRequired(),
-                            progressBar,
-                            progression.getProgressPercentage()),
-                    false);
+            int wordsRemaining = progression.getWordsRemaining();
+            int nextLevel = progression.getLevel() + 1;
+            
+            String progressText;
+            if (progression.isMaxLevel()) {
+                progressText = String.format("**Level %d**\nXP: %d / %d\n%s\n%.1f%%\n\n**Progress:** Max level reached!",
+                        progression.getLevel(),
+                        progression.getXp(),
+                        progression.getXpRequired(),
+                        progressBar,
+                        progression.getProgressPercentage());
+            } else {
+                progressText = String.format("**Level %d**\nXP: %d / %d\n%s\n%.1f%%\n\n**Progress:** %d more words needed to reach Level %d",
+                        progression.getLevel(),
+                        progression.getXp(),
+                        progression.getXpRequired(),
+                        progressBar,
+                        progression.getProgressPercentage(),
+                        wordsRemaining,
+                        nextLevel);
+            }
+            
+            embed.addField("📊 Progression", progressText, false);
         }
 
         // Participation stats
@@ -175,6 +208,8 @@ public class GameStatsCommand implements CommandHandler {
 
     @Override
     public String getCommandName() {
-        return "game-stats";
+        return "scramble-stats";
     }
 }
+
+

@@ -1,6 +1,7 @@
 package com.tatumgames.mikros.games.rpg.actions;
 
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
+import com.tatumgames.mikros.games.rpg.model.EssenceType;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 
@@ -70,7 +71,39 @@ public class ExploreAction implements CharacterAction {
             "Strange footprints circle around you… and disappear.",
             "You catch a glimpse of a shadow that mirrors your movements perfectly.",
             "You find a torn cloak clasp made of dragonbone.",
-            "The sky ripples with aurora lights that form strange, ancient symbols."
+            "The sky ripples with aurora lights that form strange, ancient symbols.",
+            // New Nilfheim lore narratives (30 additional)
+            "You discover ancient ruins from before the Shattering, their runes still glowing faintly.",
+            "A Stormwarden passes by, leaving behind a trail of crackling Gale energy.",
+            "You find a hidden entrance to the Grand Library of Nil City, filled with forbidden knowledge.",
+            "The twin moons align, revealing a path through the Spirit Veil that wasn't there before.",
+            "You stumble upon the Moonspire Obelisk, its ancient runic inscriptions pulsing with power.",
+            "A fragment of the Shattering of the First Winter drifts past, frozen in time.",
+            "You discover a training ground used by Frostborne warriors, their techniques still visible in the ice.",
+            "The Eight Elements converge here - you feel Frost, Gale, Ember, Void, and Astral energies mixing.",
+            "You find a hidden chamber beneath Starfall Ridge, filled with star fragments and cosmic energy.",
+            "A portal to the Arcane Veil flickers before you, offering glimpses of other realities.",
+            "You discover the remains of a Frostgate outpost, its banners still fluttering in the eternal wind.",
+            "Ancient Frostborne runes carved into a glacier begin to glow as you approach.",
+            "You witness a Stormwarden training with the Gale element, their movements a blur of wind and lightning.",
+            "A library of the first civilizations after the Shattering reveals secrets of the Eight Elements.",
+            "You find a meditation circle where the Astral element is strongest, showing you possible futures.",
+            "The Mortal and Arcane Veils thin here, allowing you to see spirits from both realms.",
+            "You discover a hidden hot spring that never freezes, said to be blessed by the Frost element.",
+            "Ancient battlefields from the Shattering still echo with the sounds of war.",
+            "You find a cache of weapons forged by the Frostborne, still sharp after centuries.",
+            "A Stormwarden's journal reveals techniques for mastering the Gale element.",
+            "You discover a shrine to the Eight Elements, each one represented by glowing crystals.",
+            "The Grand Library's forbidden section opens to you, revealing knowledge of the Void element.",
+            "You find a map leading to Frostgate, marked with routes through the Ice Wastes.",
+            "Ancient prophecies carved into the Moonspire Obelisk begin to make sense as you read them.",
+            "You discover a hidden passage to Nil City, its spires visible through the mist.",
+            "A fragment of the first winter's ice contains memories of the Shattering itself.",
+            "You find a training manual from the Frostborne warriors, detailing their combat techniques.",
+            "The Spirit Veil parts briefly, allowing you to communicate with a long-lost spirit.",
+            "You discover a cache of Astral element crystals, their power showing you glimpses of fate.",
+            "Ancient runes from Starfall Ridge tell the story of the first civilizations after the Shattering.",
+            "You find a hidden chamber beneath the Grand Library, filled with knowledge of the Eight Elements."
     };
 
     @Override
@@ -101,16 +134,119 @@ public class ExploreAction implements CharacterAction {
         // Add XP and check for level up
         boolean leveledUp = character.addXp(xpGained);
 
-        // Record the action
-        character.recordAction();
+        // AGI-based item drop chance bonus
+        // Base: 12.5% chance
+        // AGI bonus: +0.5% per AGI point (capped at +15%)
+        double baseDropChance = 0.125;
+        int agility = character.getStats().getAgility();
+        double agilityBonus = Math.min(0.15, agility * 0.005);
+        double dropChance = baseDropChance + agilityBonus; // 12.5% to 27.5%
 
-        return RPGActionOutcome.builder()
+        RPGActionOutcome.Builder outcomeBuilder = RPGActionOutcome.builder()
                 .narrative(narrative)
                 .xpGained(xpGained)
                 .leveledUp(leveledUp)
                 .hpRestored(0)
-                .success(true)
-                .build();
+                .success(true);
+
+        // Roll for item drops with AGI bonus
+        if (random.nextDouble() < dropChance) {
+            int essenceCount = random.nextInt(2) + 1; // Base: 1-2 essences
+            // AGI bonus: +1 essence if AGI >= 20
+            if (agility >= 20) {
+                essenceCount += 1; // Now 2-3 essences
+            }
+            
+            // Class-specific essence bonuses
+            EssenceType essence = getRandomEssenceWithClassBonus(character.getCharacterClass());
+            outcomeBuilder.addItemDrop(essence, essenceCount);
+            
+            // Add to character inventory
+            character.getInventory().addEssence(essence, essenceCount);
+            
+            // Update narrative to mention benefits
+            StringBuilder benefitNote = new StringBuilder();
+            if (agility >= 15) {
+                benefitNote.append(" Your agility helped you find better loot!");
+            }
+            if (essence == EssenceType.EMBER_SHARD && character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.WARRIOR) {
+                benefitNote.append(" Your warrior instincts led you to strength-aligned materials!");
+            } else if (essence == EssenceType.MIND_CRYSTAL && (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.MAGE ||
+                    character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.PRIEST ||
+                    character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.NECROMANCER)) {
+                benefitNote.append(" Your magical affinity drew you to intelligence-aligned materials!");
+            } else if (essence == EssenceType.VITAL_ASH && character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.KNIGHT) {
+                benefitNote.append(" Your defensive nature led you to vitality-aligned materials!");
+            } else if (essence == EssenceType.FATE_CLOVER && character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.PRIEST) {
+                benefitNote.append(" Your supportive nature drew you to luck-aligned materials!");
+            }
+            
+            if (benefitNote.length() > 0) {
+                outcomeBuilder.narrative(narrative + benefitNote.toString());
+            }
+        }
+
+        // Record the action
+        character.recordAction();
+
+        return outcomeBuilder.build();
+    }
+
+    /**
+     * Gets a random essence type.
+     *
+     * @return random essence type
+     */
+    private EssenceType getRandomEssence() {
+        EssenceType[] essences = EssenceType.values();
+        return essences[random.nextInt(essences.length)];
+    }
+
+    /**
+     * Gets a random essence type with class-specific bonuses.
+     *
+     * @param characterClass the character's class
+     * @return random essence type (biased by class)
+     */
+    private EssenceType getRandomEssenceWithClassBonus(com.tatumgames.mikros.games.rpg.model.CharacterClass characterClass) {
+        EssenceType[] allEssences = EssenceType.values();
+        
+        // Class-specific essence bonuses
+        switch (characterClass) {
+            case WARRIOR:
+                // +5% chance for STR-aligned (Ember Shard)
+                if (random.nextDouble() < 0.05) {
+                    return EssenceType.EMBER_SHARD;
+                }
+                break;
+            case MAGE:
+            case PRIEST:
+            case NECROMANCER:
+                // +5% chance for INT-aligned (Mind Crystal)
+                if (random.nextDouble() < 0.05) {
+                    return EssenceType.MIND_CRYSTAL;
+                }
+                break;
+            case KNIGHT:
+                // +5% chance for HP-aligned (Vital Ash)
+                if (random.nextDouble() < 0.05) {
+                    return EssenceType.VITAL_ASH;
+                }
+                break;
+            case ROGUE:
+                // Already has AGI benefits, no additional bonus needed
+                break;
+        }
+        
+        // Priest also gets +3% chance for LUCK-aligned (Fate Clover)
+        if (characterClass == com.tatumgames.mikros.games.rpg.model.CharacterClass.PRIEST) {
+            if (random.nextDouble() < 0.03) {
+                return EssenceType.FATE_CLOVER;
+            }
+        }
+        
+        // Default: random essence
+        return allEssences[random.nextInt(allEssences.length)];
     }
 }
 

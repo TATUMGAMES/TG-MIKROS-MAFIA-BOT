@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 
 /**
- * Command handler for /rpg-config.
+ * Command handler for /admin-rpg-config.
  * Allows administrators to configure RPG settings for their server.
  */
 @SuppressWarnings("ClassCanBeRecord")
@@ -40,17 +40,19 @@ public class RPGConfigCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("rpg-config", "Configure RPG settings (admin only)")
+        return Commands.slash("admin-rpg-config", "Configure RPG settings (admin only)")
                 .addSubcommands(
                         new SubcommandData("view", "View current RPG configuration"),
                         new SubcommandData("toggle", "Enable or disable RPG system")
                                 .addOption(OptionType.BOOLEAN, "enabled", "Enable RPG?", true),
-                        new SubcommandData("set-channel", "Set RPG-specific channel")
+                        new SubcommandData("update-channel", "Update RPG-specific channel")
                                 .addOption(OptionType.CHANNEL, "channel", "RPG channel (or leave empty for any)", false),
                         new SubcommandData("set-charge-refresh", "Set charge refresh period in hours")
                                 .addOption(OptionType.INTEGER, "hours", "Charge refresh period in hours (1-168)", true),
                         new SubcommandData("set-xp-multiplier", "Set XP gain multiplier")
-                                .addOption(OptionType.NUMBER, "multiplier", "XP multiplier (0.1-10.0)", true)
+                                .addOption(OptionType.NUMBER, "multiplier", "XP multiplier (0.1-10.0)", true),
+                        new SubcommandData("set-allow-no-role", "Allow or disallow users without roles to play")
+                                .addOption(OptionType.BOOLEAN, "enabled", "Allow users without roles?", true)
                 )
                 .setGuildOnly(true)
                 .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
@@ -82,9 +84,10 @@ public class RPGConfigCommand implements CommandHandler {
         switch (subcommand) {
             case "view" -> handleView(event, guildId);
             case "toggle" -> handleToggle(event, guildId);
-            case "set-channel" -> handleSetChannel(event, guildId);
+            case "update-channel" -> handleSetChannel(event, guildId);
             case "set-charge-refresh" -> handleSetChargeRefresh(event, guildId);
             case "set-xp-multiplier" -> handleSetXpMultiplier(event, guildId);
+            case "set-allow-no-role" -> handleSetAllowNoRole(event, guildId);
             default -> event.reply("❌ Unknown subcommand.").setEphemeral(true).queue();
         }
     }
@@ -122,6 +125,12 @@ public class RPGConfigCommand implements CommandHandler {
                 true
         );
 
+        embed.addField(
+                "Allow No-Role Users",
+                config.isAllowNoRoleUsers() ? "✅ Enabled" : "❌ Disabled",
+                true
+        );
+
         embed.setTimestamp(java.time.Instant.now());
 
         event.replyEmbeds(embed.build()).queue();
@@ -146,6 +155,14 @@ public class RPGConfigCommand implements CommandHandler {
     private void handleSetChannel(SlashCommandInteractionEvent event, String guildId) {
         RPGConfig config = characterService.getConfig(guildId);
 
+        // Check if RPG system was set up first (channel must be set)
+        if (config.getRpgChannelId() == null) {
+            event.reply("❌ RPG system not set up yet. Use `/admin-rpg-setup` first.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
         if (event.getOption("channel") == null) {
             // Clear channel restriction
             config.setRpgChannelId(null);
@@ -156,18 +173,18 @@ public class RPGConfigCommand implements CommandHandler {
         }
 
         // Get the channel option
-        TextChannel channel = AdminUtils.getValidTextChannel(event, "channel");
+        MessageChannel channel = AdminUtils.getValidTextChannel(event, "channel");
         if (channel == null) return;
 
         config.setRpgChannelId(channel.getId());
         characterService.updateConfig(config);
 
         event.reply(String.format(
-                "✅ RPG commands restricted to %s",
+                "✅ RPG channel updated to %s",
                 channel.getAsMention()
         )).queue();
 
-        logger.info("RPG channel set to {} for guild {}", channel.getId(), guildId);
+        logger.info("RPG channel updated to {} for guild {}", channel.getId(), guildId);
     }
 
     private void handleSetChargeRefresh(SlashCommandInteractionEvent event, String guildId) {
@@ -219,6 +236,22 @@ public class RPGConfigCommand implements CommandHandler {
         )).queue();
 
         logger.info("RPG XP multiplier set to {}x for guild {}", multiplier, guildId);
+    }
+
+    private void handleSetAllowNoRole(SlashCommandInteractionEvent event, String guildId) {
+        RPGConfig config = characterService.getConfig(guildId);
+        OptionMapping enabledOption = event.getOption("enabled");
+        boolean enabled = (enabledOption != null) && enabledOption.getAsBoolean();
+
+        config.setAllowNoRoleUsers(enabled);
+        characterService.updateConfig(config);
+
+        event.reply(String.format(
+                "✅ Users without roles are now **%s** to play RPG games.",
+                enabled ? "allowed" : "not allowed"
+        )).queue();
+
+        logger.info("RPG allowNoRoleUsers set to {} for guild {}", enabled, guildId);
     }
 
     @Override
