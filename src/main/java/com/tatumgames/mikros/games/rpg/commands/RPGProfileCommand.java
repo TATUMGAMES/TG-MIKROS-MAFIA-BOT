@@ -121,7 +121,7 @@ public class RPGProfileCommand implements CommandHandler {
                                 ⚔️ STR: **%d**
                                 🏃 AGI: **%d**
                                 🧠 INT: **%d**
-                                🍀 LUCK: **%d"""
+                                🍀 LUCK: **%d**"""
                         ,
                         character.getStats().getCurrentHp(),
                         effectiveMaxHp,
