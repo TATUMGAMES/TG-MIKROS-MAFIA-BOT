@@ -12,37 +12,46 @@ import java.util.stream.Collectors;
 /**
  * Manages message templates for app promotions.
  * <p>
- * Cursor AI creates 10 templates (2-3 per step).
- * TODO: Developer to add 10 more templates to reach 20 total.
+ * Contains 20 templates total (5 per step) with community support and rallying messages.
  */
 public class PromotionMessageTemplates {
     private static final Logger logger = LoggerFactory.getLogger(PromotionMessageTemplates.class);
     private final Random random;
 
-    // Step 1: Introduce the game (2 templates - developer adds 3 more)
+    // Step 1: Introduce the game (5 templates total)
     private static final String[] STEP_1_TEMPLATES = {
             "🎮 Introducing <app_name>! <short_description>",
-            "Have you heard about <app_name>? <short_description>"
+            "Have you heard about <app_name>? <short_description>",
+            "Let's all support <app_name>! <short_description>",
+            "This game really impressed us - <app_name>! <short_description>",
+            "You're going to love <app_name>! <short_description>"
     };
 
-    // Step 2: Add more details (2 templates - developer adds 3 more)
+    // Step 2: Add more details (5 templates total)
     private static final String[] STEP_2_TEMPLATES = {
             "Dive deeper into <app_name>: <long_description>",
-            "Want to know more about <app_name>? <long_description>"
+            "Want to know more about <app_name>? <long_description>",
+            "Let's rally behind <app_name> and discover what makes it special: <long_description>",
+            "This project put a smile on our face. Here's why <app_name> stands out: <long_description>",
+            "Join us in supporting <app_name> - <long_description>"
     };
 
-    // Step 3: Multiple games promotion (3 templates - developer adds 2 more)
+    // Step 3: Multiple games promotion (5 templates total)
     private static final String[] STEP_3_TEMPLATES = {
             "🌟 MIKROS Top Picks for this month: <game_list>",
             "This month's featured games: <game_list>",
-            "Don't miss these MIKROS favorites: <game_list>"
+            "Don't miss these MIKROS favorites: <game_list>",
+            "Let's rally behind these amazing developers! This month's highlights: <game_list>",
+            "These games really impressed us - check them out: <game_list>"
     };
 
-    // Step 4: Final chance (3 templates - developer adds 2 more)
+    // Step 4: Final chance (5 templates total)
     private static final String[] STEP_4_TEMPLATES = {
             "⏰ Last chance to check out <app_name>! <short_description>",
             "Don't miss out on <app_name>! <short_description>",
-            "Final opportunity: <app_name> - <short_description>"
+            "Final opportunity: <app_name> - <short_description>",
+            "One final rally for <app_name>! <short_description>",
+            "Last call to support <app_name> - <short_description>"
     };
 
     public PromotionMessageTemplates() {

@@ -77,6 +77,12 @@ public class RPGCharacter {
     private int cursedBossFights = 0; // Participated in boss fights while curses were active
     private int cursedResurrections = 0; // Resurrections performed during cursed worlds (Priest)
     private boolean actedDuringBothCurses = false; // Acted during both Minor + Major curse simultaneously
+    
+    // Exploration event temporary debuffs
+    private boolean hasFrostbite = false; // Frostbite reduces max HP by 5%, removed by rest
+    private int darkRelicActionsRemaining = 0; // Dark Relic: +5% XP for next 3 actions, +10% damage taken
+    private double darkRelicXpBonus = 0.0; // XP bonus multiplier (0.05 = +5%)
+    private double darkRelicDamagePenalty = 0.0; // Damage penalty multiplier (0.10 = +10% damage taken)
 
     /**
      * Creates a new RPG character.
@@ -145,6 +151,12 @@ public class RPGCharacter {
         this.cursedBossFights = 0;
         this.cursedResurrections = 0;
         this.actedDuringBothCurses = false;
+        
+        // Initialize exploration event debuffs
+        this.hasFrostbite = false;
+        this.darkRelicActionsRemaining = 0;
+        this.darkRelicXpBonus = 0.0;
+        this.darkRelicDamagePenalty = 0.0;
     }
 
     /**
@@ -857,5 +869,50 @@ public class RPGCharacter {
      */
     public int getTotalBossKills() {
         return bossesKilled + superBossesKilled;
+    }
+
+    // Exploration event debuff getters/setters
+
+    public boolean hasFrostbite() {
+        return hasFrostbite;
+    }
+
+    public void setHasFrostbite(boolean hasFrostbite) {
+        this.hasFrostbite = hasFrostbite;
+    }
+
+    public int getDarkRelicActionsRemaining() {
+        return darkRelicActionsRemaining;
+    }
+
+    public void setDarkRelicActionsRemaining(int darkRelicActionsRemaining) {
+        this.darkRelicActionsRemaining = Math.max(0, darkRelicActionsRemaining);
+    }
+
+    public void decrementDarkRelicActions() {
+        if (darkRelicActionsRemaining > 0) {
+            darkRelicActionsRemaining--;
+            if (darkRelicActionsRemaining == 0) {
+                // Clear debuff when actions expire
+                darkRelicXpBonus = 0.0;
+                darkRelicDamagePenalty = 0.0;
+            }
+        }
+    }
+
+    public double getDarkRelicXpBonus() {
+        return darkRelicXpBonus;
+    }
+
+    public void setDarkRelicXpBonus(double darkRelicXpBonus) {
+        this.darkRelicXpBonus = darkRelicXpBonus;
+    }
+
+    public double getDarkRelicDamagePenalty() {
+        return darkRelicDamagePenalty;
+    }
+
+    public void setDarkRelicDamagePenalty(double darkRelicDamagePenalty) {
+        this.darkRelicDamagePenalty = darkRelicDamagePenalty;
     }
 }

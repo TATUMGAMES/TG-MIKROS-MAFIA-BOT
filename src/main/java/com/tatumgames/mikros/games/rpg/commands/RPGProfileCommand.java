@@ -111,7 +111,7 @@ public class RPGProfileCommand implements CommandHandler {
         // Get active curses for effective HP calculation
         String guildId = config.getGuildId();
         var activeCurses = worldCurseService.getActiveCurses(guildId);
-        int effectiveMaxHp = character.getStats().getEffectiveMaxHp(activeCurses);
+        int effectiveMaxHp = character.getStats().getEffectiveMaxHp(activeCurses, character.hasFrostbite());
 
         // Stats
         embed.addField(
@@ -172,6 +172,25 @@ public class RPGProfileCommand implements CommandHandler {
         craftedBonuses.append(String.format("HP: **+%d/5**", inventory.getCraftedBonus("HP")));
         
         embed.addField("✨ Crafted Bonuses", craftedBonuses.toString(), false);
+
+        // Temporary Debuffs
+        StringBuilder debuffs = new StringBuilder();
+        boolean hasDebuffs = false;
+        
+        if (character.hasFrostbite()) {
+            debuffs.append("🩸 **Frostbite:** Max HP reduced by 5% (removed by rest)\n");
+            hasDebuffs = true;
+        }
+        
+        if (character.getDarkRelicActionsRemaining() > 0) {
+            debuffs.append(String.format("🕯️ **Dark Relic:** +5%% XP, +10%% damage taken (%d actions remaining)\n",
+                    character.getDarkRelicActionsRemaining()));
+            hasDebuffs = true;
+        }
+        
+        if (hasDebuffs) {
+            embed.addField("⚠️ Temporary Effects", debuffs.toString().trim(), false);
+        }
 
         // Duel record
         embed.addField("⚔️ Duels",

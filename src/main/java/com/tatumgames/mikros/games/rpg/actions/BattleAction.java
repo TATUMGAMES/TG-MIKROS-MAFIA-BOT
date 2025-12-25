@@ -314,6 +314,12 @@ public class BattleAction implements CharacterAction {
             int minXp = (int) (baseXp * (1 + stats.getLuck() / 20.0));
             xpGained = Math.max(minXp, xpGained);
             
+            // Apply Dark Relic XP bonus (+5% XP for 3 actions)
+            if (character.getDarkRelicActionsRemaining() > 0) {
+                xpGained = (int) (xpGained * (1.0 + character.getDarkRelicXpBonus()));
+                character.decrementDarkRelicActions();
+            }
+            
             // Apply Curse of Clouded Mind (-5% XP, but ensure minimum 90%)
             // Song of Nilfheim reduces the penalty
             if (activeCurses.contains(WorldCurse.MINOR_CURSE_OF_CLOUDED_MIND)) {
@@ -454,6 +460,11 @@ public class BattleAction implements CharacterAction {
         // Apply class bonus (Knight gets 10% additional reduction, stacks with agility)
         if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.KNIGHT) {
             damageTaken = (int) (damageTaken * 0.90); // 10% reduction (balanced from 15%)
+        }
+        
+        // Apply Dark Relic damage penalty (+10% damage taken until rested)
+        if (character.getDarkRelicActionsRemaining() > 0) {
+            damageTaken = (int) (damageTaken * (1.0 + character.getDarkRelicDamagePenalty()));
         }
 
         // Capture HP before damage for story flags
