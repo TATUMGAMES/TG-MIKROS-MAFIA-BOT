@@ -233,20 +233,24 @@ for game developers and studios.
 
 **Features:**
 
-- **Action Charge System:** 3 charges, refresh every 12 hours (not 24h cooldown)
-- **Four Action Types:** Explore, Train, Battle, Rest
-- **40+ narrative encounters** (Nilfheim-themed)
-- **36 enemy types** for battles
+- **Action Charge System:** Dynamic charges (3-10 based on level), refresh every 12 hours
+- **Four Action Types:** Explore, Train, Battle, Rest, Donate
+- **65+ narrative encounters** (Nilfheim-themed)
+- **66 enemy types** for battles with stat effectiveness system
 - **Death System:** Characters can die, enter recovery
 - **Boss System:** 48 normal bosses + 20 super bosses
-- **Community Boss Battles:** Shared HP pool, damage tracking
+- **Community Boss Battles:** Shared HP pool, damage tracking, heroic charges (5 per boss)
 - **Boss Progression:** Levels increase based on defeats
 - **Boss XP Rewards:** Top 30% of participants receive proportional XP rewards (scales with participation)
 - **Class Bonuses:** Each class gets +20% damage vs specific boss types
+- **World Curse System:** Temporary world-wide curses when bosses expire undefeated (7 minor + 6 major curses)
+- **Achievement System:** First-to achievements, pattern achievements, legendary auras, titles, story flags
+- **Item & Crafting System:** Collect essences and catalysts, craft permanent stat bonuses (+5 per stat cap)
+- **Player Duels:** Challenge other players (free action, 3x/24h limit)
 - Exponential XP progression
 - **Nilfheim Lore:** Full realm integration
 
-**TODO:** Inventory system, quests, multiplayer, prestige system
+**TODO:** Quests, multiplayer, prestige system
 
 ### 🧠 Word Unscramble Game (TASKS_05)
 

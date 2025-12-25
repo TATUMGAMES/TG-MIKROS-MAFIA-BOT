@@ -1,6 +1,8 @@
 package com.tatumgames.mikros.games.rpg.model;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -47,6 +49,35 @@ public class RPGCharacter {
     private Instant lastDuelTime;
     private int duelsInLast24Hours = 0;
 
+    // Heroic charge system (for boss battles)
+    private int heroicCharges = 5; // Fixed at 5 charges, refreshed when new boss spawns
+
+    // Achievement system
+    private String title; // Current equipped title (nullable)
+    private String legendaryAura; // Current legendary aura (nullable)
+    private List<String> storyFlags; // Personal story flags (max 2)
+    private int totalExplores = 0; // Total explore actions performed
+    private int totalRests = 0; // Total rest actions performed
+    private int totalDeaths = 0; // Total death count
+    private int totalResurrections = 0; // Times resurrected (as target)
+    private int totalChargesDonated = 0; // Total charges donated to others
+    private int exploreStreak = 0; // Sequences of 3x explore in a row
+    private int trainStreak = 0; // Sequences of 3x train in a row
+    private int restStreak = 0; // Sequences of 3x rest in a row
+    private int battleStreak = 0; // Sequences of 3x battle in a row
+    private String lastActionType; // Last action performed (for pattern tracking)
+    private int consecutiveSameAction = 0; // Current streak of same action
+    private int timesRaisedFallen = 0; // Times Necromancer raised fallen (for Gravebound Presence)
+    private int topDamageBossKills = 0; // Count of being top damage dealer on boss defeats
+    private boolean raisedFallenThisBoss = false; // Reset when new boss spawns
+    private int temporaryCharges = 0; // Donated charges (separate from regular charges)
+    private Instant lastDonationReceived; // Track donation cooldown
+    
+    // Cursed world tracking (for failure-based titles)
+    private int cursedBossFights = 0; // Participated in boss fights while curses were active
+    private int cursedResurrections = 0; // Resurrections performed during cursed worlds (Priest)
+    private boolean actedDuringBothCurses = false; // Acted during both Minor + Major curse simultaneously
+
     /**
      * Creates a new RPG character.
      *
@@ -87,6 +118,33 @@ public class RPGCharacter {
         this.duelsLost = 0;
         this.lastDuelTime = null;
         this.duelsInLast24Hours = 0;
+
+        // Initialize heroic charges (for boss battles)
+        this.heroicCharges = 5;
+
+        // Initialize achievement system
+        this.title = null;
+        this.legendaryAura = null;
+        this.storyFlags = new ArrayList<>();
+        this.totalExplores = 0;
+        this.totalRests = 0;
+        this.totalDeaths = 0;
+        this.totalResurrections = 0;
+        this.totalChargesDonated = 0;
+        this.exploreStreak = 0;
+        this.trainStreak = 0;
+        this.restStreak = 0;
+        this.battleStreak = 0;
+        this.lastActionType = null;
+        this.consecutiveSameAction = 0;
+        this.timesRaisedFallen = 0;
+        this.topDamageBossKills = 0;
+        this.raisedFallenThisBoss = false;
+        this.temporaryCharges = 0;
+        this.lastDonationReceived = null;
+        this.cursedBossFights = 0;
+        this.cursedResurrections = 0;
+        this.actedDuringBothCurses = false;
     }
 
     /**
@@ -183,8 +241,15 @@ public class RPGCharacter {
      * Refreshes action charges if the refresh period has passed.
      *
      * @param refreshHours the charge refresh period in hours (default: 12)
+     * @param activeCurses list of active world curses (for Frozen Time curse)
      */
-    public void refreshCharges(int refreshHours) {
+    public void refreshCharges(int refreshHours, java.util.List<com.tatumgames.mikros.games.rpg.curse.WorldCurse> activeCurses) {
+        // Apply Frozen Time curse (+2 hours to refresh timer)
+        int effectiveRefreshHours = refreshHours;
+        if (activeCurses != null && activeCurses.contains(com.tatumgames.mikros.games.rpg.curse.WorldCurse.MAJOR_FROZEN_TIME)) {
+            effectiveRefreshHours = refreshHours + 2;
+        }
+        
         int maxCharges = getMaxActionCharges();
         
         if (lastChargeRefreshTime == null) {
@@ -196,12 +261,21 @@ public class RPGCharacter {
         Instant now = Instant.now();
         long hoursSinceRefresh = (now.getEpochSecond() - lastChargeRefreshTime.getEpochSecond()) / 3600;
 
-        if (hoursSinceRefresh >= refreshHours) {
+        if (hoursSinceRefresh >= effectiveRefreshHours) {
             // Calculate how many full refresh cycles have passed
-            int refreshCycles = (int) (hoursSinceRefresh / refreshHours);
+            int refreshCycles = (int) (hoursSinceRefresh / effectiveRefreshHours);
             actionCharges = Math.min(maxCharges, actionCharges + refreshCycles * maxCharges);
             lastChargeRefreshTime = now;
         }
+    }
+
+    /**
+     * Refreshes action charges if the refresh period has passed (backward compatibility).
+     *
+     * @param refreshHours the charge refresh period in hours (default: 12)
+     */
+    public void refreshCharges(int refreshHours) {
+        refreshCharges(refreshHours, null);
     }
 
     /**
@@ -484,5 +558,304 @@ public class RPGCharacter {
         if (hoursSince >= 24) {
             duelsInLast24Hours = 0;
         }
+    }
+
+    // Heroic charge system getters/setters
+
+    /**
+     * Gets the current number of heroic charges.
+     *
+     * @return current heroic charges (0-3)
+     */
+    public int getHeroicCharges() {
+        return heroicCharges;
+    }
+
+    /**
+     * Gets the maximum number of heroic charges.
+     *
+     * @return maximum heroic charges (always 5)
+     */
+    public int getMaxHeroicCharges() {
+        return 5;
+    }
+
+    /**
+     * Checks if the character can perform a heroic action (boss battle).
+     *
+     * @return true if has heroic charges and is not dead/recovering
+     */
+    public boolean canPerformHeroicAction() {
+        if (isDead || isRecovering) {
+            return false;
+        }
+        return heroicCharges > 0;
+    }
+
+    /**
+     * Uses a heroic charge for a boss battle.
+     *
+     * @return true if charge was used successfully
+     */
+    public boolean useHeroicCharge() {
+        if (heroicCharges > 0) {
+            heroicCharges--;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Refreshes heroic charges to maximum (5).
+     * Called when a new boss spawns.
+     */
+    public void refreshHeroicCharges() {
+        this.heroicCharges = getMaxHeroicCharges();
+        // Reset Raise Fallen tracking when new boss spawns
+        this.raisedFallenThisBoss = false;
+        this.timesRaisedFallen = 0;
+    }
+
+    // Achievement system getters/setters
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getLegendaryAura() {
+        return legendaryAura;
+    }
+
+    public void setLegendaryAura(String legendaryAura) {
+        this.legendaryAura = legendaryAura;
+    }
+
+    public List<String> getStoryFlags() {
+        return storyFlags;
+    }
+
+    public void setStoryFlags(List<String> storyFlags) {
+        this.storyFlags = storyFlags != null ? new ArrayList<>(storyFlags) : new ArrayList<>();
+    }
+
+    /**
+     * Adds a story flag. If already at max (2), removes the oldest flag.
+     *
+     * @param flag the story flag to add
+     */
+    public void addStoryFlag(String flag) {
+        if (storyFlags.size() >= 2) {
+            storyFlags.remove(0); // Remove oldest
+        }
+        storyFlags.add(flag);
+    }
+
+    public int getTotalExplores() {
+        return totalExplores;
+    }
+
+    public void incrementExploreCount() {
+        this.totalExplores++;
+    }
+
+    public int getTotalRests() {
+        return totalRests;
+    }
+
+    public void incrementRestCount() {
+        this.totalRests++;
+    }
+
+    public int getTotalDeaths() {
+        return totalDeaths;
+    }
+
+    public void incrementDeathCount() {
+        this.totalDeaths++;
+    }
+
+    public int getTotalResurrections() {
+        return totalResurrections;
+    }
+
+    public void incrementResurrectionCount() {
+        this.totalResurrections++;
+    }
+
+    public int getTotalChargesDonated() {
+        return totalChargesDonated;
+    }
+
+    public void incrementChargesDonated() {
+        this.totalChargesDonated++;
+    }
+
+    public int getExploreStreak() {
+        return exploreStreak;
+    }
+
+    public void incrementExploreStreak() {
+        this.exploreStreak++;
+    }
+
+    public int getTrainStreak() {
+        return trainStreak;
+    }
+
+    public void incrementTrainStreak() {
+        this.trainStreak++;
+    }
+
+    public int getRestStreak() {
+        return restStreak;
+    }
+
+    public void incrementRestStreak() {
+        this.restStreak++;
+    }
+
+    public int getBattleStreak() {
+        return battleStreak;
+    }
+
+    public void incrementBattleStreak() {
+        this.battleStreak++;
+    }
+
+    public String getLastActionType() {
+        return lastActionType;
+    }
+
+    public int getConsecutiveSameAction() {
+        return consecutiveSameAction;
+    }
+
+    /**
+     * Records an action type for pattern tracking.
+     * Tracks consecutive same actions and increments streak counters when pattern detected.
+     *
+     * @param actionType the action type (explore, train, rest, battle)
+     */
+    public void recordActionType(String actionType) {
+        if (actionType == null) {
+            return;
+        }
+
+        if (actionType.equals(lastActionType)) {
+            consecutiveSameAction++;
+        } else {
+            consecutiveSameAction = 1;
+            lastActionType = actionType;
+        }
+
+        // When we reach 3 consecutive same actions, increment streak counter
+        if (consecutiveSameAction >= 3) {
+            switch (actionType.toLowerCase()) {
+                case "explore":
+                    incrementExploreStreak();
+                    break;
+                case "train":
+                    incrementTrainStreak();
+                    break;
+                case "rest":
+                    incrementRestStreak();
+                    break;
+                case "battle":
+                    incrementBattleStreak();
+                    break;
+            }
+            consecutiveSameAction = 0; // Reset after pattern detected
+        }
+    }
+
+    public int getTimesRaisedFallen() {
+        return timesRaisedFallen;
+    }
+
+    public void incrementTimesRaisedFallen() {
+        this.timesRaisedFallen++;
+    }
+
+    public int getTopDamageBossKills() {
+        return topDamageBossKills;
+    }
+
+    public void incrementTopDamageBossKills() {
+        this.topDamageBossKills++;
+    }
+
+    public boolean isRaisedFallenThisBoss() {
+        return raisedFallenThisBoss;
+    }
+
+    public void setRaisedFallenThisBoss(boolean raisedFallenThisBoss) {
+        this.raisedFallenThisBoss = raisedFallenThisBoss;
+    }
+
+    public int getTemporaryCharges() {
+        return temporaryCharges;
+    }
+
+    public void setTemporaryCharges(int temporaryCharges) {
+        this.temporaryCharges = Math.max(0, temporaryCharges);
+    }
+
+    public void addTemporaryCharge() {
+        this.temporaryCharges++;
+    }
+
+    public boolean useTemporaryCharge() {
+        if (temporaryCharges > 0) {
+            temporaryCharges--;
+            return true;
+        }
+        return false;
+    }
+
+    public Instant getLastDonationReceived() {
+        return lastDonationReceived;
+    }
+
+    public void setLastDonationReceived(Instant lastDonationReceived) {
+        this.lastDonationReceived = lastDonationReceived;
+    }
+
+    // Cursed world tracking getters/setters
+
+    public int getCursedBossFights() {
+        return cursedBossFights;
+    }
+
+    public void incrementCursedBossFights() {
+        this.cursedBossFights++;
+    }
+
+    public int getCursedResurrections() {
+        return cursedResurrections;
+    }
+
+    public void incrementCursedResurrections() {
+        this.cursedResurrections++;
+    }
+
+    public boolean hasActedDuringBothCurses() {
+        return actedDuringBothCurses;
+    }
+
+    public void setActedDuringBothCurses(boolean actedDuringBothCurses) {
+        this.actedDuringBothCurses = actedDuringBothCurses;
+    }
+
+    /**
+     * Gets the total number of bosses killed (normal + super).
+     *
+     * @return total boss kills
+     */
+    public int getTotalBossKills() {
+        return bossesKilled + superBossesKilled;
     }
 }

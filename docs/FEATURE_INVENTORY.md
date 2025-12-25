@@ -84,7 +84,7 @@ Discord Bot.
 | `/rpg-profile`     | View character profile                     | Everyone      | RPG    |
 | `/rpg-action`      | Perform action (explore/train/battle/rest) | Everyone      | RPG    |
 | `/rpg-resurrect`   | Resurrect dead player (Priest-only)        | Everyone      | RPG    |
-| `/rpg-boss-battle` | Attack boss, check status, leaderboard     | Everyone      | RPG    |
+| `/rpg-boss-battle` | Battle boss, check status, leaderboard     | Everyone      | RPG    |
 | `/rpg-leaderboard` | View RPG leaderboard                       | Everyone      | RPG    |
 | `/rpg-config`      | Configure RPG (5 subcommands)              | Administrator | RPG    |
 

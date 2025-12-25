@@ -95,7 +95,7 @@ public class RPGSetupCommand implements CommandHandler {
                     
                     The shadows spread across Nilfheim… heroes, unite!
                     
-                    Use `/rpg-boss-battle attack` to join the fight!
+                    Use `/rpg-boss-battle battle` to join the fight!
                     """,
                     boss.getName(),
                     boss.getLevel(),

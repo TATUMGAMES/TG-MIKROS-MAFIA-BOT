@@ -6,8 +6,12 @@ import com.tatumgames.mikros.games.rpg.actions.CharacterAction;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
+import com.tatumgames.mikros.games.rpg.achievements.AchievementType;
+import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
+import com.tatumgames.mikros.games.rpg.service.AchievementService;
 import com.tatumgames.mikros.games.rpg.service.ActionService;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
+import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -31,22 +35,28 @@ public class RPGActionCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RPGActionCommand.class);
     private final CharacterService characterService;
     private final ActionService actionService;
+    private final AchievementService achievementService;
+    private final WorldCurseService worldCurseService;
 
     /**
      * Creates a new RPGActionCommand handler.
      *
      * @param characterService the character service
      * @param actionService    the action service
+     * @param achievementService the achievement service for checking first-to achievements
+     * @param worldCurseService the world curse service for tracking cursed world participation
      */
-    public RPGActionCommand(CharacterService characterService, ActionService actionService) {
+    public RPGActionCommand(CharacterService characterService, ActionService actionService, AchievementService achievementService, WorldCurseService worldCurseService) {
         this.characterService = characterService;
         this.actionService = actionService;
+        this.achievementService = achievementService;
+        this.worldCurseService = worldCurseService;
     }
 
     @Override
     public CommandData getCommandData() {
         return Commands.slash("rpg-action", "Perform an action with your character (3 charges, refresh every 12h)")
-                .addOption(OptionType.STRING, "type", "Action type (explore, train, battle, rest)", true);
+                .addOption(OptionType.STRING, "type", "Action type (explore, train, battle, rest, donate)", true);
     }
 
     @Override
@@ -171,10 +181,23 @@ public class RPGActionCommand implements CommandHandler {
 
         // Validate action
         if (!actionService.hasAction(actionType)) {
-            event.reply("❌ Invalid action! Choose from: **explore**, **train**, **battle**, or **rest**")
+            event.reply("❌ Invalid action! Choose from: **explore**, **train**, **battle**, **rest**, or **donate**")
                     .setEphemeral(true)
                     .queue();
             return;
+        }
+
+        // Track cursed world participation (Cursewalker and Bound to Death titles)
+        var activeCurses = worldCurseService.getActiveCurses(config.getGuildId());
+        boolean hasMinor = activeCurses.stream().anyMatch(c -> c.getType() == WorldCurse.CurseType.MINOR);
+        boolean hasMajor = activeCurses.stream().anyMatch(c -> c.getType() == WorldCurse.CurseType.MAJOR);
+        if (hasMinor && hasMajor) {
+            character.setActedDuringBothCurses(true);
+        }
+        // Bound to Death: Necromancer active during March of the Dead
+        if (activeCurses.contains(WorldCurse.MAJOR_MARCH_OF_THE_DEAD) &&
+            character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.NECROMANCER) {
+            character.addStoryFlag("Bound to Death"); // Track via story flag for now
         }
 
         // Execute action
@@ -223,8 +246,12 @@ public class RPGActionCommand implements CommandHandler {
             }
 
             if (outcome.leveledUp()) {
+                int newLevel = character.getLevel();
                 results.append(String.format("\n\n🎉 **LEVEL UP!** You are now Level %d!",
-                        character.getLevel()));
+                        newLevel));
+                
+                // Check for first-to level achievements
+                checkLevelAchievements(guildId, userId, newLevel);
             }
 
             embed.addField("📊 Results", results.toString(), false);
@@ -288,6 +315,34 @@ public class RPGActionCommand implements CommandHandler {
             return str;
         }
         return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
+    /**
+     * Checks for first-to level achievements.
+     *
+     * @param guildId the guild ID
+     * @param userId the user ID
+     * @param level the new level
+     */
+    private void checkLevelAchievements(String guildId, String userId, int level) {
+        AchievementType achievementType = null;
+        
+        if (level == 20) {
+            achievementType = AchievementType.FIRST_TO_LEVEL_20;
+        } else if (level == 30) {
+            achievementType = AchievementType.FIRST_TO_LEVEL_30;
+        } else if (level == 50) {
+            achievementType = AchievementType.FIRST_TO_LEVEL_50;
+        }
+        
+        if (achievementType != null) {
+            boolean claimed = achievementService.checkAndClaimFirstTo(guildId, achievementType, userId);
+            if (claimed) {
+                logger.info("User {} claimed first-to achievement {} at level {} in guild {}",
+                        userId, achievementType, level, guildId);
+                // TODO: Announce achievement (will be handled by AchievementAnnouncementService)
+            }
+        }
     }
 
     @Override

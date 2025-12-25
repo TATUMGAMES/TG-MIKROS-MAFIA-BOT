@@ -22,15 +22,20 @@ public class ActionService {
 
     /**
      * Creates a new ActionService and registers all actions.
+     *
+     * @param characterService the character service (needed for DonateAction)
+     * @param worldCurseService the world curse service (needed for curse effects)
+     * @param auraService the aura service (needed for Song of Nilfheim)
      */
-    public ActionService() {
+    public ActionService(CharacterService characterService, WorldCurseService worldCurseService, AuraService auraService) {
         this.actions = new HashMap<>();
 
         // Register available actions
-        registerAction(new ExploreAction());
+        registerAction(new ExploreAction(worldCurseService, auraService));
         registerAction(new TrainAction());
-        registerAction(new BattleAction());
+        registerAction(new BattleAction(worldCurseService, auraService));
         registerAction(new RestAction());
+        registerAction(new DonateAction(characterService));
 
         logger.info("ActionService initialized with {} actions", actions.size());
     }

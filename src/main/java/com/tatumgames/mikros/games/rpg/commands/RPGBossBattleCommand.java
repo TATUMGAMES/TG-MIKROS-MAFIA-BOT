@@ -6,8 +6,10 @@ import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.model.Boss;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.model.SuperBoss;
+import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
 import com.tatumgames.mikros.games.rpg.service.BossService;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
+import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -25,29 +27,32 @@ import java.util.Map;
 
 /**
  * Command handler for /rpg-boss-battle.
- * Allows players to attack community bosses.
+ * Allows players to battle community bosses.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class RPGBossBattleCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RPGBossBattleCommand.class);
     private final CharacterService characterService;
     private final BossService bossService;
+    private final WorldCurseService worldCurseService;
 
     /**
      * Creates a new RPGBossBattleCommand handler.
      *
      * @param characterService the character service
      * @param bossService      the boss service
+     * @param worldCurseService the world curse service
      */
-    public RPGBossBattleCommand(CharacterService characterService, BossService bossService) {
+    public RPGBossBattleCommand(CharacterService characterService, BossService bossService, WorldCurseService worldCurseService) {
         this.characterService = characterService;
         this.bossService = bossService;
+        this.worldCurseService = worldCurseService;
     }
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("rpg-boss-battle", "Attack the current community boss")
-                .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.STRING, "action", "Action: attack, status, or leaderboard", false);
+        return Commands.slash("rpg-boss-battle", "Battle the current community boss")
+                .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.STRING, "action", "Action: battle, status, or leaderboard", false);
     }
 
     @Override
@@ -93,11 +98,11 @@ public class RPGBossBattleCommand implements CommandHandler {
         OptionMapping actionOption = event.getOption("action");
         String action = (actionOption != null)
                 ? actionOption.getAsString().toLowerCase()
-                : "attack";
+                : "battle";
 
         switch (action) {
-            case "attack":
-                handleAttack(event, userId, guildId);
+            case "battle":
+                handleBattle(event, userId, guildId);
                 break;
             case "status":
                 handleStatus(event, guildId);
@@ -106,13 +111,13 @@ public class RPGBossBattleCommand implements CommandHandler {
                 handleLeaderboard(event, guildId);
                 break;
             default:
-                event.reply("❌ Invalid action! Use: **attack**, **status**, or **leaderboard**")
+                event.reply("❌ Invalid action! Use: **battle**, **status**, or **leaderboard**")
                         .setEphemeral(true)
                         .queue();
         }
     }
 
-    private void handleAttack(SlashCommandInteractionEvent event, String userId, String guildId) {
+    private void handleBattle(SlashCommandInteractionEvent event, String userId, String guildId) {
         // Check if user has a character
         RPGCharacter character = characterService.getCharacter(userId);
         if (character == null) {
@@ -124,9 +129,25 @@ public class RPGBossBattleCommand implements CommandHandler {
 
         // Check if character can act
         if (character.isDead() || character.isRecovering()) {
-            event.reply("❌ You cannot attack bosses while dead or recovering!")
+            event.reply("❌ You cannot battle bosses while dead or recovering!")
                     .setEphemeral(true)
                     .queue();
+            return;
+        }
+
+        // Check if character has heroic charges
+        if (!character.canPerformHeroicAction()) {
+            int remaining = character.getHeroicCharges();
+            event.reply(String.format("""
+                            ⚔️ **No Heroic Charges Available**
+                            
+                            Heroic charges remaining: **%d/%d**
+                            
+                            Heroic charges refresh when a new boss spawns. Wait for the next boss to get more battles!
+                            """,
+                    remaining,
+                    character.getMaxHeroicCharges()
+            )).setEphemeral(true).queue();
             return;
         }
 
@@ -149,19 +170,23 @@ public class RPGBossBattleCommand implements CommandHandler {
             return;
         }
 
-        // Attack boss
+        // Battle boss (this consumes a heroic charge)
         int damage = bossService.attackBoss(guildId, character);
 
         if (damage == 0) {
-            event.reply("❌ Failed to attack boss. Please try again.")
+            event.reply("❌ Failed to battle boss. Please try again.")
                     .setEphemeral(true)
                     .queue();
             return;
         }
 
+        // Consume heroic charge after successful battle
+        character.useHeroicCharge();
+        int remainingCharges = character.getHeroicCharges();
+
         // Build response
         EmbedBuilder embed = new EmbedBuilder();
-        embed.setTitle("⚔️ Boss Attack!");
+        embed.setTitle("⚔️ Boss Battle!");
         embed.setColor(Color.RED);
 
         String bossName = boss != null ? boss.getName() : superBoss.getName();
@@ -281,12 +306,14 @@ public class RPGBossBattleCommand implements CommandHandler {
                     false);
         }
 
-        embed.setFooter("Keep attacking to defeat the boss!");
+        embed.setFooter(String.format("Heroic Charges: %d/%d | Keep battling to defeat the boss!",
+                remainingCharges,
+                character.getMaxHeroicCharges()));
         embed.setTimestamp(Instant.now());
 
         event.replyEmbeds(embed.build()).queue();
 
-        logger.info("User {} attacked boss in guild {} - Damage: {}", userId, guildId, damage);
+        logger.info("User {} battled boss in guild {} - Damage: {}", userId, guildId, damage);
     }
 
     private void handleStatus(SlashCommandInteractionEvent event, String guildId) {
@@ -325,6 +352,17 @@ public class RPGBossBattleCommand implements CommandHandler {
             }
         }
 
+        // Active World Curses
+        var activeCurses = worldCurseService.getActiveCurses(guildId);
+        if (!activeCurses.isEmpty()) {
+            StringBuilder curseDisplay = new StringBuilder();
+            for (WorldCurse curse : activeCurses) {
+                curseDisplay.append(String.format("%s\n*%s*\n\n", curse.getDisplayName(), curse.getDescription()));
+            }
+            embed.addField("🌑 Active World Curses", curseDisplay.toString().trim(), false);
+            embed.setColor(Color.RED); // Change color to indicate cursed state
+        }
+
         embed.addField("Progression",
                 String.format("Boss Level: **%d**\nSuper Boss Level: **%d**\nNormal Bosses Defeated: **%d**\nSuper Bosses Defeated: **%d**",
                         state.getBossLevel(),
@@ -345,7 +383,7 @@ public class RPGBossBattleCommand implements CommandHandler {
         embed.setColor(Color.YELLOW);
 
         if (topDamage.isEmpty()) {
-            embed.setDescription("No damage dealt yet. Be the first to attack!");
+            embed.setDescription("No damage dealt yet. Be the first to battle!");
         } else {
             StringBuilder leaderboard = new StringBuilder();
             int rank = 1;

@@ -7,6 +7,7 @@ import com.tatumgames.mikros.games.rpg.model.CharacterClass;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
+import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
@@ -27,16 +28,20 @@ import java.awt.*;
 public class RPGResurrectCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RPGResurrectCommand.class);
     private final CharacterService characterService;
+    @SuppressWarnings("unused") // Used in constructor to create ResurrectAction
+    private final WorldCurseService worldCurseService;
     private final ResurrectAction resurrectAction;
 
     /**
      * Creates a new RPGResurrectCommand handler.
      *
      * @param characterService the character service
+     * @param worldCurseService the world curse service
      */
-    public RPGResurrectCommand(CharacterService characterService) {
+    public RPGResurrectCommand(CharacterService characterService, WorldCurseService worldCurseService) {
         this.characterService = characterService;
-        this.resurrectAction = new ResurrectAction();
+        this.worldCurseService = worldCurseService;
+        this.resurrectAction = new ResurrectAction(worldCurseService);
     }
 
     @Override

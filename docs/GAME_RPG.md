@@ -27,7 +27,7 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
     - Actions may drop collectible items (essences and catalysts)
 
 4. **Battle Community Bosses:**
-    - Use `/rpg-boss-battle attack` to attack the current boss
+    - Use `/rpg-boss-battle battle` to battle the current boss
     - Bosses spawn every 24 hours
     - Community-wide HP pool — everyone fights together!
     - Super bosses appear every 3 normal boss defeats
@@ -60,14 +60,14 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 | `/rpg-action`              | Perform an action (uses 1 charge)              | `/rpg-action type:explore`                 |
 | `/rpg-resurrect`           | Resurrect a dead player (Priest-only, free)    | `/rpg-resurrect target:@Player`            |
 | `/rpg-duel`                | Challenge another player to a duel (free, 3x/24h) | `/rpg-duel target:@Player`              |
-| `/rpg-boss-battle`         | Attack boss, check status, or view leaderboard | `/rpg-boss-battle attack`                  |
+| `/rpg-boss-battle`         | Battle boss, check status, or view leaderboard | `/rpg-boss-battle battle`                  |
 | `/rpg-leaderboard`         | View top players                               | `/rpg-leaderboard`                         |
 | `/rpg-inventory`           | View your collected items and crafted bonuses  | `/rpg-inventory`                           |
 | `/rpg-craft`               | Craft permanent stat-boosting items             | `/rpg-craft item:Ember Infusion`           |
 
 **Boss Battle Subcommands:**
 
-- `attack` - Attack the current boss (default)
+- `battle` - Battle the current boss (default)
 - `status` - View boss status and progression
 - `leaderboard` - View top damage dealers for current boss
 
@@ -546,7 +546,7 @@ Items are displayed inline in action result messages:
 - Characters can die when HP reaches 0 in battle
 - Dead characters:
     - Cannot perform actions
-    - Cannot attack bosses
+    - Cannot battle bosses
     - Can be resurrected by Priests
 
 ### Recovery
@@ -555,7 +555,7 @@ Items are displayed inline in action result messages:
 - During recovery:
     - HP set to 50% of max
     - Cannot perform actions
-    - Cannot attack bosses
+    - Cannot battle bosses
     - Recovery timer shown in profile
 
 ### Resurrection
@@ -605,9 +605,24 @@ Bosses have types that determine class bonuses:
 
 ### Boss Battle Commands
 
-- `/rpg-boss-battle attack` - Attack the current boss
+- `/rpg-boss-battle battle` - Battle the current boss
 - `/rpg-boss-battle status` - View boss HP, level, and progression
 - `/rpg-boss-battle leaderboard` - View top damage dealers
+
+### Heroic Charges System
+
+Boss battles use a separate charge system from regular actions:
+
+- **5 Heroic Charges** per boss (fixed, not level-based)
+- Each boss battle consumes **1 heroic charge**
+- Heroic charges **refresh to 5** when a new boss spawns (normal or super)
+- Heroic charges are **separate** from regular action charges
+- View your heroic charges in `/rpg-profile`
+
+**Why Separate?**
+- Prevents boss spam while allowing multiple attempts
+- Ensures fair participation across all players
+- Refreshes automatically with each new boss spawn
 
 ### Boss Catalog
 
@@ -637,6 +652,91 @@ Bosses have types that determine class bonuses:
 - Boss drops only occur on victory, not defeat
 - XP rewards scale dynamically: top 30% of participants (rounded up) receive rewards
 - All participants who dealt damage receive item rewards, but only top performers get XP
+
+## World Curse System
+
+When a boss despawns undefeated (expires after 24 hours), a **World Curse** is applied to Nilfheim. These curses affect all players equally and create urgency to defeat bosses before they expire.
+
+### How Curses Work
+
+**Trigger:**
+- Normal Boss expires undefeated → 1 Minor World Curse
+- Super Boss expires undefeated → 1 Major World Curse
+
+**Duration:**
+- **Minor Curses:** Last until next boss spawns
+- **Major Curses:** Last until next boss is defeated
+- Maximum active: 1 Minor + 1 Major curse at a time
+
+**Removal:**
+- Curses are cleared when bosses are defeated (victory removes curses)
+- Curses are cleared when new bosses spawn (based on duration type)
+
+### Minor World Curses (Normal Boss Failure)
+
+| Curse | Effect | Description |
+|-------|--------|-------------|
+| ❄️ **Curse of Frailty** | -10% Max HP | The cold seeps into bone and marrow. |
+| 🗡️ **Curse of Weakness** | -10% STR effectiveness | Steel feels heavier in your grasp. |
+| 🌪️ **Curse of Sluggish Steps** | AGI defense cap: 30% → 25% | The winds of Nilfheim resist every movement. |
+| 🔮 **Curse of Clouded Mind** | -5% XP gain | Thoughts scatter like frostbitten ash. |
+| 🍀 **Curse of Ill Fortune** | -5% item drop chance | Luck turns its gaze away. |
+| 🩸 **Curse of Bleeding Wounds** | +10% defeat damage | Wounds refuse to close. |
+| 🌫️ **Curse of Waning Resolve** | Battle XP variance shifts lower | Doubt gnaws at the spirit. |
+
+### Major World Curses (Super Boss Failure)
+
+| Curse | Effect | Description |
+|-------|--------|-------------|
+| 🌑 **Eclipse of Nilfheim** | +10% enemy damage, +10% next boss HP | The sky darkens. Hope thins. |
+| 💀 **March of the Dead** | More undead enemies, +15% defeat damage | The fallen refuse to rest. |
+| 🕯️ **Fading Hope** | Resurrection: 24h → 36h, Priest XP doubled | The light grows harder to summon. |
+| 🧊 **Frozen Time** | Charge refresh +2 hours slower | Time itself slows beneath the frost. |
+| 🌌 **Shattered Reality** | Stat effectiveness: 1.3x → 1.25x, 0.85x → 0.8x | Reality fractures under eldritch strain. |
+| 🔥 **World Aflame** | Boss damage variance ±25% → ±35%, crits +0.1x | Nilfheim burns with unnatural fury. |
+| 🩸 **Price of Survival** | Battle victories restore less HP | Every victory exacts a toll. |
+
+### Curse Effects
+
+**Safeguards:**
+- Never reduce XP below 90% of original
+- Never remove action charges
+- Never affect duels (PvP remains safe)
+- HP cannot go below 1
+
+**Display:**
+- Active curses shown in `/rpg-profile` and `/rpg-boss-battle status`
+- Profile color changes to orange/red when cursed
+- Effective HP shown with curse indicator
+
+### Song of Nilfheim Aura
+
+Players with the **Song of Nilfheim** legendary aura reduce all curse penalties by 1-2%:
+- Curse effects are 98-99% effective instead of 100%
+- Provides slight relief during cursed worlds
+- Encourages community cooperation (aura holders benefit everyone)
+
+### Failure-Based Titles
+
+Players can earn special titles by participating in cursed worlds:
+
+| Title | Requirement | Bonus |
+|-------|-------------|-------|
+| **Hope Unbroken** | Participated in 5 cursed boss fights | Cosmetic |
+| **Cursewalker** | Acted during both Minor + Major curse simultaneously | Cosmetic |
+| **Lightbearer** | Priest: 10 resurrections during cursed worlds | +2% resurrection XP |
+| **Bound to Death** | Necromancer: Active during March of the Dead | Cosmetic |
+
+### Curse Announcements
+
+When a boss expires undefeated, a curse is announced in the RPG channel:
+
+> ❄️ **The beast is not slain.**
+> Nilfheim shudders beneath the **Curse of Frailty**.
+>
+> *The cold seeps into bone and marrow.*
+
+When curses are removed (boss defeated), players are notified that the curse has lifted.
 
 ## Scoring Rules
 
@@ -679,7 +779,7 @@ Bosses have types that determine class bonuses:
 
 3. **Boss Battles:**
     - Boss spawns every 24 hours
-    - Community attacks boss together
+    - Community battles boss together
     - Damage tracked per player
     - Boss defeated when HP reaches 0
     - Progression tracked per server
@@ -775,10 +875,10 @@ are fewer. Yet fate stirs… and your journey begins.
 
 ---
 
-**Last Updated:** 2025-12-24  
+**Last Updated:** 2025-12-24 (World Curse System added)  
 **Game Type:** Text-Based RPG  
 **Realm:** Nilfheim  
 **Command Prefix:** `rpg-*`  
 **Action System:** Dynamic charges (3-10 based on level), 12h refresh  
 **Boss System:** 48 normal + 20 super bosses  
-**Features:** Dual System, Item & Crafting System, Dynamic Charges
+**Features:** Dual System, Item & Crafting System, Dynamic Charges, World Curse System

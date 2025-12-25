@@ -23,6 +23,7 @@ public class BossScheduler {
 
     private final BossService bossService;
     private final CharacterService characterService;
+    private final WorldCurseService worldCurseService;
     private final ScheduledExecutorService scheduler;
     private JDA jda;
 
@@ -31,10 +32,12 @@ public class BossScheduler {
      *
      * @param bossService      the boss service
      * @param characterService the character service (to check if RPG is enabled)
+     * @param worldCurseService the world curse service (for applying curses on boss expiration)
      */
-    public BossScheduler(BossService bossService, CharacterService characterService) {
+    public BossScheduler(BossService bossService, CharacterService characterService, WorldCurseService worldCurseService) {
         this.bossService = bossService;
         this.characterService = characterService;
+        this.worldCurseService = worldCurseService;
         this.scheduler = Executors.newScheduledThreadPool(1);
         logger.info("BossScheduler initialized");
     }
@@ -93,6 +96,10 @@ public class BossScheduler {
                     // Check if current boss expired or was defeated
                     if (currentBoss != null) {
                         if (currentBoss.isExpired() || currentBoss.isDefeated()) {
+                            // Check if boss expired without being defeated (apply curse)
+                            if (currentBoss.isExpired() && !currentBoss.isDefeated()) {
+                                applyBossFailureCurse(guild, guildId, false); // false = normal boss
+                            }
                             // Boss expired or defeated, spawn new one
                             spawnNewBoss(guild, guildId, state);
                         }
@@ -101,6 +108,10 @@ public class BossScheduler {
 
                     if (currentSuperBoss != null) {
                         if (currentSuperBoss.isExpired() || currentSuperBoss.isDefeated()) {
+                            // Check if super boss expired without being defeated (apply curse)
+                            if (currentSuperBoss.isExpired() && !currentSuperBoss.isDefeated()) {
+                                applyBossFailureCurse(guild, guildId, true); // true = super boss
+                            }
                             // Super boss expired or defeated, spawn new one
                             spawnNewBoss(guild, guildId, state);
                         }
@@ -122,8 +133,11 @@ public class BossScheduler {
 
     /**
      * Spawns a new boss for a guild.
+     * Clears curses that expire on spawn.
      */
     private void spawnNewBoss(Guild guild, String guildId, BossService.ServerBossState state) {
+        // Clear curses that expire on spawn
+        worldCurseService.clearCursesOnSpawn(guildId);
         // Check if super boss should spawn (every 3 normal bosses)
         if (state.getNormalBossesSinceSuper() >= 3) {
             logger.info("Boss scheduler: Spawning super boss for guild {} (normal bosses since super: {})",
@@ -156,7 +170,7 @@ public class BossScheduler {
                     
                     The shadows spread across Nilfheim… heroes, unite!
                     
-                    Use `/rpg-boss-battle attack` to join the fight!
+                    Use `/rpg-boss-battle battle` to join the fight!
                     """,
 
             """
@@ -168,7 +182,7 @@ public class BossScheduler {
                     
                     Darkness rises once more. Champions, prepare for battle!
                     
-                    Use `/rpg-boss-battle attack` to strike first!
+                    Use `/rpg-boss-battle battle` to strike first!
                     """,
 
             """
@@ -182,7 +196,7 @@ public class BossScheduler {
                     
                     Gather your strength, heroes. A new challenge awaits!
                     
-                    Join via `/rpg-boss-battle attack`!
+                    Join via `/rpg-boss-battle battle`!
                     """
     );
 
@@ -233,7 +247,7 @@ public class BossScheduler {
                     
                     This is a world-tier threat! All heroes must unite!
                     
-                    Use `/rpg-boss-battle attack` to join the fight!
+                    Use `/rpg-boss-battle battle` to join the fight!
                     """,
 
             """
@@ -247,7 +261,7 @@ public class BossScheduler {
                     
                     Only the strongest can stand against this monster!
                     
-                    Join the defense using `/rpg-boss-battle attack`!
+                    Join the defense using `/rpg-boss-battle battle`!
                     """,
 
             """
@@ -263,7 +277,7 @@ public class BossScheduler {
                     
                     The universe trembles. Champions, this is your ultimate test!
                     
-                    Use `/rpg-boss-battle attack` to engage!
+                    Use `/rpg-boss-battle battle` to engage!
                     """
     );
 
@@ -301,6 +315,57 @@ public class BossScheduler {
                         superBoss.getName(), superBoss.getLevel(), channel.getName(), guild.getName()),
                 failure -> logger.error("Boss scheduler: Failed to send super boss announcement for guild {}", guild.getName(), failure)
         );
+    }
+
+    /**
+     * Applies a world curse when a boss expires undefeated.
+     *
+     * @param guild the guild
+     * @param guildId the guild ID
+     * @param isSuperBoss whether it was a super boss
+     */
+    private void applyBossFailureCurse(Guild guild, String guildId, boolean isSuperBoss) {
+        com.tatumgames.mikros.games.rpg.curse.WorldCurse curse;
+        String announcementTemplate;
+
+        if (isSuperBoss) {
+            curse = worldCurseService.getRandomMajorCurse();
+            announcementTemplate = """
+                    🌑 **The Super Boss endures.**
+                    The sky darkens as **%s** descends upon the realm.
+                    
+                    %s
+                    """;
+        } else {
+            curse = worldCurseService.getRandomMinorCurse();
+            announcementTemplate = """
+                    ❄️ **The beast is not slain.**
+                    Nilfheim shudders beneath the **%s**.
+                    
+                    %s
+                    """;
+        }
+
+        // Apply the curse
+        worldCurseService.applyCurse(guildId, curse);
+
+        // Announce the curse
+        TextChannel channel = findRpgChannel(guild);
+        if (channel != null && channel.canTalk()) {
+            String announcement = String.format(announcementTemplate,
+                    curse.getDisplayName(),
+                    curse.getDescription()
+            );
+
+            channel.sendMessage(announcement).queue(
+                    success -> logger.info("Boss scheduler: Applied and announced curse {} for guild {}",
+                            curse.getDisplayName(), guild.getName()),
+                    failure -> logger.error("Boss scheduler: Failed to announce curse for guild {}", guild.getName(), failure)
+            );
+        } else {
+            logger.warn("Boss scheduler: Applied curse {} for guild {} but could not announce (no channel)",
+                    curse.getDisplayName(), guild.getName());
+        }
     }
 
     private static String pickRandom(List<String> list) {

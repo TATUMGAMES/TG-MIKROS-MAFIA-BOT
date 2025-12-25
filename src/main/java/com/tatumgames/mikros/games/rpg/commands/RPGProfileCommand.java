@@ -3,7 +3,9 @@ package com.tatumgames.mikros.games.rpg.commands;
 import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
+import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
+import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
@@ -26,14 +28,17 @@ import java.time.Duration;
 public class RPGProfileCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RPGProfileCommand.class);
     private final CharacterService characterService;
+    private final WorldCurseService worldCurseService;
 
     /**
      * Creates a new RPGProfileCommand handler.
      *
      * @param characterService the character service
+     * @param worldCurseService the world curse service
      */
-    public RPGProfileCommand(CharacterService characterService) {
+    public RPGProfileCommand(CharacterService characterService, WorldCurseService worldCurseService) {
         this.characterService = characterService;
+        this.worldCurseService = worldCurseService;
     }
 
     @Override
@@ -74,9 +79,13 @@ public class RPGProfileCommand implements CommandHandler {
 
         // Build profile embed
         EmbedBuilder embed = new EmbedBuilder();
+        
+        // Build title with character title prefix if present
+        String titlePrefix = character.getTitle() != null ? character.getTitle() + " " : "";
         embed.setTitle(String.format(
-                "%s %s - Level %d %s",
+                "%s %s%s - Level %d %s",
                 character.getCharacterClass().getEmoji(),
+                titlePrefix,
                 character.getName(),
                 character.getLevel(),
                 character.getCharacterClass().getDisplayName()
@@ -99,18 +108,24 @@ public class RPGProfileCommand implements CommandHandler {
                 false
         );
 
+        // Get active curses for effective HP calculation
+        String guildId = config.getGuildId();
+        var activeCurses = worldCurseService.getActiveCurses(guildId);
+        int effectiveMaxHp = character.getStats().getEffectiveMaxHp(activeCurses);
+
         // Stats
         embed.addField(
                 "📈 Stats",
                 String.format("""
-                                ❤️ HP: **%d** / %d
+                                ❤️ HP: **%d** / %d%s
                                 ⚔️ STR: **%d**
                                 🏃 AGI: **%d**
                                 🧠 INT: **%d**
                                 🍀 LUCK: **%d"""
                         ,
                         character.getStats().getCurrentHp(),
-                        character.getStats().getMaxHp(),
+                        effectiveMaxHp,
+                        effectiveMaxHp < character.getStats().getMaxHp() ? " ⚠️ (Cursed)" : "",
                         character.getStats().getStrength(),
                         character.getStats().getAgility(),
                         character.getStats().getIntelligence(),
@@ -139,6 +154,14 @@ public class RPGProfileCommand implements CommandHandler {
 
         embed.addField("⚡ Action Status", cooldownStatus, true);
 
+        // Heroic charges (for boss battles)
+        String heroicStatus = String.format(
+                "⚔️ **%d/%d Heroic Charges**\n\nCharges refresh when a new boss spawns",
+                character.getHeroicCharges(),
+                character.getMaxHeroicCharges()
+        );
+        embed.addField("🛡️ Heroic Charges", heroicStatus, true);
+
         // Crafted bonuses
         var inventory = character.getInventory();
         StringBuilder craftedBonuses = new StringBuilder();
@@ -155,6 +178,34 @@ public class RPGProfileCommand implements CommandHandler {
                 String.format("**%d Wins** | **%d Losses**",
                         character.getDuelsWon(), character.getDuelsLost()),
                 true);
+
+        // Legendary Aura
+        if (character.getLegendaryAura() != null) {
+            String auraName = character.getLegendaryAura();
+            String auraDisplay = switch (auraName) {
+                case "SONG_OF_NILFHEIM" -> "🌟 Song of Nilfheim";
+                case "HEROS_MARK" -> "⚔️ Hero's Mark";
+                case "GRAVEBOUND_PRESENCE" -> "💀 Gravebound Presence";
+                default -> auraName;
+            };
+            embed.addField("✨ Legendary Aura", auraDisplay, false);
+        }
+
+        // Story Flags
+        if (!character.getStoryFlags().isEmpty()) {
+            String flags = String.join(" | ", character.getStoryFlags());
+            embed.addField("📜 Legend", flags, false);
+        }
+
+        // Active World Curses
+        if (!activeCurses.isEmpty()) {
+            StringBuilder curseDisplay = new StringBuilder();
+            for (WorldCurse curse : activeCurses) {
+                curseDisplay.append(String.format("%s\n*%s*\n\n", curse.getDisplayName(), curse.getDescription()));
+            }
+            embed.addField("🌑 Active World Curses", curseDisplay.toString().trim(), false);
+            embed.setColor(Color.ORANGE); // Change color to indicate cursed state
+        }
 
         // Footer
         embed.setFooter(String.format(

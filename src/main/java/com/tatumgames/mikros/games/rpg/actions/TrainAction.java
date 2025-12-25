@@ -170,6 +170,9 @@ public class TrainAction implements CharacterAction {
 
         // Record the action
         character.recordAction();
+        
+        // Track action type for achievements
+        character.recordActionType("train");
 
         return RPGActionOutcome.builder()
                 .narrative(narrative)

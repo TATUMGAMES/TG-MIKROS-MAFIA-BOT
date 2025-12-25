@@ -1,10 +1,14 @@
 package com.tatumgames.mikros.games.rpg.actions;
 
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
+import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
 import com.tatumgames.mikros.games.rpg.model.EssenceType;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
+import com.tatumgames.mikros.games.rpg.service.AuraService;
+import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -13,6 +17,19 @@ import java.util.Random;
  */
 public class ExploreAction implements CharacterAction {
     private static final Random random = new Random();
+    private final WorldCurseService worldCurseService;
+    private final AuraService auraService;
+
+    /**
+     * Creates a new ExploreAction.
+     *
+     * @param worldCurseService the world curse service for applying curse effects
+     * @param auraService the aura service for Song of Nilfheim curse reduction
+     */
+    public ExploreAction(WorldCurseService worldCurseService, AuraService auraService) {
+        this.worldCurseService = worldCurseService;
+        this.auraService = auraService;
+    }
 
     private static final String[] NARRATIVES = {
             // Original 15 narratives
@@ -126,10 +143,27 @@ public class ExploreAction implements CharacterAction {
         // Select random narrative
         String narrative = NARRATIVES[random.nextInt(NARRATIVES.length)];
 
+        // Get active curses for this guild
+        String guildId = config.getGuildId();
+        List<WorldCurse> activeCurses = worldCurseService.getActiveCurses(guildId);
+        
+        // Check for Song of Nilfheim aura (reduces curse penalties by 1-2%)
+        double songReduction = auraService.getSongOfNilfheimCurseReduction(guildId);
+
         // Calculate XP gain (scales with level and config multiplier)
         int baseXp = 30 + (character.getLevel() * 5);
         int variance = random.nextInt(20) - 10; // +/- 10
         int xpGained = (int) ((baseXp + variance) * config.getXpMultiplier());
+        
+        // Apply Curse of Clouded Mind (-5% XP, but ensure minimum 90%)
+        // Song of Nilfheim reduces the penalty
+        if (activeCurses.contains(WorldCurse.MINOR_CURSE_OF_CLOUDED_MIND)) {
+            double cloudedPenalty = 0.95 * songReduction; // Apply Song reduction
+            xpGained = (int) (xpGained * cloudedPenalty);
+            // Ensure minimum 90% of original
+            int minXpWithCurse = (int) ((baseXp + variance) * config.getXpMultiplier() * 0.90);
+            xpGained = Math.max(minXpWithCurse, xpGained);
+        }
 
         // Add XP and check for level up
         boolean leveledUp = character.addXp(xpGained);
@@ -141,6 +175,13 @@ public class ExploreAction implements CharacterAction {
         int agility = character.getStats().getAgility();
         double agilityBonus = Math.min(0.15, agility * 0.005);
         double dropChance = baseDropChance + agilityBonus; // 12.5% to 27.5%
+        
+        // Apply Curse of Ill Fortune (-5% item drop chance)
+        // Song of Nilfheim reduces the penalty
+        if (activeCurses.contains(WorldCurse.MINOR_CURSE_OF_ILL_FORTUNE)) {
+            double illFortunePenalty = 0.05 * songReduction; // Apply Song reduction
+            dropChance = Math.max(0.0, dropChance - illFortunePenalty);
+        }
 
         RPGActionOutcome.Builder outcomeBuilder = RPGActionOutcome.builder()
                 .narrative(narrative)
@@ -188,18 +229,12 @@ public class ExploreAction implements CharacterAction {
 
         // Record the action
         character.recordAction();
+        
+        // Track action type and increment explore count for achievements
+        character.recordActionType("explore");
+        character.incrementExploreCount();
 
         return outcomeBuilder.build();
-    }
-
-    /**
-     * Gets a random essence type.
-     *
-     * @return random essence type
-     */
-    private EssenceType getRandomEssence() {
-        EssenceType[] essences = EssenceType.values();
-        return essences[random.nextInt(essences.length)];
     }
 
     /**

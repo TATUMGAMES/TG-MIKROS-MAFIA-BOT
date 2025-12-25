@@ -7,8 +7,11 @@ import com.tatumgames.mikros.config.ConfigLoader;
 import com.tatumgames.mikros.games.rpg.commands.*;
 import com.tatumgames.mikros.games.rpg.service.ActionService;
 import com.tatumgames.mikros.games.rpg.service.BossScheduler;
+import com.tatumgames.mikros.games.rpg.service.AchievementService;
+import com.tatumgames.mikros.games.rpg.service.AuraService;
 import com.tatumgames.mikros.games.rpg.service.BossService;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
+import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 import com.tatumgames.mikros.games.word_unscramble.commands.GameConfigCommand;
 import com.tatumgames.mikros.games.word_unscramble.commands.GameSetupCommand;
 import com.tatumgames.mikros.games.word_unscramble.commands.ScrambleGuessCommand;
@@ -64,6 +67,9 @@ public class BotMain extends ListenerAdapter {
     private final WordUnscrambleResetScheduler wordUnscrambleResetScheduler;
     private final CharacterService characterService;
     private final ActionService actionService;
+    private final AchievementService achievementService;
+    private final AuraService auraService;
+    private final WorldCurseService worldCurseService;
     private final BossService bossService;
     private final BossScheduler bossScheduler;
     private final PromoDetectionService promoService;
@@ -116,9 +122,12 @@ public class BotMain extends ListenerAdapter {
         this.wordUnscrambleService = new WordUnscrambleService();
         this.wordUnscrambleResetScheduler = new WordUnscrambleResetScheduler(wordUnscrambleService);
         this.characterService = new CharacterService();
-        this.actionService = new ActionService();
-        this.bossService = new BossService(characterService);
-        this.bossScheduler = new BossScheduler(bossService, characterService);
+        this.achievementService = new AchievementService();
+        this.auraService = new AuraService();
+        this.worldCurseService = new WorldCurseService();
+        this.actionService = new ActionService(characterService, worldCurseService, auraService);
+        this.bossService = new BossService(characterService, auraService, worldCurseService);
+        this.bossScheduler = new BossScheduler(bossService, characterService, worldCurseService);
         this.promoService = new PromoDetectionService();
         this.promoListener = new PromoMessageListener(promoService);
         this.honeypotService = new HoneypotService();
@@ -205,10 +214,10 @@ public class BotMain extends ListenerAdapter {
 
         // RPG System commands
         registerHandler(new RPGRegisterCommand(characterService));
-        registerHandler(new RPGProfileCommand(characterService));
-        registerHandler(new RPGActionCommand(characterService, actionService));
-        registerHandler(new RPGResurrectCommand(characterService));
-        registerHandler(new RPGBossBattleCommand(characterService, bossService));
+        registerHandler(new RPGProfileCommand(characterService, worldCurseService));
+        registerHandler(new RPGActionCommand(characterService, actionService, achievementService, worldCurseService));
+        registerHandler(new RPGResurrectCommand(characterService, worldCurseService));
+        registerHandler(new RPGBossBattleCommand(characterService, bossService, worldCurseService));
         registerHandler(new RPGLeaderboardCommand(characterService, config));
         registerHandler(new RPGSetupCommand(characterService, bossService));
         registerHandler(new RPGConfigCommand(characterService));
@@ -217,6 +226,7 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new RPGDualCommand(characterService));
         registerHandler(new RPGInventoryCommand(characterService));
         registerHandler(new RPGCraftCommand(characterService, new com.tatumgames.mikros.games.rpg.service.CraftingService()));
+        // Note: Charge donation is now part of /rpg-action, not a separate command
 
         // Promo commands
         registerHandler(new SetupPromotionsCommand(promoService));
