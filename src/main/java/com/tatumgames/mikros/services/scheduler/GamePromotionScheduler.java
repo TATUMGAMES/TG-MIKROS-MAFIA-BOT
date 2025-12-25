@@ -515,7 +515,12 @@ public class GamePromotionScheduler {
             }
         }
 
-        embed.setFooter("Powered by MIKROS Marketing");
+        // Add MIKROS Marketing footer (always on step 4, randomly on steps 1-2)
+        if (messageTemplates.shouldShowMikrosFooter(step)) {
+            embed.setFooter(messageTemplates.getRandomMikrosFooter());
+        } else {
+            embed.setFooter("Powered by MIKROS Marketing");
+        }
         embed.setTimestamp(Instant.now());
 
         channel.sendMessageEmbeds(embed.build()).queue(
@@ -564,7 +569,8 @@ public class GamePromotionScheduler {
             }
         }
 
-        embed.setFooter("Powered by MIKROS Marketing");
+        // Always show MIKROS Marketing footer on step 3 (multi-game promotion)
+        embed.setFooter(messageTemplates.getRandomMikrosFooter());
         embed.setTimestamp(Instant.now());
 
         channel.sendMessageEmbeds(embed.build()).queue(
