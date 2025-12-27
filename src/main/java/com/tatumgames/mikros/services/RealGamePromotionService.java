@@ -23,8 +23,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RealGamePromotionService implements GamePromotionService {
     private static final Logger logger = LoggerFactory.getLogger(RealGamePromotionService.class);
+    private static final String PROMOTION_API_URL = "https://tg-api-new.uc.r.appspot.com/mikros/discord";
 
     private final TatumGamesApiClient apiClient;
+    private final String promotionApiKey;
     private final ObjectMapper objectMapper;
 
     // Guild configuration storage
@@ -50,10 +52,12 @@ public class RealGamePromotionService implements GamePromotionService {
     /**
      * Creates a new RealGamePromotionService.
      *
-     * @param apiClient the API client for making requests
+     * @param apiClient      the API client for making requests
+     * @param promotionApiKey the API key for promotion API calls
      */
-    public RealGamePromotionService(TatumGamesApiClient apiClient) {
+    public RealGamePromotionService(TatumGamesApiClient apiClient, String promotionApiKey) {
         this.apiClient = apiClient;
+        this.promotionApiKey = promotionApiKey;
         this.promotionChannels = new ConcurrentHashMap<>();
         this.promotionVerbosity = new ConcurrentHashMap<>();
         this.promotionSteps = new ConcurrentHashMap<>();
@@ -149,8 +153,18 @@ public class RealGamePromotionService implements GamePromotionService {
 
     @Override
     public List<AppPromotion> fetchAllApps() {
+        if (promotionApiKey == null || promotionApiKey.isBlank()) {
+            logger.warn("Promotion API key not configured, using stub response");
+            return loadStubApps();
+        }
+
         try {
-            GetAllAppsResponse response = apiClient.get("/getAllApps", GetAllAppsResponse.class);
+            GetAllAppsResponse response = apiClient.getWithApiKey(
+                    PROMOTION_API_URL,
+                    "/getAllApps",
+                    promotionApiKey,
+                    GetAllAppsResponse.class
+            );
             if (response != null && response.getData() != null && response.getData().getApps() != null) {
                 List<AppPromotion> apps = response.getData().getApps();
                 logger.info("Fetched {} apps from API", apps.size());

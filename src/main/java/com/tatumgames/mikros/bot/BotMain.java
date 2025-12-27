@@ -117,7 +117,7 @@ public class BotMain extends ListenerAdapter {
 
         // Initialize game promotion service (use real API if key is configured, otherwise use mock)
         if (config.getMikrosApiKey() != null && !config.getMikrosApiKey().isBlank()) {
-            this.gamePromotionService = new RealGamePromotionService(apiClient);
+            this.gamePromotionService = new RealGamePromotionService(apiClient, config.getMikrosApiKey());
             logger.info("Using RealGamePromotionService with API integration");
         } else {
             logger.warn("MIKROS_API_KEY not set, using InMemoryGamePromotionService (mock mode)");

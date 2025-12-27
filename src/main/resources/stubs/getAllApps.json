@@ -9,7 +9,7 @@
         "appId": "hv-nemesis",
         "appGameId": "tg-nemesis-001",
         "appName": "Heroes Vs Villains: Nemesis",
-        "shortDescription": "Auto-battler game with idle progression",
+        "shortDescription": "[STUB] Auto-battler game with idle progression",
         "longDescription": "Guide your Guardian through levels, defeat enemies, collect rewards. Idle progression allows your character to grow while offline.",
         "gameGenre": "Action",
         "gameplayType": "Casual",
@@ -58,7 +58,7 @@
         "appId": "hv-nervo",
         "appGameId": "tg-nervo-001",
         "appName": "Heroes Vs Villains: Rise of Nervo",
-        "shortDescription": "Disguised CCG with guild-based combat",
+        "shortDescription": "[STUB] Disguised CCG with guild-based combat",
         "longDescription": "Our heroes fight villains, earn rewards, and can join/create guilds to battle together.",
         "gameGenre": "Strategy",
         "gameplayType": "Card",
@@ -106,4 +106,3 @@
     ]
   }
 }
-
