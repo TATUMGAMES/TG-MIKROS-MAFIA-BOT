@@ -109,17 +109,27 @@ public class ScrambleGuessCommand implements CommandHandler {
                         wordsRemaining, nextLevel);
             }
 
+            // Display score with bonus breakdown if bonus > 0
+            String scoreText;
+            if (result.bonus() > 0) {
+                int baseScore = result.score() - result.bonus();
+                scoreText = String.format("Score: **%d** (%d base + %d bonus)", 
+                        result.score(), baseScore, result.bonus());
+            } else {
+                scoreText = String.format("Score: %d points", result.score());
+            }
+
             event.reply(String.format("""
                             🎉 **CORRECT!** 🎉
                             
                             %s guessed it right: **%s**!
                             
-                            Score: %d points
+                            %s
                             Time: %d seconds%s
                             """,
                     member.getAsMention(),
                     guess,
-                    result.score(),
+                    scoreText,
                     timeToSolve,
                     progressionText
             )).queue();

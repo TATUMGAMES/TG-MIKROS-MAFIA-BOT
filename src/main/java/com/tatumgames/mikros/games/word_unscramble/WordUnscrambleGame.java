@@ -267,14 +267,37 @@ public class WordUnscrambleGame implements WordUnscrambleInterface {
         String normalizedCorrect = normalizeAnswer(correctAnswer);
         boolean isCorrect = normalizedInput.equals(normalizedCorrect);
 
-        // Calculate score based on time (earlier = higher score)
-        int score = 0;
+        // Calculate base score based on time (earlier = higher score)
+        int baseScore = 0;
+        int bonus = 0;
+        
         if (isCorrect) {
             long secondsSinceStart = Instant.now().getEpochSecond() - session.getStartTime().getEpochSecond();
-            score = Math.max(100, 1000 - (int) secondsSinceStart);
+            baseScore = Math.max(100, 1000 - (int) secondsSinceStart);
+            
+            // Calculate bonus based on wrong guesses before this correct answer
+            // Only count wrong guesses that occurred before this correct answer
+            long wrongGuessesBefore = session.getResults().stream()
+                    .filter(r -> !r.isCorrect())
+                    .count();
+            
+            // Diminishing returns bonus calculation:
+            // - First 5 wrong guesses: 15 points each
+            // - Next 10 wrong guesses: 10 points each
+            // - After that: 5 points each
+            // - Cap at 250 points
+            if (wrongGuessesBefore > 0) {
+                long firstTier = Math.min(5, wrongGuessesBefore);
+                long secondTier = Math.min(10, Math.max(0, wrongGuessesBefore - 5));
+                long thirdTier = Math.max(0, wrongGuessesBefore - 15);
+                
+                bonus = (int) ((firstTier * 15) + (secondTier * 10) + (thirdTier * 5));
+                bonus = Math.min(250, bonus); // Cap at 250
+            }
         }
 
-        WordUnscrambleResult result = new WordUnscrambleResult(userId, username, input, score, isCorrect, Instant.now());
+        int totalScore = baseScore + bonus;
+        WordUnscrambleResult result = new WordUnscrambleResult(userId, username, input, totalScore, bonus, isCorrect, Instant.now());
         session.addResult(result);
 
         logger.info("Word Unscramble attempt by {} in guild {}: {} - {}",
