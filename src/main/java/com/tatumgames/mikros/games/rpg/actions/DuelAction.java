@@ -8,27 +8,27 @@ import com.tatumgames.mikros.games.rpg.model.RPGStats;
 import java.util.Random;
 
 /**
- * Dual action - player vs player combat.
+ * Duel action - player vs player combat.
  * No charge cost, rate limited to 3 per 24 hours.
  * No HP damage, no XP rewards - just win/loss tracking.
  */
-public class DualAction {
+public class DuelAction {
     private static final Random random = new Random();
-    private final DualNarrativeGenerator narrativeGenerator;
+    private final DuelNarrativeGenerator narrativeGenerator;
 
-    public DualAction() {
-        this.narrativeGenerator = new DualNarrativeGenerator();
+    public DuelAction() {
+        this.narrativeGenerator = new DuelNarrativeGenerator();
     }
 
     /**
-     * Executes a dual between two characters.
+     * Executes a duel between two characters.
      *
      * @param challenger the challenging character
      * @param target     the target character
      * @param config     the guild RPG configuration
      * @return the action outcome
      */
-    public RPGActionOutcome executeDual(RPGCharacter challenger, RPGCharacter target, RPGConfig config) {
+    public RPGActionOutcome executeDuel(RPGCharacter challenger, RPGCharacter target, RPGConfig config) {
         // Calculate player power
         int challengerPower = calculatePower(challenger);
         int targetPower = calculatePower(target);

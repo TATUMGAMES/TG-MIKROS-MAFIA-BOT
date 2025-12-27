@@ -117,7 +117,7 @@ public class PromotionMessageTemplates {
         // Replace game list placeholder (for step 3)
         if (message.contains("<game_list>") && allApps != null && !allApps.isEmpty()) {
             String gameList = allApps.stream()
-                    .map(app -> "**" + app.getAppName() + "**")
+                    .map(appPromotion -> "**" + appPromotion.getAppName() + "**")
                     .collect(Collectors.joining(", "));
             message = message.replace("<game_list>", gameList);
         }

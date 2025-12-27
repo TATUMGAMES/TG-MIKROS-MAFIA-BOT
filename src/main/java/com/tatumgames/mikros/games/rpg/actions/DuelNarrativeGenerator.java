@@ -4,12 +4,12 @@ import com.tatumgames.mikros.games.rpg.model.CharacterClass;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 
 /**
- * Generates narrative descriptions for dual outcomes based on class matchups.
+ * Generates narrative descriptions for duel outcomes based on class matchups.
  */
-public class DualNarrativeGenerator {
+public class DuelNarrativeGenerator {
 
     /**
-     * Generates a narrative for a dual outcome.
+     * Generates a narrative for a duel outcome.
      *
      * @param challenger the challenging character
      * @param target     the target character

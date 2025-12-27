@@ -419,9 +419,9 @@ Different stats are effective or weak against different enemy types:
 - Shows: "Charges: 2/5" (current/max) and time until next refresh
 - Cannot act if dead or in recovery (even with charges)
 
-## Dual System
+## Duel System
 
-The Dual System allows players to challenge each other to narrative-driven PvP duels. These are friendly competitions that don't affect HP or XP, but track win/loss records.
+The Duel System allows players to challenge each other to narrative-driven PvP duels. These are friendly competitions that don't affect HP or XP, but track win/loss records.
 
 ### Mechanics
 
@@ -608,6 +608,22 @@ Bosses have types that determine class bonuses:
 - `/rpg-boss-battle battle` - Battle the current boss
 - `/rpg-boss-battle status` - View boss HP, level, and progression
 - `/rpg-boss-battle leaderboard` - View top damage dealers
+
+### Boss Expiration Warnings
+
+When a boss or super boss is within 1-2 hours of expiring, the bot will automatically post a warning message in the RPG channel. These warnings:
+
+- **Check Interval:** Bot checks every 30 minutes for bosses nearing expiration
+- **Warning Window:** Warnings appear when 1-2 hours remain before expiration
+- **Message Variety:** 5 different message variations (randomly selected) to keep things fresh
+- **Spam Prevention:** Only one warning per hour per boss to avoid flooding the channel
+- **Information Displayed:**
+  - Boss/super boss name, level, and type
+  - Current HP and max HP with percentage remaining
+  - Time remaining (hours and minutes)
+  - Call to action to join the fight
+
+Players can use these warnings as a reminder to join the fight before time runs out and the boss escapes!
 
 ### Heroic Charges System
 

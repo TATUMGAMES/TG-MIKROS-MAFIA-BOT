@@ -288,6 +288,36 @@ public class WordUnscrambleService {
         String key = guildId + "_" + userId;
         return playerStats.get(key);
     }
+
+    /**
+     * Gets all player statistics for a guild.
+     * Only returns players who have made at least one attempt.
+     *
+     * @param guildId the guild ID
+     * @return list of player statistics, sorted by total points (descending)
+     */
+    public List<WordUnscramblePlayerStats> getAllPlayerStats(String guildId) {
+        String prefix = guildId + "_";
+        return playerStats.entrySet().stream()
+                .filter(entry -> entry.getKey().startsWith(prefix))
+                .map(Map.Entry::getValue)
+                .filter(stats -> stats.getTotalAttempts() > 0) // Only players who have attempted
+                .sorted((a, b) -> {
+                    // Sort by total points (descending)
+                    int pointsCompare = Integer.compare(b.getTotalPoints(), a.getTotalPoints());
+                    if (pointsCompare != 0) {
+                        return pointsCompare;
+                    }
+                    // Then by words solved (descending)
+                    int wordsCompare = Integer.compare(b.getTotalWordsSolved(), a.getTotalWordsSolved());
+                    if (wordsCompare != 0) {
+                        return wordsCompare;
+                    }
+                    // Then by highest score (descending)
+                    return Integer.compare(b.getHighestScore(), a.getHighestScore());
+                })
+                .collect(Collectors.toList());
+    }
 }
 
 

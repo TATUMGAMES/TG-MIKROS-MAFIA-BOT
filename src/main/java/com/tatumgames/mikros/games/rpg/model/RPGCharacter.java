@@ -43,7 +43,7 @@ public class RPGCharacter {
     // Inventory system
     private RPGInventory inventory;
 
-    // Dual system
+    // Duel system
     private int duelsWon = 0;
     private int duelsLost = 0;
     private Instant lastDuelTime;
@@ -119,7 +119,7 @@ public class RPGCharacter {
         // Initialize inventory
         this.inventory = new RPGInventory();
 
-        // Initialize dual tracking
+        // Initialize duel tracking
         this.duelsWon = 0;
         this.duelsLost = 0;
         this.lastDuelTime = null;
@@ -515,7 +515,7 @@ public class RPGCharacter {
         this.inventory = Objects.requireNonNull(inventory);
     }
 
-    // Dual system getters/setters
+    // Duel system getters/setters
 
     public int getDuelsWon() {
         return duelsWon;

@@ -15,6 +15,7 @@ import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 import com.tatumgames.mikros.games.word_unscramble.commands.GameConfigCommand;
 import com.tatumgames.mikros.games.word_unscramble.commands.GameSetupCommand;
 import com.tatumgames.mikros.games.word_unscramble.commands.ScrambleGuessCommand;
+import com.tatumgames.mikros.games.word_unscramble.commands.ScrambleLeaderboardCommand;
 import com.tatumgames.mikros.games.word_unscramble.commands.ScrambleProfileCommand;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleResetScheduler;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleService;
@@ -210,6 +211,7 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new ScrambleGuessCommand(wordUnscrambleService));
         registerHandler(new com.tatumgames.mikros.games.word_unscramble.commands.GameStatsCommand(wordUnscrambleService));
         registerHandler(new ScrambleProfileCommand(wordUnscrambleService));
+        registerHandler(new ScrambleLeaderboardCommand(wordUnscrambleService));
         registerHandler(new GameConfigCommand(wordUnscrambleService));
 
         // RPG System commands
@@ -223,7 +225,7 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new RPGConfigCommand(characterService));
         registerHandler(new RPGResetCommand(characterService, bossService));
         registerHandler(new RPGStatsCommand(characterService));
-        registerHandler(new RPGDualCommand(characterService));
+        registerHandler(new RPGDuelCommand(characterService));
         registerHandler(new RPGInventoryCommand(characterService));
         registerHandler(new RPGCraftCommand(characterService, new com.tatumgames.mikros.games.rpg.service.CraftingService()));
         // Note: Charge donation is now part of /rpg-action, not a separate command

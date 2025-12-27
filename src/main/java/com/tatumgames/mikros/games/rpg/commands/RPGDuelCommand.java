@@ -2,7 +2,7 @@ package com.tatumgames.mikros.games.rpg.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
-import com.tatumgames.mikros.games.rpg.actions.DualAction;
+import com.tatumgames.mikros.games.rpg.actions.DuelAction;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
@@ -26,19 +26,19 @@ import java.awt.*;
  * Allows players to challenge each other to duels (free action, 3 per 24h).
  */
 @SuppressWarnings("ClassCanBeRecord")
-public class RPGDualCommand implements CommandHandler {
-    private static final Logger logger = LoggerFactory.getLogger(RPGDualCommand.class);
+public class RPGDuelCommand implements CommandHandler {
+    private static final Logger logger = LoggerFactory.getLogger(RPGDuelCommand.class);
     private final CharacterService characterService;
-    private final DualAction dualAction;
+    private final DuelAction duelAction;
 
     /**
-     * Creates a new RPGDualCommand handler.
+     * Creates a new RPGDuelCommand handler.
      *
      * @param characterService the character service
      */
-    public RPGDualCommand(CharacterService characterService) {
+    public RPGDuelCommand(CharacterService characterService) {
         this.characterService = characterService;
-        this.dualAction = new DualAction();
+        this.duelAction = new DuelAction();
     }
 
     @Override
@@ -149,8 +149,8 @@ public class RPGDualCommand implements CommandHandler {
             return;
         }
 
-        // Execute dual
-        RPGActionOutcome outcome = dualAction.executeDual(challenger, target, config);
+        // Execute duel
+        RPGActionOutcome outcome = duelAction.executeDuel(challenger, target, config);
 
         // Update records
         challenger.recordDuel(outcome.success());
@@ -158,7 +158,7 @@ public class RPGDualCommand implements CommandHandler {
 
         // Build result embed
         EmbedBuilder embed = new EmbedBuilder();
-        embed.setTitle("⚔️ Dual");
+        embed.setTitle("⚔️ Duel");
         embed.setColor(outcome.success() ? Color.GREEN : Color.RED);
         embed.setDescription(outcome.narrative());
 
@@ -174,7 +174,7 @@ public class RPGDualCommand implements CommandHandler {
 
         event.replyEmbeds(embed.build()).queue();
 
-        logger.info("Dual between {} and {} - Winner: {}",
+        logger.info("Duel between {} and {} - Winner: {}",
                 challengerId, targetId, outcome.success() ? challenger.getName() : target.getName());
     }
 
