@@ -109,23 +109,44 @@ public class PromotionConfigCommand implements CommandHandler {
         String channelId = gamePromotionService.getPromotionChannel(guildId);
         PromotionVerbosity verbosity = gamePromotionService.getPromotionVerbosity(guildId);
 
+        // Status field
         embed.addField(
                 "Status",
-                channelId != null ? "✅ Enabled" : "❌ Disabled",
+                channelId != null ? "✅ Enabled" : "❌ Not configured",
                 true
         );
 
+        // Promotion channel field
         embed.addField(
                 "Promotion Channel",
-                channelId != null ? "<#" + channelId + ">" : "Not configured",
+                channelId != null ? "<#" + channelId + ">" : "❌ Not configured",
                 true
         );
 
+        // Verbosity field
         embed.addField(
-                "Verbosity Level",
+                "Verbosity",
                 verbosity.getLabel() + " (every " + verbosity.getHoursInterval() + "h)",
                 true
         );
+
+        // Promotions active field
+        embed.addField(
+                "Promotions Active",
+                channelId != null ? "✅ Yes" : "❌ No",
+                true
+        );
+
+        // Last check field (if channel configured)
+        if (channelId != null) {
+            // Get last check time from scheduler if available
+            // For now, show "Active" - can be enhanced later to get actual timestamp
+            embed.addField(
+                    "Last Check",
+                    "Active",
+                    true
+            );
+        }
 
         embed.setTimestamp(java.time.Instant.now());
 

@@ -22,16 +22,20 @@ import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleService
 import com.tatumgames.mikros.honeypot.commands.*;
 import com.tatumgames.mikros.honeypot.listener.HoneypotMessageListener;
 import com.tatumgames.mikros.honeypot.service.HoneypotService;
+import com.tatumgames.mikros.promo.commands.PromoHelpCommand;
 import com.tatumgames.mikros.promo.commands.SetPromoFrequencyCommand;
 import com.tatumgames.mikros.promo.commands.SetupPromotionsCommand;
 import com.tatumgames.mikros.promo.listener.PromoMessageListener;
 import com.tatumgames.mikros.promo.service.PromoDetectionService;
 import com.tatumgames.mikros.services.*;
 import com.tatumgames.mikros.services.RealGamePromotionService;
+import com.tatumgames.mikros.services.PromotionOnboardingService;
 import com.tatumgames.mikros.services.scheduler.GamePromotionScheduler;
+import com.tatumgames.mikros.services.scheduler.PromotionOnboardingScheduler;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
@@ -63,6 +67,8 @@ public class BotMain extends ListenerAdapter {
     private final MonthlyReportService monthlyReportService;
     private final GamePromotionService gamePromotionService;
     private final GamePromotionScheduler gamePromotionScheduler;
+    private final PromotionOnboardingService promotionOnboardingService;
+    private final PromotionOnboardingScheduler promotionOnboardingScheduler;
     private final GameStatsService gameStatsService;
     private final WordUnscrambleService wordUnscrambleService;
     private final WordUnscrambleResetScheduler wordUnscrambleResetScheduler;
@@ -119,6 +125,11 @@ public class BotMain extends ListenerAdapter {
         }
 
         this.gamePromotionScheduler = new GamePromotionScheduler(gamePromotionService);
+        this.promotionOnboardingService = new PromotionOnboardingService();
+        this.promotionOnboardingScheduler = new PromotionOnboardingScheduler(
+                promotionOnboardingService,
+                gamePromotionService
+        );
         this.gameStatsService = new MockGameStatsService();
         this.wordUnscrambleService = new WordUnscrambleService();
         this.wordUnscrambleResetScheduler = new WordUnscrambleResetScheduler(wordUnscrambleService);
@@ -233,6 +244,7 @@ public class BotMain extends ListenerAdapter {
         // Promo commands
         registerHandler(new SetupPromotionsCommand(promoService));
         registerHandler(new SetPromoFrequencyCommand(promoService));
+        registerHandler(new PromoHelpCommand());
 
         // Honeypot System commands
         registerHandler(new HoneypotCommand(honeypotService));
@@ -280,6 +292,15 @@ public class BotMain extends ListenerAdapter {
         // Start boss scheduler
         bossScheduler.start(event.getJDA());
         logger.info("Boss scheduler started");
+
+        // Record all guilds as first seen (if not already recorded)
+        for (Guild guild : event.getJDA().getGuilds()) {
+            promotionOnboardingService.recordGuildFirstSeen(guild.getId());
+        }
+
+        // Start onboarding scheduler
+        promotionOnboardingScheduler.start(event.getJDA());
+        logger.info("Promotion onboarding scheduler started");
     }
 
     /**

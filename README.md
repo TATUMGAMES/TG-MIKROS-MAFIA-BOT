@@ -697,19 +697,6 @@ src/main/java/com/tatumgames/mikros/
 - **[`QUICK_START.md`](QUICK_START.md)** - Quick setup guide
 - **[`README.md`](README.md)** - This file
 
-### Task Summaries
-
-- **[`TASKS_01_SUMMARY.md`](TASKS_01_SUMMARY.md)** - Admin Tools implementation
-- **[`TASKS_02_SUMMARY.md`](TASKS_02_SUMMARY.md)** - Enhanced Moderation
-- **[`TASKS_03_SUMMARY.md`](TASKS_03_SUMMARY.md)** - Game Promotion System
-- **[`TASKS_04_SUMMARY.md`](TASKS_04_SUMMARY.md)** - Game Analytics
-- **[`TASKS_05_SUMMARY.md`](TASKS_05_SUMMARY.md)** - Community Games Engine
-- **[`TASKS_06_SUMMARY.md`](TASKS_06_SUMMARY.md)** - Text-Based RPG System
-- **[`TASKS_07_SUMMARY.md`](TASKS_07_SUMMARY.md)** - Daily Spelling Challenge
-- **[`TASKS_08_SUMMARY.md`](TASKS_08_SUMMARY.md)** - Smart Promotional Lead Generator
-- **[`TASKS_09_SUMMARY.md`](TASKS_09_SUMMARY.md)** - Final QA & Cleanup
-- **[`TASKS_10_SUMMARY.md`](TASKS_10_SUMMARY.md)** - GCP Deployment Documentation
-
 ### API Documentation (`/docs/`)
 
 **Deployment:**
@@ -750,15 +737,6 @@ src/main/java/com/tatumgames/mikros/
 **System Configuration:**
 
 - **[`docs/systemd/mikros-bot.service`](docs/systemd/mikros-bot.service)** - systemd service file
-
-### Regenerating Documentation
-
-Documentation can be regenerated using Cursor AI by:
-
-1. Reading the relevant task file (`TASKS_XX.md`)
-2. Following the implementation requirements
-3. Creating or updating documentation files
-4. Ensuring consistency with existing docs
 
 ---
 
@@ -928,7 +906,6 @@ For issues, questions, or contributions:
 
 1. **Check Documentation:**
     - Review this README
-    - Check task summaries (`TASKS_*_SUMMARY.md`)
     - Review API documentation in `/docs/`
 
 2. **Check Logs:**
