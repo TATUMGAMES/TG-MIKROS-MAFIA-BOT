@@ -69,6 +69,7 @@ public class BotMain extends ListenerAdapter {
     private final GamePromotionScheduler gamePromotionScheduler;
     private final PromotionOnboardingService promotionOnboardingService;
     private final PromotionOnboardingScheduler promotionOnboardingScheduler;
+    private final com.tatumgames.mikros.tatumtech.scheduler.TatumTechEventScheduler tatumTechEventScheduler;
     private final GameStatsService gameStatsService;
     private final WordUnscrambleService wordUnscrambleService;
     private final WordUnscrambleResetScheduler wordUnscrambleResetScheduler;
@@ -129,6 +130,11 @@ public class BotMain extends ListenerAdapter {
         this.promotionOnboardingScheduler = new PromotionOnboardingScheduler(
                 promotionOnboardingService,
                 gamePromotionService
+        );
+        this.tatumTechEventScheduler = new com.tatumgames.mikros.tatumtech.scheduler.TatumTechEventScheduler(
+                gamePromotionService,
+                config.getTatumTechRecapMonthYear(),
+                config.getTatumTechRecapVideoUrl()
         );
         this.gameStatsService = new MockGameStatsService();
         this.wordUnscrambleService = new WordUnscrambleService();
@@ -214,8 +220,9 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new PromotionConfigCommand(gamePromotionService, gamePromotionScheduler));
 
         // Game Stats/Analytics commands
-        registerHandler(new com.tatumgames.mikros.admin.commands.MikrosEcosystemSetupCommand(gameStatsService));
-        registerHandler(new com.tatumgames.mikros.admin.commands.GameStatsCommand(gameStatsService));
+        // TODO: Re-enable when MIKROS Analytics API integration is complete
+        // registerHandler(new com.tatumgames.mikros.admin.commands.MikrosEcosystemSetupCommand(gameStatsService));
+        // registerHandler(new com.tatumgames.mikros.admin.commands.GameStatsCommand(gameStatsService));
 
         // Word Unscramble commands
         registerHandler(new GameSetupCommand(wordUnscrambleService, wordUnscrambleResetScheduler));
@@ -301,6 +308,10 @@ public class BotMain extends ListenerAdapter {
         // Start onboarding scheduler
         promotionOnboardingScheduler.start(event.getJDA());
         logger.info("Promotion onboarding scheduler started");
+
+        // Start Tatum Tech event scheduler
+        tatumTechEventScheduler.start(event.getJDA());
+        logger.info("Tatum Tech event scheduler started");
     }
 
     /**
