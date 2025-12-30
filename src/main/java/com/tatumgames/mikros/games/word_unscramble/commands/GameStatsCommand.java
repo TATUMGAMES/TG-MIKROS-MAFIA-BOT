@@ -170,11 +170,21 @@ public class GameStatsCommand implements CommandHandler {
         if (winner != null) {
             long timeToWin = winner.timestamp().getEpochSecond() - session.getStartTime().getEpochSecond();
 
+            // Display score with bonus breakdown if bonus > 0
+            String scoreText;
+            if (winner.bonus() > 0) {
+                int baseScore = winner.score() - winner.bonus();
+                scoreText = String.format("%d points (%d base + %d bonus)", 
+                        winner.score(), baseScore, winner.bonus());
+            } else {
+                scoreText = String.format("%d points", winner.score());
+            }
+
             embed.addField("🏆 Winner",
-                    String.format("**%s**\nSolved in %d seconds with %d points!",
+                    String.format("**%s**\nSolved in %d seconds with %s!",
                             winner.username(),
                             timeToWin,
-                            winner.score()),
+                            scoreText),
                     false);
         } else if (session.isActive()) {
             embed.addField("🏆 Status",

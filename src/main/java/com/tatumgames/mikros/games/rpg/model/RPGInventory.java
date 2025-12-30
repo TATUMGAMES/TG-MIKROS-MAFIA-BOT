@@ -45,6 +45,26 @@ public class RPGInventory {
     }
 
     /**
+     * Removes essences from inventory.
+     *
+     * @param essence the essence type
+     * @param count   the amount to remove
+     * @return true if removed successfully, false if not enough essences
+     */
+    public boolean removeEssence(EssenceType essence, int count) {
+        Objects.requireNonNull(essence);
+        if (count < 0) {
+            throw new IllegalArgumentException("Count cannot be negative");
+        }
+        int currentCount = getEssenceCount(essence);
+        if (currentCount < count) {
+            return false; // Not enough essences
+        }
+        essences.put(essence, Math.max(0, currentCount - count));
+        return true;
+    }
+
+    /**
      * Adds catalysts to inventory.
      *
      * @param catalyst the catalyst type

@@ -8,7 +8,10 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
@@ -23,19 +26,33 @@ public class BossScheduler {
 
     private final BossService bossService;
     private final CharacterService characterService;
+    private final WorldCurseService worldCurseService;
     private final ScheduledExecutorService scheduler;
     private JDA jda;
+
+    // Track last warning sent per boss to avoid spam: "guildId_bossId" -> Instant
+    private final Map<String, Instant> lastWarningSent;
+
+    // Warning check interval: check every 30 minutes
+    private static final long WARNING_CHECK_INTERVAL_MINUTES = 30;
+
+    // Warning thresholds: warn when 1-2 hours remain
+    private static final long WARNING_THRESHOLD_MIN_HOURS = 1;
+    private static final long WARNING_THRESHOLD_MAX_HOURS = 2;
 
     /**
      * Creates a new BossScheduler.
      *
      * @param bossService      the boss service
      * @param characterService the character service (to check if RPG is enabled)
+     * @param worldCurseService the world curse service (for applying curses on boss expiration)
      */
-    public BossScheduler(BossService bossService, CharacterService characterService) {
+    public BossScheduler(BossService bossService, CharacterService characterService, WorldCurseService worldCurseService) {
         this.bossService = bossService;
         this.characterService = characterService;
+        this.worldCurseService = worldCurseService;
         this.scheduler = Executors.newScheduledThreadPool(1);
+        this.lastWarningSent = new ConcurrentHashMap<>();
         logger.info("BossScheduler initialized");
     }
 
@@ -57,7 +74,18 @@ public class BossScheduler {
             }
         }, 0, 24, TimeUnit.HOURS);
 
-        logger.info("Boss scheduler started (spawns every 24 hours, initial spawn immediately)");
+        // Check for expiration warnings every 30 minutes
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                logger.debug("Boss expiration warning check triggered");
+                checkBossExpirationWarnings();
+            } catch (Exception e) {
+                logger.error("Error in boss expiration warning check", e);
+            }
+        }, 0, WARNING_CHECK_INTERVAL_MINUTES, TimeUnit.MINUTES);
+
+        logger.info("Boss scheduler started (spawns every 24 hours, warnings checked every {} minutes)",
+                WARNING_CHECK_INTERVAL_MINUTES);
     }
 
     /**
@@ -93,6 +121,10 @@ public class BossScheduler {
                     // Check if current boss expired or was defeated
                     if (currentBoss != null) {
                         if (currentBoss.isExpired() || currentBoss.isDefeated()) {
+                            // Check if boss expired without being defeated (apply curse)
+                            if (currentBoss.isExpired() && !currentBoss.isDefeated()) {
+                                applyBossFailureCurse(guild, guildId, false); // false = normal boss
+                            }
                             // Boss expired or defeated, spawn new one
                             spawnNewBoss(guild, guildId, state);
                         }
@@ -101,6 +133,10 @@ public class BossScheduler {
 
                     if (currentSuperBoss != null) {
                         if (currentSuperBoss.isExpired() || currentSuperBoss.isDefeated()) {
+                            // Check if super boss expired without being defeated (apply curse)
+                            if (currentSuperBoss.isExpired() && !currentSuperBoss.isDefeated()) {
+                                applyBossFailureCurse(guild, guildId, true); // true = super boss
+                            }
                             // Super boss expired or defeated, spawn new one
                             spawnNewBoss(guild, guildId, state);
                         }
@@ -122,8 +158,11 @@ public class BossScheduler {
 
     /**
      * Spawns a new boss for a guild.
+     * Clears curses that expire on spawn.
      */
     private void spawnNewBoss(Guild guild, String guildId, BossService.ServerBossState state) {
+        // Clear curses that expire on spawn
+        worldCurseService.clearCursesOnSpawn(guildId);
         // Check if super boss should spawn (every 3 normal bosses)
         if (state.getNormalBossesSinceSuper() >= 3) {
             logger.info("Boss scheduler: Spawning super boss for guild {} (normal bosses since super: {})",
@@ -156,7 +195,7 @@ public class BossScheduler {
                     
                     The shadows spread across Nilfheim… heroes, unite!
                     
-                    Use `/rpg-boss-battle attack` to join the fight!
+                    Use `/rpg-boss-battle battle` to join the fight!
                     """,
 
             """
@@ -168,7 +207,7 @@ public class BossScheduler {
                     
                     Darkness rises once more. Champions, prepare for battle!
                     
-                    Use `/rpg-boss-battle attack` to strike first!
+                    Use `/rpg-boss-battle battle` to strike first!
                     """,
 
             """
@@ -182,7 +221,7 @@ public class BossScheduler {
                     
                     Gather your strength, heroes. A new challenge awaits!
                     
-                    Join via `/rpg-boss-battle attack`!
+                    Join via `/rpg-boss-battle battle`!
                     """
     );
 
@@ -233,7 +272,7 @@ public class BossScheduler {
                     
                     This is a world-tier threat! All heroes must unite!
                     
-                    Use `/rpg-boss-battle attack` to join the fight!
+                    Use `/rpg-boss-battle battle` to join the fight!
                     """,
 
             """
@@ -247,7 +286,7 @@ public class BossScheduler {
                     
                     Only the strongest can stand against this monster!
                     
-                    Join the defense using `/rpg-boss-battle attack`!
+                    Join the defense using `/rpg-boss-battle battle`!
                     """,
 
             """
@@ -263,7 +302,7 @@ public class BossScheduler {
                     
                     The universe trembles. Champions, this is your ultimate test!
                     
-                    Use `/rpg-boss-battle attack` to engage!
+                    Use `/rpg-boss-battle battle` to engage!
                     """
     );
 
@@ -301,6 +340,57 @@ public class BossScheduler {
                         superBoss.getName(), superBoss.getLevel(), channel.getName(), guild.getName()),
                 failure -> logger.error("Boss scheduler: Failed to send super boss announcement for guild {}", guild.getName(), failure)
         );
+    }
+
+    /**
+     * Applies a world curse when a boss expires undefeated.
+     *
+     * @param guild the guild
+     * @param guildId the guild ID
+     * @param isSuperBoss whether it was a super boss
+     */
+    private void applyBossFailureCurse(Guild guild, String guildId, boolean isSuperBoss) {
+        com.tatumgames.mikros.games.rpg.curse.WorldCurse curse;
+        String announcementTemplate;
+
+        if (isSuperBoss) {
+            curse = worldCurseService.getRandomMajorCurse();
+            announcementTemplate = """
+                    🌑 **The Super Boss endures.**
+                    The sky darkens as **%s** descends upon the realm.
+                    
+                    %s
+                    """;
+        } else {
+            curse = worldCurseService.getRandomMinorCurse();
+            announcementTemplate = """
+                    ❄️ **The beast is not slain.**
+                    Nilfheim shudders beneath the **%s**.
+                    
+                    %s
+                    """;
+        }
+
+        // Apply the curse
+        worldCurseService.applyCurse(guildId, curse);
+
+        // Announce the curse
+        TextChannel channel = findRpgChannel(guild);
+        if (channel != null && channel.canTalk()) {
+            String announcement = String.format(announcementTemplate,
+                    curse.getDisplayName(),
+                    curse.getDescription()
+            );
+
+            channel.sendMessage(announcement).queue(
+                    success -> logger.info("Boss scheduler: Applied and announced curse {} for guild {}",
+                            curse.getDisplayName(), guild.getName()),
+                    failure -> logger.error("Boss scheduler: Failed to announce curse for guild {}", guild.getName(), failure)
+            );
+        } else {
+            logger.warn("Boss scheduler: Applied curse {} for guild {} but could not announce (no channel)",
+                    curse.getDisplayName(), guild.getName());
+        }
     }
 
     private static String pickRandom(List<String> list) {
@@ -356,6 +446,283 @@ public class BossScheduler {
         // No valid channel found
         logger.error("Boss scheduler: No valid channel found for guild {} - boss will not be announced", guildName);
         return null;
+    }
+
+    /**
+     * Checks all active bosses and sends expiration warnings if needed.
+     */
+    private void checkBossExpirationWarnings() {
+        if (jda == null) {
+            logger.warn("Boss expiration warning: JDA instance is null");
+            return;
+        }
+
+        for (Guild guild : jda.getGuilds()) {
+            try {
+                String guildId = guild.getId();
+
+                // Check if RPG is enabled
+                com.tatumgames.mikros.games.rpg.config.RPGConfig config = characterService.getConfig(guildId);
+                if (config == null || !config.isEnabled()) {
+                    continue;
+                }
+
+                BossService.ServerBossState state = bossService.getState(guildId);
+                if (state == null) {
+                    continue;
+                }
+
+                Boss currentBoss = state.getCurrentBoss();
+                SuperBoss currentSuperBoss = state.getCurrentSuperBoss();
+
+                // Check normal boss
+                if (currentBoss != null && !currentBoss.isDefeated() && !currentBoss.isExpired()) {
+                    checkAndSendBossWarning(guild, guildId, currentBoss);
+                }
+
+                // Check super boss
+                if (currentSuperBoss != null && !currentSuperBoss.isDefeated() && !currentSuperBoss.isExpired()) {
+                    checkAndSendSuperBossWarning(guild, guildId, currentSuperBoss);
+                }
+
+            } catch (Exception e) {
+                logger.error("Error checking boss expiration warning for guild {}", guild.getName(), e);
+            }
+        }
+    }
+
+    /**
+     * Checks if a normal boss needs a warning and sends it.
+     */
+    private void checkAndSendBossWarning(Guild guild, String guildId, Boss boss) {
+        Instant now = Instant.now();
+        Instant expiresAt = boss.getExpiresAt();
+
+        long secondsRemaining = java.time.Duration.between(now, expiresAt).getSeconds();
+        long hoursRemaining = secondsRemaining / 3600;
+        long minutesRemaining = (secondsRemaining % 3600) / 60;
+
+        // Check if within warning threshold (1-2 hours)
+        if (hoursRemaining >= WARNING_THRESHOLD_MIN_HOURS && hoursRemaining <= WARNING_THRESHOLD_MAX_HOURS) {
+            String warningKey = guildId + "_boss_" + boss.getBossId();
+            Instant lastWarning = lastWarningSent.get(warningKey);
+
+            // Only send warning if we haven't sent one in the last hour (to avoid spam)
+            if (lastWarning == null || java.time.Duration.between(lastWarning, now).toHours() >= 1) {
+                sendBossExpirationWarning(guild, boss, hoursRemaining, minutesRemaining);
+                lastWarningSent.put(warningKey, now);
+            }
+        }
+    }
+
+    /**
+     * Checks if a super boss needs a warning and sends it.
+     */
+    private void checkAndSendSuperBossWarning(Guild guild, String guildId, SuperBoss superBoss) {
+        Instant now = Instant.now();
+        Instant expiresAt = superBoss.getExpiresAt();
+
+        long secondsRemaining = java.time.Duration.between(now, expiresAt).getSeconds();
+        long hoursRemaining = secondsRemaining / 3600;
+        long minutesRemaining = (secondsRemaining % 3600) / 60;
+
+        // Check if within warning threshold (1-2 hours)
+        if (hoursRemaining >= WARNING_THRESHOLD_MIN_HOURS && hoursRemaining <= WARNING_THRESHOLD_MAX_HOURS) {
+            String warningKey = guildId + "_superboss_" + superBoss.getBossId();
+            Instant lastWarning = lastWarningSent.get(warningKey);
+
+            // Only send warning if we haven't sent one in the last hour (to avoid spam)
+            if (lastWarning == null || java.time.Duration.between(lastWarning, now).toHours() >= 1) {
+                sendSuperBossExpirationWarning(guild, superBoss, hoursRemaining, minutesRemaining);
+                lastWarningSent.put(warningKey, now);
+            }
+        }
+    }
+
+    private static final List<String> BOSS_WARNING_TEMPLATES = List.of(
+            """
+                    ⏰ **Time is almost up, where are the heroes?**
+                    
+                    **%s** (Level %d) - %s
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    
+                    Only **%d hour%s %d minute%s** left before the shadows consume Nilfheim!
+                    
+                    Use `/rpg-boss-battle battle` to join the fight!
+                    """,
+            """
+                    🚨 **Calling all heroes of Nilfheim, the world needs you!**
+                    
+                    **%s** (Level %d) - %s
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    
+                    Time remaining: **%d hour%s %d minute%s**
+                    The realm depends on your courage!
+                    
+                    Join the battle with `/rpg-boss-battle battle`!
+                    """,
+            """
+                    ⚔️ **The battle rages on, but time grows short!**
+                    
+                    **%s** (Level %d) - %s
+                    Current HP: **%,d** / %,d (%.1f%% remaining)
+                    
+                    **%d hour%s %d minute%s** remain before darkness falls!
+                    
+                    Heroes, unite! `/rpg-boss-battle battle`
+                    """,
+            """
+                    🌑 **The shadows lengthen... will you answer the call?**
+                    
+                    **%s** (Level %d) - %s
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    
+                    **%d hour%s %d minute%s** until the beast escapes!
+                    
+                    Stand with your fellow heroes: `/rpg-boss-battle battle`
+                    """,
+            """
+                    🔥 **The final hour approaches!**
+                    
+                    **%s** (Level %d) - %s
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    
+                    Only **%d hour%s %d minute%s** left!
+                    
+                    Nilfheim needs you now! `/rpg-boss-battle battle`
+                    """
+    );
+
+    /**
+     * Sends an expiration warning for a normal boss.
+     */
+    private void sendBossExpirationWarning(Guild guild, Boss boss, long hoursRemaining, long minutesRemaining) {
+        TextChannel channel = findRpgChannel(guild);
+        if (channel == null || !channel.canTalk()) {
+            logger.warn("Boss expiration warning: Could not send warning for boss {} in guild {} (no channel)",
+                    boss.getName(), guild.getName());
+            return;
+        }
+
+        String template = pickRandom(BOSS_WARNING_TEMPLATES);
+        double hpPercent = (double) boss.getCurrentHp() / boss.getMaxHp() * 100.0;
+        String hoursText = hoursRemaining != 1 ? "s" : "";
+        String minutesText = minutesRemaining != 1 ? "s" : "";
+
+        String warning = String.format(template,
+                boss.getName(),
+                boss.getLevel(),
+                boss.getType().getDisplayName(),
+                boss.getCurrentHp(),
+                boss.getMaxHp(),
+                hpPercent,
+                hoursRemaining,
+                hoursText,
+                minutesRemaining,
+                minutesText
+        );
+
+        channel.sendMessage(warning).queue(
+                success -> logger.info("Boss expiration warning sent for {} (Level {}) in guild {} - {}h {}m remaining",
+                        boss.getName(), boss.getLevel(), guild.getName(), hoursRemaining, minutesRemaining),
+                failure -> logger.error("Failed to send boss expiration warning for guild {}", guild.getName(), failure)
+        );
+    }
+
+    private static final List<String> SUPER_BOSS_WARNING_TEMPLATES = List.of(
+            """
+                    ⏰ **Time is almost up, where are the heroes?**
+                    
+                    🔥 **%s** (Level %d) - %s 🔥
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    Special: %s
+                    
+                    Only **%d hour%s %d minute%s** left before the world-tier threat escapes!
+                    
+                    Use `/rpg-boss-battle battle` to join the fight!
+                    """,
+            """
+                    🚨 **Calling all heroes of Nilfheim, the world needs you!**
+                    
+                    💀 **%s** (Level %d) - %s 💀
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    Special Mechanic: %s
+                    
+                    Time remaining: **%d hour%s %d minute%s**
+                    This is a world-ending threat!
+                    
+                    Join the defense using `/rpg-boss-battle battle`!
+                    """,
+            """
+                    ⚔️ **The ultimate battle rages on, but time grows short!**
+                    
+                    🌌 **%s** (Level %d) - %s 🌌
+                    Current HP: **%,d** / %,d (%.1f%% remaining)
+                    Special Ability: %s
+                    
+                    **%d hour%s %d minute%s** remain before reality collapses!
+                    
+                    Champions, this is your moment! `/rpg-boss-battle battle`
+                    """,
+            """
+                    🌑 **The cosmic shadows lengthen... will you answer the call?**
+                    
+                    🔥 **%s** (Level %d) - %s 🔥
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    Special: %s
+                    
+                    **%d hour%s %d minute%s** until the super boss escapes!
+                    
+                    Stand with your fellow heroes: `/rpg-boss-battle battle`
+                    """,
+            """
+                    🔥 **The final hour approaches for the world-tier threat!**
+                    
+                    💀 **%s** (Level %d) - %s 💀
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    Special Mechanic: %s
+                    
+                    Only **%d hour%s %d minute%s** left!
+                    
+                    The universe needs you now! `/rpg-boss-battle battle`
+                    """
+    );
+
+    /**
+     * Sends an expiration warning for a super boss.
+     */
+    private void sendSuperBossExpirationWarning(Guild guild, SuperBoss superBoss, long hoursRemaining, long minutesRemaining) {
+        TextChannel channel = findRpgChannel(guild);
+        if (channel == null || !channel.canTalk()) {
+            logger.warn("Boss expiration warning: Could not send warning for super boss {} in guild {} (no channel)",
+                    superBoss.getName(), guild.getName());
+            return;
+        }
+
+        String template = pickRandom(SUPER_BOSS_WARNING_TEMPLATES);
+        double hpPercent = (double) superBoss.getCurrentHp() / superBoss.getMaxHp() * 100.0;
+        String hoursText = hoursRemaining != 1 ? "s" : "";
+        String minutesText = minutesRemaining != 1 ? "s" : "";
+
+        String warning = String.format(template,
+                superBoss.getName(),
+                superBoss.getLevel(),
+                superBoss.getType().getDisplayName(),
+                superBoss.getCurrentHp(),
+                superBoss.getMaxHp(),
+                hpPercent,
+                superBoss.getSpecialMechanic(),
+                hoursRemaining,
+                hoursText,
+                minutesRemaining,
+                minutesText
+        );
+
+        channel.sendMessage(warning).queue(
+                success -> logger.info("Super boss expiration warning sent for {} (Level {}) in guild {} - {}h {}m remaining",
+                        superBoss.getName(), superBoss.getLevel(), guild.getName(), hoursRemaining, minutesRemaining),
+                failure -> logger.error("Failed to send super boss expiration warning for guild {}", guild.getName(), failure)
+        );
     }
 
     /**

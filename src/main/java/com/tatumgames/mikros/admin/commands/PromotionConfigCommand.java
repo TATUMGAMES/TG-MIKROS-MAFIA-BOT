@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.time.Instant;
 
 /**
  * Command handler for /admin-promotion-config.
@@ -109,25 +110,46 @@ public class PromotionConfigCommand implements CommandHandler {
         String channelId = gamePromotionService.getPromotionChannel(guildId);
         PromotionVerbosity verbosity = gamePromotionService.getPromotionVerbosity(guildId);
 
+        // Status field
         embed.addField(
                 "Status",
-                channelId != null ? "✅ Enabled" : "❌ Disabled",
+                channelId != null ? "✅ Enabled" : "❌ Not configured",
                 true
         );
 
+        // Promotion channel field
         embed.addField(
                 "Promotion Channel",
-                channelId != null ? "<#" + channelId + ">" : "Not configured",
+                channelId != null ? "<#" + channelId + ">" : "❌ Not configured",
                 true
         );
 
+        // Verbosity field
         embed.addField(
-                "Verbosity Level",
+                "Verbosity",
                 verbosity.getLabel() + " (every " + verbosity.getHoursInterval() + "h)",
                 true
         );
 
-        embed.setTimestamp(java.time.Instant.now());
+        // Promotions active field
+        embed.addField(
+                "Promotions Active",
+                channelId != null ? "✅ Yes" : "❌ No",
+                true
+        );
+
+        // Last check field (if channel configured)
+        if (channelId != null) {
+            // Get last check time from scheduler if available
+            // For now, show "Active" - can be enhanced later to get actual timestamp
+            embed.addField(
+                    "Last Check",
+                    "Active",
+                    true
+            );
+        }
+
+        embed.setTimestamp(Instant.now());
 
         event.replyEmbeds(embed.build()).queue();
     }

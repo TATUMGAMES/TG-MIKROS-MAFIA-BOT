@@ -29,6 +29,7 @@ scrambled word is posted, and players compete to be the first to solve it.
 | `/scramble-guess`   | Submit your word guess                   | `/scramble-guess word:GAMEPLAY` |
 | `/scramble-stats`   | View current game status and leaderboard | `/scramble-stats`               |
 | `/scramble-profile` | View your individual statistics          | `/scramble-profile`             |
+| `/scramble-leaderboard` | View top players by total points (per server) | `/scramble-leaderboard page:1` |
 
 ### Admin Commands
 
@@ -92,7 +93,8 @@ The game features 20 levels with progressively longer words and phrases:
 
 3. **Leaderboard:**
     - Shows winner with time and score
-    - View via `/scramble-stats`
+    - View current game via `/scramble-stats`
+    - View all-time rankings via `/scramble-leaderboard`
 
 ## Narrative/Explanations
 
@@ -156,6 +158,34 @@ Each player has persistent statistics tracked across all game sessions:
 - **Average Score** - Total Points / Words Solved
 
 **Note:** Statistics are tracked per-guild, so each server maintains separate stats for players.
+
+## Leaderboards
+
+View the top Word Unscramble players in your server with `/scramble-leaderboard`.
+
+### Features
+
+- **Per-Server Rankings:** Leaderboards are specific to each Discord server
+- **Comprehensive Stats:** Shows total points, words solved, high score, accuracy, and attempts
+- **Pagination:** View 25 players per page with easy navigation
+- **Active Players Only:** Only shows players who have attempted at least one word
+
+### Sorting
+
+Players are ranked by:
+1. Total Points (descending)
+2. Words Solved (descending)
+3. Highest Score (descending)
+
+### Viewing Your Stats
+
+Use `/scramble-profile` to see your personal statistics including:
+- Total words solved
+- Total points earned
+- Highest single-word score
+- Fastest solve time
+- Accuracy percentage
+- Total attempts and wrong guesses
 
 ## Future TODOs
 

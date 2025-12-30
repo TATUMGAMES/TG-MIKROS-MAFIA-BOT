@@ -15,6 +15,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+
+import static java.time.ZoneId.systemDefault;
 
 /**
  * Command handler for /rpg-stats.
@@ -174,9 +178,9 @@ public class RPGStatsCommand implements CommandHandler {
      * @param instant the instant to format
      * @return formatted timestamp string
      */
-    private String formatTimestamp(java.time.Instant instant) {
-        return java.time.format.DateTimeFormatter.ofPattern("MMM dd, yyyy")
-                .format(instant.atZone(java.time.ZoneId.systemDefault()));
+    private String formatTimestamp(Instant instant) {
+        return DateTimeFormatter.ofPattern("MMM dd, yyyy")
+                .format(instant.atZone(systemDefault()));
     }
 
     @Override

@@ -7,27 +7,35 @@ import com.tatumgames.mikros.config.ConfigLoader;
 import com.tatumgames.mikros.games.rpg.commands.*;
 import com.tatumgames.mikros.games.rpg.service.ActionService;
 import com.tatumgames.mikros.games.rpg.service.BossScheduler;
+import com.tatumgames.mikros.games.rpg.service.AchievementService;
+import com.tatumgames.mikros.games.rpg.service.AuraService;
 import com.tatumgames.mikros.games.rpg.service.BossService;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
+import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 import com.tatumgames.mikros.games.word_unscramble.commands.GameConfigCommand;
 import com.tatumgames.mikros.games.word_unscramble.commands.GameSetupCommand;
 import com.tatumgames.mikros.games.word_unscramble.commands.ScrambleGuessCommand;
+import com.tatumgames.mikros.games.word_unscramble.commands.ScrambleLeaderboardCommand;
 import com.tatumgames.mikros.games.word_unscramble.commands.ScrambleProfileCommand;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleResetScheduler;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleService;
 import com.tatumgames.mikros.honeypot.commands.*;
 import com.tatumgames.mikros.honeypot.listener.HoneypotMessageListener;
 import com.tatumgames.mikros.honeypot.service.HoneypotService;
+import com.tatumgames.mikros.promo.commands.PromoRequestCommand;
 import com.tatumgames.mikros.promo.commands.SetPromoFrequencyCommand;
 import com.tatumgames.mikros.promo.commands.SetupPromotionsCommand;
 import com.tatumgames.mikros.promo.listener.PromoMessageListener;
 import com.tatumgames.mikros.promo.service.PromoDetectionService;
 import com.tatumgames.mikros.services.*;
 import com.tatumgames.mikros.services.RealGamePromotionService;
+import com.tatumgames.mikros.services.PromotionOnboardingService;
 import com.tatumgames.mikros.services.scheduler.GamePromotionScheduler;
+import com.tatumgames.mikros.services.scheduler.PromotionOnboardingScheduler;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
@@ -59,11 +67,17 @@ public class BotMain extends ListenerAdapter {
     private final MonthlyReportService monthlyReportService;
     private final GamePromotionService gamePromotionService;
     private final GamePromotionScheduler gamePromotionScheduler;
+    private final PromotionOnboardingService promotionOnboardingService;
+    private final PromotionOnboardingScheduler promotionOnboardingScheduler;
+    private final com.tatumgames.mikros.tatumtech.scheduler.TatumTechEventScheduler tatumTechEventScheduler;
     private final GameStatsService gameStatsService;
     private final WordUnscrambleService wordUnscrambleService;
     private final WordUnscrambleResetScheduler wordUnscrambleResetScheduler;
     private final CharacterService characterService;
     private final ActionService actionService;
+    private final AchievementService achievementService;
+    private final AuraService auraService;
+    private final WorldCurseService worldCurseService;
     private final BossService bossService;
     private final BossScheduler bossScheduler;
     private final PromoDetectionService promoService;
@@ -71,6 +85,8 @@ public class BotMain extends ListenerAdapter {
     private final HoneypotService honeypotService;
     private final MessageDeletionService messageDeletionService;
     private final HoneypotMessageListener honeypotListener;
+    private final com.tatumgames.mikros.botdetection.service.BotDetectionService botDetectionService;
+    private final com.tatumgames.mikros.botdetection.listener.BotDetectionMessageListener botDetectionListener;
 
     /**
      * Creates a new BotMain instance.
@@ -102,7 +118,7 @@ public class BotMain extends ListenerAdapter {
 
         // Initialize game promotion service (use real API if key is configured, otherwise use mock)
         if (config.getMikrosApiKey() != null && !config.getMikrosApiKey().isBlank()) {
-            this.gamePromotionService = new RealGamePromotionService(apiClient);
+            this.gamePromotionService = new RealGamePromotionService(apiClient, config.getMikrosApiKey());
             logger.info("Using RealGamePromotionService with API integration");
         } else {
             logger.warn("MIKROS_API_KEY not set, using InMemoryGamePromotionService (mock mode)");
@@ -110,18 +126,34 @@ public class BotMain extends ListenerAdapter {
         }
 
         this.gamePromotionScheduler = new GamePromotionScheduler(gamePromotionService);
+        this.promotionOnboardingService = new PromotionOnboardingService();
+        this.promotionOnboardingScheduler = new PromotionOnboardingScheduler(
+                promotionOnboardingService,
+                gamePromotionService
+        );
+        this.tatumTechEventScheduler = new com.tatumgames.mikros.tatumtech.scheduler.TatumTechEventScheduler(
+                gamePromotionService,
+                config.getTatumTechRecapMonthYear(),
+                config.getTatumTechRecapVideoUrl()
+        );
         this.gameStatsService = new MockGameStatsService();
         this.wordUnscrambleService = new WordUnscrambleService();
         this.wordUnscrambleResetScheduler = new WordUnscrambleResetScheduler(wordUnscrambleService);
         this.characterService = new CharacterService();
-        this.actionService = new ActionService();
-        this.bossService = new BossService(characterService);
-        this.bossScheduler = new BossScheduler(bossService, characterService);
+        this.achievementService = new AchievementService();
+        this.auraService = new AuraService();
+        this.worldCurseService = new WorldCurseService();
+        this.actionService = new ActionService(characterService, worldCurseService, auraService);
+        this.bossService = new BossService(characterService, auraService, worldCurseService);
+        this.bossScheduler = new BossScheduler(bossService, characterService, worldCurseService);
         this.promoService = new PromoDetectionService();
         this.promoListener = new PromoMessageListener(promoService);
         this.honeypotService = new HoneypotService();
         this.messageDeletionService = new MessageDeletionService();
         this.honeypotListener = new HoneypotMessageListener(honeypotService, moderationLogService, messageDeletionService);
+        this.botDetectionService = new com.tatumgames.mikros.botdetection.service.BotDetectionService();
+        this.botDetectionListener = new com.tatumgames.mikros.botdetection.listener.BotDetectionMessageListener(
+                botDetectionService, reputationService);
 
         // Register command handlers
         registerCommandHandlers();
@@ -151,7 +183,7 @@ public class BotMain extends ListenerAdapter {
                             GatewayIntent.MESSAGE_CONTENT
                     )
                     .setActivity(Activity.playing("Moderating with style 🎮"))
-                    .addEventListeners(bot, bot.promoListener, bot.honeypotListener)
+                    .addEventListeners(bot, bot.promoListener, bot.honeypotListener, bot.botDetectionListener)
                     .build();
 
             // Wait for JDA to be ready
@@ -177,7 +209,7 @@ public class BotMain extends ListenerAdapter {
         // Admin & Server commands
         registerHandler(new WarnSuggestionsCommand(messageAnalysisService));
         registerHandler(new BanSuggestionsCommand(messageAnalysisService));
-        registerHandler(new ServerStatsCommand(activityTrackingService));
+        registerHandler(new ServerStatsCommand(activityTrackingService, botDetectionService));
         registerHandler(new TopContributorsCommand(activityTrackingService));
         registerHandler(new PraiseCommand(reputationService));
         registerHandler(new ReportCommand(reputationService));
@@ -188,34 +220,42 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new PromotionConfigCommand(gamePromotionService, gamePromotionScheduler));
 
         // Game Stats/Analytics commands
-        registerHandler(new com.tatumgames.mikros.admin.commands.MikrosEcosystemSetupCommand(gameStatsService));
-        registerHandler(new com.tatumgames.mikros.admin.commands.GameStatsCommand(gameStatsService));
+        // TODO: Re-enable when MIKROS Analytics API integration is complete
+        // registerHandler(new com.tatumgames.mikros.admin.commands.MikrosEcosystemSetupCommand(gameStatsService));
+        // registerHandler(new com.tatumgames.mikros.admin.commands.GameStatsCommand(gameStatsService));
 
         // Word Unscramble commands
         registerHandler(new GameSetupCommand(wordUnscrambleService, wordUnscrambleResetScheduler));
         registerHandler(new ScrambleGuessCommand(wordUnscrambleService));
         registerHandler(new com.tatumgames.mikros.games.word_unscramble.commands.GameStatsCommand(wordUnscrambleService));
         registerHandler(new ScrambleProfileCommand(wordUnscrambleService));
+        registerHandler(new ScrambleLeaderboardCommand(wordUnscrambleService));
         registerHandler(new GameConfigCommand(wordUnscrambleService));
 
         // RPG System commands
         registerHandler(new RPGRegisterCommand(characterService));
-        registerHandler(new RPGProfileCommand(characterService));
-        registerHandler(new RPGActionCommand(characterService, actionService));
-        registerHandler(new RPGResurrectCommand(characterService));
-        registerHandler(new RPGBossBattleCommand(characterService, bossService));
+        registerHandler(new RPGProfileCommand(characterService, worldCurseService));
+        registerHandler(new RPGActionCommand(characterService, actionService, achievementService, worldCurseService));
+        registerHandler(new RPGResurrectCommand(characterService, worldCurseService));
+        registerHandler(new RPGBossBattleCommand(characterService, bossService, worldCurseService));
         registerHandler(new RPGLeaderboardCommand(characterService, config));
         registerHandler(new RPGSetupCommand(characterService, bossService));
         registerHandler(new RPGConfigCommand(characterService));
         registerHandler(new RPGResetCommand(characterService, bossService));
         registerHandler(new RPGStatsCommand(characterService));
-        registerHandler(new RPGDualCommand(characterService));
+        registerHandler(new RPGDuelCommand(characterService));
         registerHandler(new RPGInventoryCommand(characterService));
         registerHandler(new RPGCraftCommand(characterService, new com.tatumgames.mikros.games.rpg.service.CraftingService()));
+        // Note: Charge donation is now part of /rpg-action, not a separate command
 
         // Promo commands
         registerHandler(new SetupPromotionsCommand(promoService));
         registerHandler(new SetPromoFrequencyCommand(promoService));
+        registerHandler(new PromoRequestCommand());
+
+        // Support commands
+        registerHandler(new com.tatumgames.mikros.support.commands.SupportCommand());
+        registerHandler(new com.tatumgames.mikros.support.commands.InfoCommand());
 
         // Honeypot System commands
         registerHandler(new HoneypotCommand(honeypotService));
@@ -223,6 +263,10 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new CleanupCommand(messageDeletionService));
         registerHandler(new AlertChannelCommand(honeypotService));
         registerHandler(new ListBansCommand(moderationLogService));
+
+        // Bot Detection commands
+        registerHandler(new com.tatumgames.mikros.botdetection.commands.BotDetectionSetupCommand(botDetectionService));
+        registerHandler(new com.tatumgames.mikros.botdetection.commands.BotDetectionConfigCommand(botDetectionService));
 
         logger.info("Registered {} command handlers", commandHandlers.size());
     }
@@ -259,6 +303,19 @@ public class BotMain extends ListenerAdapter {
         // Start boss scheduler
         bossScheduler.start(event.getJDA());
         logger.info("Boss scheduler started");
+
+        // Record all guilds as first seen (if not already recorded)
+        for (Guild guild : event.getJDA().getGuilds()) {
+            promotionOnboardingService.recordGuildFirstSeen(guild.getId());
+        }
+
+        // Start onboarding scheduler
+        promotionOnboardingScheduler.start(event.getJDA());
+        logger.info("Promotion onboarding scheduler started");
+
+        // Start Tatum Tech event scheduler
+        tatumTechEventScheduler.start(event.getJDA());
+        logger.info("Tatum Tech event scheduler started");
     }
 
     /**

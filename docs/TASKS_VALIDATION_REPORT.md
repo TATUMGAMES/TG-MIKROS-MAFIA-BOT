@@ -292,13 +292,13 @@ None - All requirements met.
 
 | Requirement                     | Status | Notes                                          |
 |---------------------------------|--------|------------------------------------------------|
-| `/promo-help` command           | ✅      | `PromoHelpCommand.java`                        |
+| `/promo-request` command        | ✅      | `PromoRequestCommand.java`                     |
 | `/setup-promotions` command     | ✅      | `SetupPromotionsCommand.java`                  |
 | `/set-promo-frequency` command  | ✅      | `SetPromoFrequencyCommand.java`                |
 | Message detection (regex)       | ✅      | `PromoDetectionService.java`                   |
 | PromoMessageListener            | ✅      | `PromoMessageListener.java`                    |
 | TODO for NLP/AI integration     | ✅      | Present in code                                |
-| TODO for API submission         | ✅      | Present in `PromoHelpCommand.java`             |
+| TODO for API submission         | ✅      | Present in `PromoRequestCommand.java`         |
 | API documentation               | ✅      | `/docs/API_MIKROS_PROMO_SUBMISSION.md`         |
 | API documentation for marketing | ✅      | `/docs/API_MIKROS_MARKETING_DISCOUNT_OFFER.md` |
 
@@ -308,7 +308,7 @@ None - All requirements met.
 
 ### Files Verified
 
-- ✅ `src/main/java/com/tatumgames/mikros/promo/commands/PromoHelpCommand.java`
+- ✅ `src/main/java/com/tatumgames/mikros/promo/commands/PromoRequestCommand.java`
 - ✅ `src/main/java/com/tatumgames/mikros/promo/commands/SetupPromotionsCommand.java`
 - ✅ `src/main/java/com/tatumgames/mikros/promo/commands/SetPromoFrequencyCommand.java`
 - ✅ `src/main/java/com/tatumgames/mikros/promo/service/PromoDetectionService.java`

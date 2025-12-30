@@ -84,7 +84,7 @@ Discord Bot.
 | `/rpg-profile`     | View character profile                     | Everyone      | RPG    |
 | `/rpg-action`      | Perform action (explore/train/battle/rest) | Everyone      | RPG    |
 | `/rpg-resurrect`   | Resurrect dead player (Priest-only)        | Everyone      | RPG    |
-| `/rpg-boss-battle` | Attack boss, check status, leaderboard     | Everyone      | RPG    |
+| `/rpg-boss-battle` | Battle boss, check status, leaderboard     | Everyone      | RPG    |
 | `/rpg-leaderboard` | View RPG leaderboard                       | Everyone      | RPG    |
 | `/rpg-config`      | Configure RPG (5 subcommands)              | Administrator | RPG    |
 
@@ -100,9 +100,16 @@ Discord Bot.
 
 | Command                | Description                    | Permission    | Module |
 |------------------------|--------------------------------|---------------|--------|
-| `/promo-help`          | Request promotional help       | Everyone      | Promo  |
+| `/promo-request`       | Request promotional services   | Everyone      | Promo  |
 | `/setup-promotions`    | Enable/disable promo detection | Administrator | Promo  |
 | `/set-promo-frequency` | Set promo cooldown             | Administrator | Promo  |
+
+### Support Commands
+
+| Command     | Description                                    | Permission | Module  |
+|-------------|------------------------------------------------|------------|---------|
+| `/support`  | Learn how to support the MIKROS Bot development | Everyone   | Support |
+| `/info`     | Learn about the MIKROS Bot and MIKROS Ecosystem | Everyone   | Support |
 
 ### Honeypot System Commands
 
@@ -116,7 +123,7 @@ Discord Bot.
 | `/alert_channel`               | Set alert channel     | Administrator | Honeypot |
 | `/list_bans`                   | View recent bans      | Administrator | Honeypot |
 
-**Total Commands:** 33+ (including subcommands)
+**Total Commands:** 36+ (including subcommands)
 
 ---
 

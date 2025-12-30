@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.time.Instant;
 import java.util.Optional;
 
 /**
@@ -108,7 +109,7 @@ public class SetupPromotionsCommand implements CommandHandler {
         }
 
         embed.setFooter("Use /set-promo-frequency to adjust cooldown settings");
-        embed.setTimestamp(java.time.Instant.now());
+        embed.setTimestamp(Instant.now());
 
         event.replyEmbeds(embed.build()).queue();
 

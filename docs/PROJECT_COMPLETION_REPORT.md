@@ -75,7 +75,7 @@ documentation, and a clean, modular architecture.
 
 - **Status:** Complete
 - **Deliverables:** AI-powered promotional help detection
-- **Commands:** `/promo-help`, `/setup-promotions`, `/set-promo-frequency`
+- **Commands:** `/promo-request`, `/setup-promotions`, `/set-promo-frequency`
 - **Files:** 5+ files created
 
 ### TASKS_09: Code Quality & Cleanup ✅

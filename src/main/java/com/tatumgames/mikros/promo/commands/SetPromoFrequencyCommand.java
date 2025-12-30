@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.time.Instant;
 import java.util.Optional;
 
 /**
@@ -99,7 +100,7 @@ public class SetPromoFrequencyCommand implements CommandHandler {
         );
 
         embed.setFooter("Use /setup-promotions to enable/disable detection");
-        embed.setTimestamp(java.time.Instant.now());
+        embed.setTimestamp(Instant.now());
 
         event.replyEmbeds(embed.build()).queue();
 

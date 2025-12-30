@@ -109,6 +109,25 @@ public class TatumGamesApiClient {
     }
 
     /**
+     * Performs a GET request to a custom base URL with X-Apikey header.
+     * Used for APIs that require X-Apikey header instead of Authorization: Bearer.
+     *
+     * @param baseUrl       the base URL for the API (can be different from default)
+     * @param endpoint      the endpoint path
+     * @param apiKey        the API key for X-Apikey header
+     * @param responseClass the expected response class
+     * @param <T>           the response type
+     * @return the parsed response, or null if request failed
+     * @throws ApiException if the request fails after retries
+     */
+    public <T> T getWithApiKey(String baseUrl, String endpoint, String apiKey, Class<T> responseClass) throws ApiException {
+        return executeWithRetry(() -> {
+            HttpRequest request = buildRequestWithApiKey("GET", baseUrl, endpoint, null, apiKey);
+            return executeRequest(request, responseClass);
+        });
+    }
+
+    /**
      * Builds an HTTP request with authentication and headers.
      *
      * @param method    the HTTP method

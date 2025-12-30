@@ -96,6 +96,15 @@ public class CharacterService {
     }
 
     /**
+     * Gets all registered characters.
+     *
+     * @return collection of all characters
+     */
+    public Collection<RPGCharacter> getAllCharacters() {
+        return new ArrayList<>(characters.values());
+    }
+
+    /**
      * Gets the leaderboard (top characters by level and XP).
      *
      * @param limit the maximum number of characters

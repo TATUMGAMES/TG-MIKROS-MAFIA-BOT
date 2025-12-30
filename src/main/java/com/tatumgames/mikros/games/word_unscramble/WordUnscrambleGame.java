@@ -115,21 +115,24 @@ public class WordUnscrambleGame implements WordUnscrambleInterface {
                 "FINAL BOSS", "LEVEL UP", "SIDE QUEST", "NEW GAME", "TOP SCORE", "HARD MODE",
                 "EASY MODE", "NORMAL MODE", "BOSS FIGHT", "CUT SCENE", "LOAD SCREEN", "SAVE POINT",
                 "CHECK POINT", "SPAWN POINT", "RESPAWN", "GAME OVER", "CONTINUE", "RESTART", "QUIT GAME", "PAUSE MENU",
-                "TATUM GAMES", "TATUM TECH"
+                "TATUM GAMES", "TATUM TECH", "DPS RATE"
         ));
 
         // Level 12: Short phrases (2 words)
         LEVEL_WORDS.put(12, Arrays.asList(
                 "SECRET AREA", "MAGIC ATTACK", "PLAYER STATS", "SPEED RUN", "DOUBLE JUMP",
                 "TRIPLE JUMP", "AIR DASH", "WALL JUMP", "GRAPPLE HOOK", "HEALTH BAR", "MANA BAR", "STAMINA BAR",
-                "EXPERIENCE POINTS", "SKILL POINTS", "ATTRIBUTE POINTS", "TALENT TREE", "SKILL TREE", "UPGRADE PATH"
+                "EXPERIENCE POINTS", "SKILL POINTS", "ATTRIBUTE POINTS", "TALENT TREE", "SKILL TREE", "UPGRADE PATH",
+                "OPEN WORLD MAP", "LOOT DROP RATE"
         ));
 
         // Level 13: Medium phrases (2-3 words)
         LEVEL_WORDS.put(13, Arrays.asList(
                 "ULTIMATE WEAPON", "COOPERATIVE MODE", "RANDOM ENCOUNTER", "LEGENDARY DROP",
                 "RARE ITEM", "EPIC LOOT", "COMMON DROP", "UNCOMMON FIND", "LEGENDARY GEAR", "EPIC ARMOR",
-                "QUEST ITEM", "KEY ITEM", "CONSUMABLE", "PERMANENT UPGRADE", "TEMPORARY BUFF", "PERMANENT BUFF"
+                "QUEST ITEM", "KEY ITEM", "CONSUMABLE", "PERMANENT UPGRADE", "TEMPORARY BUFF", "PERMANENT BUFF",
+                "LOOKING FOR GROUP", "LOOKING FOR TANK", "LOOKING FOR HEALER", "FINAL BOSS FIGHT",
+                "GAME OVER SCREEN", "PRESS START BUTTON", "PLAYER ONE READY"
         ));
 
         // Level 14: Medium phrases (2-3 words)
@@ -144,7 +147,10 @@ public class WordUnscrambleGame implements WordUnscrambleInterface {
                 "PROCEDURALLY GENERATED LEVELS", "OPEN WORLD EXPLORATION", "COMPETITIVE MULTIPLAYER MATCH",
                 "PLAYER VERSUS PLAYER", "PLAYER VERSUS ENVIRONMENT", "PLAYER VERSUS PLAYER VERSUS ENVIRONMENT",
                 "MASSIVELY MULTIPLAYER ONLINE", "MASSIVELY MULTIPLAYER ONLINE ROLE PLAYING GAME", "REAL TIME STRATEGY",
-                "TURN BASED STRATEGY", "REAL TIME COMBAT", "TURN BASED COMBAT", "ACTION ROLE PLAYING GAME"
+                "TURN BASED STRATEGY", "REAL TIME COMBAT", "TURN BASED COMBAT", "ACTION ROLE PLAYING GAME",
+                "I NEED HEALING", "DPS CHECK PHASE", "HARD MODE UNLOCKED", "PATCH NOTES RELEASED",
+                "NERF THIS CHARACTER", "BUFF THAT SKILL", "RANDOM NUMBER GENERATOR", "EARLY ACCESS RELEASE",
+                "PROCEDURALLY GENERATED DUNGEONS", "PERMADEATH IRONMAN MODE"
         ));
 
         // Level 16: Longer phrases (3-4 words)
@@ -159,7 +165,9 @@ public class WordUnscrambleGame implements WordUnscrambleInterface {
                 "VIRTUAL REALITY COMBAT EXPERIENCE", "ASYMMETRICAL MULTIPLAYER SURVIVAL",
                 "FULLY VOICED CHARACTER DIALOGUE", "MOTION CAPTURE ANIMATION SYSTEM",
                 "PHYSICS BASED INTERACTION MECHANICS", "DESTRUCTIBLE ENVIRONMENT SYSTEM",
-                "ADAPTIVE DIFFICULTY SCALING", "DYNAMIC ENEMY SPAWNING", "INTELLIGENT AI BEHAVIOR"
+                "ADAPTIVE DIFFICULTY SCALING", "DYNAMIC ENEMY SPAWNING", "INTELLIGENT AI BEHAVIOR",
+                "YOU DIED TRY AGAIN", "ONE MORE TURN SYNDROME", "PLAYER VERSUS PLAYER MODE",
+                "MASSIVELY MULTIPLAYER ONLINE ROLEPLAYING", "BALANCE PATCH BROKE EVERYTHING"
         ));
 
         // Level 18: Long phrases (4-5 words)
@@ -176,7 +184,10 @@ public class WordUnscrambleGame implements WordUnscrambleInterface {
                 "DEEP CRAFTING AND ENCHANTING SYSTEM", "COMPREHENSIVE QUEST AND MISSION GENERATOR",
                 "ADVANCED COMBAT MECHANICS AND COMBOS", "ELABORATE STORYTELLING AND NARRATIVE DESIGN",
                 "IMMERSIVE WORLD BUILDING AND LORE", "COMPLEX ECONOMY AND TRADING SYSTEMS",
-                "SOPHISTICATED RESOURCE MANAGEMENT", "INTELLIGENT NPC BEHAVIOR PATTERNS"
+                "SOPHISTICATED RESOURCE MANAGEMENT", "INTELLIGENT NPC BEHAVIOR PATTERNS",
+                "LOOKING FOR RAID GROUP TONIGHT", "THIS GAME NEEDS BETTER MATCHMAKING",
+                "META DEFINES THE WHOLE GAME", "ADAPTIVE NARRATIVE RESPONDS TO PLAYER CHOICES",
+                "ALL YOUR BASES BELONG TO US"
         ));
 
         // Level 20: Maximum difficulty phrases (6+ words)
@@ -185,7 +196,9 @@ public class WordUnscrambleGame implements WordUnscrambleInterface {
                 "INFINITELY GENERATED QUEST AND MISSION CONTENT", "ADAPTIVE NARRATIVE THAT RESPONDS TO PLAYER ACTIONS",
                 "REALISTIC PHYSICS SIMULATION WITH FULL ENVIRONMENTAL INTERACTION", "CUTTING EDGE GRAPHICS WITH RAY TRACING AND GLOBAL ILLUMINATION",
                 "ADVANCED ARTIFICIAL INTELLIGENCE WITH MACHINE LEARNING CAPABILITIES", "SEAMLESS MULTIPLAYER EXPERIENCE ACROSS ALL PLATFORMS",
-                "COMPREHENSIVE CHARACTER CUSTOMIZATION WITH THOUSANDS OF OPTIONS", "DEEP STRATEGIC COMBAT SYSTEM WITH COUNTLESS POSSIBILITIES"
+                "COMPREHENSIVE CHARACTER CUSTOMIZATION WITH THOUSANDS OF OPTIONS", "DEEP STRATEGIC COMBAT SYSTEM WITH COUNTLESS POSSIBILITIES",
+                "ALL YOUR BASE ARE BELONG TO US NOW", "REALISTIC PHYSICS SIMULATION WITH ENVIRONMENTAL INTERACTION",
+                "MASSIVE OPEN WORLD WITH SEAMLESS MULTIPLAYER INTEGRATION", "FULLY PROCEDURAL CONTENT WITH DYNAMIC STORY OUTCOMES"
         ));
     }
 
@@ -254,14 +267,37 @@ public class WordUnscrambleGame implements WordUnscrambleInterface {
         String normalizedCorrect = normalizeAnswer(correctAnswer);
         boolean isCorrect = normalizedInput.equals(normalizedCorrect);
 
-        // Calculate score based on time (earlier = higher score)
-        int score = 0;
+        // Calculate base score based on time (earlier = higher score)
+        int baseScore = 0;
+        int bonus = 0;
+        
         if (isCorrect) {
             long secondsSinceStart = Instant.now().getEpochSecond() - session.getStartTime().getEpochSecond();
-            score = Math.max(100, 1000 - (int) secondsSinceStart);
+            baseScore = Math.max(100, 1000 - (int) secondsSinceStart);
+            
+            // Calculate bonus based on wrong guesses before this correct answer
+            // Only count wrong guesses that occurred before this correct answer
+            long wrongGuessesBefore = session.getResults().stream()
+                    .filter(r -> !r.isCorrect())
+                    .count();
+            
+            // Diminishing returns bonus calculation:
+            // - First 5 wrong guesses: 15 points each
+            // - Next 10 wrong guesses: 10 points each
+            // - After that: 5 points each
+            // - Cap at 250 points
+            if (wrongGuessesBefore > 0) {
+                long firstTier = Math.min(5, wrongGuessesBefore);
+                long secondTier = Math.min(10, Math.max(0, wrongGuessesBefore - 5));
+                long thirdTier = Math.max(0, wrongGuessesBefore - 15);
+                
+                bonus = (int) ((firstTier * 15) + (secondTier * 10) + (thirdTier * 5));
+                bonus = Math.min(250, bonus); // Cap at 250
+            }
         }
 
-        WordUnscrambleResult result = new WordUnscrambleResult(userId, username, input, score, isCorrect, Instant.now());
+        int totalScore = baseScore + bonus;
+        WordUnscrambleResult result = new WordUnscrambleResult(userId, username, input, totalScore, bonus, isCorrect, Instant.now());
         session.addResult(result);
 
         logger.info("Word Unscramble attempt by {} in guild {}: {} - {}",

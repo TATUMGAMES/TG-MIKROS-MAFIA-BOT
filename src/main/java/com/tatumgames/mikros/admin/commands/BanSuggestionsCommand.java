@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -156,7 +157,7 @@ public class BanSuggestionsCommand implements CommandHandler {
                         embed.setFooter(String.format("Showing 10 of %d suggestions", banSuggestions.size()));
                     }
 
-                    embed.setTimestamp(java.time.Instant.now());
+                    embed.setTimestamp(Instant.now());
 
                     event.getHook().sendMessageEmbeds(embed.build()).queue();
 

@@ -1,6 +1,7 @@
 package com.tatumgames.mikros.admin.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.botdetection.service.BotDetectionService;
 import com.tatumgames.mikros.services.ActivityTrackingService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -13,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.time.Instant;
 import java.util.Map;
 
 /**
@@ -24,14 +26,18 @@ import java.util.Map;
 public class ServerStatsCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(ServerStatsCommand.class);
     private final ActivityTrackingService activityTrackingService;
+    private final BotDetectionService botDetectionService;
 
     /**
      * Creates a new ServerStatsCommand handler.
      *
      * @param activityTrackingService the activity tracking service
+     * @param botDetectionService     the bot detection service
      */
-    public ServerStatsCommand(ActivityTrackingService activityTrackingService) {
+    public ServerStatsCommand(ActivityTrackingService activityTrackingService,
+                              BotDetectionService botDetectionService) {
         this.activityTrackingService = activityTrackingService;
+        this.botDetectionService = botDetectionService;
     }
 
     @Override
@@ -82,7 +88,8 @@ public class ServerStatsCommand implements CommandHandler {
         // Message statistics
         embed.addField("💬 Total Messages Tracked", String.valueOf(totalMessages), true);
         embed.addField("📊 Avg Messages/User", String.format("%.1f", avgMessagesPerUser), true);
-        embed.addField("\u200B", "\u200B", true); // Empty field for alignment
+        int botsPrevented = botDetectionService.getBotPreventionCount(guildId);
+        embed.addField("🛡️ Bots Prevented", String.valueOf(botsPrevented), true);
 
         // Most active channels
         if (!topChannels.isEmpty()) {
@@ -102,7 +109,7 @@ public class ServerStatsCommand implements CommandHandler {
                         "Historical data is not included.",
                 false);
 
-        embed.setTimestamp(java.time.Instant.now());
+        embed.setTimestamp(Instant.now());
         embed.setFooter("Requested by " + member.getEffectiveName());
 
         // Send a reply message for this interaction

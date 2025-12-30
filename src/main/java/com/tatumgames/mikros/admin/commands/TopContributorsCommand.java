@@ -111,7 +111,7 @@ public class TopContributorsCommand implements CommandHandler {
         embed.addField("ℹ️ Note",
                 "Activity is tracked from when the bot joined. Historical messages are not counted.",
                 false);
-        embed.setTimestamp(java.time.Instant.now());
+        embed.setTimestamp(Instant.now());
 
         event.replyEmbeds(embed.build()).queue();
 

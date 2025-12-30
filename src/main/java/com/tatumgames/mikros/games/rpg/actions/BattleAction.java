@@ -1,14 +1,18 @@
 package com.tatumgames.mikros.games.rpg.actions;
 
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
+import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
 import com.tatumgames.mikros.games.rpg.model.CatalystType;
 import com.tatumgames.mikros.games.rpg.model.EnemyType;
 import com.tatumgames.mikros.games.rpg.model.EssenceType;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.model.RPGStats;
+import com.tatumgames.mikros.games.rpg.service.AuraService;
+import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -24,6 +28,19 @@ import java.util.Random;
  */
 public class BattleAction implements CharacterAction {
     private static final Random random = new Random();
+    private final WorldCurseService worldCurseService;
+    private final AuraService auraService;
+
+    /**
+     * Creates a new BattleAction.
+     *
+     * @param worldCurseService the world curse service for applying curse effects
+     * @param auraService the aura service for Song of Nilfheim curse reduction
+     */
+    public BattleAction(WorldCurseService worldCurseService, AuraService auraService) {
+        this.worldCurseService = worldCurseService;
+        this.auraService = auraService;
+    }
 
     private static final String[] ENEMY_NAMES = {
             // Original 16
@@ -185,8 +202,34 @@ public class BattleAction implements CharacterAction {
 
     @Override
     public RPGActionOutcome execute(RPGCharacter character, RPGConfig config) {
-        // Select random enemy
-        String enemyName = ENEMY_NAMES[random.nextInt(ENEMY_NAMES.length)];
+        // Get active curses for this guild
+        String guildId = config.getGuildId();
+        List<WorldCurse> activeCurses = worldCurseService.getActiveCurses(guildId);
+        
+        // Check for Song of Nilfheim aura (reduces curse penalties by 1-2%)
+        double songReduction = auraService.getSongOfNilfheimCurseReduction(guildId);
+
+        // Select random enemy (March of the Dead increases undead chance)
+        String enemyName;
+        if (activeCurses.contains(WorldCurse.MAJOR_MARCH_OF_THE_DEAD)) {
+            // 50% chance for undead enemy when March of the Dead is active
+            if (random.nextDouble() < 0.50) {
+                // Select from undead enemies
+                String[] undeadEnemies = ENEMY_TYPE_MAP.entrySet().stream()
+                        .filter(e -> e.getValue() == EnemyType.UNDEAD)
+                        .map(Map.Entry::getKey)
+                        .toArray(String[]::new);
+                if (undeadEnemies.length > 0) {
+                    enemyName = undeadEnemies[random.nextInt(undeadEnemies.length)];
+                } else {
+                    enemyName = ENEMY_NAMES[random.nextInt(ENEMY_NAMES.length)];
+                }
+            } else {
+                enemyName = ENEMY_NAMES[random.nextInt(ENEMY_NAMES.length)];
+            }
+        } else {
+            enemyName = ENEMY_NAMES[random.nextInt(ENEMY_NAMES.length)];
+        }
         EnemyType enemyType = ENEMY_TYPE_MAP.getOrDefault(enemyName, EnemyType.PHYSICAL); // Default fallback
 
         // Calculate enemy strength based on character level
@@ -197,6 +240,28 @@ public class BattleAction implements CharacterAction {
         RPGStats stats = character.getStats();
         int basePlayerPower = calculatePlayerPower(stats, character.getCharacterClass().name());
         double effectiveness = getStatEffectiveness(character.getCharacterClass().name(), enemyType);
+        
+        // Apply Shattered Reality curse (reduces effectiveness multipliers)
+        if (activeCurses.contains(WorldCurse.MAJOR_SHATTERED_REALITY)) {
+            if (effectiveness > 1.0) {
+                // Reduce from 1.3x to 1.25x
+                effectiveness = 1.0 + ((effectiveness - 1.0) * (1.25 / 1.3));
+            } else if (effectiveness < 1.0) {
+                // Reduce from 0.85x to 0.8x
+                effectiveness = 1.0 - ((1.0 - effectiveness) * (0.2 / 0.15));
+            }
+        }
+        
+        // Apply Curse of Weakness (-10% STR effectiveness for physical classes)
+        // Song of Nilfheim reduces the penalty
+        if (activeCurses.contains(WorldCurse.MINOR_CURSE_OF_WEAKNESS)) {
+            if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.WARRIOR ||
+                character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.KNIGHT) {
+                double weaknessPenalty = 0.90 * songReduction; // Apply Song reduction
+                basePlayerPower = (int) (basePlayerPower * weaknessPenalty);
+            }
+        }
+        
         int playerPower = (int) (basePlayerPower * effectiveness);
 
         // Check for critical hit (AGI-based)
@@ -248,6 +313,30 @@ public class BattleAction implements CharacterAction {
             // Apply LUCK-based XP floor (prevents extremely bad rolls)
             int minXp = (int) (baseXp * (1 + stats.getLuck() / 20.0));
             xpGained = Math.max(minXp, xpGained);
+            
+            // Apply Dark Relic XP bonus (+5% XP for 3 actions)
+            if (character.getDarkRelicActionsRemaining() > 0) {
+                xpGained = (int) (xpGained * (1.0 + character.getDarkRelicXpBonus()));
+                character.decrementDarkRelicActions();
+            }
+            
+            // Apply Curse of Clouded Mind (-5% XP, but ensure minimum 90%)
+            // Song of Nilfheim reduces the penalty
+            if (activeCurses.contains(WorldCurse.MINOR_CURSE_OF_CLOUDED_MIND)) {
+                double cloudedPenalty = 0.95 * songReduction; // Apply Song reduction
+                xpGained = (int) (xpGained * cloudedPenalty);
+                // Ensure minimum 90% of original
+                int minXpWithCurse = (int) (baseXp * 0.90);
+                xpGained = Math.max(minXpWithCurse, xpGained);
+            }
+            
+            // Apply Curse of Waning Resolve (XP variance shifts lower)
+            // Song of Nilfheim reduces the penalty
+            if (activeCurses.contains(WorldCurse.MINOR_CURSE_OF_WANING_RESOLVE)) {
+                // Reduce XP by 5-10% randomly (shifts variance lower)
+                double reduction = (0.05 + (random.nextDouble() * 0.05)) * songReduction; // Apply Song reduction
+                xpGained = (int) (xpGained * (1 - reduction));
+            }
 
             // Necromancer Decay: 10% chance to double XP on victory
             boolean decayTriggered = false;
@@ -304,6 +393,14 @@ public class BattleAction implements CharacterAction {
             // Apply LUCK-based XP floor
             int minXp = (int) (baseXp * (1 + stats.getLuck() / 20.0));
             xpGained = Math.max(minXp, xpGained);
+            
+            // Apply Curse of Clouded Mind (-5% XP, but ensure minimum 90%)
+            if (activeCurses.contains(WorldCurse.MINOR_CURSE_OF_CLOUDED_MIND)) {
+                xpGained = (int) (xpGained * 0.95);
+                // Ensure minimum 90% of original
+                int minXpWithCurse = (int) (baseXp * 0.90);
+                xpGained = Math.max(minXpWithCurse, xpGained);
+            }
 
             // Generate narrative emphasizing injury severity
             String injurySeverity = enemyLevel >= 5 ? 
@@ -329,12 +426,49 @@ public class BattleAction implements CharacterAction {
 
         // Apply agility-based defense (1% per agility point, capped at 30%)
         double agilityReduction = Math.min(0.30, stats.getAgility() * 0.01);
+        
+        // Apply Curse of Sluggish Steps (reduces AGI defense cap: 30% → 25%)
+        // Song of Nilfheim reduces the penalty
+        if (activeCurses.contains(WorldCurse.MINOR_CURSE_OF_SLUGGISH_STEPS)) {
+            double sluggishPenalty = 0.25 * songReduction; // Apply Song reduction
+            agilityReduction = Math.min(sluggishPenalty, agilityReduction);
+        }
+        
         damageTaken = (int) (damageWithVariance * (1 - agilityReduction));
+        
+        // Apply Eclipse of Nilfheim (+10% enemy damage)
+        // Song of Nilfheim reduces the penalty
+        if (activeCurses.contains(WorldCurse.MAJOR_ECLIPSE_OF_NILFHEIM)) {
+            double eclipseBonus = 1.10 / songReduction; // Reduce the bonus (divide by reduction)
+            damageTaken = (int) (damageTaken * eclipseBonus);
+        }
+        
+        // Apply Curse of Bleeding Wounds (+10% defeat damage)
+        // Song of Nilfheim reduces the penalty
+        if (!victory && activeCurses.contains(WorldCurse.MINOR_CURSE_OF_BLEEDING_WOUNDS)) {
+            double bleedingBonus = 1.10 / songReduction; // Reduce the bonus
+            damageTaken = (int) (damageTaken * bleedingBonus);
+        }
+        
+        // Apply March of the Dead (+15% defeat damage)
+        // Song of Nilfheim reduces the penalty
+        if (!victory && activeCurses.contains(WorldCurse.MAJOR_MARCH_OF_THE_DEAD)) {
+            double marchBonus = 1.15 / songReduction; // Reduce the bonus
+            damageTaken = (int) (damageTaken * marchBonus);
+        }
 
         // Apply class bonus (Knight gets 10% additional reduction, stacks with agility)
         if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.KNIGHT) {
             damageTaken = (int) (damageTaken * 0.90); // 10% reduction (balanced from 15%)
         }
+        
+        // Apply Dark Relic damage penalty (+10% damage taken until rested)
+        if (character.getDarkRelicActionsRemaining() > 0) {
+            damageTaken = (int) (damageTaken * (1.0 + character.getDarkRelicDamagePenalty()));
+        }
+
+        // Capture HP before damage for story flags
+        int hpBefore = stats.getCurrentHp();
 
         // Apply damage (can now kill character)
         boolean isAlive = stats.takeDamage(damageTaken);
@@ -342,6 +476,18 @@ public class BattleAction implements CharacterAction {
         // Check if character died
         if (!isAlive || stats.getCurrentHp() <= 0) {
             character.die();
+            character.incrementDeathCount();
+            
+            // Check for story flag: "Survived death at 1 HP" (if HP was exactly 1 before death)
+            if (hpBefore == 1) {
+                character.addStoryFlag("Survived death at 1 HP");
+            }
+            
+            // Check for story flag: "Once fled from battle in terror" (defeat with very low damage)
+            if (!victory && playerPower < 10) {
+                character.addStoryFlag("Once fled from battle in terror");
+            }
+            
             narrative += "\n\n💀 **You have fallen in battle!** A Priest can resurrect you.";
         }
 
@@ -387,6 +533,9 @@ public class BattleAction implements CharacterAction {
 
         // Record the action
         character.recordAction();
+        
+        // Track action type for achievements
+        character.recordActionType("battle");
 
         return outcomeBuilder.build();
     }
@@ -465,21 +614,6 @@ public class BattleAction implements CharacterAction {
             };
         }
         return 1.0; // Default neutral
-    }
-
-    /**
-     * Gets the primary stat name for a class (for narrative purposes).
-     *
-     * @param className the character class name
-     * @return primary stat name
-     */
-    private String getPrimaryStatName(String className) {
-        return switch (className) {
-            case "WARRIOR", "KNIGHT" -> "physical";
-            case "MAGE", "PRIEST", "NECROMANCER" -> "magical";
-            case "ROGUE" -> "swift";
-            default -> "combat";
-        };
     }
 
     /**
