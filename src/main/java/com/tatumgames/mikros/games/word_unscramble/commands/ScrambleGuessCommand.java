@@ -83,9 +83,26 @@ public class ScrambleGuessCommand implements CommandHandler {
         );
 
         if (result == null) {
-            event.reply("❌ Something went wrong. Try again!")
-                    .setEphemeral(true)
-                    .queue();
+            // Check if it's because they exceeded the limit
+            long incorrectGuesses = session.getResults().stream()
+                    .filter(r -> r.userId().equals(member.getId()) && !r.isCorrect())
+                    .count();
+            
+            if (incorrectGuesses >= 3) {
+                event.reply("""
+                                ❌ **No More Guesses Remaining**
+                                
+                                You've used all 3 incorrect guesses for this word.
+                                
+                                Wait for the next word to get 3 more guesses!
+                                """)
+                        .setEphemeral(true)
+                        .queue();
+            } else {
+                event.reply("❌ Something went wrong. Try again!")
+                        .setEphemeral(true)
+                        .queue();
+            }
             return;
         }
 
@@ -137,13 +154,22 @@ public class ScrambleGuessCommand implements CommandHandler {
             session.setActive(false);
 
         } else {
+            // Calculate remaining guesses
+            long incorrectGuesses = session.getResults().stream()
+                    .filter(r -> r.userId().equals(member.getId()) && !r.isCorrect())
+                    .count();
+            int remainingGuesses = 3 - (int) incorrectGuesses;
+            
             event.reply(String.format("""
                             ❌ **Incorrect!**
                             
                             Your guess: %s
+                            
+                            **Remaining guesses:** %d out of 3
                             Try again!
                             """,
-                    guess
+                    guess,
+                    remainingGuesses
             )).setEphemeral(true).queue();
         }
     }

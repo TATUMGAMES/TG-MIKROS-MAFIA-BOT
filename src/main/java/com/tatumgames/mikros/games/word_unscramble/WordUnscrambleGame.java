@@ -261,6 +261,18 @@ public class WordUnscrambleGame implements WordUnscrambleInterface {
             return new WordUnscrambleResult(userId, username, input, 0, false, Instant.now());
         }
 
+        // Check if user has already made 3 incorrect guesses for this word
+        long incorrectGuesses = session.getResults().stream()
+                .filter(r -> r.userId().equals(userId) && !r.isCorrect())
+                .count();
+        
+        if (incorrectGuesses >= 3) {
+            // User has used all 3 incorrect guesses - don't process this attempt
+            logger.info("User {} in guild {} attempted to guess after using all 3 incorrect guesses", 
+                    username, session.getGuildId());
+            return null; // Return null to indicate limit reached
+        }
+
         // Check if answer is correct (normalize both for comparison)
         String correctAnswer = session.getCorrectAnswer();
         String normalizedInput = normalizeAnswer(input);

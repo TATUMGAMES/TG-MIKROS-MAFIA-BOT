@@ -274,7 +274,9 @@ for game developers and studios.
 - Daily word unscrambling challenge
 - Gaming/fantasy-themed words
 - Hourly game resets
-- Point-based scoring
+- Point-based scoring (100-1000 points based on solve speed)
+- Bonus points for solving words that stumped others
+- **3 incorrect guesses limit per word** (prevents spam, resets with each new word)
 
 **Commands:**
 
@@ -282,12 +284,13 @@ for game developers and studios.
 - `/scramble-stats` - View game leaderboard and status
 - `/admin-scramble-setup` - Setup word unscramble game (Admin only)
 
-**Features:**
+**Gameplay:**
 
 - Hourly game resets
 - Leaderboard tracking
 - Individual player statistics tracking (words solved, points, fastest time, accuracy)
 - Beautiful embed formatting
+- Remaining guesses shown after each incorrect attempt
 - Branding words included: "MIKROS", "TATUM GAMES", "TATUM TECH"
 
 **TODO:** Hint system, RPG integration, difficulty levels

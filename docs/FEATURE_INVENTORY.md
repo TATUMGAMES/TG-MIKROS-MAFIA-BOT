@@ -233,7 +233,10 @@ Discord Bot.
 - Daily automatic resets
 - Per-server configuration
 - Leaderboards with medals
-- Time-based scoring
+- Time-based scoring (100-1000 points)
+- Bonus points for solving words that stumped others
+- 3 incorrect guesses limit per word per player (prevents spam)
+- Remaining guesses displayed after each incorrect attempt
 
 **Services:**
 
