@@ -9,6 +9,7 @@ launch-related phrases in messages and offers promotional assistance.
 
 - `/admin-promotion-setup` - Initial setup for promotion channel
 - `/admin-promotion-config` - Configure promotion settings (subcommands: view, update-channel, set-verbosity, disable, force-check)
+- `/promo-help` - Get help with MIKROS promotional services and schedule a demo
 
 ---
 
@@ -88,6 +89,47 @@ Next Steps:
 
 ---
 
+
+---
+
+### `/promo-help`
+
+**Purpose:** Request promotional help and schedule a demo with the MIKROS team.
+
+**Permission Required:** `Everyone`
+
+**Syntax:**
+
+```
+/promo-help
+```
+
+**Behavior:**
+
+- Sends a private DM (ephemeral reply) to the user who ran the command
+- Provides Calendly link for scheduling a 30-minute demo
+- Non-intrusive, opt-in approach
+
+**Example:**
+
+```
+/promo-help
+```
+
+**Output:**
+
+```
+Want a quick MIKROS product walkthrough or campaign setup demo?
+
+📅 Book a 30-min demo here:
+www.calendly.com/tatumgames
+```
+
+**Use Cases:**
+
+- Users interested in game promotion services
+- Developers looking for marketing assistance
+- Community members wanting to learn about MIKROS capabilities
 
 ---
 
@@ -235,6 +277,7 @@ Contact MIKROS for promotional assistance!
 ---
 
 **Last Updated:** 2025-01-27  
-**Admin Commands:** 
+**Commands:** 
 - `/admin-promotion-setup` - Channel setup
 - `/admin-promotion-config` - Configuration (4 subcommands)
+- `/promo-help` - Request promotional help and schedule a demo

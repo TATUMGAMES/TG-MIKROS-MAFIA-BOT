@@ -104,6 +104,12 @@ Discord Bot.
 | `/setup-promotions`    | Enable/disable promo detection | Administrator | Promo  |
 | `/set-promo-frequency` | Set promo cooldown             | Administrator | Promo  |
 
+### Support Commands
+
+| Command     | Description                                    | Permission | Module  |
+|-------------|------------------------------------------------|------------|---------|
+| `/support`  | Learn how to support the MIKROS Bot development | Everyone   | Support |
+
 ### Honeypot System Commands
 
 | Command                        | Description           | Permission    | Module   |
@@ -116,7 +122,7 @@ Discord Bot.
 | `/alert_channel`               | Set alert channel     | Administrator | Honeypot |
 | `/list_bans`                   | View recent bans      | Administrator | Honeypot |
 
-**Total Commands:** 33+ (including subcommands)
+**Total Commands:** 35+ (including subcommands)
 
 ---
 

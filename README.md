@@ -487,8 +487,10 @@ Includes:
 | `/admin-promotion-config`        | Admin      | Configure promotion settings (view, update-channel, set-verbosity, disable, force-check) | Administrator    |
 | `/admin-bot-detection-setup`     | Moderation | Enable/disable bot detection system                                                      | Administrator    |
 | `/admin-bot-detection-config`    | Moderation | Configure bot detection settings (8 subcommands)                                         | Administrator    |
+| `/promo-help`                    | Promo      | Get help with MIKROS promotional services and schedule a demo                            | Everyone         |
+| `/support`                      | Support    | Learn how to support the MIKROS Bot development                                          | Everyone         |
 
-**Total Commands:** 36+ (including subcommands)
+**Total Commands:** 38+ (including subcommands)
 
 ### Example Usage
 
