@@ -74,6 +74,8 @@ public class ConfigLoader {
     private final String reputationApiKeyProd;
     private final String reputationApiKey;
     private final String reputationApiUrl;
+    private final String tatumTechRecapMonthYear;
+    private final String tatumTechRecapVideoUrl;
 
     /**
      * Creates a new ConfigLoader instance and loads configuration.
@@ -221,6 +223,10 @@ public class ConfigLoader {
                     environment.getValue(), environment == Environment.DEV ? "DEV" : "PROD");
         }
 
+        // Load Tatum Tech event configuration (optional - has defaults)
+        this.tatumTechRecapMonthYear = getEnv("TATUM_TECH_RECAP_MONTH_YEAR", "October 2025");
+        this.tatumTechRecapVideoUrl = getEnv("TATUM_TECH_RECAP_VIDEO_URL", "https://youtu.be/_0JZcW_Eo3E");
+
         logger.info("Configuration loaded successfully");
     }
 
@@ -350,5 +356,23 @@ public class ConfigLoader {
      */
     public String getApiKeyType() {
         return environment.getValue();
+    }
+
+    /**
+     * Gets the Tatum Tech recap month and year for event promotions.
+     *
+     * @return the recap month and year (defaults to "October 2025")
+     */
+    public String getTatumTechRecapMonthYear() {
+        return tatumTechRecapMonthYear;
+    }
+
+    /**
+     * Gets the Tatum Tech recap video URL for event promotions.
+     *
+     * @return the recap video URL (defaults to "https://youtu.be/_0JZcW_Eo3E")
+     */
+    public String getTatumTechRecapVideoUrl() {
+        return tatumTechRecapVideoUrl;
     }
 }

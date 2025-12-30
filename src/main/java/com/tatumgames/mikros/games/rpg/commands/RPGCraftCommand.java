@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.time.Instant;
 
 /**
  * Command handler for /rpg-craft.
@@ -179,7 +180,7 @@ public class RPGCraftCommand implements CommandHandler {
         }
 
         embed.setFooter("Use /rpg-inventory to view your materials and bonuses");
-        embed.setTimestamp(java.time.Instant.now());
+        embed.setTimestamp(Instant.now());
 
         event.replyEmbeds(embed.build()).queue();
 

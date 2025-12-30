@@ -81,6 +81,13 @@ public class RestAction implements CharacterAction {
         int hpBefore = character.getStats().getCurrentHp();
         int maxHp = character.getStats().getMaxHp();
 
+        // Remove frostbite debuff (resting warms you up)
+        boolean hadFrostbite = character.hasFrostbite();
+        if (hadFrostbite) {
+            character.setHasFrostbite(false);
+            narrative += " The warmth of rest removes the lingering effects of frostbite.";
+        }
+
         // Fully restore HP
         character.getStats().fullHeal();
 
@@ -88,6 +95,10 @@ public class RestAction implements CharacterAction {
 
         // Record the action (uses a charge)
         character.recordAction();
+        
+        // Track action type and increment rest count for achievements
+        character.recordActionType("rest");
+        character.incrementRestCount();
 
         return RPGActionOutcome.builder()
                 .narrative(narrative)

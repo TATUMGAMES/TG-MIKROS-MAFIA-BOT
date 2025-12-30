@@ -322,7 +322,7 @@ with TODO comments.
 
 | Command                | Test Case           | Expected Result   | Notes                      |
 |------------------------|---------------------|-------------------|----------------------------|
-| `/promo-help`          | Request help        | DM with lead form | Collects email (TODO: API) |
+| `/promo-request`       | Request promotional services | DM with Calendly link | Schedule demo |
 | `/setup-promotions`    | Configure detection | Settings updated  | Admin only                 |
 | `/set-promo-frequency` | Set cooldown        | Cooldown updated  | 1-30 days range            |
 

@@ -12,37 +12,60 @@ import java.util.stream.Collectors;
 /**
  * Manages message templates for app promotions.
  * <p>
- * Cursor AI creates 10 templates (2-3 per step).
- * TODO: Developer to add 10 more templates to reach 20 total.
+ * Contains 20 templates total (5 per step) with community support and rallying messages.
  */
 public class PromotionMessageTemplates {
     private static final Logger logger = LoggerFactory.getLogger(PromotionMessageTemplates.class);
     private final Random random;
 
-    // Step 1: Introduce the game (2 templates - developer adds 3 more)
+    // Step 1: Introduce the game (5 templates total)
     private static final String[] STEP_1_TEMPLATES = {
             "🎮 Introducing <app_name>! <short_description>",
-            "Have you heard about <app_name>? <short_description>"
+            "Have you heard about <app_name>? <short_description>",
+            "Let's all support <app_name>! <short_description>",
+            "This game really impressed us - <app_name>! <short_description>",
+            "You're going to love <app_name>! <short_description>"
     };
 
-    // Step 2: Add more details (2 templates - developer adds 3 more)
+    // Step 2: Add more details (5 templates total)
     private static final String[] STEP_2_TEMPLATES = {
             "Dive deeper into <app_name>: <long_description>",
-            "Want to know more about <app_name>? <long_description>"
+            "Want to know more about <app_name>? <long_description>",
+            "Let's rally behind <app_name> and discover what makes it special: <long_description>",
+            "This project put a smile on our face. Here's why <app_name> stands out: <long_description>",
+            "Join us in supporting <app_name> - <long_description>"
     };
 
-    // Step 3: Multiple games promotion (3 templates - developer adds 2 more)
+    // Step 3: Multiple games promotion (5 templates total)
     private static final String[] STEP_3_TEMPLATES = {
             "🌟 MIKROS Top Picks for this month: <game_list>",
             "This month's featured games: <game_list>",
-            "Don't miss these MIKROS favorites: <game_list>"
+            "Don't miss these MIKROS favorites: <game_list>",
+            "Let's rally behind these amazing developers! This month's highlights: <game_list>",
+            "These games really impressed us - check them out: <game_list>"
     };
 
-    // Step 4: Final chance (3 templates - developer adds 2 more)
+    // Step 4: Final chance (5 templates total)
     private static final String[] STEP_4_TEMPLATES = {
             "⏰ Last chance to check out <app_name>! <short_description>",
             "Don't miss out on <app_name>! <short_description>",
-            "Final opportunity: <app_name> - <short_description>"
+            "Final opportunity: <app_name> - <short_description>",
+            "One final rally for <app_name>! <short_description>",
+            "Last call to support <app_name> - <short_description>"
+    };
+
+    // MIKROS Marketing footer messages
+    private static final String[] MIKROS_FOOTER_MESSAGES = {
+            "Powered by MIKROS Marketing — a developer-first platform helping indie games reach real players. Learn more: https://developer.tatumgames.com/",
+            "This discovery is powered by MIKROS, a marketing ecosystem built for indie game developers. https://developer.tatumgames.com/",
+            "Indie devs: this campaign was distributed using MIKROS Marketing. Get your game discovered here: https://developer.tatumgames.com/",
+            "Distributed via MIKROS Marketing, tools and tech that help indie games break through. https://developer.tatumgames.com/",
+            "Want visibility like this? MIKROS Marketing helps indie games reach engaged communities. https://developer.tatumgames.com/",
+            "Part of the MIKROS Ecosystem, connecting indie games with real players across Discord. https://developer.tatumgames.com/",
+            "This campaign is running through MIKROS, a platform built to improve game discovery and reach. https://developer.tatumgames.com/",
+            "FYI for developers: campaigns like this are powered by MIKROS Marketing. Learn more: https://developer.tatumgames.com/",
+            "Shared via MIKROS Marketing, supporting indie devs through community-driven discovery. https://developer.tatumgames.com/",
+            "Powered by MIKROS! Modern marketing tools for indie game developers and small game studios. https://developer.tatumgames.com/"
     };
 
     public PromotionMessageTemplates() {
@@ -85,7 +108,8 @@ public class PromotionMessageTemplates {
 
         // Replace app-specific placeholders
         if (app != null) {
-            message = message.replace("<app_name>", app.getAppName());
+            // Make app name bold when it appears in the message
+            message = message.replace("<app_name>", "**" + app.getAppName() + "**");
             message = message.replace("<short_description>", app.getShortDescription());
             message = message.replace("<long_description>", app.getLongDescription());
         }
@@ -93,7 +117,7 @@ public class PromotionMessageTemplates {
         // Replace game list placeholder (for step 3)
         if (message.contains("<game_list>") && allApps != null && !allApps.isEmpty()) {
             String gameList = allApps.stream()
-                    .map(AppPromotion::getAppName)
+                    .map(appPromotion -> "**" + appPromotion.getAppName() + "**")
                     .collect(Collectors.joining(", "));
             message = message.replace("<game_list>", gameList);
         }
@@ -213,6 +237,32 @@ public class PromotionMessageTemplates {
         return available.stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Gets a random MIKROS Marketing footer message.
+     *
+     * @return a random footer message
+     */
+    public String getRandomMikrosFooter() {
+        return MIKROS_FOOTER_MESSAGES[random.nextInt(MIKROS_FOOTER_MESSAGES.length)];
+    }
+
+    /**
+     * Determines if the MIKROS Marketing footer should be shown for a given step.
+     * Always shows on step 4 (final step) and step 3 (multi-game).
+     * Shows randomly (~35% chance) on steps 1 and 2.
+     *
+     * @param step the promotion step (1-4)
+     * @return true if footer should be shown
+     */
+    public boolean shouldShowMikrosFooter(int step) {
+        // Always show on step 3 (multi-game) and step 4 (final step)
+        if (step == 3 || step == 4) {
+            return true;
+        }
+        // 35% chance on steps 1 and 2
+        return random.nextInt(100) < 35;
     }
 }
 

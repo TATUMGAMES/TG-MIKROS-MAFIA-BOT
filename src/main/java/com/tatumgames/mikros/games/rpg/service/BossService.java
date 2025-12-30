@@ -5,6 +5,7 @@ import com.tatumgames.mikros.games.rpg.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
@@ -24,17 +25,23 @@ public class BossService {
     private final Map<String, Map<String, Integer>> damageTracking;
 
     private final CharacterService characterService;
+    private final AuraService auraService;
+    private final WorldCurseService worldCurseService;
     private static final Random random = new Random();
 
     /**
      * Creates a new BossService.
      *
      * @param characterService the character service for tracking kills
+     * @param auraService the aura service for applying legendary aura effects
+     * @param worldCurseService the world curse service for clearing curses on defeat
      */
-    public BossService(CharacterService characterService) {
+    public BossService(CharacterService characterService, AuraService auraService, WorldCurseService worldCurseService) {
         this.serverStates = new ConcurrentHashMap<>();
         this.damageTracking = new ConcurrentHashMap<>();
         this.characterService = characterService;
+        this.auraService = auraService;
+        this.worldCurseService = worldCurseService;
         logger.info("BossService initialized");
     }
 
@@ -79,6 +86,9 @@ public class BossService {
         state.setCurrentBoss(boss);
         damageTracking.put(guildId, new ConcurrentHashMap<>());
 
+        // Refresh heroic charges for all characters when new boss spawns
+        refreshHeroicChargesForAllCharacters();
+
         logger.info("Spawned normal boss {} (Level {}) for guild {}", boss.getName(), level, guildId);
         return boss;
     }
@@ -99,6 +109,9 @@ public class BossService {
         state.setCurrentSuperBoss(superBoss);
         state.setNormalBossesSinceSuper(0); // Reset counter
         damageTracking.put(guildId, new ConcurrentHashMap<>());
+
+        // Refresh heroic charges for all characters when new boss spawns
+        refreshHeroicChargesForAllCharacters();
 
         logger.info("Spawned super boss {} (Level {}) for guild {}", superBoss.getName(), level, guildId);
         return superBoss;
@@ -124,12 +137,39 @@ public class BossService {
             return 0; // No active boss
         }
 
+        // Check for Gravebound Presence Raise Fallen mechanic
+        // If character has Gravebound Presence and would die, set HP to 1 instead
+        // Note: Currently boss battles don't deal damage to characters, but this is ready for future implementation
+        if (character.getLegendaryAura() != null && 
+            character.getLegendaryAura().equals(com.tatumgames.mikros.games.rpg.achievements.LegendaryAura.GRAVEBOUND_PRESENCE.name())) {
+            // Check if character would die (HP would go to 0 or below)
+            // This would be checked if boss damage mechanics are added
+            // For now, we just ensure the flag is set correctly
+            if (!character.isRaisedFallenThisBoss()) {
+                // Character can be raised once per boss fight
+                // TODO: When boss damage is implemented, check if HP would go to 0, then:
+                // - Set HP to 1 instead of 0
+                // - Set raisedFallenThisBoss = true
+                // - Increment timesRaisedFallen
+                // - Add flavor text: "Dark sigils flare as the fallen hero is bound to the fight by forbidden magic…"
+            }
+        }
+
         // Calculate damage based on character stats and class
         int baseDamage = calculateDamage(character, boss != null ? boss.getType() : superBoss.getType());
 
         // Apply class bonuses
         double multiplier = getClassBonus(character.getCharacterClass(), boss != null ? boss.getType() : superBoss.getType());
         int damage = (int) (baseDamage * multiplier);
+
+        // Apply Song of Nilfheim aura effect (+5% damage if aura holder present)
+        // Get all participants who have dealt damage
+        Map<String, Integer> allDamage = damageTracking.get(guildId);
+        if (allDamage != null) {
+            java.util.List<String> participants = new java.util.ArrayList<>(allDamage.keySet());
+            participants.add(character.getDiscordId()); // Include current attacker
+            damage = auraService.applyAuraEffects(guildId, participants, damage);
+        }
 
         // Apply damage
         boolean defeated;
@@ -142,6 +182,12 @@ public class BossService {
         // Track damage
         damageTracking.computeIfAbsent(guildId, k -> new ConcurrentHashMap<>())
                 .merge(character.getDiscordId(), damage, Integer::sum);
+
+        // Track cursed boss fight participation
+        var activeCurses = worldCurseService.getActiveCurses(guildId);
+        if (!activeCurses.isEmpty()) {
+            character.incrementCursedBossFights();
+        }
 
         if (defeated) {
             handleBossDefeat(guildId, boss != null);
@@ -205,6 +251,9 @@ public class BossService {
             return;
         }
 
+        // Clear curses that expire on defeat (victory removes curses)
+        worldCurseService.clearCursesOnDefeat(guildId);
+
         // Calculate 30% of participants (rounded up) for XP rewards
         Map<String, Integer> allDamage = damageTracking.get(guildId);
         int totalParticipants = (allDamage != null) ? allDamage.size() : 0;
@@ -234,9 +283,15 @@ public class BossService {
 
             if (totalTopDamage > 0) {
                 int rank = 1;
+                String topDamageDealerId = null;
                 for (Map.Entry<String, Integer> entry : topDamage.entrySet()) {
                     String userId = entry.getKey();
                     int playerDamage = entry.getValue();
+                    
+                    // Track top damage dealer (rank 1)
+                    if (rank == 1) {
+                        topDamageDealerId = userId;
+                    }
                     
                     RPGCharacter character = characterService.getCharacter(userId);
                     if (character != null) {
@@ -261,6 +316,18 @@ public class BossService {
                                 finalXp, character.getName(), rank, playerDamage, leveledUp);
                     }
                     rank++;
+                }
+                
+                // Track top damage dealer for Hero's Mark achievement
+                if (topDamageDealerId != null) {
+                    RPGCharacter topDealer = characterService.getCharacter(topDamageDealerId);
+                    if (topDealer != null) {
+                        topDealer.incrementTopDamageBossKills();
+                        
+                        // TODO: Check for Hero's Mark achievement (100 normal OR 10 super)
+                        // Hero's Mark: 100 top damage kills on normal bosses OR 10 on super bosses
+                        // This will be implemented when we add achievement checking logic
+                    }
                 }
             }
         }
@@ -466,6 +533,19 @@ public class BossService {
     private CatalystType getRandomCatalyst() {
         CatalystType[] catalysts = CatalystType.values();
         return catalysts[random.nextInt(catalysts.length)];
+    }
+
+    /**
+     * Refreshes heroic charges for all characters when a new boss spawns.
+     */
+    private void refreshHeroicChargesForAllCharacters() {
+        Collection<RPGCharacter> allCharacters = characterService.getAllCharacters();
+        int refreshedCount = 0;
+        for (RPGCharacter character : allCharacters) {
+            character.refreshHeroicCharges();
+            refreshedCount++;
+        }
+        logger.info("Refreshed heroic charges for {} characters (new boss spawned)", refreshedCount);
     }
 }
 

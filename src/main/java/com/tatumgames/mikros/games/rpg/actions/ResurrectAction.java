@@ -1,10 +1,13 @@
 package com.tatumgames.mikros.games.rpg.actions;
 
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
+import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
 import com.tatumgames.mikros.games.rpg.model.CharacterClass;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
+import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -13,6 +16,16 @@ import java.util.Random;
  */
 public class ResurrectAction implements CharacterAction {
     private static final Random random = new Random();
+    private final WorldCurseService worldCurseService;
+
+    /**
+     * Creates a new ResurrectAction.
+     *
+     * @param worldCurseService the world curse service for applying curse effects
+     */
+    public ResurrectAction(WorldCurseService worldCurseService) {
+        this.worldCurseService = worldCurseService;
+    }
 
     // Messages when target is ALIVE (blessing instead)
     private static final String[] BLESSING_MESSAGES = {
@@ -78,19 +91,38 @@ public class ResurrectAction implements CharacterAction {
             throw new IllegalArgumentException("Only Priests can perform resurrection!");
         }
 
+        // Get active curses for this guild
+        String guildId = config.getGuildId();
+        List<WorldCurse> activeCurses = worldCurseService.getActiveCurses(guildId);
+
+        // Apply Fading Hope curse (24h → 36h recovery)
+        int recoveryHours = 24;
+        if (activeCurses.contains(WorldCurse.MAJOR_FADING_HOPE)) {
+            recoveryHours = 36;
+        }
+
         String narrative;
         int xpGained = 0;
         boolean success = false;
 
         if (target.isDead()) {
             // Target is dead - perform resurrection
-            target.resurrect(24); // 24 hour recovery
+            target.resurrect(recoveryHours);
             narrative = RESURRECTION_MESSAGES[random.nextInt(RESURRECTION_MESSAGES.length)]
                     .replace("{priest}", priest.getName())
                     .replace("{target}", target.getName());
 
-            // Priest gets +5 XP for successful resurrection
+            // Priest gets +5 XP for successful resurrection (doubled during Fading Hope)
             xpGained = 5;
+            if (activeCurses.contains(WorldCurse.MAJOR_FADING_HOPE)) {
+                xpGained = 10; // Double XP during curse
+            }
+            
+            // Track cursed resurrection for Lightbearer title (Priest only)
+            if (!activeCurses.isEmpty() && priest.getCharacterClass() == CharacterClass.PRIEST) {
+                priest.incrementCursedResurrections();
+            }
+            
             success = true;
         } else {
             // Target is alive - give blessing instead
@@ -98,8 +130,11 @@ public class ResurrectAction implements CharacterAction {
                     .replace("{priest}", priest.getName())
                     .replace("{target}", target.getName());
 
-            // Small XP bonus for blessing
+            // Small XP bonus for blessing (doubled during Fading Hope)
             xpGained = 2;
+            if (activeCurses.contains(WorldCurse.MAJOR_FADING_HOPE)) {
+                xpGained = 4; // Double XP during curse
+            }
             success = true;
         }
 

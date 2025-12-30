@@ -125,6 +125,93 @@ server moderation, configuration, and management.
 
 ---
 
+## Bot Detection Commands
+
+### `/admin-bot-detection-setup`
+
+**Purpose:** Initial setup for bot detection system.
+
+**Permission Required:** `ADMINISTRATOR`
+
+**Syntax:**
+
+```
+/admin-bot-detection-setup enabled:<true/false>
+```
+
+**Parameters:**
+
+- `enabled` (required): Enable or disable bot detection (true/false)
+
+**Behavior:**
+
+- Enables or disables bot detection for the server
+- Creates default configuration if not already set
+- Shows current configuration after setup
+
+**Example:**
+
+```
+/admin-bot-detection-setup enabled:true
+```
+
+---
+
+### `/admin-bot-detection-config`
+
+**Purpose:** Configure bot detection settings.
+
+**Permission Required:** `ADMINISTRATOR`
+
+**Subcommands:**
+
+- `view` - View current bot detection configuration
+- `set-account-age-threshold` - Set account age threshold in days (1-365, default: 30)
+- `set-link-restriction-minutes` - Set link restriction time after joining (1-1440, default: 20)
+- `set-multi-channel-threshold` - Set multi-channel spam threshold (2-10, default: 3)
+- `set-auto-action` - Set automatic action when bot detected (NONE, DELETE, WARN, MUTE, KICK, default: DELETE)
+- `toggle-reputation-reporting` - Enable/disable auto-reporting to reputation system (default: true)
+- `add-suspicious-domain` - Manually add a suspicious domain with risk score (1-10)
+- `remove-suspicious-domain` - Remove a domain from suspicious list
+
+**Detection Methods:**
+
+1. **Account Age + Link:** Account < threshold days old AND message contains link → HIGH confidence
+2. **Multi-Channel Spam:** Same message in ≥threshold channels within time window → HIGH confidence
+3. **Join + Link:** Joined < time window seconds ago AND message contains link → HIGH confidence
+4. **Suspicious Domain:** Message contains known suspicious TLD or URL shortener → MEDIUM confidence
+5. **Dynamic Domain:** Domain in dynamic list with risk score ≥ 3 → MEDIUM confidence
+
+**Auto Actions:**
+
+- `NONE` - No action, only log detection
+- `DELETE` - Delete message and warn user (default)
+- `WARN` - Send warning message to user
+- `MUTE` - Timeout user for 1 hour
+- `KICK` - Remove user from server
+
+**Reputation Integration:**
+
+- Detected bots are automatically reported using `BehaviorCategory.SPAMMER`
+- Reports appear in `/history` command
+- Reputation scores visible in `/lookup` command
+- Bot prevention count displayed in `/server-stats`
+
+**Example:**
+
+```
+/admin-bot-detection-config view
+/admin-bot-detection-config set-account-age-threshold days:30
+/admin-bot-detection-config set-link-restriction-minutes minutes:20
+/admin-bot-detection-config set-multi-channel-threshold threshold:3
+/admin-bot-detection-config set-auto-action action:DELETE
+/admin-bot-detection-config toggle-reputation-reporting enabled:true
+/admin-bot-detection-config add-suspicious-domain domain:example.ru risk-score:5
+/admin-bot-detection-config remove-suspicious-domain domain:example.ru
+```
+
+---
+
 ## Configuration Commands
 
 ### `/admin-scramble-setup`
@@ -575,7 +662,7 @@ native moderation features.
 
 ---
 
-**Last Updated:** 2025-01-27  
+**Last Updated:** 2025-12-24  
 **Total Admin Commands:** 15+ commands
 
 

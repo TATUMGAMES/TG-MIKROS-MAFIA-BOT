@@ -3,7 +3,10 @@ package com.tatumgames.mikros.games.rpg.commands;
 import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
-import com.tatumgames.mikros.games.rpg.model.*;
+import com.tatumgames.mikros.games.rpg.model.CatalystType;
+import com.tatumgames.mikros.games.rpg.model.EssenceType;
+import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
+import com.tatumgames.mikros.games.rpg.model.RPGInventory;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -15,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.time.Instant;
 
 /**
  * Command handler for /rpg-inventory.
@@ -129,7 +133,7 @@ public class RPGInventoryCommand implements CommandHandler {
         embed.addField("✨ Crafted Bonuses", bonuses.toString(), false);
 
         embed.setFooter("Use /rpg-craft to create permanent stat bonuses");
-        embed.setTimestamp(java.time.Instant.now());
+        embed.setTimestamp(Instant.now());
 
         event.replyEmbeds(embed.build()).queue();
 
