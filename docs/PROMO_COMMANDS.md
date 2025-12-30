@@ -9,7 +9,7 @@ launch-related phrases in messages and offers promotional assistance.
 
 - `/admin-promotion-setup` - Initial setup for promotion channel
 - `/admin-promotion-config` - Configure promotion settings (subcommands: view, update-channel, set-verbosity, disable, force-check)
-- `/promo-help` - Get help with MIKROS promotional services and schedule a demo
+- `/promo-request` - Request MIKROS promotional services and schedule a demo
 
 ---
 
@@ -92,16 +92,16 @@ Next Steps:
 
 ---
 
-### `/promo-help`
+### `/promo-request`
 
-**Purpose:** Request promotional help and schedule a demo with the MIKROS team.
+**Purpose:** Request promotional services and schedule a demo with the MIKROS team.
 
 **Permission Required:** `Everyone`
 
 **Syntax:**
 
 ```
-/promo-help
+/promo-request
 ```
 
 **Behavior:**
@@ -113,7 +113,7 @@ Next Steps:
 **Example:**
 
 ```
-/promo-help
+/promo-request
 ```
 
 **Output:**
@@ -280,4 +280,4 @@ Contact MIKROS for promotional assistance!
 **Commands:** 
 - `/admin-promotion-setup` - Channel setup
 - `/admin-promotion-config` - Configuration (4 subcommands)
-- `/promo-help` - Request promotional help and schedule a demo
+- `/promo-request` - Request promotional services and schedule a demo

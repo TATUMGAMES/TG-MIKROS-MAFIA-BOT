@@ -56,7 +56,7 @@
 - ✅ `spell-challenge`
 - ✅ `spell-guess`
 - ✅ `spell-leaderboard`
-- ✅ `promo-help`
+- ✅ `promo-request`
 - ✅ `admin-setup-promotions`
 - ✅ `admin-set-promo-frequency`
 - ✅ `honeypot`

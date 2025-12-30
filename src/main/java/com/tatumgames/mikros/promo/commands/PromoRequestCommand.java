@@ -8,15 +8,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Command handler for /promo-help.
+ * Command handler for /promo-request.
  * Sends a private message with Calendly link for scheduling demos.
  */
-public class PromoHelpCommand implements CommandHandler {
-    private static final Logger logger = LoggerFactory.getLogger(PromoHelpCommand.class);
+public class PromoRequestCommand implements CommandHandler {
+    private static final Logger logger = LoggerFactory.getLogger(PromoRequestCommand.class);
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("promo-help", "Get help with MIKROS promotional services and schedule a demo");
+        return Commands.slash("promo-request", "Request MIKROS promotional services and schedule a demo");
     }
 
     @Override
@@ -32,14 +32,14 @@ public class PromoHelpCommand implements CommandHandler {
         event.reply(message)
                 .setEphemeral(true)
                 .queue(
-                        success -> logger.info("Sent promo-help message to user {}", event.getUser().getId()),
-                        error -> logger.error("Failed to send promo-help message", error)
+                        success -> logger.info("Sent promo-request message to user {}", event.getUser().getId()),
+                        error -> logger.error("Failed to send promo-request message", error)
                 );
     }
 
     @Override
     public String getCommandName() {
-        return "promo-help";
+        return "promo-request";
     }
 }
 

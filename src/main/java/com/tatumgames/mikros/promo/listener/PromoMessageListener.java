@@ -101,7 +101,7 @@ public class PromoMessageListener extends ListenerAdapter {
         String promptMessage = """
                 🚀 **Looks like you're launching a game!**
                 
-                Want help promoting your game with MIKROS? Type `/promo-help` to get a free promo code or speak with a partner.
+                Want help promoting your game with MIKROS? Type `/promo-request` to get a free promo code or speak with a partner.
                 
                 We can help with:
                 • Game launch promotions

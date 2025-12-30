@@ -22,7 +22,7 @@ import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleService
 import com.tatumgames.mikros.honeypot.commands.*;
 import com.tatumgames.mikros.honeypot.listener.HoneypotMessageListener;
 import com.tatumgames.mikros.honeypot.service.HoneypotService;
-import com.tatumgames.mikros.promo.commands.PromoHelpCommand;
+import com.tatumgames.mikros.promo.commands.PromoRequestCommand;
 import com.tatumgames.mikros.promo.commands.SetPromoFrequencyCommand;
 import com.tatumgames.mikros.promo.commands.SetupPromotionsCommand;
 import com.tatumgames.mikros.promo.listener.PromoMessageListener;
@@ -251,10 +251,11 @@ public class BotMain extends ListenerAdapter {
         // Promo commands
         registerHandler(new SetupPromotionsCommand(promoService));
         registerHandler(new SetPromoFrequencyCommand(promoService));
-        registerHandler(new PromoHelpCommand());
+        registerHandler(new PromoRequestCommand());
 
         // Support commands
         registerHandler(new com.tatumgames.mikros.support.commands.SupportCommand());
+        registerHandler(new com.tatumgames.mikros.support.commands.InfoCommand());
 
         // Honeypot System commands
         registerHandler(new HoneypotCommand(honeypotService));
