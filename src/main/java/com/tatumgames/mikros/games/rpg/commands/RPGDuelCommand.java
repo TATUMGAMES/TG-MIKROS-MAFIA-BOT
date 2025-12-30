@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.time.Instant;
 
 /**
  * Command handler for /rpg-duel.
@@ -170,7 +171,7 @@ public class RPGDuelCommand implements CommandHandler {
                 false);
 
         embed.setFooter(String.format("Duels remaining today: %d/3", 3 - challenger.getDuelsInLast24Hours()));
-        embed.setTimestamp(java.time.Instant.now());
+        embed.setTimestamp(Instant.now());
 
         event.replyEmbeds(embed.build()).queue();
 

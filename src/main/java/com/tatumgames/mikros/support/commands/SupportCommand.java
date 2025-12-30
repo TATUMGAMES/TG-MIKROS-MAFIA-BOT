@@ -8,7 +8,8 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.Color;
+import java.awt.*;
+import java.time.Instant;
 import java.util.List;
 import java.util.Random;
 
@@ -101,7 +102,7 @@ public class SupportCommand implements CommandHandler {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setDescription(selectedMessage);
         embed.setColor(Color.CYAN);
-        embed.setTimestamp(java.time.Instant.now());
+        embed.setTimestamp(Instant.now());
 
         event.replyEmbeds(embed.build())
                 .setEphemeral(true)

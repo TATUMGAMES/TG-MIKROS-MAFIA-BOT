@@ -3,6 +3,7 @@ package com.tatumgames.mikros.services;
 import com.tatumgames.mikros.models.AppPromotion;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,7 +62,7 @@ public class InMemoryGamePromotionServiceTest {
         assertNull(service.getLastAppPostTime(guildId, appId), "Should have no post time initially");
 
         // Record step 1
-        java.time.Instant now = java.time.Instant.now();
+        java.time.Instant now = Instant.now();
         service.recordPromotionStep(guildId, appId, 1, now);
 
         assertEquals(1, service.getLastPromotionStep(guildId, appId), "Should have step 1");

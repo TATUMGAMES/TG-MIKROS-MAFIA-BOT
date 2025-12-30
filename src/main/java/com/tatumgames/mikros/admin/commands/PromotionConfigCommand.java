@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.time.Instant;
 
 /**
  * Command handler for /admin-promotion-config.
@@ -148,7 +149,7 @@ public class PromotionConfigCommand implements CommandHandler {
             );
         }
 
-        embed.setTimestamp(java.time.Instant.now());
+        embed.setTimestamp(Instant.now());
 
         event.replyEmbeds(embed.build()).queue();
     }

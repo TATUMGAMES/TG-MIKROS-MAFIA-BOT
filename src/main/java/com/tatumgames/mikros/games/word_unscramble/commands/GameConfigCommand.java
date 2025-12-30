@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.time.Instant;
 import java.time.LocalTime;
 
 /**
@@ -121,7 +122,7 @@ public class GameConfigCommand implements CommandHandler {
         }
 
         embed.addField("Game Types", games.toString(), false);
-        embed.setTimestamp(java.time.Instant.now());
+        embed.setTimestamp(Instant.now());
 
         event.replyEmbeds(embed.build()).queue();
     }

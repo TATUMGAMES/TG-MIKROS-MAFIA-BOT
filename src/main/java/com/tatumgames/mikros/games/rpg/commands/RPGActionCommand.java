@@ -2,12 +2,12 @@ package com.tatumgames.mikros.games.rpg.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
+import com.tatumgames.mikros.games.rpg.achievements.AchievementType;
 import com.tatumgames.mikros.games.rpg.actions.CharacterAction;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
+import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
-import com.tatumgames.mikros.games.rpg.achievements.AchievementType;
-import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
 import com.tatumgames.mikros.games.rpg.service.AchievementService;
 import com.tatumgames.mikros.games.rpg.service.ActionService;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.time.Duration;
+import java.time.Instant;
 
 /**
  * Command handler for /rpg-action.
@@ -295,7 +296,7 @@ public class RPGActionCommand implements CommandHandler {
                     character.getMaxActionCharges(),
                     refreshHours
             ));
-            embed.setTimestamp(java.time.Instant.now());
+            embed.setTimestamp(Instant.now());
 
             event.replyEmbeds(embed.build()).queue();
 

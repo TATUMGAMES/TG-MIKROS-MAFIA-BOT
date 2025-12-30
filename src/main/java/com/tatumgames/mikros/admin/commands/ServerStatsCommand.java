@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.time.Instant;
 import java.util.Map;
 
 /**
@@ -108,7 +109,7 @@ public class ServerStatsCommand implements CommandHandler {
                         "Historical data is not included.",
                 false);
 
-        embed.setTimestamp(java.time.Instant.now());
+        embed.setTimestamp(Instant.now());
         embed.setFooter("Requested by " + member.getEffectiveName());
 
         // Send a reply message for this interaction
