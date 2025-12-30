@@ -9,7 +9,7 @@ import java.util.Random;
 public class TatumTechEventTemplates {
     private final Random random;
 
-    // Version A: Pre-event awareness (most important)
+    // Version A: Pre-event awareness (most important) - includes donation support
     private static final String VERSION_A_TEMPLATE = """
             🎮 TATUM TECH - CALLING ALL GAME LOVERS!
             
@@ -26,6 +26,10 @@ public class TatumTechEventTemplates {
             • Real exposure (not ads) for you and your game(s)
             • Games running MIKROS campaigns during the event automatically get featured!
             • Opportunity for sponsorships & partnerships
+            
+            💝 Support Tatum Tech:
+            Help us continue providing free computers and workshops to underserved communities in South LA. Every contribution makes a difference!
+            Donate here: {DONATION_URL}
             
             📽️ {RECAP_MONTH_YEAR} Recap Video:
             {RECAP_VIDEO_URL}
@@ -54,6 +58,9 @@ public class TatumTechEventTemplates {
             📬 If you want updates, early access, or to explore featuring your game download the
             Tatum Tech app. Early registration is open: https://forms.gle/cm9wMsYY6ZpPauWR8
             """;
+
+    // Donation URL for Tatum Tech support
+    private static final String DONATION_URL = "https://buy.stripe.com/7sI3cH8m6bmd5ck4gj";
 
     // MIKROS Marketing footer messages (same as game promotions)
     private static final String[] MIKROS_FOOTER_MESSAGES = {
@@ -86,7 +93,8 @@ public class TatumTechEventTemplates {
     public String getVersionA(String recapMonthYear, String recapVideoUrl) {
         String message = VERSION_A_TEMPLATE
                 .replace("{RECAP_MONTH_YEAR}", recapMonthYear)
-                .replace("{RECAP_VIDEO_URL}", recapVideoUrl);
+                .replace("{RECAP_VIDEO_URL}", recapVideoUrl)
+                .replace("{DONATION_URL}", DONATION_URL);
         return message.trim();
     }
 

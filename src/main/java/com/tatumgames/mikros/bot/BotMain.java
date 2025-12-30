@@ -253,6 +253,9 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new SetPromoFrequencyCommand(promoService));
         registerHandler(new PromoHelpCommand());
 
+        // Support commands
+        registerHandler(new com.tatumgames.mikros.support.commands.SupportCommand());
+
         // Honeypot System commands
         registerHandler(new HoneypotCommand(honeypotService));
         registerHandler(new BanAndRemoveCommand(moderationLogService, messageDeletionService));
