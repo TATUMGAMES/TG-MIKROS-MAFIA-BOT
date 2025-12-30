@@ -49,6 +49,13 @@ Discord Bot.
 | `/set-promotion-verbosity` | Set promotion frequency     | Administrator | Promotions |
 | `/force-promotion-check`   | Manually trigger promotion  | Administrator | Promotions |
 
+### Auto-Bump Commands
+
+| Command              | Description                          | Permission    | Module   |
+|----------------------|--------------------------------------|---------------|---------|
+| `/admin-bump-setup`   | Set up automatic server bumping      | Administrator | Bump    |
+| `/admin-bump-config` | Configure auto-bump settings (4 subs) | Administrator | Bump    |
+
 ### Analytics Commands
 
 | Command                              | Description                | Permission | Module    |
@@ -123,7 +130,7 @@ Discord Bot.
 | `/alert_channel`               | Set alert channel     | Administrator | Honeypot |
 | `/list_bans`                   | View recent bans      | Administrator | Honeypot |
 
-**Total Commands:** 36+ (including subcommands)
+**Total Commands:** 38+ (including subcommands)
 
 ---
 
@@ -326,6 +333,33 @@ Discord Bot.
 
 ---
 
+### 10. Auto-Bump System
+
+**Purpose:** Automatic server bumping for advertising bots (Disboard, Disurl)
+
+**Features:**
+
+- Automatic server bumping at configurable intervals
+- Support for Disboard and/or Disurl
+- Per-server independent configuration
+- Rate limit safety (respects external bot cooldowns)
+- Bot presence verification before bumping
+- Configurable bump interval (1-24 hours, default: 4 hours)
+
+**Services:**
+
+- `BumpService` - Bump configuration management
+- `BumpScheduler` - Automated bump execution (checks every 15 minutes)
+
+**Storage:** In-memory (TODO: database persistence)
+
+**Rate Limits:**
+
+- Disboard: Minimum 2 hours between bumps
+- Disurl: Minimum 1 hour between bumps
+
+---
+
 ## Configuration Options
 
 ### Per-Server Settings
@@ -364,6 +398,12 @@ Discord Bot.
 - Silent mode
 - Delete days (0-7)
 - Alert channel
+
+#### Auto-Bump
+
+- Bump channel
+- Enabled bots (Disboard, Disurl, or both)
+- Bump interval (1-24 hours, default: 4)
 
 #### Auto-Escalation
 
@@ -457,8 +497,8 @@ Discord Bot.
 
 ## Summary
 
-**Total Commands:** 33+  
-**Feature Modules:** 9  
+**Total Commands:** 38+  
+**Feature Modules:** 10  
 **Services:** 20+  
 **Data Models:** 15+  
 **Scheduled Tasks:** 2+  

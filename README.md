@@ -96,6 +96,21 @@ for game developers and studios.
 - `/admin-promotion-setup` - Configure promotion posting channel
 - `/admin-promotion-config` - Configure promotion settings (view, update-channel, set-verbosity, disable, force-check)
 
+### 🔄 Auto-Bump System
+
+**Admin Commands:**
+
+- `/admin-bump-setup` - Set up automatic server bumping (channel, bots selection)
+- `/admin-bump-config` - Configure auto-bump settings (view, set-interval, update-bots, disable)
+
+**Features:**
+
+- Automatic server bumping for Disboard and/or Disurl
+- Configurable bump interval (1-24 hours, default: 4 hours)
+- Per-server independent configuration
+- Rate limit safety (respects external bot cooldowns)
+- Bot presence verification before bumping
+
 **Features:**
 
 - Automated game promotion scheduling
@@ -485,13 +500,15 @@ Includes:
 | `/set-promo-frequency`           | Promo      | Set promo cooldown                                                                       | Administrator    |
 | `/admin-promotion-setup`         | Admin      | Configure game promotion channel                                                         | Administrator    |
 | `/admin-promotion-config`        | Admin      | Configure promotion settings (view, update-channel, set-verbosity, disable, force-check) | Administrator    |
+| `/admin-bump-setup`              | Admin      | Set up automatic server bumping (channel, bots selection)                               | Administrator    |
+| `/admin-bump-config`             | Admin      | Configure auto-bump settings (view, set-interval, update-bots, disable)               | Administrator    |
 | `/admin-bot-detection-setup`     | Moderation | Enable/disable bot detection system                                                      | Administrator    |
 | `/admin-bot-detection-config`    | Moderation | Configure bot detection settings (8 subcommands)                                         | Administrator    |
 | `/promo-request`                  | Promo      | Request MIKROS promotional services and schedule a demo                                  | Everyone         |
 | `/support`                      | Support    | Learn how to support the MIKROS Bot development                                          | Everyone         |
 | `/info`                         | Support    | Learn about the MIKROS Bot and MIKROS Ecosystem                                        | Everyone         |
 
-**Total Commands:** 39+ (including subcommands)
+**Total Commands:** 41+ (including subcommands)
 
 ### Example Usage
 
@@ -545,6 +562,16 @@ Includes:
 /admin-bot-detection-config set-account-age-threshold days:30
 /admin-bot-detection-config set-auto-action action:DELETE
 /server-stats
+```
+
+#### Auto-Bump
+
+```
+/admin-bump-setup channel:#server-promo bots:both
+/admin-bump-config view
+/admin-bump-config set-interval interval:6
+/admin-bump-config update-bots bots:disboard
+/admin-bump-config disable
 ```
 
 ---

@@ -662,8 +662,166 @@ native moderation features.
 
 ---
 
+## Auto-Bump Commands
+
+### `/admin-bump-setup`
+
+**Purpose:** Set up automatic server bumping for advertising bots (Disboard, Disurl).
+
+**Permission Required:** `ADMINISTRATOR`
+
+**Syntax:**
+
+```
+/admin-bump-setup channel:<#channel> bots:<disboard|disurl|both>
+```
+
+**Parameters:**
+
+- `channel` (required): The text channel where bump commands will be sent
+- `bots` (required): Which bots to bump - "disboard", "disurl", or "both"
+
+**Behavior:**
+
+- Configures the bump channel for the server
+- Sets which external bots to bump
+- Default interval: 4 hours
+- Automatically starts bumping at the configured interval
+
+**Example:**
+
+```
+/admin-bump-setup channel:#server-promo bots:both
+```
+
+**Error Handling:**
+
+- Permission denied: Ephemeral error message
+- Invalid channel: Clear feedback
+- Bot not present: Gracefully skipped (logged)
+
+---
+
+### `/admin-bump-config`
+
+**Purpose:** Configure auto-bump settings for your server.
+
+**Permission Required:** `ADMINISTRATOR`
+
+**Subcommands:**
+
+#### `view`
+
+View current bump configuration.
+
+**Example:**
+
+```
+/admin-bump-config view
+```
+
+**Displays:**
+
+- Status (enabled/disabled)
+- Bump channel
+- Enabled bots
+- Bump interval
+- Last bump times per bot
+
+#### `set-interval`
+
+Set the bump interval (1-24 hours).
+
+**Syntax:**
+
+```
+/admin-bump-config set-interval interval:<1-24>
+```
+
+**Example:**
+
+```
+/admin-bump-config set-interval interval:6
+```
+
+**Behavior:**
+
+- Updates the bump interval for the server
+- Minimum: 1 hour
+- Maximum: 24 hours
+- Default: 4 hours
+
+#### `update-bots`
+
+Update which bots to bump.
+
+**Syntax:**
+
+```
+/admin-bump-config update-bots bots:<disboard|disurl|both>
+```
+
+**Example:**
+
+```
+/admin-bump-config update-bots bots:disboard
+```
+
+**Behavior:**
+
+- Updates the enabled bots list
+- Options: "disboard", "disurl", or "both"
+
+#### `disable`
+
+Disable auto-bump for the server.
+
+**Example:**
+
+```
+/admin-bump-config disable
+```
+
+**Behavior:**
+
+- Clears all bump configuration
+- Stops automatic bumping
+- Removes all tracking data
+
+**Error Handling:**
+
+- Not set up: Prompts to use `/admin-bump-setup` first
+- Invalid interval: Must be 1-24 hours
+- Permission denied: Ephemeral error message
+
+---
+
+## Auto-Bump System Details
+
+### Rate Limiting
+
+The bot respects external bot rate limits:
+
+- **Disboard:** Minimum 2 hours between bumps
+- **Disurl:** Minimum 1 hour between bumps
+
+The scheduler checks every 15 minutes and only bumps when:
+- The configured interval has passed
+- The external bot's minimum cooldown has passed
+- The external bot is present in the server
+
+### Safety Features
+
+- ✅ Bot presence verification before bumping
+- ✅ Rate limit tracking per bot per server
+- ✅ Graceful error handling (bot offline, rate limited, etc.)
+- ✅ Per-server independent configuration
+- ✅ Admin-only access
+
+---
+
 **Last Updated:** 2025-12-24  
-**Total Admin Commands:** 15+ commands
+**Total Admin Commands:** 17+ commands
 
 
 

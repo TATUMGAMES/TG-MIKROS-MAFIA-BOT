@@ -32,6 +32,11 @@ import com.tatumgames.mikros.services.RealGamePromotionService;
 import com.tatumgames.mikros.services.PromotionOnboardingService;
 import com.tatumgames.mikros.services.scheduler.GamePromotionScheduler;
 import com.tatumgames.mikros.services.scheduler.PromotionOnboardingScheduler;
+import com.tatumgames.mikros.bump.service.BumpService;
+import com.tatumgames.mikros.bump.service.InMemoryBumpService;
+import com.tatumgames.mikros.bump.scheduler.BumpScheduler;
+import com.tatumgames.mikros.bump.commands.BumpSetupCommand;
+import com.tatumgames.mikros.bump.commands.BumpConfigCommand;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -87,6 +92,8 @@ public class BotMain extends ListenerAdapter {
     private final HoneypotMessageListener honeypotListener;
     private final com.tatumgames.mikros.botdetection.service.BotDetectionService botDetectionService;
     private final com.tatumgames.mikros.botdetection.listener.BotDetectionMessageListener botDetectionListener;
+    private final BumpService bumpService;
+    private final BumpScheduler bumpScheduler;
 
     /**
      * Creates a new BotMain instance.
@@ -154,6 +161,8 @@ public class BotMain extends ListenerAdapter {
         this.botDetectionService = new com.tatumgames.mikros.botdetection.service.BotDetectionService();
         this.botDetectionListener = new com.tatumgames.mikros.botdetection.listener.BotDetectionMessageListener(
                 botDetectionService, reputationService);
+        this.bumpService = new InMemoryBumpService();
+        this.bumpScheduler = new BumpScheduler(bumpService);
 
         // Register command handlers
         registerCommandHandlers();
@@ -218,6 +227,10 @@ public class BotMain extends ListenerAdapter {
         // Game Promotion commands
         registerHandler(new SetupPromotionChannelCommand(gamePromotionService));
         registerHandler(new PromotionConfigCommand(gamePromotionService, gamePromotionScheduler));
+
+        // Auto-Bump commands
+        registerHandler(new BumpSetupCommand(bumpService));
+        registerHandler(new BumpConfigCommand(bumpService));
 
         // Game Stats/Analytics commands
         // TODO: Re-enable when MIKROS Analytics API integration is complete
@@ -316,6 +329,10 @@ public class BotMain extends ListenerAdapter {
         // Start Tatum Tech event scheduler
         tatumTechEventScheduler.start(event.getJDA());
         logger.info("Tatum Tech event scheduler started");
+
+        // Start bump scheduler
+        bumpScheduler.start(event.getJDA());
+        logger.info("Bump scheduler started");
     }
 
     /**

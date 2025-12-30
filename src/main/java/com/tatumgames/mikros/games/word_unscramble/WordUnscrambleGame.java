@@ -275,10 +275,10 @@ public class WordUnscrambleGame implements WordUnscrambleInterface {
             long secondsSinceStart = Instant.now().getEpochSecond() - session.getStartTime().getEpochSecond();
             baseScore = Math.max(100, 1000 - (int) secondsSinceStart);
             
-            // Calculate bonus based on wrong guesses before this correct answer
-            // Only count wrong guesses that occurred before this correct answer
+            // Calculate bonus based on wrong guesses from OTHER users before this correct answer
+            // Only count wrong guesses from different users (not the current user's own wrong guesses)
             long wrongGuessesBefore = session.getResults().stream()
-                    .filter(r -> !r.isCorrect())
+                    .filter(r -> !r.isCorrect() && !r.userId().equals(userId))
                     .count();
             
             // Diminishing returns bonus calculation:
