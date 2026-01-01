@@ -24,8 +24,7 @@ public class PromoRequestCommand implements CommandHandler {
         String message = """
                 Want a quick MIKROS product walkthrough or campaign setup demo?
                 
-                📅 Book a 30-min demo here:
-                www.calendly.com/tatumgames
+                📅 [Book a 30-min demo here](https://www.calendly.com/tatumgames)
                 """;
 
         // Send ephemeral reply (only visible to the user who ran the command)

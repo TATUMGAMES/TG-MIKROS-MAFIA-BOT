@@ -7,6 +7,7 @@ import com.tatumgames.mikros.games.rpg.model.CharacterClass;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
+import com.tatumgames.mikros.games.rpg.service.LoreRecognitionService;
 import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -31,6 +32,7 @@ public class RPGResurrectCommand implements CommandHandler {
     private final CharacterService characterService;
     @SuppressWarnings("unused") // Used in constructor to create ResurrectAction
     private final WorldCurseService worldCurseService;
+    private final LoreRecognitionService loreRecognitionService;
     private final ResurrectAction resurrectAction;
 
     /**
@@ -38,11 +40,13 @@ public class RPGResurrectCommand implements CommandHandler {
      *
      * @param characterService the character service
      * @param worldCurseService the world curse service
+     * @param loreRecognitionService the lore recognition service
      */
-    public RPGResurrectCommand(CharacterService characterService, WorldCurseService worldCurseService) {
+    public RPGResurrectCommand(CharacterService characterService, WorldCurseService worldCurseService, LoreRecognitionService loreRecognitionService) {
         this.characterService = characterService;
         this.worldCurseService = worldCurseService;
-        this.resurrectAction = new ResurrectAction(worldCurseService);
+        this.loreRecognitionService = loreRecognitionService;
+        this.resurrectAction = new ResurrectAction(worldCurseService, loreRecognitionService);
     }
 
     @Override

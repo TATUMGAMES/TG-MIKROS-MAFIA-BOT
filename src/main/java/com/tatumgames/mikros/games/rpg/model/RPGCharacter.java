@@ -83,6 +83,10 @@ public class RPGCharacter {
     private int darkRelicActionsRemaining = 0; // Dark Relic: +5% XP for next 3 actions, +10% damage taken
     private double darkRelicXpBonus = 0.0; // XP bonus multiplier (0.05 = +5%)
     private double darkRelicDamagePenalty = 0.0; // Damage penalty multiplier (0.10 = +10% damage taken)
+    
+    // Lore recognition tracking
+    private int timesResurrectedOthers = 0; // Times Priest resurrected others (for The Rescuer recognition)
+    private java.util.Set<com.tatumgames.mikros.games.rpg.model.InfusionType> infusionsCrafted; // Set of infusion types crafted (for Master of Elements recognition)
 
     /**
      * Creates a new RPG character.
@@ -157,6 +161,10 @@ public class RPGCharacter {
         this.darkRelicActionsRemaining = 0;
         this.darkRelicXpBonus = 0.0;
         this.darkRelicDamagePenalty = 0.0;
+        
+        // Initialize lore recognition tracking
+        this.timesResurrectedOthers = 0;
+        this.infusionsCrafted = new java.util.HashSet<>();
     }
 
     /**
@@ -166,11 +174,22 @@ public class RPGCharacter {
      * @return true if the character leveled up
      */
     public boolean addXp(int amount) {
+        return addXp(amount, null);
+    }
+    
+    /**
+     * Adds experience points and handles leveling up.
+     *
+     * @param amount the XP to add
+     * @param loreRecognitionService optional service for checking milestones (can be null)
+     * @return true if the character leveled up
+     */
+    public boolean addXp(int amount, com.tatumgames.mikros.games.rpg.service.LoreRecognitionService loreRecognitionService) {
         this.xp += amount;
 
         boolean leveledUp = false;
         while (this.xp >= this.xpToNextLevel) {
-            levelUp();
+            levelUp(loreRecognitionService);
             leveledUp = true;
         }
 
@@ -179,8 +198,10 @@ public class RPGCharacter {
 
     /**
      * Levels up the character.
+     * 
+     * @param loreRecognitionService optional service for checking milestones (can be null)
      */
-    private void levelUp() {
+    private void levelUp(com.tatumgames.mikros.games.rpg.service.LoreRecognitionService loreRecognitionService) {
         int oldMaxCharges = getMaxActionCharges();
         
         this.level++;
@@ -194,6 +215,18 @@ public class RPGCharacter {
             // Player gained a charge slot - give +1 charge immediately as level-up bonus
             this.actionCharges = Math.min(newMaxCharges, this.actionCharges + 1);
         }
+        
+        // Check for lore recognition milestones (level-based)
+        if (loreRecognitionService != null) {
+            loreRecognitionService.checkMilestones(this);
+        }
+    }
+    
+    /**
+     * Levels up the character (overload without service for backward compatibility).
+     */
+    private void levelUp() {
+        levelUp(null);
     }
 
     /**
@@ -914,5 +947,23 @@ public class RPGCharacter {
 
     public void setDarkRelicDamagePenalty(double darkRelicDamagePenalty) {
         this.darkRelicDamagePenalty = darkRelicDamagePenalty;
+    }
+
+    // Lore recognition tracking getters/setters
+
+    public int getTimesResurrectedOthers() {
+        return timesResurrectedOthers;
+    }
+
+    public void incrementTimesResurrectedOthers() {
+        this.timesResurrectedOthers++;
+    }
+
+    public java.util.Set<com.tatumgames.mikros.games.rpg.model.InfusionType> getInfusionsCrafted() {
+        return new java.util.HashSet<>(infusionsCrafted);
+    }
+
+    public void addInfusionCrafted(com.tatumgames.mikros.games.rpg.model.InfusionType infusionType) {
+        this.infusionsCrafted.add(infusionType);
     }
 }

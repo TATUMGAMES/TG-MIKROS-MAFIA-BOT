@@ -119,10 +119,13 @@ public class BossScheduler {
                     SuperBoss currentSuperBoss = state.getCurrentSuperBoss();
 
                     // Check if current boss expired or was defeated
+                    // Note: Expiration is also checked in checkBossExpirationWarnings() which runs every 30 minutes
+                    // This 24-hour check serves as a backup/safety net
                     if (currentBoss != null) {
                         if (currentBoss.isExpired() || currentBoss.isDefeated()) {
                             // Check if boss expired without being defeated (apply curse)
                             if (currentBoss.isExpired() && !currentBoss.isDefeated()) {
+                                logger.debug("Boss {} expired in 24h spawn check for guild {}", currentBoss.getName(), guild.getName());
                                 applyBossFailureCurse(guild, guildId, false); // false = normal boss
                             }
                             // Boss expired or defeated, spawn new one
@@ -134,7 +137,9 @@ public class BossScheduler {
                     if (currentSuperBoss != null) {
                         if (currentSuperBoss.isExpired() || currentSuperBoss.isDefeated()) {
                             // Check if super boss expired without being defeated (apply curse)
+                            // Note: Expiration is also checked in checkBossExpirationWarnings() which runs every 30 minutes
                             if (currentSuperBoss.isExpired() && !currentSuperBoss.isDefeated()) {
+                                logger.debug("Super boss {} expired in 24h spawn check for guild {}", currentSuperBoss.getName(), guild.getName());
                                 applyBossFailureCurse(guild, guildId, true); // true = super boss
                             }
                             // Super boss expired or defeated, spawn new one
@@ -475,14 +480,30 @@ public class BossScheduler {
                 Boss currentBoss = state.getCurrentBoss();
                 SuperBoss currentSuperBoss = state.getCurrentSuperBoss();
 
-                // Check normal boss
-                if (currentBoss != null && !currentBoss.isDefeated() && !currentBoss.isExpired()) {
-                    checkAndSendBossWarning(guild, guildId, currentBoss);
+                // Check normal boss - both warnings AND expiration
+                if (currentBoss != null && !currentBoss.isDefeated()) {
+                    if (currentBoss.isExpired()) {
+                        // Boss expired! Apply curse and spawn new one
+                        logger.info("Boss {} expired in guild {}, applying curse", currentBoss.getName(), guild.getName());
+                        applyBossFailureCurse(guild, guildId, false);
+                        spawnNewBoss(guild, guildId, state);
+                    } else {
+                        // Boss still active, check for warnings
+                        checkAndSendBossWarning(guild, guildId, currentBoss);
+                    }
                 }
 
-                // Check super boss
-                if (currentSuperBoss != null && !currentSuperBoss.isDefeated() && !currentSuperBoss.isExpired()) {
-                    checkAndSendSuperBossWarning(guild, guildId, currentSuperBoss);
+                // Check super boss - both warnings AND expiration
+                if (currentSuperBoss != null && !currentSuperBoss.isDefeated()) {
+                    if (currentSuperBoss.isExpired()) {
+                        // Super boss expired! Apply curse and spawn new one
+                        logger.info("Super boss {} expired in guild {}, applying curse", currentSuperBoss.getName(), guild.getName());
+                        applyBossFailureCurse(guild, guildId, true);
+                        spawnNewBoss(guild, guildId, state);
+                    } else {
+                        // Super boss still active, check for warnings
+                        checkAndSendSuperBossWarning(guild, guildId, currentSuperBoss);
+                    }
                 }
 
             } catch (Exception e) {

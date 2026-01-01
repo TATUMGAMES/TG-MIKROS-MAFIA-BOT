@@ -63,7 +63,7 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 | `/rpg-boss-battle`         | Battle boss, check status, or view leaderboard | `/rpg-boss-battle battle`                  |
 | `/rpg-leaderboard`         | View top players                               | `/rpg-leaderboard`                         |
 | `/rpg-inventory`           | View your collected items and crafted bonuses  | `/rpg-inventory`                           |
-| `/rpg-craft`               | Craft permanent stat-boosting items             | `/rpg-craft item:Ember Infusion`           |
+| `/rpg-craft`               | Craft permanent stat-boosting items or consumable infusions | `/rpg-craft item:Ember Infusion`           |
 
 **Boss Battle Subcommands:**
 
@@ -303,6 +303,12 @@ Different stats are effective or weak against different enemy types:
   - Base: 12.5% chance to find 1-2 random essences
   - **AGI Bonus:** +0.5% drop chance per AGI point (max +15%, total: 12.5-27.5%)
   - **AGI ≥ 20:** +1 essence when drops occur (now 2-3 essences)
+- **Wandering Figures (Ultra-Rare):** 0.5% chance to encounter mysterious figures:
+  - **The Frostbound Sage** (Level 10+): Restore 1 charge OR +10% XP OR story flag
+  - **The Ancient Wanderer** (Level 5+): +1 essence OR +5% damage OR story flag
+  - **The Mysterious Merchant** (Any level): Trade essences OR +1 catalyst OR story flag
+  - **The Stormwarden Apprentice** (Any level): +1 Gale Fragment OR +10% AGI OR story flag
+  - Class-specific flavor: Preferred classes have 2x encounter chance
 - **Best For:** Consistent XP without risk, item collection (especially with high AGI)
 - **Charge Cost:** 1
 
@@ -311,6 +317,7 @@ Different stats are effective or weak against different enemy types:
 - **Type:** Stat improvement
 - **XP Gain:** 25 + (level × 4) ± 7
 - **Stat Gain:** +1 to +3 random stat (STR, AGI, INT, or LUCK)
+- **Nilfheim Event Bonus:** During "The Grand Library Opens" event, training grants +1 guaranteed stat point
 - **Risk:** None
 - **Narratives:** 20 training scenarios per stat (80 total)
 - **Best For:** Building stats over time
@@ -334,6 +341,8 @@ Different stats are effective or weak against different enemy types:
 - **Enemies:** 66 enemy types with different types (Physical, Magical, Agile, Undead, Beast, Construct)
 - **Stat Effectiveness:** STR/INT/AGI have 1.3x effectiveness vs certain enemy types, 0.85x vs others
 - **Critical Hits:** AGI/2% chance for 1.5x damage
+- **Pack Enemies:** Rare pack enemies (e.g., "Ice Wolf Pack") deal 15% more damage and use pack-specific narrative. Pack encounters are not common but are more dangerous.
+- **Nilfheim Event Bonus:** During "A Stormwarden's Blessing" event, battles deal +5% damage
 - **Item Drops:**
   - Base: 20% chance on victory, 5% chance on defeat
   - **LUCK Bonus:** +0.3% per LUCK point (capped at +10%)
@@ -516,6 +525,25 @@ Players can craft permanent stat bonuses using essences and catalysts:
 - **INT Bonus:** INT/2% chance to preserve catalyst when crafting (essence still consumed)
 - Higher intelligence = more efficient crafting (saves rare catalysts)
 
+### Consumable Infusions
+
+Players can also craft temporary single-use infusions that provide powerful effects on the next action:
+
+| Infusion | Emoji | Recipe | Effect |
+|----------|-------|--------|--------|
+| **Frost Clarity** | ❄️ | 2x Mind Crystal + 1x Frozen Reagent | +10% XP on next action |
+| **Gale Fortune** | 🌪️ | 2x Fate Clover + 1x Ancient Vial | Next drop guaranteed essence |
+| **Ember Endurance** | 🔥 | 2x Vital Ash + 1x Monster Core | Next defeat damage -20% |
+| **Astral Insight** | 🔮 | 2x Mind Crystal + 1x Runic Binding | Next craft +5% catalyst preservation |
+| **Void Precision** | ⚫ | 2x Gale Fragment + 1x Frozen Reagent | Next battle +8% damage |
+| **Elemental Convergence** | ✨ | 1x each essence (5 total) + 1x Runic Binding | +15% XP AND guaranteed drop |
+
+**Infusion Rules:**
+- **Max 1 Active:** Only one infusion can be active at a time
+- **Auto-Consume:** Infusions are consumed on the next action (or expire after 24 hours if unused)
+- **Temporary:** Effects apply once, then the infusion is consumed
+- **Crafting:** Use `/rpg-craft` to craft infusions (same command as permanent items)
+
 ### Crafting Rules
 
 - **Hard Cap:** +5 per stat (STR, AGI, INT, LUCK, HP)
@@ -572,6 +600,8 @@ Items are displayed inline in action result messages:
 - **Spawn:** One boss every 24 hours
 - **HP:** 10,000 × boss level
 - **Community Battle:** Everyone shares the same HP pool
+- **Expiration:** Bosses expire after 24 hours if not defeated, applying a minor world curse
+- **Expiration Detection:** Checked every 30 minutes (curses applied within 30 minutes of expiration)
 - **Progression:** Boss level increases when `TotalDefeated >= 6 × currentBossLevel`
     - Level 1 → 2: Need 6 defeats
     - Level 2 → 3: Need 12 defeats
@@ -583,6 +613,8 @@ Items are displayed inline in action result messages:
 - **Spawn:** Every 3 normal boss defeats
 - **HP:** 50,000 × super boss level
 - **Special Mechanics:** Each super boss has unique abilities
+- **Expiration:** Super bosses expire after 24 hours if not defeated, applying a major world curse
+- **Expiration Detection:** Checked every 30 minutes (curses applied within 30 minutes of expiration)
 - **Progression:** Super boss level increases when `SuperBossesDefeated >= 2 × superBossLevel`
     - Level 1 → 2: Need 2 defeats
     - Level 2 → 3: Need 4 defeats
@@ -672,6 +704,8 @@ Boss battles use a separate charge system from regular actions:
 ## World Curse System
 
 When a boss despawns undefeated (expires after 24 hours), a **World Curse** is applied to Nilfheim. These curses affect all players equally and create urgency to defeat bosses before they expire.
+
+**Expiration Detection:** Boss expiration is checked every 30 minutes, ensuring curses are applied within 30 minutes of a boss expiring (not just at the 24-hour spawn cycle).
 
 ### How Curses Work
 

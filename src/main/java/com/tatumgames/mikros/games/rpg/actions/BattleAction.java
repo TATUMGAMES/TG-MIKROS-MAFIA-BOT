@@ -5,11 +5,15 @@ import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
 import com.tatumgames.mikros.games.rpg.model.CatalystType;
 import com.tatumgames.mikros.games.rpg.model.EnemyType;
 import com.tatumgames.mikros.games.rpg.model.EssenceType;
+import com.tatumgames.mikros.games.rpg.model.InfusionType;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.model.RPGStats;
 import com.tatumgames.mikros.games.rpg.service.AuraService;
+import com.tatumgames.mikros.games.rpg.service.LoreRecognitionService;
+import com.tatumgames.mikros.games.rpg.service.NilfheimEventService;
 import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
+import com.tatumgames.mikros.games.rpg.events.NilfheimEventType;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,16 +34,22 @@ public class BattleAction implements CharacterAction {
     private static final Random random = new Random();
     private final WorldCurseService worldCurseService;
     private final AuraService auraService;
+    private final NilfheimEventService nilfheimEventService;
+    private final LoreRecognitionService loreRecognitionService;
 
     /**
      * Creates a new BattleAction.
      *
      * @param worldCurseService the world curse service for applying curse effects
      * @param auraService the aura service for Song of Nilfheim curse reduction
+     * @param nilfheimEventService the Nilfheim event service for server-wide events
+     * @param loreRecognitionService the lore recognition service for milestone checks
      */
-    public BattleAction(WorldCurseService worldCurseService, AuraService auraService) {
+    public BattleAction(WorldCurseService worldCurseService, AuraService auraService, NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService) {
         this.worldCurseService = worldCurseService;
         this.auraService = auraService;
+        this.nilfheimEventService = nilfheimEventService;
+        this.loreRecognitionService = loreRecognitionService;
     }
 
     private static final String[] ENEMY_NAMES = {
@@ -232,6 +242,9 @@ public class BattleAction implements CharacterAction {
         }
         EnemyType enemyType = ENEMY_TYPE_MAP.getOrDefault(enemyName, EnemyType.PHYSICAL); // Default fallback
 
+        // Check if this is a pack enemy (pack enemies are rare but more dangerous)
+        boolean isPack = isPackEnemy(enemyName);
+
         // Calculate enemy strength based on character level
         int enemyLevel = Math.max(1, character.getLevel() + random.nextInt(3) - 1);
         int enemyPower = calculateEnemyPower(enemyLevel);
@@ -291,6 +304,26 @@ public class BattleAction implements CharacterAction {
             }
         }
 
+        // Apply Nilfheim event effects
+        NilfheimEventType activeEvent = nilfheimEventService.getActiveEvent(guildId);
+        if (activeEvent != null) {
+            if (activeEvent.getEffectType() == NilfheimEventType.EventEffectType.BATTLE_DAMAGE_BOOST) {
+                // Stormwarden's Blessing: +5% damage on Battle
+                playerPower = (int) (playerPower * (1.0 + activeEvent.getEffectValue()));
+            }
+        }
+
+        // Apply infusion effects for damage
+        InfusionType activeInfusion = character.getInventory().getActiveInfusion();
+        boolean infusionConsumed = false;
+        if (activeInfusion != null) {
+            infusionConsumed = true;
+            if (activeInfusion == InfusionType.VOID_PRECISION) {
+                // Void Precision: +8% damage on next battle
+                playerPower = (int) (playerPower * 1.08);
+            }
+        }
+
         // Determine battle outcome
         int playerRoll = random.nextInt(playerPower) + (stats.getLuck() * 2);
         int enemyRoll = random.nextInt(enemyPower);
@@ -338,6 +371,25 @@ public class BattleAction implements CharacterAction {
                 xpGained = (int) (xpGained * (1 - reduction));
             }
 
+            // Apply Nilfheim event effects for XP
+            if (activeEvent != null) {
+                if (activeEvent.getEffectType() == NilfheimEventType.EventEffectType.ALL_XP_BOOST) {
+                    // Starfall Ridge's Light: +15% XP on all actions
+                    xpGained = (int) (xpGained * (1.0 + activeEvent.getEffectValue()));
+                }
+            }
+
+            // Apply infusion effects for XP
+            if (activeInfusion != null) {
+                if (activeInfusion == InfusionType.FROST_CLARITY) {
+                    // Frost Clarity: +10% XP on next action
+                    xpGained = (int) (xpGained * 1.10);
+                } else if (activeInfusion == InfusionType.ELEMENTAL_CONVERGENCE) {
+                    // Elemental Convergence: +15% XP on next action
+                    xpGained = (int) (xpGained * 1.15);
+                }
+            }
+
             // Necromancer Decay: 10% chance to double XP on victory
             boolean decayTriggered = false;
             if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.NECROMANCER) {
@@ -377,10 +429,15 @@ public class BattleAction implements CharacterAction {
             String agilityNote = stats.getAgility() >= 15 ? 
                     " Your swift movements helped you avoid the worst of the enemy's attacks." : "";
             
+            // Format enemy name for narrative (handle pack enemies)
+            String formattedEnemyName = formatEnemyNameForNarrative(enemyName, isPack);
+            String packNote = isPack ? 
+                    " The pack's coordinated attacks made the battle more challenging, but you prevailed!" : "";
+            
             narrative = String.format(
-                    "You encountered a **%s** %s (Level %d) and emerged victorious!%s%s%s " +
-                            "Your combat prowess proved superior, though you sustained minor wounds.%s%s",
-                    enemyType.getEmoji(), enemyName, enemyLevel, critNote, effectivenessNote, classNote, agilityNote, decayNote
+                    "You encountered %s (Level %d) and emerged victorious!%s%s%s " +
+                            "Your combat prowess proved superior, though you sustained minor wounds.%s%s%s",
+                    formattedEnemyName, enemyLevel, critNote, effectivenessNote, classNote, agilityNote, decayNote, packNote
             );
         } else {
             // Defeat: moderate XP, significant damage
@@ -407,10 +464,15 @@ public class BattleAction implements CharacterAction {
                     " You suffered severe injuries in the encounter." :
                     " You managed to escape, but not without significant injury.";
             
+            // Format enemy name for narrative (handle pack enemies)
+            String formattedEnemyName = formatEnemyNameForNarrative(enemyName, isPack);
+            String packNote = isPack ? 
+                    " The pack's overwhelming numbers proved too much to handle." : "";
+            
             narrative = String.format(
-                    "You encountered a **%s** %s (Level %d) but were defeated.%s " +
+                    "You encountered %s (Level %d) but were defeated.%s%s " +
                             "Learn from this experience!",
-                    enemyType.getEmoji(), enemyName, enemyLevel, injurySeverity
+                    formattedEnemyName, enemyLevel, injurySeverity, packNote
             );
         }
 
@@ -423,6 +485,11 @@ public class BattleAction implements CharacterAction {
         int maxDamage = (int) (baseDamage * 1.25);
         int damageWithVariance = minDamage + random.nextInt(maxDamage - minDamage + 1);
         damageWithVariance = Math.max(1, damageWithVariance); // Ensure at least 1 damage
+
+        // Apply pack enemy damage multiplier (pack enemies are rare but more dangerous)
+        if (isPack) {
+            damageWithVariance = (int) (damageWithVariance * 1.15); // Pack enemies deal 15% more damage
+        }
 
         // Apply agility-based defense (1% per agility point, capped at 30%)
         double agilityReduction = Math.min(0.30, stats.getAgility() * 0.01);
@@ -467,6 +534,14 @@ public class BattleAction implements CharacterAction {
             damageTaken = (int) (damageTaken * (1.0 + character.getDarkRelicDamagePenalty()));
         }
 
+        // Apply infusion effects for defeat damage reduction
+        if (!victory && activeInfusion != null) {
+            if (activeInfusion == InfusionType.EMBER_ENDURANCE) {
+                // Ember Endurance: -20% defeat damage
+                damageTaken = (int) (damageTaken * 0.80);
+            }
+        }
+
         // Capture HP before damage for story flags
         int hpBefore = stats.getCurrentHp();
 
@@ -494,11 +569,11 @@ public class BattleAction implements CharacterAction {
         // Add XP and check for level up (only if alive)
         boolean leveledUp;
         if (isAlive) {
-            leveledUp = character.addXp(xpGained);
+            leveledUp = character.addXp(xpGained, loreRecognitionService);
         } else {
             // Dead characters still get some XP (defeat bonus)
             xpGained = (int) (xpGained * 0.5); // Half XP on death
-            leveledUp = character.addXp(xpGained);
+            leveledUp = character.addXp(xpGained, loreRecognitionService);
         }
 
         // Roll for item drops with LUCK bonus
@@ -529,6 +604,11 @@ public class BattleAction implements CharacterAction {
                 outcomeBuilder.addItemDrop(essence, 1);
                 character.getInventory().addEssence(essence, 1);
             }
+        }
+
+        // Consume active infusion if used
+        if (infusionConsumed) {
+            character.getInventory().consumeActiveInfusion();
         }
 
         // Record the action
@@ -679,6 +759,37 @@ public class BattleAction implements CharacterAction {
             case NECROMANCER -> " Your dark magic strikes at the enemy's very soul!";
             case PRIEST -> " Your holy magic finds a critical weakness in the enemy's defenses!";
         };
+    }
+
+    /**
+     * Checks if an enemy is a pack enemy (contains "Pack" in the name).
+     *
+     * @param enemyName the enemy name
+     * @return true if it's a pack enemy
+     */
+    private boolean isPackEnemy(String enemyName) {
+        return enemyName != null && enemyName.toLowerCase().contains("pack");
+    }
+
+    /**
+     * Formats enemy name for narrative, handling pack enemies specially.
+     *
+     * @param enemyName the enemy name
+     * @param isPack    whether it's a pack enemy
+     * @return formatted enemy name for narrative
+     */
+    private String formatEnemyNameForNarrative(String enemyName, boolean isPack) {
+        if (isPack) {
+            // Remove "Pack" suffix and format as "a pack of [enemy type]"
+            String baseName = enemyName.replaceAll("(?i)\\s*pack\\s*$", "");
+            // Get emoji from enemy type
+            EnemyType enemyType = ENEMY_TYPE_MAP.getOrDefault(enemyName, EnemyType.PHYSICAL);
+            return String.format("**%s a pack of %s**", enemyType.getEmoji(), baseName);
+        } else {
+            // Regular enemy - get emoji from enemy type
+            EnemyType enemyType = ENEMY_TYPE_MAP.getOrDefault(enemyName, EnemyType.PHYSICAL);
+            return String.format("a **%s %s**", enemyType.getEmoji(), enemyName);
+        }
     }
 
     /**
