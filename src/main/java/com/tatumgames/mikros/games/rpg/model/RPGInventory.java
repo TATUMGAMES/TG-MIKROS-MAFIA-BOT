@@ -1,5 +1,6 @@
 package com.tatumgames.mikros.games.rpg.model;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -13,6 +14,10 @@ public class RPGInventory {
     private final Map<EssenceType, Integer> essences;
     private final Map<CatalystType, Integer> catalysts;
     private final Map<String, Integer> craftedBonuses; // stat name -> bonus amount (0-5)
+    
+    // Active infusion (max 1 at a time)
+    private InfusionType activeInfusion;
+    private Instant infusionExpiresAt;
 
     /**
      * Creates a new empty inventory.
@@ -28,6 +33,10 @@ public class RPGInventory {
         this.craftedBonuses.put("INT", 0);
         this.craftedBonuses.put("LUCK", 0);
         this.craftedBonuses.put("HP", 0);
+        
+        // Initialize infusion fields
+        this.activeInfusion = null;
+        this.infusionExpiresAt = null;
     }
 
     /**
@@ -76,6 +85,26 @@ public class RPGInventory {
             throw new IllegalArgumentException("Count cannot be negative");
         }
         catalysts.put(catalyst, catalysts.getOrDefault(catalyst, 0) + count);
+    }
+
+    /**
+     * Removes catalysts from inventory.
+     *
+     * @param catalyst the catalyst type
+     * @param count    the amount to remove
+     * @return true if removed successfully, false if not enough catalysts
+     */
+    public boolean removeCatalyst(CatalystType catalyst, int count) {
+        Objects.requireNonNull(catalyst);
+        if (count < 0) {
+            throw new IllegalArgumentException("Count cannot be negative");
+        }
+        int currentCount = getCatalystCount(catalyst);
+        if (currentCount < count) {
+            return false; // Not enough catalysts
+        }
+        catalysts.put(catalyst, Math.max(0, currentCount - count));
+        return true;
     }
 
     /**
@@ -170,6 +199,74 @@ public class RPGInventory {
 
     public Map<String, Integer> getCraftedBonuses() {
         return new HashMap<>(craftedBonuses);
+    }
+
+    // Infusion methods
+
+    /**
+     * Gets the currently active infusion, if any.
+     * Automatically checks expiration and clears if expired.
+     *
+     * @return the active infusion, or null if none or expired
+     */
+    public InfusionType getActiveInfusion() {
+        checkInfusionExpiration();
+        return activeInfusion;
+    }
+
+    /**
+     * Sets an active infusion with expiration time (24 hours from now).
+     *
+     * @param infusion the infusion type
+     */
+    public void setActiveInfusion(InfusionType infusion) {
+        this.activeInfusion = infusion;
+        if (infusion != null) {
+            // Expires after 24 hours
+            this.infusionExpiresAt = Instant.now().plusSeconds(24 * 3600);
+        } else {
+            this.infusionExpiresAt = null;
+        }
+    }
+
+    /**
+     * Gets when the active infusion expires.
+     *
+     * @return the expiration time, or null if no active infusion
+     */
+    public Instant getInfusionExpiresAt() {
+        return infusionExpiresAt;
+    }
+
+    /**
+     * Checks if the active infusion has expired and clears it if so.
+     */
+    public void checkInfusionExpiration() {
+        if (activeInfusion != null && infusionExpiresAt != null) {
+            if (Instant.now().isAfter(infusionExpiresAt)) {
+                // Infusion expired
+                activeInfusion = null;
+                infusionExpiresAt = null;
+            }
+        }
+    }
+
+    /**
+     * Consumes the active infusion (removes it).
+     */
+    public void consumeActiveInfusion() {
+        this.activeInfusion = null;
+        this.infusionExpiresAt = null;
+    }
+
+    /**
+     * Checks if there is an active infusion (not expired).
+     *
+     * @return true if there is an active infusion
+     */
+    public boolean hasActiveInfusion() {
+        checkInfusionExpiration();
+        return activeInfusion != null;
     }
 }
 

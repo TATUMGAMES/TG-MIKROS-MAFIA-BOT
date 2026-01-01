@@ -1,7 +1,10 @@
 package com.tatumgames.mikros.games.rpg.service;
 
 import com.tatumgames.mikros.games.rpg.boss.BossCatalog;
+import com.tatumgames.mikros.games.rpg.events.NilfheimEventType;
 import com.tatumgames.mikros.games.rpg.model.*;
+import com.tatumgames.mikros.games.rpg.service.LoreRecognitionService;
+import com.tatumgames.mikros.games.rpg.service.NilfheimEventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +30,8 @@ public class BossService {
     private final CharacterService characterService;
     private final AuraService auraService;
     private final WorldCurseService worldCurseService;
+    private final NilfheimEventService nilfheimEventService;
+    private final LoreRecognitionService loreRecognitionService;
     private static final Random random = new Random();
 
     /**
@@ -35,13 +40,17 @@ public class BossService {
      * @param characterService the character service for tracking kills
      * @param auraService the aura service for applying legendary aura effects
      * @param worldCurseService the world curse service for clearing curses on defeat
+     * @param nilfheimEventService the Nilfheim event service for server-wide events
+     * @param loreRecognitionService the lore recognition service for milestone checks
      */
-    public BossService(CharacterService characterService, AuraService auraService, WorldCurseService worldCurseService) {
+    public BossService(CharacterService characterService, AuraService auraService, WorldCurseService worldCurseService, NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService) {
         this.serverStates = new ConcurrentHashMap<>();
         this.damageTracking = new ConcurrentHashMap<>();
         this.characterService = characterService;
         this.auraService = auraService;
         this.worldCurseService = worldCurseService;
+        this.nilfheimEventService = nilfheimEventService;
+        this.loreRecognitionService = loreRecognitionService;
         logger.info("BossService initialized");
     }
 
@@ -169,6 +178,15 @@ public class BossService {
             java.util.List<String> participants = new java.util.ArrayList<>(allDamage.keySet());
             participants.add(character.getDiscordId()); // Include current attacker
             damage = auraService.applyAuraEffects(guildId, participants, damage);
+        }
+
+        // Apply Nilfheim event effects
+        NilfheimEventType activeEvent = nilfheimEventService.getActiveEvent(guildId);
+        if (activeEvent != null) {
+            if (activeEvent.getEffectType() == NilfheimEventType.EventEffectType.BOSS_DAMAGE_BOOST) {
+                // Frostborne Echoes: +8% damage to bosses
+                damage = (int) (damage * (1.0 + activeEvent.getEffectValue()));
+            }
         }
 
         // Apply damage
@@ -346,6 +364,11 @@ public class BossService {
                     
                     // Distribute boss rewards
                     distributeBossRewards(character, isNormalBoss);
+                    
+                    // Check for lore recognition milestones (boss victory)
+                    if (loreRecognitionService != null) {
+                        loreRecognitionService.checkMilestones(character);
+                    }
                 }
             }
         }

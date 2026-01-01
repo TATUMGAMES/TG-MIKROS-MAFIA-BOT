@@ -49,9 +49,13 @@ scrambled word is posted, and players compete to be the first to solve it.
 ## Scoring Rules
 
 - **Time-Based Scoring:** Faster solves = more points (100-1000 points based on solve time)
-- **First Solver Bonus:** Extra points for being first
+- **Bonus Points:** Extra points for solving words that stumped others (based on wrong guesses from other players)
 - **Game Ends:** When first correct guess is submitted
 - **Hourly Reset:** New word every hour at the top of the hour (00:00 UTC format)
+- **Guess Limit:** Each player gets **3 incorrect guesses per word** to prevent spam
+  - Remaining guesses are shown after each incorrect attempt
+  - Limit resets automatically when a new word starts
+  - Correct guesses always work, even after incorrect attempts
 - **Individual Statistics:** All players have persistent stats tracking:
   - Total words solved
   - Total points earned
@@ -88,8 +92,11 @@ The game features 20 levels with progressively longer words and phrases:
 2. **Player Participation:**
     - Players see scrambled word in game channel
     - Players submit guesses via `/scramble-guess`
-    - Incorrect guesses: Private ephemeral message
+    - Each player gets **3 incorrect guesses per word**
+    - Incorrect guesses: Private ephemeral message showing remaining guesses
+    - After 3 incorrect guesses: Further attempts blocked (private message)
     - Correct guess: Public announcement, game ends
+    - Limit resets automatically when a new word starts
 
 3. **Leaderboard:**
     - Shows winner with time and score
@@ -126,7 +133,19 @@ Time: 12.5 seconds
 ❌ Incorrect!
 
 Your guess: GAMING
+
+Remaining guesses: 2 out of 3
 Try again!
+```
+
+**Limit Exceeded Response:**
+
+```
+❌ No More Guesses Remaining
+
+You've used all 3 incorrect guesses for this word.
+
+Wait for the next word to get 3 more guesses!
 ```
 
 ## Configuration

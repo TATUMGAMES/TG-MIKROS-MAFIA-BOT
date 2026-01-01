@@ -49,6 +49,14 @@ Discord Bot.
 | `/set-promotion-verbosity` | Set promotion frequency     | Administrator | Promotions |
 | `/force-promotion-check`   | Manually trigger promotion  | Administrator | Promotions |
 
+### Auto-Bump Commands
+
+| Command              | Description                          | Permission    | Module   |
+|----------------------|--------------------------------------|---------------|---------|
+| `/admin-bump-setup`   | Set up automatic server bumping      | Administrator | Bump    |
+| `/admin-bump-config` | Configure auto-bump settings (4 subs) | Administrator | Bump    |
+| `/admin-bump-stats`   | View server bump statistics          | Admin         | Bump    |
+
 ### Analytics Commands
 
 | Command                              | Description                | Permission | Module    |
@@ -123,7 +131,7 @@ Discord Bot.
 | `/alert_channel`               | Set alert channel     | Administrator | Honeypot |
 | `/list_bans`                   | View recent bans      | Administrator | Honeypot |
 
-**Total Commands:** 36+ (including subcommands)
+**Total Commands:** 38+ (including subcommands)
 
 ---
 
@@ -226,7 +234,10 @@ Discord Bot.
 - Daily automatic resets
 - Per-server configuration
 - Leaderboards with medals
-- Time-based scoring
+- Time-based scoring (100-1000 points)
+- Bonus points for solving words that stumped others
+- 3 incorrect guesses limit per word per player (prevents spam)
+- Remaining guesses displayed after each incorrect attempt
 
 **Services:**
 
@@ -246,15 +257,22 @@ Discord Bot.
 - **6 character classes:** Warrior, Knight, Mage, Rogue, Necromancer, Priest
 - Level and XP progression (exponential growth)
 - Stat growth system (+5 HP, +1 all stats per level)
-- **Action Charge System:** 3 charges, refresh every 12 hours
+- **Action Charge System:** Dynamic charges (3-10 based on level), refresh every 12 hours
 - **4 action types:** Explore, Train, Battle, Rest
-- **40+ narrative encounters** (Nilfheim-themed)
-- **36 enemy types** for battles
+- **65+ narrative encounters** (Nilfheim-themed)
+- **Wandering Figures:** Ultra-rare (0.5% chance) encounters with mysterious figures during exploration
+- **66 enemy types** for battles with stat effectiveness system
+- **Pack Enemies:** Rare pack enemies (e.g., "Ice Wolf Pack") deal 15% more damage and use pack-specific narrative
+- **Server-Wide Events:** Nilfheim Calms affect all players (every 48-96 hours, 12-hour duration)
+- **Consumable Infusions:** Temporary single-use crafting items with powerful effects (6 types)
+- **Hidden Lore Recognition:** Story flags awarded for significant milestones (8 recognition types, max 2 flags)
 - **Death & Recovery System:** Characters can die, Priests can resurrect
-- **Boss System:** 24 normal bosses + 12 super bosses
+- **Boss System:** 48 normal bosses + 20 super bosses
+- **Boss Expiration:** Bosses expire after 24 hours if not defeated, applying world curses (checked every 30 minutes)
 - **Community Boss Battles:** Shared HP pool, damage tracking
 - **Boss Progression:** Levels increase based on defeats
 - **Class Bonuses:** +20% damage vs specific boss types
+- **World Curse System:** Temporary world-wide curses when bosses expire undefeated
 - **Nilfheim Lore Integration**
 
 **Services:**
@@ -263,6 +281,10 @@ Discord Bot.
 - `ActionService` - Action processing
 - `BossService` - Boss spawning and tracking
 - `BossScheduler` - 24h boss spawns
+- `NilfheimEventService` - Server-wide event tracking
+- `NilfheimEventScheduler` - Event scheduling (checks every 6 hours)
+- `LoreRecognitionService` - Milestone checking and story flag awards
+- `CraftingService` - Item and infusion crafting
 
 **Storage:** In-memory (TODO: API integration)
 
@@ -326,6 +348,51 @@ Discord Bot.
 
 ---
 
+### 10. Auto-Bump System
+
+**Purpose:** Automatic server bumping for advertising bots (Disboard, Disurl)
+
+**Features:**
+
+- Automatic server bumping at configurable intervals
+- Support for Disboard and/or Disurl
+- Per-server independent configuration
+- Rate limit safety (respects external bot cooldowns)
+- Bot presence verification before bumping
+- Configurable bump interval (1-24 hours, default: 4 hours)
+- Interactive bump reminders with buttons (Copy Command, Instructions, Mention Bot)
+- Automatic bump detection and tracking
+- Bump statistics and history
+
+**Commands:**
+
+| Command | Description | Permission |
+|---------|-------------|------------|
+| `/admin-bump-setup`   | Set up automatic server bumping      | Administrator |
+| `/admin-bump-config` | Configure auto-bump settings (4 subs) | Administrator |
+| `/admin-bump-stats` | View server bump statistics and history | Admin |
+
+**Services:**
+
+- `BumpService` - Bump configuration management
+- `BumpScheduler` - Automated bump execution (checks every 15 minutes)
+- `BumpDetectionListener` - Detects successful bumps from Disboard/Disurl bots
+
+**Storage:** In-memory (TODO: database persistence)
+
+**Rate Limits:**
+
+- Disboard: Minimum 2 hours between bumps
+- Disurl: Minimum 1 hour between bumps
+
+**Bump Detection:**
+
+- Automatically detects successful bumps from Disboard/Disurl bot messages
+- Tracks who triggered each bump (when possible)
+- Records bump history for statistics
+
+---
+
 ## Configuration Options
 
 ### Per-Server Settings
@@ -364,6 +431,12 @@ Discord Bot.
 - Silent mode
 - Delete days (0-7)
 - Alert channel
+
+#### Auto-Bump
+
+- Bump channel
+- Enabled bots (Disboard, Disurl, or both)
+- Bump interval (1-24 hours, default: 4)
 
 #### Auto-Escalation
 
@@ -457,8 +530,8 @@ Discord Bot.
 
 ## Summary
 
-**Total Commands:** 33+  
-**Feature Modules:** 9  
+**Total Commands:** 38+  
+**Feature Modules:** 10  
 **Services:** 20+  
 **Data Models:** 15+  
 **Scheduled Tasks:** 2+  

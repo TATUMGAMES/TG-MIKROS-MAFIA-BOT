@@ -1,8 +1,12 @@
 package com.tatumgames.mikros.games.rpg.actions;
 
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
+import com.tatumgames.mikros.games.rpg.events.NilfheimEventType;
+import com.tatumgames.mikros.games.rpg.model.InfusionType;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
+import com.tatumgames.mikros.games.rpg.service.LoreRecognitionService;
+import com.tatumgames.mikros.games.rpg.service.NilfheimEventService;
 
 import java.util.Random;
 
@@ -12,6 +16,19 @@ import java.util.Random;
  */
 public class TrainAction implements CharacterAction {
     private static final Random random = new Random();
+    private final NilfheimEventService nilfheimEventService;
+    private final LoreRecognitionService loreRecognitionService;
+
+    /**
+     * Creates a new TrainAction.
+     *
+     * @param nilfheimEventService the Nilfheim event service for server-wide events
+     * @param loreRecognitionService the lore recognition service for milestone checks
+     */
+    public TrainAction(NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService) {
+        this.nilfheimEventService = nilfheimEventService;
+        this.loreRecognitionService = loreRecognitionService;
+    }
 
     private static final String[] STAT_NAMES = {"STR", "AGI", "INT", "LUCK"};
     private static final String[] STAT_DISPLAY_NAMES = {"Strength", "Agility", "Intelligence", "Luck"};
@@ -137,6 +154,19 @@ public class TrainAction implements CharacterAction {
         // Calculate stat increase (1-3 points)
         int statIncrease = 1 + random.nextInt(3);
 
+        // Apply Nilfheim event effects
+        String guildId = config.getGuildId();
+        NilfheimEventType activeEvent = nilfheimEventService.getActiveEvent(guildId);
+        if (activeEvent != null) {
+            if (activeEvent.getEffectType() == NilfheimEventType.EventEffectType.TRAIN_STAT_BOOST) {
+                // Grand Library Opens: +1 guaranteed stat point
+                statIncrease += (int) activeEvent.getEffectValue();
+            }
+            if (activeEvent.getEffectType() == NilfheimEventType.EventEffectType.ALL_XP_BOOST) {
+                // Starfall Ridge's Light: +15% XP on all actions (applied below)
+            }
+        }
+
         // Apply stat increase
         character.getStats().increaseStat(statName, statIncrease);
 
@@ -145,8 +175,28 @@ public class TrainAction implements CharacterAction {
         int variance = random.nextInt(15) - 7;
         int xpGained = (int) ((baseXp + variance) * config.getXpMultiplier());
 
+        // Apply Nilfheim event effects for XP
+        if (activeEvent != null && activeEvent.getEffectType() == NilfheimEventType.EventEffectType.ALL_XP_BOOST) {
+            // Starfall Ridge's Light: +15% XP on all actions
+            xpGained = (int) (xpGained * (1.0 + activeEvent.getEffectValue()));
+        }
+
+        // Apply infusion effects
+        InfusionType activeInfusion = character.getInventory().getActiveInfusion();
+        boolean infusionConsumed = false;
+        if (activeInfusion != null) {
+            infusionConsumed = true;
+            if (activeInfusion == InfusionType.FROST_CLARITY) {
+                // Frost Clarity: +10% XP on next action
+                xpGained = (int) (xpGained * 1.10);
+            } else if (activeInfusion == InfusionType.ELEMENTAL_CONVERGENCE) {
+                // Elemental Convergence: +15% XP on next action
+                xpGained = (int) (xpGained * 1.15);
+            }
+        }
+
         // Add XP and check for level up
-        boolean leveledUp = character.addXp(xpGained);
+        boolean leveledUp = character.addXp(xpGained, loreRecognitionService);
 
         // Build narrative based on stat trained
         String narrativePrefix;
@@ -167,6 +217,11 @@ public class TrainAction implements CharacterAction {
                 statDisplayName,
                 statIncrease,
                 statIncrease > 1 ? "s" : "");
+
+        // Consume active infusion if used
+        if (infusionConsumed) {
+            character.getInventory().consumeActiveInfusion();
+        }
 
         // Record the action
         character.recordAction();
