@@ -127,7 +127,7 @@ public class BotMain extends ListenerAdapter {
         this.moderationLogService = new InMemoryModerationLogService();
         this.reputationService = new InMemoryReputationService(
                 apiClient,
-                config.getReputationApiUrl(),
+                config.getMikrosApiBaseUrl(), // Use new method instead of getReputationApiUrl()
                 config.getReputationApiKey(),
                 config.getApiKeyType()
         );
@@ -138,7 +138,11 @@ public class BotMain extends ListenerAdapter {
 
         // Initialize game promotion service (use real API if key is configured, otherwise use mock)
         if (config.getMikrosApiKey() != null && !config.getMikrosApiKey().isBlank()) {
-            this.gamePromotionService = new RealGamePromotionService(apiClient, config.getMikrosApiKey());
+            this.gamePromotionService = new RealGamePromotionService(
+                    apiClient, 
+                    config.getMikrosApiKey(),
+                    config.getMikrosApiBaseUrl() // Pass base URL
+            );
             logger.info("Using RealGamePromotionService with API integration");
         } else {
             logger.warn("MIKROS_API_KEY not set, using InMemoryGamePromotionService (mock mode)");

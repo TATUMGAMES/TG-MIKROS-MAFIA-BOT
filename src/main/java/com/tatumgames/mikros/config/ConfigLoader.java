@@ -184,8 +184,12 @@ public class ConfigLoader {
         this.mafiaGuildId = getEnv("MIKROS_MAFIA_GUILD_ID", "");
 
         // Load API configuration (optional - can be empty for mock mode)
+        // Base URL for all MIKROS API endpoints
+        String mikrosBaseUrl = environment == Environment.DEV
+                ? "https://tg-api-new-stage.uc.r.appspot.com"
+                : "https://tg-api-new.uc.r.appspot.com";
         this.mikrosApiKey = getEnv("MIKROS_API_KEY", "");
-        this.mikrosApiUrl = getEnv("MIKROS_API_URL", "https://api.tatumgames.com");
+        this.mikrosApiUrl = getEnv("MIKROS_API_URL", mikrosBaseUrl);
 
         if (mikrosApiKey == null || mikrosApiKey.isBlank()) {
             logger.warn("MIKROS_API_KEY not set - API client will operate in mock mode");
@@ -213,8 +217,12 @@ public class ConfigLoader {
                     : reputationApiKeyProd;
         }
 
-        this.reputationApiUrl = getEnv("REPUTATION_API_URL",
-                "https://tg-api-new-stage.uc.r.appspot.com/mikros/marketing/discord");
+        // Reputation API uses the same base URL as MIKROS API, with /mikros/discord path
+        // This is kept for backward compatibility but will be constructed from base URL
+        String reputationBaseUrl = environment == Environment.DEV
+                ? "https://tg-api-new-stage.uc.r.appspot.com"
+                : "https://tg-api-new.uc.r.appspot.com";
+        this.reputationApiUrl = getEnv("REPUTATION_API_URL", reputationBaseUrl + "/mikros/discord");
 
         if (reputationApiKey == null || reputationApiKey.isBlank()) {
             logger.warn("REPUTATION_API_KEY not set - reputation service will use stub responses");
@@ -320,6 +328,19 @@ public class ConfigLoader {
      */
     public String getMikrosApiUrl() {
         return mikrosApiUrl;
+    }
+
+    /**
+     * Gets the MIKROS API base URL based on environment.
+     * Production: https://tg-api-new.uc.r.appspot.com
+     * Development: https://tg-api-new-stage.uc.r.appspot.com
+     *
+     * @return the base URL (without trailing slash)
+     */
+    public String getMikrosApiBaseUrl() {
+        return environment == Environment.DEV
+                ? "https://tg-api-new-stage.uc.r.appspot.com"
+                : "https://tg-api-new.uc.r.appspot.com";
     }
 
     /**
