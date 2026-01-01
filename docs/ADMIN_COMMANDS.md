@@ -795,16 +795,16 @@ Disable auto-bump for the server.
 
 ---
 
-### `/bump-stats`
+### `/admin-bump-stats`
 
 **Purpose:** View server bump statistics and history.
 
-**Permission Required:** None (everyone can use)
+**Permission Required:** Administrator
 
 **Example:**
 
 ```
-/bump-stats
+/admin-bump-stats
 ```
 
 **Displays:**

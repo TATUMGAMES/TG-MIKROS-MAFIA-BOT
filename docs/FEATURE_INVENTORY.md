@@ -55,7 +55,7 @@ Discord Bot.
 |----------------------|--------------------------------------|---------------|---------|
 | `/admin-bump-setup`   | Set up automatic server bumping      | Administrator | Bump    |
 | `/admin-bump-config` | Configure auto-bump settings (4 subs) | Administrator | Bump    |
-| `/bump-stats`         | View server bump statistics          | Everyone      | Bump    |
+| `/admin-bump-stats`   | View server bump statistics          | Admin         | Bump    |
 
 ### Analytics Commands
 
@@ -370,7 +370,7 @@ Discord Bot.
 |---------|-------------|------------|
 | `/admin-bump-setup`   | Set up automatic server bumping      | Administrator |
 | `/admin-bump-config` | Configure auto-bump settings (4 subs) | Administrator |
-| `/bump-stats` | View server bump statistics and history | Everyone |
+| `/admin-bump-stats` | View server bump statistics and history | Admin |
 
 **Services:**
 

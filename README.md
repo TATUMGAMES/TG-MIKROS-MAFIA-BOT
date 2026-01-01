@@ -105,7 +105,7 @@ for game developers and studios.
 
 **User Commands:**
 
-- `/bump-stats` - View server bump statistics and history
+- `/admin-bump-stats` - View server bump statistics and history (Admin only)
 
 **Features:**
 
@@ -518,7 +518,7 @@ Includes:
 | `/admin-promotion-config`        | Admin      | Configure promotion settings (view, update-channel, set-verbosity, disable, force-check) | Administrator    |
 | `/admin-bump-setup`              | Admin      | Set up automatic server bumping (channel, bots selection)                               | Administrator    |
 | `/admin-bump-config`             | Admin      | Configure auto-bump settings (view, set-interval, update-bots, disable)               | Administrator    |
-| `/bump-stats`                    | Everyone   | View server bump statistics and history                                                 | Everyone         |
+| `/admin-bump-stats`              | Admin      | View server bump statistics and history                                                 | Admin            |
 | `/admin-bot-detection-setup`     | Moderation | Enable/disable bot detection system                                                      | Administrator    |
 | `/admin-bot-detection-config`    | Moderation | Configure bot detection settings (8 subcommands)                                         | Administrator    |
 | `/promo-request`                  | Promo      | Request MIKROS promotional services and schedule a demo                                  | Everyone         |
@@ -588,7 +588,7 @@ Includes:
 /admin-bump-config view
 /admin-bump-config set-interval interval:6
 /admin-bump-config update-bots bots:disboard
-/bump-stats
+/admin-bump-stats
 /admin-bump-config disable
 ```
 

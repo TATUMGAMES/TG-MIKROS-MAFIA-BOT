@@ -5,7 +5,9 @@ import com.tatumgames.mikros.bump.model.BumpConfig;
 import com.tatumgames.mikros.bump.model.BumpStats;
 import com.tatumgames.mikros.bump.service.BumpService;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -20,6 +22,7 @@ import java.util.Map;
 
 /**
  * Command to view server bump statistics.
+ * Admin-only command.
  */
 public class BumpStatsCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(BumpStatsCommand.class);
@@ -34,14 +37,22 @@ public class BumpStatsCommand implements CommandHandler {
     
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("bump-stats", "View server bump statistics and history");
+        return Commands.slash("admin-bump-stats", "View server bump statistics and history (admin only)")
+                .setGuildOnly(true)
+                .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
     
     @Override
     public void handle(SlashCommandInteractionEvent event) {
+        // Check if user has permission
+        Member member = event.getMember();
         Guild guild = event.getGuild();
-        if (guild == null) {
-            event.reply("❌ This command can only be used in a server.").setEphemeral(true).queue();
+        
+        if (member == null || guild == null ||
+                !member.hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("❌ You must be an administrator to use this command.")
+                    .setEphemeral(true)
+                    .queue();
             return;
         }
         
@@ -111,7 +122,7 @@ public class BumpStatsCommand implements CommandHandler {
     
     @Override
     public String getCommandName() {
-        return "bump-stats";
+        return "admin-bump-stats";
     }
 }
 
