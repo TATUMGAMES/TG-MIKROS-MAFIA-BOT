@@ -6,9 +6,15 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import net.dv8tion.jda.api.EmbedBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.Color;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.EnumSet;
@@ -238,18 +244,55 @@ public class BumpScheduler {
     }
     
     /**
-     * Sends a bump command to a specific bot in a channel.
+     * Sends a bump reminder with interactive buttons to a specific bot in a channel.
+     * Discord bots cannot invoke slash commands of other bots, so we send a reminder with buttons.
      *
      * @param channel the channel to send in
      * @param bot     the bot to bump
      */
     private void sendBumpCommand(TextChannel channel, BumpConfig.BumpBot bot) {
-        String command = bot.getCommand();
+        // Discord bots cannot invoke slash commands of other bots
+        // Instead, send a reminder message with buttons that help users bump
         
-        channel.sendMessage(command).queue(
-                success -> logger.debug("Sent bump command {} to channel {}", command, channel.getId()),
-                error -> logger.warn("Failed to send bump command {} to channel {}: {}",
-                        command, channel.getId(), error.getMessage())
+        EmbedBuilder embed = new EmbedBuilder();
+        embed.setTitle("⏰ Time to Bump the Server!");
+        embed.setDescription(String.format(
+            "Please run %s to bump the server on **%s**.\n\n" +
+            "This helps keep the server visible on server listing sites! 🚀",
+            bot.getCommand(),
+            bot.getDisplayName()
+        ));
+        embed.setColor(Color.CYAN);
+        embed.setFooter("Click the buttons below for quick actions");
+        embed.setTimestamp(Instant.now());
+        
+        // Create buttons
+        Button copyCommandButton = Button.secondary(
+            "bump_copy_" + bot.name().toLowerCase(),
+            "📋 Copy Command"
+        ).withEmoji(Emoji.fromUnicode("📋"));
+        
+        Button instructionsButton = Button.link(
+            bot == BumpConfig.BumpBot.DISBOARD
+                ? "https://disboard.org/help"
+                : "https://disurl.com/help",
+            "📖 Instructions"
+        ).withEmoji(Emoji.fromUnicode("📖"));
+        
+        Button botMentionButton = Button.secondary(
+            "bump_mention_" + bot.name().toLowerCase(),
+            "👤 Mention " + bot.getDisplayName()
+        ).withEmoji(Emoji.fromUnicode("👤"));
+        
+        MessageCreateData message = new MessageCreateBuilder()
+            .setEmbeds(embed.build())
+            .setActionRow(copyCommandButton, instructionsButton, botMentionButton)
+            .build();
+        
+        channel.sendMessage(message).queue(
+            success -> logger.info("Sent bump reminder for {} in channel {}", bot.getDisplayName(), channel.getId()),
+            error -> logger.warn("Failed to send bump reminder {} to channel {}: {}",
+                    bot.getDisplayName(), channel.getId(), error.getMessage())
         );
     }
 }

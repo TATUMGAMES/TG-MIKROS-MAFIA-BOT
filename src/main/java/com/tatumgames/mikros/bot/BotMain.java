@@ -11,7 +11,12 @@ import com.tatumgames.mikros.games.rpg.service.AchievementService;
 import com.tatumgames.mikros.games.rpg.service.AuraService;
 import com.tatumgames.mikros.games.rpg.service.BossService;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
+import com.tatumgames.mikros.games.rpg.service.CraftingService;
+import com.tatumgames.mikros.games.rpg.service.LoreRecognitionService;
+import com.tatumgames.mikros.games.rpg.service.NilfheimEventService;
+import com.tatumgames.mikros.games.rpg.service.InMemoryNilfheimEventService;
 import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
+import com.tatumgames.mikros.games.rpg.scheduler.NilfheimEventScheduler;
 import com.tatumgames.mikros.games.word_unscramble.commands.GameConfigCommand;
 import com.tatumgames.mikros.games.word_unscramble.commands.GameSetupCommand;
 import com.tatumgames.mikros.games.word_unscramble.commands.ScrambleGuessCommand;
@@ -37,11 +42,15 @@ import com.tatumgames.mikros.bump.service.InMemoryBumpService;
 import com.tatumgames.mikros.bump.scheduler.BumpScheduler;
 import com.tatumgames.mikros.bump.commands.BumpSetupCommand;
 import com.tatumgames.mikros.bump.commands.BumpConfigCommand;
+import com.tatumgames.mikros.bump.commands.BumpStatsCommand;
+import com.tatumgames.mikros.bump.listener.BumpDetectionListener;
+import com.tatumgames.mikros.bump.model.BumpConfig;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -94,6 +103,10 @@ public class BotMain extends ListenerAdapter {
     private final com.tatumgames.mikros.botdetection.listener.BotDetectionMessageListener botDetectionListener;
     private final BumpService bumpService;
     private final BumpScheduler bumpScheduler;
+    private final BumpDetectionListener bumpDetectionListener;
+    private final NilfheimEventService nilfheimEventService;
+    private final NilfheimEventScheduler nilfheimEventScheduler;
+    private final LoreRecognitionService loreRecognitionService;
 
     /**
      * Creates a new BotMain instance.
@@ -150,9 +163,12 @@ public class BotMain extends ListenerAdapter {
         this.achievementService = new AchievementService();
         this.auraService = new AuraService();
         this.worldCurseService = new WorldCurseService();
-        this.actionService = new ActionService(characterService, worldCurseService, auraService);
-        this.bossService = new BossService(characterService, auraService, worldCurseService);
+        this.nilfheimEventService = new InMemoryNilfheimEventService();
+        this.loreRecognitionService = new LoreRecognitionService();
+        this.actionService = new ActionService(characterService, worldCurseService, auraService, nilfheimEventService, loreRecognitionService);
+        this.bossService = new BossService(characterService, auraService, worldCurseService, nilfheimEventService, loreRecognitionService);
         this.bossScheduler = new BossScheduler(bossService, characterService, worldCurseService);
+        this.nilfheimEventScheduler = new NilfheimEventScheduler(nilfheimEventService, characterService);
         this.promoService = new PromoDetectionService();
         this.promoListener = new PromoMessageListener(promoService);
         this.honeypotService = new HoneypotService();
@@ -163,6 +179,7 @@ public class BotMain extends ListenerAdapter {
                 botDetectionService, reputationService);
         this.bumpService = new InMemoryBumpService();
         this.bumpScheduler = new BumpScheduler(bumpService);
+        this.bumpDetectionListener = new BumpDetectionListener(bumpService);
 
         // Register command handlers
         registerCommandHandlers();
@@ -192,7 +209,7 @@ public class BotMain extends ListenerAdapter {
                             GatewayIntent.MESSAGE_CONTENT
                     )
                     .setActivity(Activity.playing("Moderating with style 🎮"))
-                    .addEventListeners(bot, bot.promoListener, bot.honeypotListener, bot.botDetectionListener)
+                    .addEventListeners(bot, bot.promoListener, bot.honeypotListener, bot.botDetectionListener, bot.bumpDetectionListener)
                     .build();
 
             // Wait for JDA to be ready
@@ -231,6 +248,7 @@ public class BotMain extends ListenerAdapter {
         // Auto-Bump commands
         registerHandler(new BumpSetupCommand(bumpService));
         registerHandler(new BumpConfigCommand(bumpService));
+        registerHandler(new BumpStatsCommand(bumpService));
 
         // Game Stats/Analytics commands
         // TODO: Re-enable when MIKROS Analytics API integration is complete
@@ -249,7 +267,7 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new RPGRegisterCommand(characterService));
         registerHandler(new RPGProfileCommand(characterService, worldCurseService));
         registerHandler(new RPGActionCommand(characterService, actionService, achievementService, worldCurseService));
-        registerHandler(new RPGResurrectCommand(characterService, worldCurseService));
+        registerHandler(new RPGResurrectCommand(characterService, worldCurseService, loreRecognitionService));
         registerHandler(new RPGBossBattleCommand(characterService, bossService, worldCurseService));
         registerHandler(new RPGLeaderboardCommand(characterService, config));
         registerHandler(new RPGSetupCommand(characterService, bossService));
@@ -258,7 +276,7 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new RPGStatsCommand(characterService));
         registerHandler(new RPGDuelCommand(characterService));
         registerHandler(new RPGInventoryCommand(characterService));
-        registerHandler(new RPGCraftCommand(characterService, new com.tatumgames.mikros.games.rpg.service.CraftingService()));
+        registerHandler(new RPGCraftCommand(characterService, new CraftingService(loreRecognitionService)));
         // Note: Charge donation is now part of /rpg-action, not a separate command
 
         // Promo commands
@@ -333,6 +351,10 @@ public class BotMain extends ListenerAdapter {
         // Start bump scheduler
         bumpScheduler.start(event.getJDA());
         logger.info("Bump scheduler started");
+
+        // Start Nilfheim event scheduler
+        nilfheimEventScheduler.start(event.getJDA());
+        logger.info("Nilfheim event scheduler started");
     }
 
     /**
@@ -401,6 +423,39 @@ public class BotMain extends ListenerAdapter {
         );
 
         // Promotional detection is handled by PromoMessageListener
+    }
+
+    @Override
+    public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
+        String buttonId = event.getComponentId();
+        
+        if (buttonId.startsWith("bump_copy_")) {
+            // Copy command button
+            String botName = buttonId.replace("bump_copy_", "");
+            BumpConfig.BumpBot bot = BumpConfig.BumpBot.valueOf(botName.toUpperCase());
+            
+            event.reply(String.format(
+                    "📋 **Command to copy:**\n```%s```\n\n" +
+                    "Paste this in the channel to bump the server!",
+                    bot.getCommand()
+            )).setEphemeral(true).queue();
+            
+        } else if (buttonId.startsWith("bump_mention_")) {
+            // Mention bot button
+            String botName = buttonId.replace("bump_mention_", "");
+            BumpConfig.BumpBot bot = BumpConfig.BumpBot.valueOf(botName.toUpperCase());
+            
+            String botMention = bot == BumpConfig.BumpBot.DISBOARD
+                    ? "<@302050872383242240>"
+                    : "<@823495039178932224>";
+            
+            event.reply(String.format(
+                    "👤 **%s Bot:**\n%s\n\n" +
+                    "You can mention them or use their slash command!",
+                    bot.getDisplayName(),
+                    botMention
+            )).setEphemeral(true).queue();
+        }
     }
 
     /**

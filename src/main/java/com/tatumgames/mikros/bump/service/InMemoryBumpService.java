@@ -1,13 +1,15 @@
 package com.tatumgames.mikros.bump.service;
 
 import com.tatumgames.mikros.bump.model.BumpConfig;
+import com.tatumgames.mikros.bump.model.BumpStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.EnumSet;
-import java.util.Map;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * In-memory implementation of BumpService.
@@ -19,11 +21,15 @@ public class InMemoryBumpService implements BumpService {
     // Guild configuration storage: guildId -> BumpConfig
     private final Map<String, BumpConfig> configs;
     
+    // Bump history storage: guildId -> List of BumpRecord
+    private final Map<String, List<BumpStats.BumpRecord>> bumpHistory;
+    
     /**
      * Creates a new InMemoryBumpService.
      */
     public InMemoryBumpService() {
         this.configs = new ConcurrentHashMap<>();
+        this.bumpHistory = new ConcurrentHashMap<>();
         logger.info("InMemoryBumpService initialized");
     }
     
@@ -130,7 +136,82 @@ public class InMemoryBumpService implements BumpService {
             return;
         }
         configs.remove(guildId);
+        bumpHistory.remove(guildId);
         logger.info("Cleared bump data for guild {}", guildId);
+    }
+    
+    @Override
+    public void recordSuccessfulBump(String guildId, BumpConfig.BumpBot bot, String userId, Instant time) {
+        if (guildId == null || guildId.isBlank()) {
+            throw new IllegalArgumentException("guildId cannot be null or blank");
+        }
+        if (bot == null) {
+            throw new IllegalArgumentException("bot cannot be null");
+        }
+        if (time == null) {
+            throw new IllegalArgumentException("time cannot be null");
+        }
+        
+        // Record in history
+        List<BumpStats.BumpRecord> history = bumpHistory.computeIfAbsent(guildId, k -> new ArrayList<>());
+        history.add(new BumpStats.BumpRecord(bot, userId, time));
+        
+        // Also update last bump time (for compatibility)
+        recordBumpTime(guildId, bot, time);
+        
+        logger.info("Recorded successful bump for {} in guild {} by user {}",
+                bot.getDisplayName(), guildId, userId != null ? userId : "unknown");
+    }
+    
+    @Override
+    public BumpStats getBumpStats(String guildId) {
+        return getBumpStats(guildId, Instant.ofEpochMilli(0), Instant.now());
+    }
+    
+    @Override
+    public BumpStats getBumpStats(String guildId, Instant startTime, Instant endTime) {
+        List<BumpStats.BumpRecord> allBumps = bumpHistory.getOrDefault(guildId, Collections.emptyList());
+        
+        int totalBumps = allBumps.size();
+        
+        // Calculate monthly and weekly stats
+        Instant monthAgo = Instant.now().minus(30, ChronoUnit.DAYS);
+        Instant weekAgo = Instant.now().minus(7, ChronoUnit.DAYS);
+        
+        int bumpsThisMonth = (int) allBumps.stream()
+                .filter(bump -> !bump.getTime().isBefore(monthAgo))
+                .count();
+        
+        int bumpsThisWeek = (int) allBumps.stream()
+                .filter(bump -> !bump.getTime().isBefore(weekAgo))
+                .count();
+        
+        // Count per bot
+        Map<BumpConfig.BumpBot, Integer> bumpsPerBot = new HashMap<>();
+        for (BumpStats.BumpRecord bump : allBumps) {
+            bumpsPerBot.merge(bump.getBot(), 1, Integer::sum);
+        }
+        
+        // Get last bump time per bot
+        Map<BumpConfig.BumpBot, Instant> lastBumpTime = new HashMap<>();
+        BumpConfig config = configs.get(guildId);
+        if (config != null) {
+            for (BumpConfig.BumpBot bot : BumpConfig.BumpBot.values()) {
+                Instant lastTime = config.getLastBumpTime(bot);
+                if (lastTime != null) {
+                    lastBumpTime.put(bot, lastTime);
+                }
+            }
+        }
+        
+        // Get recent bumps (last 10)
+        List<BumpStats.BumpRecord> recentBumps = allBumps.stream()
+                .sorted((a, b) -> b.getTime().compareTo(a.getTime()))
+                .limit(10)
+                .collect(Collectors.toList());
+        
+        return new BumpStats(guildId, totalBumps, bumpsThisMonth, bumpsThisWeek,
+                bumpsPerBot, lastBumpTime, recentBumps);
     }
 }
 

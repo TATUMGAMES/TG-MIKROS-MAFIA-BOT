@@ -103,6 +103,10 @@ for game developers and studios.
 - `/admin-bump-setup` - Set up automatic server bumping (channel, bots selection)
 - `/admin-bump-config` - Configure auto-bump settings (view, set-interval, update-bots, disable)
 
+**User Commands:**
+
+- `/bump-stats` - View server bump statistics and history
+
 **Features:**
 
 - Automatic server bumping for Disboard and/or Disurl
@@ -110,6 +114,9 @@ for game developers and studios.
 - Per-server independent configuration
 - Rate limit safety (respects external bot cooldowns)
 - Bot presence verification before bumping
+- Interactive bump reminders with buttons (Copy Command, Instructions, Mention Bot)
+- Automatic bump detection and tracking
+- Bump statistics (total bumps, monthly/weekly counts, per-bot stats, recent bumps)
 
 **Features:**
 
@@ -251,13 +258,19 @@ for game developers and studios.
 - **Action Charge System:** Dynamic charges (3-10 based on level), refresh every 12 hours
 - **Four Action Types:** Explore, Train, Battle, Rest, Donate
 - **65+ narrative encounters** (Nilfheim-themed)
+- **Wandering Figures:** Ultra-rare (0.5% chance) encounters with mysterious figures during exploration
 - **66 enemy types** for battles with stat effectiveness system
+- **Pack Enemies:** Rare pack enemies (e.g., "Ice Wolf Pack") deal 15% more damage and use pack-specific narrative
+- **Server-Wide Events:** Nilfheim Calms affect all players (every 48-96 hours, 12-hour duration)
+- **Consumable Infusions:** Temporary single-use crafting items with powerful effects
+- **Hidden Lore Recognition:** Story flags awarded for significant milestones (max 2 flags)
 - **Death System:** Characters can die, enter recovery
 - **Boss System:** 48 normal bosses + 20 super bosses
 - **Community Boss Battles:** Shared HP pool, damage tracking, heroic charges (5 per boss)
 - **Boss Progression:** Levels increase based on defeats
 - **Boss XP Rewards:** Top 30% of participants receive proportional XP rewards (scales with participation)
 - **Class Bonuses:** Each class gets +20% damage vs specific boss types
+- **Boss Expiration:** Bosses expire after 24 hours if not defeated, applying world curses (checked every 30 minutes)
 - **World Curse System:** Temporary world-wide curses when bosses expire undefeated (7 minor + 6 major curses)
 - **Achievement System:** First-to achievements, pattern achievements, legendary auras, titles, story flags
 - **Item & Crafting System:** Collect essences and catalysts, craft permanent stat bonuses (+5 per stat cap)
@@ -505,6 +518,7 @@ Includes:
 | `/admin-promotion-config`        | Admin      | Configure promotion settings (view, update-channel, set-verbosity, disable, force-check) | Administrator    |
 | `/admin-bump-setup`              | Admin      | Set up automatic server bumping (channel, bots selection)                               | Administrator    |
 | `/admin-bump-config`             | Admin      | Configure auto-bump settings (view, set-interval, update-bots, disable)               | Administrator    |
+| `/bump-stats`                    | Everyone   | View server bump statistics and history                                                 | Everyone         |
 | `/admin-bot-detection-setup`     | Moderation | Enable/disable bot detection system                                                      | Administrator    |
 | `/admin-bot-detection-config`    | Moderation | Configure bot detection settings (8 subcommands)                                         | Administrator    |
 | `/promo-request`                  | Promo      | Request MIKROS promotional services and schedule a demo                                  | Everyone         |
@@ -574,6 +588,7 @@ Includes:
 /admin-bump-config view
 /admin-bump-config set-interval interval:6
 /admin-bump-config update-bots bots:disboard
+/bump-stats
 /admin-bump-config disable
 ```
 

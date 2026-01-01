@@ -1,6 +1,7 @@
 package com.tatumgames.mikros.bump.service;
 
 import com.tatumgames.mikros.bump.model.BumpConfig;
+import com.tatumgames.mikros.bump.model.BumpStats;
 
 import java.time.Instant;
 import java.util.EnumSet;
@@ -91,5 +92,33 @@ public interface BumpService {
      * @param guildId the guild ID
      */
     void clearGuildData(String guildId);
+    
+    /**
+     * Records a successful bump that was detected.
+     *
+     * @param guildId the guild ID
+     * @param bot     the bot that was bumped
+     * @param userId  the user who triggered the bump (null if unknown)
+     * @param time    the time when bumped
+     */
+    void recordSuccessfulBump(String guildId, BumpConfig.BumpBot bot, String userId, Instant time);
+    
+    /**
+     * Gets bump statistics for a guild.
+     *
+     * @param guildId the guild ID
+     * @return bump statistics
+     */
+    BumpStats getBumpStats(String guildId);
+    
+    /**
+     * Gets bump statistics for a specific time period.
+     *
+     * @param guildId the guild ID
+     * @param startTime start of time period
+     * @param endTime end of time period
+     * @return bump statistics for the period
+     */
+    BumpStats getBumpStats(String guildId, Instant startTime, Instant endTime);
 }
 

@@ -5,6 +5,7 @@ import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
 import com.tatumgames.mikros.games.rpg.model.CharacterClass;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
+import com.tatumgames.mikros.games.rpg.service.LoreRecognitionService;
 import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 
 import java.util.List;
@@ -17,14 +18,17 @@ import java.util.Random;
 public class ResurrectAction implements CharacterAction {
     private static final Random random = new Random();
     private final WorldCurseService worldCurseService;
+    private final LoreRecognitionService loreRecognitionService;
 
     /**
      * Creates a new ResurrectAction.
      *
      * @param worldCurseService the world curse service for applying curse effects
+     * @param loreRecognitionService the lore recognition service for milestone checks
      */
-    public ResurrectAction(WorldCurseService worldCurseService) {
+    public ResurrectAction(WorldCurseService worldCurseService, LoreRecognitionService loreRecognitionService) {
         this.worldCurseService = worldCurseService;
+        this.loreRecognitionService = loreRecognitionService;
     }
 
     // Messages when target is ALIVE (blessing instead)
@@ -121,6 +125,20 @@ public class ResurrectAction implements CharacterAction {
             // Track cursed resurrection for Lightbearer title (Priest only)
             if (!activeCurses.isEmpty() && priest.getCharacterClass() == CharacterClass.PRIEST) {
                 priest.incrementCursedResurrections();
+            }
+            
+            // Track resurrection for lore recognition (Priest only)
+            if (priest.getCharacterClass() == CharacterClass.PRIEST) {
+                priest.incrementTimesResurrectedOthers();
+            }
+            
+            // Track resurrection for lore recognition (target)
+            target.incrementResurrectionCount();
+            
+            // Check for lore recognition milestones
+            if (loreRecognitionService != null) {
+                loreRecognitionService.checkMilestones(priest);
+                loreRecognitionService.checkMilestones(target);
             }
             
             success = true;

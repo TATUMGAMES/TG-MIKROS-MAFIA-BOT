@@ -792,6 +792,44 @@ Disable auto-bump for the server.
 
 - Not set up: Prompts to use `/admin-bump-setup` first
 - Invalid interval: Must be 1-24 hours
+
+---
+
+### `/bump-stats`
+
+**Purpose:** View server bump statistics and history.
+
+**Permission Required:** None (everyone can use)
+
+**Example:**
+
+```
+/bump-stats
+```
+
+**Displays:**
+
+- **Overall Statistics:**
+  - Total bumps (all time)
+  - Bumps this month
+  - Bumps this week
+
+- **Per-Bot Statistics:**
+  - Bump count per bot (Disboard, Disurl)
+  - Last bump time per bot
+
+- **Recent Bumps:**
+  - Last 5 bumps with timestamps
+  - Shows which bot was bumped and when
+
+**Features:**
+
+- Ephemeral reply (only visible to you)
+- Tracks all successful bumps automatically
+- Shows monthly and weekly trends
+- Helps track server promotion activity
+
+**Note:** Bump detection automatically tracks when Disboard/Disurl bots confirm successful bumps. Statistics are calculated from detected bumps.
 - Permission denied: Ephemeral error message
 
 ---
