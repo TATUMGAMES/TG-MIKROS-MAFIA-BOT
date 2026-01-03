@@ -128,14 +128,14 @@ public class TitleService {
             available.add(Title.CURSEWALKER);
         }
         // Lightbearer (Priest: 10 resurrections during cursed worlds)
-        if (character.getCursedResurrections() >= 10 && 
-            character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.PRIEST) {
+        if (character.getCursedResurrections() >= 10 &&
+                character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.PRIEST) {
             available.add(Title.LIGHTBEARER);
         }
         // Bound to Death (Necromancer: Active during March of the Dead)
         // Checked via story flag "Bound to Death" when March of the Dead is active
         if (character.getStoryFlags().contains("Bound to Death") &&
-            character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.NECROMANCER) {
+                character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.NECROMANCER) {
             available.add(Title.BOUND_TO_DEATH);
         }
 
@@ -200,7 +200,7 @@ public class TitleService {
      * Checks if a character has a specific title.
      *
      * @param character the character
-     * @param title the title to check
+     * @param title     the title to check
      * @return true if character has the title
      */
     private boolean hasTitle(RPGCharacter character, Title title) {
@@ -209,7 +209,7 @@ public class TitleService {
             return false;
         }
         return currentTitle.equalsIgnoreCase(title.getDisplayName()) ||
-               currentTitle.equalsIgnoreCase(title.name());
+                currentTitle.equalsIgnoreCase(title.name());
     }
 }
 

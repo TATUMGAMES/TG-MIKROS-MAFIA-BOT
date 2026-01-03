@@ -14,17 +14,6 @@ public class BotDetectionConfig {
     private boolean reportToReputation;
 
     /**
-     * Enum representing automatic actions to take when bot is detected.
-     */
-    public enum AutoAction {
-        NONE,
-        DELETE,
-        WARN,
-        MUTE,
-        KICK
-    }
-
-    /**
      * Creates a new BotDetectionConfig with default values.
      */
     public BotDetectionConfig() {
@@ -100,6 +89,17 @@ public class BotDetectionConfig {
 
     public void setReportToReputation(boolean reportToReputation) {
         this.reportToReputation = reportToReputation;
+    }
+
+    /**
+     * Enum representing automatic actions to take when bot is detected.
+     */
+    public enum AutoAction {
+        NONE,
+        DELETE,
+        WARN,
+        MUTE,
+        KICK
     }
 }
 

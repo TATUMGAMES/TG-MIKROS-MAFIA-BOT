@@ -42,10 +42,10 @@ public class RPGActionCommand implements CommandHandler {
     /**
      * Creates a new RPGActionCommand handler.
      *
-     * @param characterService the character service
-     * @param actionService    the action service
+     * @param characterService   the character service
+     * @param actionService      the action service
      * @param achievementService the achievement service for checking first-to achievements
-     * @param worldCurseService the world curse service for tracking cursed world participation
+     * @param worldCurseService  the world curse service for tracking cursed world participation
      */
     public RPGActionCommand(CharacterService characterService, ActionService actionService, AchievementService achievementService, WorldCurseService worldCurseService) {
         this.characterService = characterService;
@@ -197,7 +197,7 @@ public class RPGActionCommand implements CommandHandler {
         }
         // Bound to Death: Necromancer active during March of the Dead
         if (activeCurses.contains(WorldCurse.MAJOR_MARCH_OF_THE_DEAD) &&
-            character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.NECROMANCER) {
+                character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.NECROMANCER) {
             character.addStoryFlag("Bound to Death"); // Track via story flag for now
         }
 
@@ -250,7 +250,7 @@ public class RPGActionCommand implements CommandHandler {
                 int newLevel = character.getLevel();
                 results.append(String.format("\n\n🎉 **LEVEL UP!** You are now Level %d!",
                         newLevel));
-                
+
                 // Check for first-to level achievements
                 checkLevelAchievements(guildId, userId, newLevel);
             }
@@ -322,12 +322,12 @@ public class RPGActionCommand implements CommandHandler {
      * Checks for first-to level achievements.
      *
      * @param guildId the guild ID
-     * @param userId the user ID
-     * @param level the new level
+     * @param userId  the user ID
+     * @param level   the new level
      */
     private void checkLevelAchievements(String guildId, String userId, int level) {
         AchievementType achievementType = null;
-        
+
         if (level == 20) {
             achievementType = AchievementType.FIRST_TO_LEVEL_20;
         } else if (level == 30) {
@@ -335,7 +335,7 @@ public class RPGActionCommand implements CommandHandler {
         } else if (level == 50) {
             achievementType = AchievementType.FIRST_TO_LEVEL_50;
         }
-        
+
         if (achievementType != null) {
             boolean claimed = achievementService.checkAndClaimFirstTo(guildId, achievementType, userId);
             if (claimed) {

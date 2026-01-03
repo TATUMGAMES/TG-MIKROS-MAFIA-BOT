@@ -17,15 +17,14 @@ import java.util.Objects;
  */
 public class RPGCharacter {
     private final String discordId;
-    private String name;
     private final CharacterClass characterClass;
+    private final RPGStats stats;
+    private final Instant createdAt;
+    private String name;
     private int level;
     private int xp;
     private int xpToNextLevel;
-    private final RPGStats stats;
     private Instant lastActionTime; // Deprecated - kept for migration
-    private final Instant createdAt;
-
     // Action charge system (3 charges, refresh every 12h)
     private int actionCharges;
     private Instant lastChargeRefreshTime;
@@ -73,22 +72,22 @@ public class RPGCharacter {
     private boolean raisedFallenThisBoss = false; // Reset when new boss spawns
     private int temporaryCharges = 0; // Donated charges (separate from regular charges)
     private Instant lastDonationReceived; // Track donation cooldown
-    
+
     // Cursed world tracking (for failure-based titles)
     private int cursedBossFights = 0; // Participated in boss fights while curses were active
     private int cursedResurrections = 0; // Resurrections performed during cursed worlds (Priest)
     private boolean actedDuringBothCurses = false; // Acted during both Minor + Major curse simultaneously
-    
+
     // Exploration event temporary debuffs
     private boolean hasFrostbite = false; // Frostbite reduces max HP by 5%, removed by rest
     private int darkRelicActionsRemaining = 0; // Dark Relic: +5% XP for next 3 actions, +10% damage taken
     private double darkRelicXpBonus = 0.0; // XP bonus multiplier (0.05 = +5%)
     private double darkRelicDamagePenalty = 0.0; // Damage penalty multiplier (0.10 = +10% damage taken)
-    
+
     // Elite enemy system tracking
     private Instant temporaryCurseExpiresAt = null; // Temporary curse expiration (12h)
     private boolean loseChargeOnNextRefresh = false; // Flag for losing charge on next refresh
-    
+
     // Oathbreaker corruption system
     private int corruption = 0; // Current corruption (0-15 base, 0-20 if Embraced, 0-10 if Purged)
     private int corruptionCap = 15; // Max corruption (15 base, 20 if Embraced, 10 if Purged)
@@ -96,18 +95,18 @@ public class RPGCharacter {
     private int oathFragments = 0; // Oath fragments collected from elites
     private int backlashEventsTriggered = 0; // Track for achievements
     private boolean hasRefusedDeity = false; // Track deity refusal
-    
+
     // Lore recognition tracking
     private int timesResurrectedOthers = 0; // Times Priest resurrected others (for The Rescuer recognition)
     private java.util.Set<com.tatumgames.mikros.games.rpg.model.InfusionType> infusionsCrafted; // Set of infusion types crafted (for Master of Elements recognition)
-    
+
     // Irrevocable World Encounters tracking
     private String deityBlessing; // Which deity blessed them (enum name or null)
     private String relicChoice; // Which relic they took (enum name or null)
     private String philosophicalPath; // "UNBOUND", "GODMARKED", or null
     private java.util.Set<String> worldFlags; // Permanent world flags (separate from story flags)
     private java.util.Map<String, Double> statModifiers; // Permanent multiplicative stat modifiers (e.g., "STR_EFFECTIVENESS" -> 1.15)
-    
+
     // Encounter/Interaction count tracking (max 3 per type)
     private java.util.Map<String, Integer> worldEncounterCounts; // Map: encounter type name -> count (max 3)
     private java.util.Map<String, Integer> statInteractionCounts; // Map: interaction type name -> count (max 3)
@@ -180,17 +179,17 @@ public class RPGCharacter {
         this.cursedBossFights = 0;
         this.cursedResurrections = 0;
         this.actedDuringBothCurses = false;
-        
+
         // Initialize exploration event debuffs
         this.hasFrostbite = false;
         this.darkRelicActionsRemaining = 0;
         this.darkRelicXpBonus = 0.0;
         this.darkRelicDamagePenalty = 0.0;
-        
+
         // Initialize elite enemy system tracking
         this.temporaryCurseExpiresAt = null;
         this.loseChargeOnNextRefresh = false;
-        
+
         // Initialize Oathbreaker corruption system
         this.corruption = 0;
         this.corruptionCap = 15;
@@ -198,11 +197,11 @@ public class RPGCharacter {
         this.oathFragments = 0;
         this.backlashEventsTriggered = 0;
         this.hasRefusedDeity = false;
-        
+
         // Initialize lore recognition tracking
         this.timesResurrectedOthers = 0;
         this.infusionsCrafted = new java.util.HashSet<>();
-        
+
         // Initialize irrevocable world encounters tracking
         this.deityBlessing = null;
         this.relicChoice = null;
@@ -222,11 +221,11 @@ public class RPGCharacter {
     public boolean addXp(int amount) {
         return addXp(amount, null);
     }
-    
+
     /**
      * Adds experience points and handles leveling up.
      *
-     * @param amount the XP to add
+     * @param amount                 the XP to add
      * @param loreRecognitionService optional service for checking milestones (can be null)
      * @return true if the character leveled up
      */
@@ -244,30 +243,30 @@ public class RPGCharacter {
 
     /**
      * Levels up the character.
-     * 
+     *
      * @param loreRecognitionService optional service for checking milestones (can be null)
      */
     private void levelUp(com.tatumgames.mikros.games.rpg.service.LoreRecognitionService loreRecognitionService) {
         int oldMaxCharges = getMaxActionCharges();
-        
+
         this.level++;
         this.xp -= this.xpToNextLevel;
         this.xpToNextLevel = calculateXpForNextLevel(this.level);
         this.stats.applyLevelUpGrowth(this.characterClass);
-        
+
         // Check if max charges increased (Fibonacci threshold reached)
         int newMaxCharges = getMaxActionCharges();
         if (newMaxCharges > oldMaxCharges) {
             // Player gained a charge slot - give +1 charge immediately as level-up bonus
             this.actionCharges = Math.min(newMaxCharges, this.actionCharges + 1);
         }
-        
+
         // Check for lore recognition milestones (level-based)
         if (loreRecognitionService != null) {
             loreRecognitionService.checkMilestones(this);
         }
     }
-    
+
     /**
      * Levels up the character (overload without service for backward compatibility).
      */
@@ -340,9 +339,9 @@ public class RPGCharacter {
         if (activeCurses != null && activeCurses.contains(com.tatumgames.mikros.games.rpg.curse.WorldCurse.MAJOR_FROZEN_TIME)) {
             effectiveRefreshHours = refreshHours + 2;
         }
-        
+
         int maxCharges = getMaxActionCharges();
-        
+
         if (lastChargeRefreshTime == null) {
             lastChargeRefreshTime = Instant.now();
             actionCharges = maxCharges;
@@ -356,13 +355,13 @@ public class RPGCharacter {
             // Calculate how many full refresh cycles have passed
             int refreshCycles = (int) (hoursSinceRefresh / effectiveRefreshHours);
             actionCharges = Math.min(maxCharges, actionCharges + refreshCycles * maxCharges);
-            
+
             // Apply elite defeat penalty (lose one charge on refresh)
             if (loseChargeOnNextRefresh && refreshCycles > 0) {
                 actionCharges = Math.max(0, actionCharges - 1);
                 loseChargeOnNextRefresh = false; // Clear flag after applying
             }
-            
+
             lastChargeRefreshTime = now;
         }
     }

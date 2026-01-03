@@ -22,22 +22,17 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class BotDetectionService {
     private static final Logger logger = LoggerFactory.getLogger(BotDetectionService.class);
-
+    private static final long REPORT_COOLDOWN_SECONDS = 300; // 5 minutes
     // Per-guild configuration
     private final Map<String, BotDetectionConfig> configs;
-
     // Bot prevention count tracking per guild
     private final Map<String, Integer> botPreventionCounts;
-
     // Message pattern tracker for multi-channel spam detection
     private final MessagePatternTracker patternTracker;
-
     // Suspicious domain list
     private final SuspiciousDomainList domainList;
-
     // Cooldown tracking: "guildId:userId" -> last report timestamp
     private final Map<String, Long> reportCooldowns;
-    private static final long REPORT_COOLDOWN_SECONDS = 300; // 5 minutes
 
     public BotDetectionService() {
         this.configs = new ConcurrentHashMap<>();
@@ -197,15 +192,13 @@ public class BotDetectionService {
     /**
      * Checks if a member joined recently and posted a link.
      *
-     * @param member         the member
-     * @param messageContent the message content
+     * @param member            the member
+     * @param messageContent    the message content
      * @param timeWindowSeconds the time window in seconds
      * @return true if join + link detected, false otherwise
      */
     public boolean isJoinAndLink(Member member, String messageContent, int timeWindowSeconds) {
-        if (member.getTimeJoined() == null) {
-            return false;
-        }
+        // Note: member.getTimeJoined() is guaranteed to be non-null by JDA API
 
         long secondsSinceJoin = ChronoUnit.SECONDS.between(
                 member.getTimeJoined().toInstant(),
@@ -276,9 +269,7 @@ public class BotDetectionService {
      * @return seconds since join, or 0 if unknown
      */
     private long getSecondsSinceJoin(Member member) {
-        if (member.getTimeJoined() == null) {
-            return 0;
-        }
+        // Note: member.getTimeJoined() is guaranteed to be non-null by JDA API
         return ChronoUnit.SECONDS.between(member.getTimeJoined().toInstant(), Instant.now());
     }
 

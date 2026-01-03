@@ -28,23 +28,9 @@ public class InMemoryGamePromotionService implements GamePromotionService {
 
     // App promotion step tracking: guildId -> (appId -> PromotionStepRecord)
     private final Map<String, Map<String, PromotionStepRecord>> promotionSteps;
-
+    private final ObjectMapper objectMapper;
     // Cached apps from stub JSON
     private List<AppPromotion> cachedApps;
-    private final ObjectMapper objectMapper;
-
-    /**
-     * Record of promotion step and last post time for an app.
-     */
-    private static class PromotionStepRecord {
-        int lastStep;           // 1-4, or 0 if never posted
-        Instant lastPostTime;   // When last step was posted
-
-        PromotionStepRecord(int lastStep, Instant lastPostTime) {
-            this.lastStep = lastStep;
-            this.lastPostTime = lastPostTime;
-        }
-    }
 
     /**
      * Creates a new InMemoryGamePromotionService.
@@ -230,6 +216,19 @@ public class InMemoryGamePromotionService implements GamePromotionService {
                 .mapToInt(Map::size)
                 .sum());
         return stats;
+    }
+
+    /**
+     * Record of promotion step and last post time for an app.
+     */
+    private static class PromotionStepRecord {
+        int lastStep;           // 1-4, or 0 if never posted
+        Instant lastPostTime;   // When last step was posted
+
+        PromotionStepRecord(int lastStep, Instant lastPostTime) {
+            this.lastStep = lastStep;
+            this.lastPostTime = lastPostTime;
+        }
     }
 }
 

@@ -108,7 +108,7 @@ public class RestAction implements CharacterAction {
 
         // Record the action (uses a charge)
         character.recordAction();
-        
+
         // Track action type and increment rest count for achievements
         character.recordActionType("rest");
         character.incrementRestCount();

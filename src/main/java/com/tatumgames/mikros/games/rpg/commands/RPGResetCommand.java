@@ -26,13 +26,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @SuppressWarnings("ClassCanBeRecord")
 public class RPGResetCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RPGResetCommand.class);
-
-    private final CharacterService characterService;
-    private final BossService bossService;
-
     // Pending reset confirmations: guildId -> timestamp
     private static final Map<String, Long> pendingConfirmations = new ConcurrentHashMap<>();
     private static final long CONFIRMATION_TIMEOUT_MS = 30000; // 30 seconds
+    private final CharacterService characterService;
+    private final BossService bossService;
 
     /**
      * Creates a new RPGResetCommand handler.

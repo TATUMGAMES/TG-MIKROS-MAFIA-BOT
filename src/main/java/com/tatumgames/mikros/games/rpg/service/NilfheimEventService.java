@@ -19,7 +19,7 @@ public interface NilfheimEventService {
     /**
      * Sets an active event for a guild.
      *
-     * @param guildId the guild ID
+     * @param guildId   the guild ID
      * @param eventType the event type
      * @param expiresAt when the event expires
      */
@@ -43,7 +43,7 @@ public interface NilfheimEventService {
     /**
      * Sets the time when an event was last triggered for a guild.
      *
-     * @param guildId the guild ID
+     * @param guildId   the guild ID
      * @param eventTime the event time
      */
     void setLastEventTime(String guildId, Instant eventTime);

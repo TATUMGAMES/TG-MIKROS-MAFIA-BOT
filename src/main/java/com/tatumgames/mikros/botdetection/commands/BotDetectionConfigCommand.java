@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -118,7 +119,7 @@ public class BotDetectionConfigCommand implements CommandHandler {
     }
 
     private void handleSetAccountAgeThreshold(SlashCommandInteractionEvent event, String guildId) {
-        Long days = event.getOption("days", l -> l.getAsLong());
+        Long days = event.getOption("days", OptionMapping::getAsLong);
         if (days == null || days < 1 || days > 365) {
             event.reply("❌ Account age threshold must be between 1 and 365 days.")
                     .setEphemeral(true)
@@ -135,7 +136,7 @@ public class BotDetectionConfigCommand implements CommandHandler {
     }
 
     private void handleSetLinkRestrictionMinutes(SlashCommandInteractionEvent event, String guildId) {
-        Long minutes = event.getOption("minutes", l -> l.getAsLong());
+        Long minutes = event.getOption("minutes", OptionMapping::getAsLong);
         if (minutes == null || minutes < 1 || minutes > 1440) {
             event.reply("❌ Link restriction must be between 1 and 1440 minutes (24 hours).")
                     .setEphemeral(true)
@@ -152,7 +153,7 @@ public class BotDetectionConfigCommand implements CommandHandler {
     }
 
     private void handleSetMultiChannelThreshold(SlashCommandInteractionEvent event, String guildId) {
-        Long threshold = event.getOption("threshold", l -> l.getAsLong());
+        Long threshold = event.getOption("threshold", OptionMapping::getAsLong);
         if (threshold == null || threshold < 2 || threshold > 10) {
             event.reply("❌ Multi-channel threshold must be between 2 and 10 channels.")
                     .setEphemeral(true)
@@ -169,7 +170,7 @@ public class BotDetectionConfigCommand implements CommandHandler {
     }
 
     private void handleSetAutoAction(SlashCommandInteractionEvent event, String guildId) {
-        String actionStr = event.getOption("action", s -> s.getAsString());
+        String actionStr = event.getOption("action", OptionMapping::getAsString);
         if (actionStr == null) {
             event.reply("❌ Please specify an action.").setEphemeral(true).queue();
             return;
@@ -194,7 +195,7 @@ public class BotDetectionConfigCommand implements CommandHandler {
     }
 
     private void handleToggleReputationReporting(SlashCommandInteractionEvent event, String guildId) {
-        Boolean enabled = event.getOption("enabled", b -> b.getAsBoolean());
+        Boolean enabled = event.getOption("enabled", OptionMapping::getAsBoolean);
         if (enabled == null) {
             event.reply("❌ Please specify enabled (true/false).").setEphemeral(true).queue();
             return;
@@ -209,8 +210,8 @@ public class BotDetectionConfigCommand implements CommandHandler {
     }
 
     private void handleAddSuspiciousDomain(SlashCommandInteractionEvent event, String guildId) {
-        String domain = event.getOption("domain", s -> s.getAsString());
-        Long riskScore = event.getOption("risk-score", l -> l.getAsLong());
+        String domain = event.getOption("domain", OptionMapping::getAsString);
+        Long riskScore = event.getOption("risk-score", OptionMapping::getAsLong);
 
         if (domain == null || domain.isBlank()) {
             event.reply("❌ Please specify a domain.").setEphemeral(true).queue();
@@ -229,7 +230,7 @@ public class BotDetectionConfigCommand implements CommandHandler {
     }
 
     private void handleRemoveSuspiciousDomain(SlashCommandInteractionEvent event, String guildId) {
-        String domain = event.getOption("domain", s -> s.getAsString());
+        String domain = event.getOption("domain", OptionMapping::getAsString);
 
         if (domain == null || domain.isBlank()) {
             event.reply("❌ Please specify a domain.").setEphemeral(true).queue();

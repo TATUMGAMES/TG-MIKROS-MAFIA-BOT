@@ -25,9 +25,9 @@ import java.util.stream.Collectors;
  */
 public class PromotionOnboardingScheduler {
     private static final Logger logger = LoggerFactory.getLogger(PromotionOnboardingScheduler.class);
-    
+
     private static final long CHECK_INTERVAL_MINUTES = 30;
-    
+
     // Channel names to match (case-insensitive, in priority order)
     private static final List<String> PREFERRED_CHANNEL_NAMES = Arrays.asList(
             "announcements",
@@ -35,7 +35,7 @@ public class PromotionOnboardingScheduler {
             "game-updates",
             "community-news"
     );
-    
+
     // Channel names to never match
     private static final List<String> EXCLUDED_CHANNEL_NAMES = Arrays.asList(
             "general",
@@ -50,7 +50,7 @@ public class PromotionOnboardingScheduler {
     /**
      * Creates a new PromotionOnboardingScheduler.
      *
-     * @param onboardingService   the onboarding service
+     * @param onboardingService    the onboarding service
      * @param gamePromotionService the game promotion service
      */
     public PromotionOnboardingScheduler(
@@ -217,19 +217,19 @@ public class PromotionOnboardingScheduler {
         if (matchedChannel != null) {
             // Auto-assign channel
             gamePromotionService.setPromotionChannel(guildId, matchedChannel.getId());
-            
+
             // Set default verbosity to MEDIUM
             gamePromotionService.setPromotionVerbosity(guildId, PromotionVerbosity.MEDIUM);
 
             // Send confirmation DM
             String confirmMessage = String.format(
                     "✅ Auto-configured promotion channel: %s\n\n" +
-                    "You can change this anytime with /admin-promotion-setup.",
+                            "You can change this anytime with /admin-promotion-setup.",
                     matchedChannel.getAsMention()
             );
             sendDmToAdmins(guild, confirmMessage);
 
-            logger.info("Executed Phase 3 (Auto-Assist) for guild {} - auto-assigned channel {}", 
+            logger.info("Executed Phase 3 (Auto-Assist) for guild {} - auto-assigned channel {}",
                     guildId, matchedChannel.getId());
         } else {
             logger.info("Executed Phase 3 (Auto-Assist) for guild {} - no matching channel found", guildId);
@@ -250,7 +250,7 @@ public class PromotionOnboardingScheduler {
         for (String preferredName : PREFERRED_CHANNEL_NAMES) {
             for (TextChannel channel : textChannels) {
                 String channelName = channel.getName().toLowerCase();
-                
+
                 // Check if name matches (case-insensitive)
                 if (channelName.equals(preferredName.toLowerCase())) {
                     // Verify not in excluded list (shouldn't happen, but double-check)

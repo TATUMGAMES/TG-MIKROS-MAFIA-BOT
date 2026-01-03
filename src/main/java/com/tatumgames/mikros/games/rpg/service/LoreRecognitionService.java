@@ -31,12 +31,12 @@ public class LoreRecognitionService {
         checkTheShatteringsEcho(character);
         checkStormwardensRespect(character);
         checkTheGrandLibrarysScholar(character);
-        
+
         // Check irrevocable encounter milestones
         checkDeityPathCompletion(character);
         checkRelicBearer(character);
         checkOathOfNull(character);
-        
+
         // Check Oathbreaker path choice (level 10-12)
         checkOathbreakerPathChoice(character);
     }
@@ -94,7 +94,7 @@ public class LoreRecognitionService {
             boolean hasEmberEndurance = infusionsCrafted.contains(InfusionType.EMBER_ENDURANCE);
             boolean hasAstralInsight = infusionsCrafted.contains(InfusionType.ASTRAL_INSIGHT);
             boolean hasVoidPrecision = infusionsCrafted.contains(InfusionType.VOID_PRECISION);
-            
+
             if (hasFrostClarity && hasGaleFortune && hasEmberEndurance && hasAstralInsight && hasVoidPrecision) {
                 String flag = "Elemental master";
                 if (!character.getStoryFlags().contains(flag) && character.getStoryFlags().size() < 2) {
@@ -208,7 +208,7 @@ public class LoreRecognitionService {
         if (character.getCharacterClass() != CharacterClass.OATHBREAKER || character.getOathbreakerPath() != null) {
             return;
         }
-        
+
         // Trigger at level 10-12 (randomly within this range)
         int level = character.getLevel();
         if (level >= 10 && level <= 12) {
@@ -220,7 +220,7 @@ public class LoreRecognitionService {
                 int corruption = character.getCorruption();
                 String chosenPath;
                 String narrative;
-                
+
                 if (corruption >= 8) {
                     // High corruption -> Embrace
                     chosenPath = "EMBRACE";
@@ -236,7 +236,7 @@ public class LoreRecognitionService {
                             "Your corruption cap is reduced to 10, but you gain +5% damage reduction and -10% curse penalties. " +
                             "The path of redemption is yours.";
                 }
-                
+
                 logger.info("Oathbreaker {} chose path: {} at level {}", character.getName(), chosenPath, level);
                 // Note: Narrative is logged but not returned - this happens during milestone check
                 // The path choice is permanent and affects future gameplay

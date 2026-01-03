@@ -37,23 +37,10 @@ public class RealGamePromotionService implements GamePromotionService {
     private final Map<String, Map<String, PromotionStepRecord>> promotionSteps;
 
     /**
-     * Record of promotion step and last post time for an app.
-     */
-    private static class PromotionStepRecord {
-        int lastStep;           // 1-4, or 0 if never posted
-        Instant lastPostTime;   // When last step was posted
-
-        PromotionStepRecord(int lastStep, Instant lastPostTime) {
-            this.lastStep = lastStep;
-            this.lastPostTime = lastPostTime;
-        }
-    }
-
-    /**
      * Creates a new RealGamePromotionService.
      *
-     * @param apiClient      the API client for making requests
-     * @param promotionApiKey the API key for promotion API calls
+     * @param apiClient           the API client for making requests
+     * @param promotionApiKey     the API key for promotion API calls
      * @param promotionApiBaseUrl the base URL for the API (e.g., https://tg-api-new.uc.r.appspot.com)
      */
     public RealGamePromotionService(TatumGamesApiClient apiClient, String promotionApiKey, String promotionApiBaseUrl) {
@@ -176,7 +163,7 @@ public class RealGamePromotionService implements GamePromotionService {
             logger.warn("API returned empty or invalid response, falling back to stub");
             return loadStubApps();
         } catch (TatumGamesApiClient.ApiException e) {
-            logger.error("Failed to fetch apps from API (status: {}), falling back to stub: {}", 
+            logger.error("Failed to fetch apps from API (status: {}), falling back to stub: {}",
                     e.getStatusCode(), e.getMessage());
             return loadStubApps();
         } catch (Exception e) {
@@ -255,5 +242,18 @@ public class RealGamePromotionService implements GamePromotionService {
                 .mapToInt(Map::size)
                 .sum());
         return stats;
+    }
+
+    /**
+     * Record of promotion step and last post time for an app.
+     */
+    private static class PromotionStepRecord {
+        int lastStep;           // 1-4, or 0 if never posted
+        Instant lastPostTime;   // When last step was posted
+
+        PromotionStepRecord(int lastStep, Instant lastPostTime) {
+            this.lastStep = lastStep;
+            this.lastPostTime = lastPostTime;
+        }
     }
 }

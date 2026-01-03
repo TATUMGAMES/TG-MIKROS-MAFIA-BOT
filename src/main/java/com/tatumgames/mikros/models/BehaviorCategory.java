@@ -87,6 +87,38 @@ public enum BehaviorCategory {
     }
 
     /**
+     * Gets all negative behavior categories.
+     *
+     * @return array of negative behavior categories
+     */
+    public static BehaviorCategory[] getNegativeBehaviors() {
+        return new BehaviorCategory[]{
+                SPAMMER,
+                TOXIC_BEHAVIOR,
+                HARRASSING,
+                IGNORING_RULES,
+                BAN_EVASION,
+                TROLL,
+                EXCESSIVE_PINGING,
+                NSFW_IN_NON_NSFW_SPACE
+        };
+    }
+
+    /**
+     * Gets all positive behavior categories.
+     *
+     * @return array of positive behavior categories
+     */
+    public static BehaviorCategory[] getPositiveBehaviors() {
+        return new BehaviorCategory[]{
+                ACTIVE_PARTICIPATE,
+                GOOD_HELPER,
+                POSITIVE_INFLUENCER,
+                FRIENDLY_GREETER
+        };
+    }
+
+    /**
      * Gets the weight of this behavior category.
      *
      * @return the weight value
@@ -129,38 +161,6 @@ public enum BehaviorCategory {
      */
     public boolean isPositive() {
         return weight > 0;
-    }
-
-    /**
-     * Gets all negative behavior categories.
-     *
-     * @return array of negative behavior categories
-     */
-    public static BehaviorCategory[] getNegativeBehaviors() {
-        return new BehaviorCategory[]{
-                SPAMMER,
-                TOXIC_BEHAVIOR,
-                HARRASSING,
-                IGNORING_RULES,
-                BAN_EVASION,
-                TROLL,
-                EXCESSIVE_PINGING,
-                NSFW_IN_NON_NSFW_SPACE
-        };
-    }
-
-    /**
-     * Gets all positive behavior categories.
-     *
-     * @return array of positive behavior categories
-     */
-    public static BehaviorCategory[] getPositiveBehaviors() {
-        return new BehaviorCategory[]{
-                ACTIVE_PARTICIPATE,
-                GOOD_HELPER,
-                POSITIVE_INFLUENCER,
-                FRIENDLY_GREETER
-        };
     }
 }
 

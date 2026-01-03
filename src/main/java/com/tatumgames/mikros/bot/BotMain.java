@@ -3,25 +3,19 @@ package com.tatumgames.mikros.bot;
 import com.tatumgames.mikros.admin.commands.*;
 import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.api.TatumGamesApiClient;
+import com.tatumgames.mikros.bump.commands.BumpConfigCommand;
+import com.tatumgames.mikros.bump.commands.BumpSetupCommand;
+import com.tatumgames.mikros.bump.commands.BumpStatsCommand;
+import com.tatumgames.mikros.bump.listener.BumpDetectionListener;
+import com.tatumgames.mikros.bump.model.BumpConfig;
+import com.tatumgames.mikros.bump.scheduler.BumpScheduler;
+import com.tatumgames.mikros.bump.service.BumpService;
+import com.tatumgames.mikros.bump.service.InMemoryBumpService;
 import com.tatumgames.mikros.config.ConfigLoader;
 import com.tatumgames.mikros.games.rpg.commands.*;
-import com.tatumgames.mikros.games.rpg.service.ActionService;
-import com.tatumgames.mikros.games.rpg.service.BossScheduler;
-import com.tatumgames.mikros.games.rpg.service.AchievementService;
-import com.tatumgames.mikros.games.rpg.service.AuraService;
-import com.tatumgames.mikros.games.rpg.service.BossService;
-import com.tatumgames.mikros.games.rpg.service.CharacterService;
-import com.tatumgames.mikros.games.rpg.service.CraftingService;
-import com.tatumgames.mikros.games.rpg.service.LoreRecognitionService;
-import com.tatumgames.mikros.games.rpg.service.NilfheimEventService;
-import com.tatumgames.mikros.games.rpg.service.InMemoryNilfheimEventService;
-import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 import com.tatumgames.mikros.games.rpg.scheduler.NilfheimEventScheduler;
-import com.tatumgames.mikros.games.word_unscramble.commands.GameConfigCommand;
-import com.tatumgames.mikros.games.word_unscramble.commands.GameSetupCommand;
-import com.tatumgames.mikros.games.word_unscramble.commands.ScrambleGuessCommand;
-import com.tatumgames.mikros.games.word_unscramble.commands.ScrambleLeaderboardCommand;
-import com.tatumgames.mikros.games.word_unscramble.commands.ScrambleProfileCommand;
+import com.tatumgames.mikros.games.rpg.service.*;
+import com.tatumgames.mikros.games.word_unscramble.commands.*;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleResetScheduler;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleService;
 import com.tatumgames.mikros.honeypot.commands.*;
@@ -33,18 +27,8 @@ import com.tatumgames.mikros.promo.commands.SetupPromotionsCommand;
 import com.tatumgames.mikros.promo.listener.PromoMessageListener;
 import com.tatumgames.mikros.promo.service.PromoDetectionService;
 import com.tatumgames.mikros.services.*;
-import com.tatumgames.mikros.services.RealGamePromotionService;
-import com.tatumgames.mikros.services.PromotionOnboardingService;
 import com.tatumgames.mikros.services.scheduler.GamePromotionScheduler;
 import com.tatumgames.mikros.services.scheduler.PromotionOnboardingScheduler;
-import com.tatumgames.mikros.bump.service.BumpService;
-import com.tatumgames.mikros.bump.service.InMemoryBumpService;
-import com.tatumgames.mikros.bump.scheduler.BumpScheduler;
-import com.tatumgames.mikros.bump.commands.BumpSetupCommand;
-import com.tatumgames.mikros.bump.commands.BumpConfigCommand;
-import com.tatumgames.mikros.bump.commands.BumpStatsCommand;
-import com.tatumgames.mikros.bump.listener.BumpDetectionListener;
-import com.tatumgames.mikros.bump.model.BumpConfig;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -84,6 +68,7 @@ public class BotMain extends ListenerAdapter {
     private final PromotionOnboardingService promotionOnboardingService;
     private final PromotionOnboardingScheduler promotionOnboardingScheduler;
     private final com.tatumgames.mikros.tatumtech.scheduler.TatumTechEventScheduler tatumTechEventScheduler;
+    @SuppressWarnings("unused") // Kept for future use when MIKROS Analytics API integration is complete
     private final GameStatsService gameStatsService;
     private final WordUnscrambleService wordUnscrambleService;
     private final WordUnscrambleResetScheduler wordUnscrambleResetScheduler;
@@ -139,7 +124,7 @@ public class BotMain extends ListenerAdapter {
         // Initialize game promotion service (use real API if key is configured, otherwise use mock)
         if (config.getMikrosApiKey() != null && !config.getMikrosApiKey().isBlank()) {
             this.gamePromotionService = new RealGamePromotionService(
-                    apiClient, 
+                    apiClient,
                     config.getMikrosApiKey(),
                     config.getMikrosApiBaseUrl() // Pass base URL
             );
@@ -256,8 +241,9 @@ public class BotMain extends ListenerAdapter {
 
         // Game Stats/Analytics commands
         // TODO: Re-enable when MIKROS Analytics API integration is complete
-        // registerHandler(new com.tatumgames.mikros.admin.commands.MikrosEcosystemSetupCommand(gameStatsService));
-        // registerHandler(new com.tatumgames.mikros.admin.commands.GameStatsCommand(gameStatsService));
+        // These commands are temporarily disabled until API integration is ready
+        // - MikrosEcosystemSetupCommand (commented out, class exists but unused)
+        // - GameStatsCommand (commented out, class exists but unused)
 
         // Word Unscramble commands
         registerHandler(new GameSetupCommand(wordUnscrambleService, wordUnscrambleResetScheduler));
@@ -432,30 +418,36 @@ public class BotMain extends ListenerAdapter {
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
         String buttonId = event.getComponentId();
-        
+
         if (buttonId.startsWith("bump_copy_")) {
             // Copy command button
             String botName = buttonId.replace("bump_copy_", "");
             BumpConfig.BumpBot bot = BumpConfig.BumpBot.valueOf(botName.toUpperCase());
-            
-            event.reply(String.format(
-                    "📋 **Command to copy:**\n```%s```\n\n" +
-                    "Paste this in the channel to bump the server!",
+
+            event.reply(String.format("""
+                    📋 **Command to copy:**
+                    ```%s```
+                    
+                    Paste this in the channel to bump the server!
+                    """,
                     bot.getCommand()
             )).setEphemeral(true).queue();
-            
+
         } else if (buttonId.startsWith("bump_mention_")) {
             // Mention bot button
             String botName = buttonId.replace("bump_mention_", "");
             BumpConfig.BumpBot bot = BumpConfig.BumpBot.valueOf(botName.toUpperCase());
-            
+
             String botMention = bot == BumpConfig.BumpBot.DISBOARD
                     ? "<@302050872383242240>"
                     : "<@823495039178932224>";
-            
-            event.reply(String.format(
-                    "👤 **%s Bot:**\n%s\n\n" +
-                    "You can mention them or use their slash command!",
+
+            event.reply(String.format("""
+                    👤 **%s Bot:**
+                    %s
+                    
+                    You can mention them or use their slash command!
+                    """,
                     bot.getDisplayName(),
                     botMention
             )).setEphemeral(true).queue();

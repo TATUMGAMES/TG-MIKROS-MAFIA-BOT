@@ -23,12 +23,10 @@ import java.time.Instant;
  */
 public class BotDetectionMessageListener extends ListenerAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BotDetectionMessageListener.class);
-
-    private final BotDetectionService botDetectionService;
-    private final ReputationService reputationService;
-
     private static final String BOT_DETECTION_SYSTEM_ID = "BOT_DETECTION_SYSTEM";
     private static final String BOT_DETECTION_SYSTEM_NAME = "Bot Detection System";
+    private final BotDetectionService botDetectionService;
+    private final ReputationService reputationService;
 
     /**
      * Creates a new BotDetectionMessageListener.
@@ -37,7 +35,7 @@ public class BotDetectionMessageListener extends ListenerAdapter {
      * @param reputationService   the reputation service
      */
     public BotDetectionMessageListener(BotDetectionService botDetectionService,
-                                      ReputationService reputationService) {
+                                       ReputationService reputationService) {
         this.botDetectionService = botDetectionService;
         this.reputationService = reputationService;
     }
@@ -80,15 +78,15 @@ public class BotDetectionMessageListener extends ListenerAdapter {
         }
 
         // Only take action on HIGH confidence detections (or if configured)
-        if (result.getConfidence() != BotDetectionResult.Confidence.HIGH &&
+        if (result.confidence() != BotDetectionResult.Confidence.HIGH &&
                 config.getAutoAction() == BotDetectionConfig.AutoAction.NONE) {
-            logger.debug("Bot detected with {} confidence, but auto-action is NONE", result.getConfidence());
+            logger.debug("Bot detected with {} confidence, but auto-action is NONE", result.confidence());
             return;
         }
 
         User user = event.getAuthor();
         logger.warn("Bot detected: user {} in guild {} - Reason: {}, Confidence: {}",
-                user.getId(), guildId, result.getDetectionReason(), result.getConfidence());
+                user.getId(), guildId, result.detectionReason(), result.confidence());
 
         // Take action based on config
         handleBotDetection(event, result, config);
@@ -120,6 +118,9 @@ public class BotDetectionMessageListener extends ListenerAdapter {
         MessageChannel channel = event.getChannel();
         String guildId = event.getGuild().getId();
 
+        // Declare member variable before switch to avoid scope issues
+        Member member = event.getMember();
+        
         switch (action) {
             case NONE:
                 // No action taken
@@ -149,12 +150,11 @@ public class BotDetectionMessageListener extends ListenerAdapter {
                 break;
 
             case MUTE:
-                Member member = event.getMember();
                 if (member != null && event.getGuild().getSelfMember().canInteract(member)) {
                     // Note: Mute requires a timeout role or timeout API
                     // For simplicity, we'll use timeout (1 hour)
                     member.timeoutFor(1, java.util.concurrent.TimeUnit.HOURS)
-                            .reason("Bot detection: " + result.getDetails())
+                            .reason("Bot detection: " + result.details())
                             .queue(
                                     success -> logger.info("Muted user {} for bot detection", user.getId()),
                                     error -> logger.warn("Failed to mute user: {}", error.getMessage())
@@ -167,7 +167,7 @@ public class BotDetectionMessageListener extends ListenerAdapter {
                 member = event.getMember();
                 if (member != null && event.getGuild().getSelfMember().canInteract(member)) {
                     event.getGuild().kick(member)
-                            .reason("Bot detection: " + result.getDetails())
+                            .reason("Bot detection: " + result.details())
                             .queue(
                                     success -> logger.info("Kicked user {} for bot detection", user.getId()),
                                     error -> logger.warn("Failed to kick user: {}", error.getMessage())
@@ -198,8 +198,8 @@ public class BotDetectionMessageListener extends ListenerAdapter {
                     BOT_DETECTION_SYSTEM_NAME,
                     BehaviorCategory.SPAMMER,
                     String.format("Auto-detected: %s - %s",
-                            result.getDetectionReason(),
-                            result.getDetails()),
+                            result.detectionReason(),
+                            result.details()),
                     Instant.now(),
                     guildId
             );

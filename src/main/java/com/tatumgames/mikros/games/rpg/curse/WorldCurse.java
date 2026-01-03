@@ -10,8 +10,8 @@ public enum WorldCurse {
      * Curse of Frailty
      * Max HP temporarily reduced by 10%
      */
-    MINOR_CURSE_OF_FRAILTY("❄️ Curse of Frailty", 
-            "The cold seeps into bone and marrow.", 
+    MINOR_CURSE_OF_FRAILTY("❄️ Curse of Frailty",
+            "The cold seeps into bone and marrow.",
             CurseType.MINOR,
             CurseDuration.UNTIL_NEXT_SPAWN),
 

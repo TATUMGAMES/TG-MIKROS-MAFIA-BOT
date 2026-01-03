@@ -28,7 +28,7 @@ import java.util.EnumSet;
 public class BumpSetupCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(BumpSetupCommand.class);
     private final BumpService bumpService;
-    
+
     /**
      * Creates a new BumpSetupCommand handler.
      *
@@ -37,27 +37,27 @@ public class BumpSetupCommand implements CommandHandler {
     public BumpSetupCommand(BumpService bumpService) {
         this.bumpService = bumpService;
     }
-    
+
     @Override
     public CommandData getCommandData() {
         OptionData botsOption = new OptionData(OptionType.STRING, "bots", "Which bots to bump", true);
         botsOption.addChoice("Disboard only", "disboard");
         botsOption.addChoice("Disurl only", "disurl");
         botsOption.addChoice("Both", "both");
-        
+
         return Commands.slash("admin-bump-setup", "Set up automatic server bumping (admin only)")
                 .addOption(OptionType.CHANNEL, "channel", "The channel to send bump commands in", true)
                 .addOptions(botsOption)
                 .setGuildOnly(true)
                 .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
-    
+
     @Override
     public void handle(SlashCommandInteractionEvent event) {
         // Check if user has permission
         Member member = event.getMember();
         Guild guild = event.getGuild();
-        
+
         if (member == null || guild == null ||
                 !member.hasPermission(Permission.ADMINISTRATOR)) {
             event.reply("❌ You must be an administrator to use this command.")
@@ -65,11 +65,11 @@ public class BumpSetupCommand implements CommandHandler {
                     .queue();
             return;
         }
-        
+
         // Get the channel option
         MessageChannel channel = AdminUtils.getValidTextChannel(event, "channel");
         if (channel == null) return;
-        
+
         // Get the bots option
         String botsValue = event.getOption("bots", OptionMapping::getAsString);
         if (botsValue == null) {
@@ -78,7 +78,7 @@ public class BumpSetupCommand implements CommandHandler {
                     .queue();
             return;
         }
-        
+
         // Parse bots selection
         EnumSet<BumpConfig.BumpBot> enabledBots = parseBotsSelection(botsValue);
         if (enabledBots.isEmpty()) {
@@ -87,19 +87,19 @@ public class BumpSetupCommand implements CommandHandler {
                     .queue();
             return;
         }
-        
+
         // Save the configuration
         String guildId = guild.getId();
         String channelId = channel.getId();
-        
+
         bumpService.setBumpChannel(guildId, channelId);
         bumpService.setEnabledBots(guildId, enabledBots);
-        
+
         // Build bot list string
         String botsList = String.join(", ", enabledBots.stream()
                 .map(BumpConfig.BumpBot::getDisplayName)
                 .toList());
-        
+
         // Send confirmation
         event.reply(String.format(
                 "✅ **Auto-Bump Configured**\n\n" +
@@ -113,11 +113,11 @@ public class BumpSetupCommand implements CommandHandler {
                 channel.getAsMention(),
                 botsList
         )).queue();
-        
+
         logger.info("Bump setup completed for guild {} by user {}: channel={}, bots={}",
                 guildId, member.getId(), channelId, enabledBots);
     }
-    
+
     /**
      * Parses the bots selection string into an EnumSet.
      *
@@ -132,7 +132,7 @@ public class BumpSetupCommand implements CommandHandler {
             default -> EnumSet.noneOf(BumpConfig.BumpBot.class);
         };
     }
-    
+
     @Override
     public String getCommandName() {
         return "admin-bump-setup";

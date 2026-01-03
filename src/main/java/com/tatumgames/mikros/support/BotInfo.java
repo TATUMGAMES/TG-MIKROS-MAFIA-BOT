@@ -10,12 +10,12 @@ public class BotInfo {
      * Update this when releasing new versions.
      */
     public static final String VERSION = "1.0.0";
-    
+
     /**
      * Support email for Tatum Games.
      */
     public static final String SUPPORT_EMAIL = "support@tatumgames.com";
-    
+
     private BotInfo() {
         // Utility class - prevent instantiation
     }

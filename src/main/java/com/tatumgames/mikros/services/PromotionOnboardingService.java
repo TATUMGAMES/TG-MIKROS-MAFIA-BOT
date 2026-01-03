@@ -4,7 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -13,29 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class PromotionOnboardingService {
     private static final Logger logger = LoggerFactory.getLogger(PromotionOnboardingService.class);
-
-    /**
-     * Enum representing onboarding phases.
-     */
-    public enum Phase {
-        PHASE_1_SOFT_AWARENESS(1),  // 1 hour
-        PHASE_2_EXPECTATION(24),    // 24 hours
-        PHASE_3_AUTO_ASSIST(48);     // 48 hours
-
-        private final int hoursDelay;
-
-        Phase(int hoursDelay) {
-            this.hoursDelay = hoursDelay;
-        }
-
-        public int getHoursDelay() {
-            return hoursDelay;
-        }
-    }
-
     // Map of guildId -> first seen timestamp
     private final Map<String, Instant> guildFirstSeen;
-    
     // Map of guildId -> set of completed phases
     private final Map<String, Set<Phase>> completedPhases;
 
@@ -137,7 +119,7 @@ public class PromotionOnboardingService {
         // Check if enough time has elapsed
         Instant now = Instant.now();
         long hoursElapsed = java.time.temporal.ChronoUnit.HOURS.between(firstSeen, now);
-        
+
         return hoursElapsed >= phase.getHoursDelay();
     }
 
@@ -166,6 +148,25 @@ public class PromotionOnboardingService {
         guildFirstSeen.remove(guildId);
         completedPhases.remove(guildId);
         logger.debug("Cleared onboarding data for guild {}", guildId);
+    }
+
+    /**
+     * Enum representing onboarding phases.
+     */
+    public enum Phase {
+        PHASE_1_SOFT_AWARENESS(1),  // 1 hour
+        PHASE_2_EXPECTATION(24),    // 24 hours
+        PHASE_3_AUTO_ASSIST(48);     // 48 hours
+
+        private final int hoursDelay;
+
+        Phase(int hoursDelay) {
+            this.hoursDelay = hoursDelay;
+        }
+
+        public int getHoursDelay() {
+            return hoursDelay;
+        }
     }
 }
 

@@ -18,7 +18,7 @@ public enum RelicType {
             "BOSS_DAMAGE",
             "MAX_HP"
     ),
-    
+
     /**
      * Frozen Crown - Increases AGI defense but slows charge refresh.
      * Effect: +10% AGI defense, charge refresh +2 hours slower
@@ -32,7 +32,7 @@ public enum RelicType {
             "AGI_DEFENSE",
             "CHARGE_REFRESH"
     ),
-    
+
     /**
      * Soul Anchor - Increases curse resistance but reduces XP gain.
      * Effect: +15% curse resistance, -10% XP gain

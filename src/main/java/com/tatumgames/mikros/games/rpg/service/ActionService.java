@@ -23,12 +23,12 @@ public class ActionService {
     /**
      * Creates a new ActionService and registers all actions.
      *
-     * @param characterService the character service (needed for DonateAction)
-     * @param worldCurseService the world curse service (needed for curse effects)
-     * @param auraService the aura service (needed for Song of Nilfheim)
-     * @param nilfheimEventService the Nilfheim event service (needed for server-wide events)
+     * @param characterService       the character service (needed for DonateAction)
+     * @param worldCurseService      the world curse service (needed for curse effects)
+     * @param auraService            the aura service (needed for Song of Nilfheim)
+     * @param nilfheimEventService   the Nilfheim event service (needed for server-wide events)
      * @param loreRecognitionService the lore recognition service (needed for milestone checks)
-     * @param bossService the boss service (optional, for elite enemy system)
+     * @param bossService            the boss service (optional, for elite enemy system)
      */
     public ActionService(CharacterService characterService, WorldCurseService worldCurseService, AuraService auraService, com.tatumgames.mikros.games.rpg.service.NilfheimEventService nilfheimEventService, com.tatumgames.mikros.games.rpg.service.LoreRecognitionService loreRecognitionService, com.tatumgames.mikros.games.rpg.service.BossService bossService) {
         this.actions = new HashMap<>();

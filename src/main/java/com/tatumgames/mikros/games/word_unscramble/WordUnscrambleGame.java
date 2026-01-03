@@ -265,10 +265,10 @@ public class WordUnscrambleGame implements WordUnscrambleInterface {
         long incorrectGuesses = session.getResults().stream()
                 .filter(r -> r.userId().equals(userId) && !r.isCorrect())
                 .count();
-        
+
         if (incorrectGuesses >= 3) {
             // User has used all 3 incorrect guesses - don't process this attempt
-            logger.info("User {} in guild {} attempted to guess after using all 3 incorrect guesses", 
+            logger.info("User {} in guild {} attempted to guess after using all 3 incorrect guesses",
                     username, session.getGuildId());
             return null; // Return null to indicate limit reached
         }
@@ -282,17 +282,17 @@ public class WordUnscrambleGame implements WordUnscrambleInterface {
         // Calculate base score based on time (earlier = higher score)
         int baseScore = 0;
         int bonus = 0;
-        
+
         if (isCorrect) {
             long secondsSinceStart = Instant.now().getEpochSecond() - session.getStartTime().getEpochSecond();
             baseScore = Math.max(100, 1000 - (int) secondsSinceStart);
-            
+
             // Calculate bonus based on wrong guesses from OTHER users before this correct answer
             // Only count wrong guesses from different users (not the current user's own wrong guesses)
             long wrongGuessesBefore = session.getResults().stream()
                     .filter(r -> !r.isCorrect() && !r.userId().equals(userId))
                     .count();
-            
+
             // Diminishing returns bonus calculation:
             // - First 5 wrong guesses: 15 points each
             // - Next 10 wrong guesses: 10 points each
@@ -302,7 +302,7 @@ public class WordUnscrambleGame implements WordUnscrambleInterface {
                 long firstTier = Math.min(5, wrongGuessesBefore);
                 long secondTier = Math.min(10, Math.max(0, wrongGuessesBefore - 5));
                 long thirdTier = Math.max(0, wrongGuessesBefore - 15);
-                
+
                 bonus = (int) ((firstTier * 15) + (secondTier * 10) + (thirdTier * 5));
                 bonus = Math.min(250, bonus); // Cap at 250
             }

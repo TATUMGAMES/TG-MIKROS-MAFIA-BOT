@@ -2,20 +2,15 @@ package com.tatumgames.mikros.games.rpg.actions;
 
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
+import com.tatumgames.mikros.games.rpg.events.NilfheimEventType;
 import com.tatumgames.mikros.games.rpg.exploration.ClassExclusiveEventType;
 import com.tatumgames.mikros.games.rpg.exploration.ExplorationEventType;
 import com.tatumgames.mikros.games.rpg.exploration.WanderingFigureType;
-import com.tatumgames.mikros.games.rpg.model.CatalystType;
-import com.tatumgames.mikros.games.rpg.model.CharacterClass;
-import com.tatumgames.mikros.games.rpg.model.EssenceType;
-import com.tatumgames.mikros.games.rpg.model.InfusionType;
-import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
-import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
+import com.tatumgames.mikros.games.rpg.model.*;
 import com.tatumgames.mikros.games.rpg.service.AuraService;
 import com.tatumgames.mikros.games.rpg.service.LoreRecognitionService;
 import com.tatumgames.mikros.games.rpg.service.NilfheimEventService;
 import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
-import com.tatumgames.mikros.games.rpg.events.NilfheimEventType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,34 +22,6 @@ import java.util.Random;
  */
 public class ExploreAction implements CharacterAction {
     private static final Random random = new Random();
-    private final WorldCurseService worldCurseService;
-    private final AuraService auraService;
-    private final NilfheimEventService nilfheimEventService;
-    private final LoreRecognitionService loreRecognitionService;
-    private final com.tatumgames.mikros.games.rpg.service.WorldEncounterService worldEncounterService;
-    private final com.tatumgames.mikros.games.rpg.service.StatInteractionService statInteractionService;
-
-    /**
-     * Creates a new ExploreAction.
-     *
-     * @param worldCurseService the world curse service for applying curse effects
-     * @param auraService the aura service for Song of Nilfheim curse reduction
-     * @param nilfheimEventService the Nilfheim event service for server-wide events
-     * @param loreRecognitionService the lore recognition service for milestone checks
-     * @param worldEncounterService the world encounter service for irrevocable encounters
-     * @param statInteractionService the stat interaction service for stat-gated interactions
-     */
-    public ExploreAction(WorldCurseService worldCurseService, AuraService auraService, NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService,
-                         com.tatumgames.mikros.games.rpg.service.WorldEncounterService worldEncounterService,
-                         com.tatumgames.mikros.games.rpg.service.StatInteractionService statInteractionService) {
-        this.worldCurseService = worldCurseService;
-        this.auraService = auraService;
-        this.nilfheimEventService = nilfheimEventService;
-        this.loreRecognitionService = loreRecognitionService;
-        this.worldEncounterService = worldEncounterService;
-        this.statInteractionService = statInteractionService;
-    }
-
     private static final String[] NARRATIVES = {
             // Original 15 narratives
             "You ventured into an ancient forest and discovered a hidden shrine. The spirits blessed your journey.",
@@ -146,6 +113,38 @@ public class ExploreAction implements CharacterAction {
             "Ancient runes from Starfall Ridge tell the story of the first civilizations after the Shattering.",
             "You find a hidden chamber beneath the Grand Library, filled with knowledge of the Eight Elements."
     };
+    // Ambush enemy names (lore creatures for Tier 2 events)
+    private static final String[] AMBUSH_ENEMIES = {
+            "Frost Wraith", "Ice Troll", "Shadow Stalker", "Frozen Revenant",
+            "Frost Wolf Pack", "Ice Stalker", "Wailing Wisp", "Coldshade Phantom"
+    };
+    private final WorldCurseService worldCurseService;
+    private final AuraService auraService;
+    private final NilfheimEventService nilfheimEventService;
+    private final LoreRecognitionService loreRecognitionService;
+    private final com.tatumgames.mikros.games.rpg.service.WorldEncounterService worldEncounterService;
+    private final com.tatumgames.mikros.games.rpg.service.StatInteractionService statInteractionService;
+
+    /**
+     * Creates a new ExploreAction.
+     *
+     * @param worldCurseService      the world curse service for applying curse effects
+     * @param auraService            the aura service for Song of Nilfheim curse reduction
+     * @param nilfheimEventService   the Nilfheim event service for server-wide events
+     * @param loreRecognitionService the lore recognition service for milestone checks
+     * @param worldEncounterService  the world encounter service for irrevocable encounters
+     * @param statInteractionService the stat interaction service for stat-gated interactions
+     */
+    public ExploreAction(WorldCurseService worldCurseService, AuraService auraService, NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService,
+                         com.tatumgames.mikros.games.rpg.service.WorldEncounterService worldEncounterService,
+                         com.tatumgames.mikros.games.rpg.service.StatInteractionService statInteractionService) {
+        this.worldCurseService = worldCurseService;
+        this.auraService = auraService;
+        this.nilfheimEventService = nilfheimEventService;
+        this.loreRecognitionService = loreRecognitionService;
+        this.worldEncounterService = worldEncounterService;
+        this.statInteractionService = statInteractionService;
+    }
 
     @Override
     public String getActionName() {
@@ -162,18 +161,12 @@ public class ExploreAction implements CharacterAction {
         return "Explore the world and encounter random events";
     }
 
-    // Ambush enemy names (lore creatures for Tier 2 events)
-    private static final String[] AMBUSH_ENEMIES = {
-            "Frost Wraith", "Ice Troll", "Shadow Stalker", "Frozen Revenant",
-            "Frost Wolf Pack", "Ice Stalker", "Wailing Wisp", "Coldshade Phantom"
-    };
-
     @Override
     public RPGActionOutcome execute(RPGCharacter character, RPGConfig config) {
         // Get active curses for this guild
         String guildId = config.getGuildId();
         List<WorldCurse> activeCurses = worldCurseService.getActiveCurses(guildId);
-        
+
         // Check for Song of Nilfheim aura (reduces curse penalties by 1-2%)
         double songReduction = auraService.getSongOfNilfheimCurseReduction(guildId);
 
@@ -192,8 +185,8 @@ public class ExploreAction implements CharacterAction {
         }
 
         // Check for irrevocable world encounter (Level 5+, once per character, ≤1% chance)
-        if (character.getLevel() >= 5 && character.getDeityBlessing() == null && 
-            character.getRelicChoice() == null && character.getPhilosophicalPath() == null) {
+        if (character.getLevel() >= 5 && character.getDeityBlessing() == null &&
+                character.getRelicChoice() == null && character.getPhilosophicalPath() == null) {
             com.tatumgames.mikros.games.rpg.exploration.WorldEncounterType encounter = worldEncounterService.rollForIrrevocableEncounter(character);
             if (encounter != null) {
                 return worldEncounterService.handleEncounter(encounter, character, config, activeCurses, songReduction);
@@ -215,7 +208,7 @@ public class ExploreAction implements CharacterAction {
         int damageTaken = 0;
         boolean leveledUp = false;
         boolean eventTriggered = false;
-        
+
         if (negativeEvent != null) {
             // Negative event triggered - show warning and apply event
             eventTriggered = true;
@@ -228,13 +221,13 @@ public class ExploreAction implements CharacterAction {
         } else {
             // Normal exploration - select random narrative
             narrative = NARRATIVES[random.nextInt(NARRATIVES.length)];
-            
+
             // Calculate XP gain (scales with level and config multiplier)
             int baseXp = 30 + (character.getLevel() * 5);
             int variance = random.nextInt(20) - 10; // +/- 10
             xpGained = (int) ((baseXp + variance) * config.getXpMultiplier());
         }
-        
+
         // Apply Curse of Clouded Mind (-5% XP, but ensure minimum 90%) - only if not already handled by event
         if (!eventTriggered && activeCurses.contains(WorldCurse.MINOR_CURSE_OF_CLOUDED_MIND)) {
             int baseXp = 30 + (character.getLevel() * 5);
@@ -273,7 +266,7 @@ public class ExploreAction implements CharacterAction {
             xpGained += bonusXp;
             character.decrementDarkRelicActions();
         }
-        
+
         // Add XP and check for level up (if not already done by event)
         if (!eventTriggered) {
             leveledUp = character.addXp(xpGained, loreRecognitionService);
@@ -286,7 +279,7 @@ public class ExploreAction implements CharacterAction {
         int agility = character.getStats().getAgility();
         double agilityBonus = Math.min(0.15, agility * 0.005);
         double dropChance = baseDropChance + agilityBonus; // 12.5% to 27.5%
-        
+
         // Apply Curse of Ill Fortune (-5% item drop chance)
         // Song of Nilfheim reduces the penalty
         if (activeCurses.contains(WorldCurse.MINOR_CURSE_OF_ILL_FORTUNE)) {
@@ -325,14 +318,14 @@ public class ExploreAction implements CharacterAction {
             if (agility >= 20) {
                 essenceCount += 1; // Now 2-3 essences
             }
-            
+
             // Class-specific essence bonuses
             EssenceType essence = getRandomEssenceWithClassBonus(character.getCharacterClass());
             outcomeBuilder.addItemDrop(essence, essenceCount);
-            
+
             // Add to character inventory
             character.getInventory().addEssence(essence, essenceCount);
-            
+
             // Update narrative to mention benefits
             StringBuilder benefitNote = new StringBuilder();
             if (agility >= 15) {
@@ -349,7 +342,7 @@ public class ExploreAction implements CharacterAction {
             } else if (essence == EssenceType.FATE_CLOVER && character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.PRIEST) {
                 benefitNote.append(" Your supportive nature drew you to luck-aligned materials!");
             }
-            
+
             if (benefitNote.length() > 0) {
                 outcomeBuilder.narrative(narrative + benefitNote.toString());
             }
@@ -357,17 +350,17 @@ public class ExploreAction implements CharacterAction {
 
         // Record the action
         character.recordAction();
-        
+
         // Oathbreaker: Gain corruption from acting during world curses
         if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER && !activeCurses.isEmpty()) {
             character.addCorruption(1);
-            // Update narrative if not already updated
-            String currentNarrative = outcomeBuilder.build().narrative();
-            if (!currentNarrative.contains("⚔️💀 **Corruption:**")) {
-                outcomeBuilder.narrative(currentNarrative + "\n\n⚔️💀 **Corruption:** The world's curses resonate with your broken oath, increasing your corruption.");
+            // Update narrative if not already updated (check both original narrative and any benefit notes)
+            String finalNarrative = outcomeBuilder.build().narrative();
+            if (!finalNarrative.contains("⚔️💀 **Corruption:**")) {
+                outcomeBuilder.narrative(finalNarrative + "\n\n⚔️💀 **Corruption:** The world's curses resonate with your broken oath, increasing your corruption.");
             }
         }
-        
+
         // Track action type and increment explore count for achievements
         character.recordActionType("explore");
         character.incrementExploreCount();
@@ -383,7 +376,7 @@ public class ExploreAction implements CharacterAction {
      */
     private EssenceType getRandomEssenceWithClassBonus(CharacterClass characterClass) {
         EssenceType[] allEssences = EssenceType.values();
-        
+
         // Class-specific essence bonuses
         switch (characterClass) {
             case WARRIOR:
@@ -416,14 +409,14 @@ public class ExploreAction implements CharacterAction {
                 }
                 break;
         }
-        
+
         // Priest and Oathbreaker also get +3% chance for LUCK-aligned (Fate Clover)
         if (characterClass == CharacterClass.PRIEST || characterClass == CharacterClass.OATHBREAKER) {
             if (random.nextDouble() < 0.03) {
                 return EssenceType.FATE_CLOVER;
             }
         }
-        
+
         // Default: random essence
         return allEssences[random.nextInt(allEssences.length)];
     }
@@ -439,55 +432,55 @@ public class ExploreAction implements CharacterAction {
         double baseChance = 0.05; // 5%
         int agility = character.getStats().getAgility();
         int luck = character.getStats().getLuck();
-        
+
         // AGI reduction: -0.2% per AGI (max -4% at 20 AGI)
         double agiReduction = Math.min(0.04, agility * 0.002);
-        
+
         // LUCK reduction: -0.1% per LUCK (max -2% at 20 LUCK)
         double luckReduction = Math.min(0.02, luck * 0.001);
-        
+
         // Final chance: base - reductions, minimum 1%
         double finalChance = Math.max(0.01, baseChance - agiReduction - luckReduction);
-        
+
         if (random.nextDouble() < finalChance) {
             // Event triggered - select tier (Tier 1: 75%, Tier 2: 20%, Tier 3: 5%)
             double tierRoll = random.nextDouble();
             if (tierRoll < 0.75) {
                 // Tier 1: Minor Setbacks
                 ExplorationEventType[] tier1Events = {
-                    ExplorationEventType.SLIPPED_ON_ICE,
-                    ExplorationEventType.PICKPOCKETED_BY_THIEVES,
-                    ExplorationEventType.MOCKED_BY_ANGRY_MOB,
-                    ExplorationEventType.LOST_IN_THE_FOG
+                        ExplorationEventType.SLIPPED_ON_ICE,
+                        ExplorationEventType.PICKPOCKETED_BY_THIEVES,
+                        ExplorationEventType.MOCKED_BY_ANGRY_MOB,
+                        ExplorationEventType.LOST_IN_THE_FOG
                 };
                 return tier1Events[random.nextInt(tier1Events.length)];
             } else if (tierRoll < 0.95) {
                 // Tier 2: Dangerous Encounters
                 ExplorationEventType[] tier2Events = {
-                    ExplorationEventType.AMBUSHED_BY_CREATURE,
-                    ExplorationEventType.FROSTBITE
+                        ExplorationEventType.AMBUSHED_BY_CREATURE,
+                        ExplorationEventType.FROSTBITE
                 };
                 return tier2Events[random.nextInt(tier2Events.length)];
             } else {
                 // Tier 3: Legendary Events
                 ExplorationEventType[] tier3Events = {
-                    ExplorationEventType.TOUCHED_BY_DARK_RELIC,
-                    ExplorationEventType.SEEN_BY_ANCIENT
+                        ExplorationEventType.TOUCHED_BY_DARK_RELIC,
+                        ExplorationEventType.SEEN_BY_ANCIENT
                 };
                 return tier3Events[random.nextInt(tier3Events.length)];
             }
         }
-        
+
         return null; // No event
     }
 
     /**
      * Handles a negative exploration event and returns the outcome.
      *
-     * @param eventType the type of negative event
-     * @param character the character affected
-     * @param config the RPG config
-     * @param activeCurses list of active world curses
+     * @param eventType     the type of negative event
+     * @param character     the character affected
+     * @param config        the RPG config
+     * @param activeCurses  list of active world curses
      * @param songReduction Song of Nilfheim curse reduction multiplier
      * @return the action outcome
      */
@@ -497,7 +490,7 @@ public class ExploreAction implements CharacterAction {
         int xpGained = 0;
         int damageTaken = 0;
         boolean leveledUp = false;
-        
+
         switch (eventType) {
             case SLIPPED_ON_ICE -> {
                 // Lose 5-10% HP, cannot kill
@@ -508,7 +501,7 @@ public class ExploreAction implements CharacterAction {
                 character.getStats().takeDamage(damageTaken);
                 narrative = "🧊 **Slipped on Ice:** You lose your footing on a patch of black ice, taking " + damageTaken + " damage. At least you're still alive!";
             }
-            
+
             case PICKPOCKETED_BY_THIEVES -> {
                 // Lose 1 random essence (cannot lose catalysts, cannot go below 0)
                 EssenceType[] allEssences = EssenceType.values();
@@ -518,17 +511,17 @@ public class ExploreAction implements CharacterAction {
                         availableEssences.add(essence);
                     }
                 }
-                
+
                 if (!availableEssences.isEmpty()) {
                     EssenceType stolenEssence = availableEssences.get(random.nextInt(availableEssences.size()));
                     character.getInventory().removeEssence(stolenEssence, 1); // Remove 1
-                    narrative = "🧤 **Pickpocketed by Thieves:** A group of shadowy figures slips past you in the fog. You notice " + 
-                               stolenEssence.getDisplayName() + " is missing from your inventory!";
+                    narrative = "🧤 **Pickpocketed by Thieves:** A group of shadowy figures slips past you in the fog. You notice " +
+                            stolenEssence.getDisplayName() + " is missing from your inventory!";
                 } else {
                     narrative = "🧤 **Pickpocketed by Thieves:** A group of shadowy figures slips past you, but your pockets are already empty. Lucky you!";
                 }
             }
-            
+
             case MOCKED_BY_ANGRY_MOB -> {
                 // Only triggers if curses are active
                 if (!activeCurses.isEmpty()) {
@@ -539,12 +532,12 @@ public class ExploreAction implements CharacterAction {
                             availableEssences.add(essence);
                         }
                     }
-                    
+
                     if (!availableEssences.isEmpty()) {
                         EssenceType stolenEssence = availableEssences.get(random.nextInt(availableEssences.size()));
                         character.getInventory().removeEssence(stolenEssence, 1); // Remove 1
-                        narrative = "😠 **Mocked by Angry Mob:** The citizens of Nilfheim blame you for the world's curses! They throw stones and steal " + 
-                                   stolenEssence.getDisplayName() + " from your pack.";
+                        narrative = "😠 **Mocked by Angry Mob:** The citizens of Nilfheim blame you for the world's curses! They throw stones and steal " +
+                                stolenEssence.getDisplayName() + " from your pack.";
                     } else {
                         narrative = "😠 **Mocked by Angry Mob:** The citizens of Nilfheim blame you for the world's curses! They throw stones, but you have nothing left to lose.";
                     }
@@ -553,55 +546,55 @@ public class ExploreAction implements CharacterAction {
                     narrative = "You explore peacefully, but something feels off...";
                 }
             }
-            
+
             case LOST_IN_THE_FOG -> {
                 // XP reduced by 25% for this action only
                 int baseXp = 30 + (character.getLevel() * 5);
                 int variance = random.nextInt(20) - 10;
                 int normalXp = (int) ((baseXp + variance) * config.getXpMultiplier());
                 xpGained = (int) (normalXp * 0.75); // 25% reduction
-                
+
                 // Apply dark relic XP bonus if active
                 if (character.getDarkRelicActionsRemaining() > 0) {
                     int bonusXp = (int) (xpGained * character.getDarkRelicXpBonus());
                     xpGained += bonusXp;
                     character.decrementDarkRelicActions();
                 }
-                
+
                 leveledUp = character.addXp(xpGained, loreRecognitionService);
                 narrative = "🌫️ **Lost in the Fog:** A thick mist obscures your path. You eventually find your way, but the disorientation cost you some experience.";
             }
-            
+
             case AMBUSHED_BY_CREATURE -> {
                 // Treated like a battle defeat - use BattleAction logic
                 String enemyName = AMBUSH_ENEMIES[random.nextInt(AMBUSH_ENEMIES.length)];
                 int enemyLevel = Math.max(1, character.getLevel() - 2 + random.nextInt(5)); // Level-appropriate enemy
-                
+
                 // Calculate enemy power (similar to BattleAction)
                 int enemyPower = 20 + (enemyLevel * 10);
                 int playerPower = calculatePlayerPower(character, enemyLevel);
-                
+
                 // Roll battle (player likely to lose in ambush)
                 int playerRoll = random.nextInt(playerPower) + (character.getStats().getLuck() * 2);
                 int enemyRoll = random.nextInt(enemyPower) + (enemyLevel * 3); // Enemy advantage
-                
+
                 boolean victory = playerRoll > enemyRoll;
-                
+
                 // Check for dark relic before applying effects
                 boolean hasDarkRelic = character.getDarkRelicActionsRemaining() > 0;
-                
+
                 if (victory) {
                     // Victory: minimal damage, some XP
                     int baseXp = (int) ((50 + (enemyLevel * 10)) * config.getXpMultiplier() * 0.5); // Half XP for ambush
                     xpGained = baseXp;
-                    
+
                     // Apply dark relic XP bonus if active
                     if (hasDarkRelic) {
                         int bonusXp = (int) (xpGained * character.getDarkRelicXpBonus());
                         xpGained += bonusXp;
                         character.decrementDarkRelicActions();
                     }
-                    
+
                     damageTaken = random.nextInt(5) + 1; // 1-5 damage
                     // Apply dark relic damage penalty (check before decrementing)
                     if (hasDarkRelic) {
@@ -609,20 +602,20 @@ public class ExploreAction implements CharacterAction {
                     }
                     character.getStats().takeDamage(damageTaken);
                     leveledUp = character.addXp(xpGained, loreRecognitionService);
-                    narrative = "🐺 **Ambushed by " + enemyName + ":** You were caught off guard, but managed to fight back! You take " + 
-                               damageTaken + " damage but gain " + xpGained + " XP.";
+                    narrative = "🐺 **Ambushed by " + enemyName + ":** You were caught off guard, but managed to fight back! You take " +
+                            damageTaken + " damage but gain " + xpGained + " XP.";
                 } else {
                     // Defeat: significant damage, minimal XP
                     int baseXp = (int) ((50 + (enemyLevel * 10)) * config.getXpMultiplier() * 0.25); // Quarter XP for defeat
                     xpGained = baseXp;
-                    
+
                     // Apply dark relic XP bonus if active
                     if (hasDarkRelic) {
                         int bonusXp = (int) (xpGained * character.getDarkRelicXpBonus());
                         xpGained += bonusXp;
                         character.decrementDarkRelicActions();
                     }
-                    
+
                     damageTaken = (int) (enemyPower * (0.15 + random.nextDouble() * 0.10)); // 15-25% of enemy power
                     // Apply dark relic damage penalty (check before decrementing)
                     if (hasDarkRelic) {
@@ -630,33 +623,33 @@ public class ExploreAction implements CharacterAction {
                     }
                     boolean survived = character.getStats().takeDamage(damageTaken);
                     leveledUp = character.addXp(xpGained, loreRecognitionService);
-                    
+
                     if (!survived) {
                         character.setIsDead(true);
-                        narrative = "🐺 **Ambushed by " + enemyName + ":** The ambush was too much! You fall, defeated. " + 
-                                   "You gain " + xpGained + " XP from the experience, but death claims you.";
+                        narrative = "🐺 **Ambushed by " + enemyName + ":** The ambush was too much! You fall, defeated. " +
+                                "You gain " + xpGained + " XP from the experience, but death claims you.";
                     } else {
-                        narrative = "🐺 **Ambushed by " + enemyName + ":** You were caught off guard and take " + damageTaken + 
-                                   " damage! You barely escape with " + xpGained + " XP.";
+                        narrative = "🐺 **Ambushed by " + enemyName + ":** You were caught off guard and take " + damageTaken +
+                                " damage! You barely escape with " + xpGained + " XP.";
                     }
                 }
             }
-            
+
             case FROSTBITE -> {
                 // Max HP reduced by 5%, removed by rest
                 character.setHasFrostbite(true);
                 narrative = "🩸 **Frostbite:** The biting cold seeps into your bones. Your maximum HP is reduced by 5% until you rest and warm up.";
             }
-            
+
             case TOUCHED_BY_DARK_RELIC -> {
                 // +5% XP for next 3 actions, +10% damage taken until rested
                 character.setDarkRelicActionsRemaining(3);
                 character.setDarkRelicXpBonus(0.05); // +5% XP
                 character.setDarkRelicDamagePenalty(0.10); // +10% damage taken
-                narrative = "🕯️ **Touched by a Dark Relic:** An ancient artifact pulses with dark energy as you touch it. " + 
-                           "You feel a surge of power (+5% XP for 3 actions) but also vulnerability (+10% damage taken).";
+                narrative = "🕯️ **Touched by a Dark Relic:** An ancient artifact pulses with dark energy as you touch it. " +
+                        "You feel a surge of power (+5% XP for 3 actions) but also vulnerability (+10% damage taken).";
             }
-            
+
             case SEEN_BY_ANCIENT -> {
                 // No mechanical penalty, adds story flag
                 List<String> storyFlags = character.getStoryFlags();
@@ -664,11 +657,11 @@ public class ExploreAction implements CharacterAction {
                 if (!storyFlags.contains(flag) && storyFlags.size() < 2) {
                     character.addStoryFlag(flag);
                 }
-                narrative = "👁️ **Seen by Something Ancient:** You feel an otherworldly presence watching you from the shadows. " + 
-                           "Something beyond mortal understanding has noticed you. This moment will be remembered.";
+                narrative = "👁️ **Seen by Something Ancient:** You feel an otherworldly presence watching you from the shadows. " +
+                        "Something beyond mortal understanding has noticed you. This moment will be remembered.";
             }
         }
-        
+
         return RPGActionOutcome.builder()
                 .narrative(narrative)
                 .xpGained(xpGained)
@@ -682,7 +675,7 @@ public class ExploreAction implements CharacterAction {
     /**
      * Calculates player power for ambush battles (simplified version of BattleAction logic).
      *
-     * @param character the character
+     * @param character  the character
      * @param enemyLevel the enemy level
      * @return player power value
      */
@@ -692,11 +685,11 @@ public class ExploreAction implements CharacterAction {
         int agi = character.getStats().getAgility();
         int intel = character.getStats().getIntelligence();
         int luck = character.getStats().getLuck();
-        
+
         // Simplified power calculation (similar to BattleAction)
         int basePower = 20 + (level * 5);
         int statPower = (str * 2) + agi + intel + (luck * 2);
-        
+
         return basePower + statPower;
     }
 
@@ -709,13 +702,13 @@ public class ExploreAction implements CharacterAction {
      */
     private ClassExclusiveEventType rollForClassExclusiveEvent(RPGCharacter character) {
         double baseChance = 0.015; // 1.5% base chance (between 1-2% as per TASKS_01.md)
-        
+
         if (random.nextDouble() < baseChance) {
             // Event triggered - select random event from all 10 events
             ClassExclusiveEventType[] allEvents = ClassExclusiveEventType.values();
             return allEvents[random.nextInt(allEvents.length)];
         }
-        
+
         return null; // No event
     }
 
@@ -728,65 +721,65 @@ public class ExploreAction implements CharacterAction {
      */
     private WanderingFigureType rollForWanderingFigure(RPGCharacter character) {
         double baseChance = 0.005; // 0.5% base chance
-        
+
         if (random.nextDouble() < baseChance) {
             // Encounter triggered - filter by level requirements and class preferences
             List<WanderingFigureType> availableFigures = new ArrayList<>();
-            
+
             for (WanderingFigureType figure : WanderingFigureType.values()) {
                 // Check level requirement
                 if (character.getLevel() >= figure.getMinLevel()) {
                     availableFigures.add(figure);
                 }
             }
-            
+
             if (availableFigures.isEmpty()) {
                 return null; // No figures available for this level
             }
-            
+
             // Class-specific flavor: preferred class has 2x chance
             List<WanderingFigureType> weightedFigures = new ArrayList<>();
             for (WanderingFigureType figure : availableFigures) {
                 weightedFigures.add(figure);
                 // If character's class matches preferred class, add again (2x weight)
-                if (figure.getPreferredClass() != null && 
-                    character.getCharacterClass() == figure.getPreferredClass()) {
+                if (figure.getPreferredClass() != null &&
+                        character.getCharacterClass() == figure.getPreferredClass()) {
                     weightedFigures.add(figure);
                 }
             }
-            
+
             // Select random figure from weighted list
             return weightedFigures.get(random.nextInt(weightedFigures.size()));
         }
-        
+
         return null; // No encounter
     }
 
     /**
      * Handles a wandering figure encounter.
      *
-     * @param figureType the type of wandering figure
-     * @param character the character affected
-     * @param config the RPG config
-     * @param activeCurses list of active world curses
+     * @param figureType    the type of wandering figure
+     * @param character     the character affected
+     * @param config        the RPG config
+     * @param activeCurses  list of active world curses
      * @param songReduction Song of Nilfheim curse reduction multiplier
      * @return the action outcome
      */
     private RPGActionOutcome handleWanderingFigure(WanderingFigureType figureType, RPGCharacter character,
-                                         RPGConfig config, List<WorldCurse> activeCurses, double songReduction) {
+                                                   RPGConfig config, List<WorldCurse> activeCurses, double songReduction) {
         String narrative = String.format("**%s**\n\n%s\n\n", figureType.getDisplayName(), figureType.getDescription());
         int xpGained = 0;
         boolean leveledUp = false;
         RPGActionOutcome.Builder outcomeBuilder = RPGActionOutcome.builder();
-        
+
         // Calculate base XP (normal explore XP)
         int baseXp = 30 + (character.getLevel() * 5);
         int variance = random.nextInt(20) - 10;
         int normalXp = (int) ((baseXp + variance) * config.getXpMultiplier());
-        
+
         // Randomly select one of three outcomes
         int outcomeRoll = random.nextInt(3);
-        
+
         switch (figureType) {
             case FROSTBOUND_SAGE -> {
                 switch (outcomeRoll) {
@@ -856,20 +849,20 @@ public class ExploreAction implements CharacterAction {
                                 availableEssences.add(essence);
                             }
                         }
-                        
+
                         if (!availableEssences.isEmpty()) {
                             EssenceType sourceEssence = availableEssences.get(random.nextInt(availableEssences.size()));
                             character.getInventory().removeEssence(sourceEssence, 2);
-                            
+
                             // Get random different essence
                             EssenceType targetEssence = allEssences[random.nextInt(allEssences.length)];
                             while (targetEssence == sourceEssence) {
                                 targetEssence = allEssences[random.nextInt(allEssences.length)];
                             }
-                            
+
                             outcomeBuilder.addItemDrop(targetEssence, 1);
                             character.getInventory().addEssence(targetEssence, 1);
-                            narrative += String.format("The Merchant trades 2x %s for 1x %s.", 
+                            narrative += String.format("The Merchant trades 2x %s for 1x %s.",
                                     sourceEssence.getDisplayName(), targetEssence.getDisplayName());
                         } else {
                             // No essences to trade, give catalyst instead
@@ -926,33 +919,33 @@ public class ExploreAction implements CharacterAction {
                 }
             }
         }
-        
+
         // Default XP if not set
         if (xpGained == 0) {
             xpGained = normalXp;
         }
-        
+
         // Apply dark relic XP bonus if active
         if (character.getDarkRelicActionsRemaining() > 0 && xpGained > 0) {
             int bonusXp = (int) (xpGained * character.getDarkRelicXpBonus());
             xpGained += bonusXp;
             character.decrementDarkRelicActions();
         }
-        
+
         // Add XP and check for level up
         leveledUp = character.addXp(xpGained, loreRecognitionService);
-        
+
         // Check and consume active infusion if present (infusions apply to all explore actions)
         InfusionType activeInfusion = character.getInventory().getActiveInfusion();
         if (activeInfusion != null) {
             character.getInventory().consumeActiveInfusion();
         }
-        
+
         // Record the action
         character.recordAction();
         character.recordActionType("explore");
         character.incrementExploreCount();
-        
+
         return outcomeBuilder
                 .narrative(narrative)
                 .xpGained(xpGained)
@@ -965,10 +958,10 @@ public class ExploreAction implements CharacterAction {
      * Handles a class-exclusive exploration event.
      * Matching classes get full rewards, non-matching classes get consolation.
      *
-     * @param eventType the type of class-exclusive event
-     * @param character the character affected
-     * @param config the RPG config
-     * @param activeCurses list of active world curses
+     * @param eventType     the type of class-exclusive event
+     * @param character     the character affected
+     * @param config        the RPG config
+     * @param activeCurses  list of active world curses
      * @param songReduction Song of Nilfheim curse reduction multiplier
      * @return the action outcome
      */
@@ -976,12 +969,12 @@ public class ExploreAction implements CharacterAction {
                                                        RPGConfig config, List<WorldCurse> activeCurses, double songReduction) {
         CharacterClass requiredClass = eventType.getRequiredClass();
         boolean isMatchingClass = character.getCharacterClass() == requiredClass;
-        
+
         String narrative = eventType.getDiscoveryNarrative() + "\n\n";
         int xpGained = 0;
         boolean leveledUp = false;
         RPGActionOutcome.Builder outcomeBuilder = RPGActionOutcome.builder();
-        
+
         if (isMatchingClass) {
             // Matching class - full rewards
             RPGActionOutcome matchingOutcome = handleMatchingClassEvent(eventType, character, config);
@@ -993,7 +986,7 @@ public class ExploreAction implements CharacterAction {
                     .xpGained(xpGained)
                     .leveledUp(leveledUp)
                     .success(true);
-            
+
             // Copy item drops
             for (var itemDrop : matchingOutcome.itemDrops()) {
                 outcomeBuilder.addItemDrop(itemDrop.essence(), itemDrop.count());
@@ -1013,7 +1006,7 @@ public class ExploreAction implements CharacterAction {
                     .leveledUp(leveledUp)
                     .success(true);
         }
-        
+
         // Check and consume active infusion if present (infusions apply to all explore actions)
         InfusionType activeInfusion = character.getInventory().getActiveInfusion();
         if (activeInfusion != null) {
@@ -1032,28 +1025,28 @@ public class ExploreAction implements CharacterAction {
      * Handles a class-exclusive event for a matching class (full rewards).
      */
     private RPGActionOutcome handleMatchingClassEvent(ClassExclusiveEventType eventType, RPGCharacter character,
-                                                     RPGConfig config) {
+                                                      RPGConfig config) {
         String narrative = "";
         int xpGained = 0;
         RPGActionOutcome.Builder outcomeBuilder = RPGActionOutcome.builder();
-        
+
         // Calculate base XP (normal explore XP)
         int baseXp = 30 + (character.getLevel() * 5);
         int variance = random.nextInt(20) - 10;
         int normalXp = (int) ((baseXp + variance) * config.getXpMultiplier());
-        
+
         switch (eventType) {
             case LOCKED_CHEST -> {
                 // Rogue: Extra essences, catalyst chance, possible rare cosmetic
                 narrative = "🔐 **Locked Chest:** Your nimble fingers work the lock with practiced ease. The chest opens!";
                 xpGained = (int) (normalXp * 1.25); // 25% XP bonus
-                
+
                 // Extra essences (2-4 random)
                 int essenceCount = random.nextInt(3) + 2;
                 EssenceType essence = getRandomEssenceWithClassBonus(character.getCharacterClass());
                 outcomeBuilder.addItemDrop(essence, essenceCount);
                 character.getInventory().addEssence(essence, essenceCount);
-                
+
                 // 15% chance for catalyst
                 if (random.nextDouble() < 0.15) {
                     CatalystType[] catalysts = CatalystType.values();
@@ -1062,57 +1055,57 @@ public class ExploreAction implements CharacterAction {
                     character.getInventory().addCatalyst(catalyst, 1);
                     narrative += " You also find a rare " + catalyst.getDisplayName() + "!";
                 }
-                
+
                 narrative += " Your expertise as a Rogue paid off!";
             }
-            
+
             case HIDDEN_PASSAGE -> {
                 // Rogue: Bonus explore XP, +1 essence
                 narrative = "🕳️ **Hidden Passage:** You slip through the narrow opening with ease, discovering a hidden route!";
                 xpGained = (int) (normalXp * 1.30); // 30% XP bonus
-                
+
                 EssenceType essence = getRandomEssenceWithClassBonus(character.getCharacterClass());
                 outcomeBuilder.addItemDrop(essence, 1);
                 character.getInventory().addEssence(essence, 1);
-                
+
                 narrative += " Your agility led you to treasures others would miss!";
             }
-            
+
             case CRUMBLING_OBSTACLE -> {
                 // Warrior: Bonus STR essence, small XP burst
                 narrative = "🪨 **Crumbling Obstacle:** You channel your strength and shatter the barrier!";
                 xpGained = (int) (normalXp * 1.20); // 20% XP bonus
-                
+
                 // STR-aligned essence (Ember Shard) - 2-3 essences
                 int essenceCount = random.nextInt(2) + 2;
                 outcomeBuilder.addItemDrop(EssenceType.EMBER_SHARD, essenceCount);
                 character.getInventory().addEssence(EssenceType.EMBER_SHARD, essenceCount);
-                
+
                 narrative += " Your warrior's might cleared the path!";
             }
-            
+
             case ANCIENT_OATHSTONE -> {
                 // Knight: Temporary defense bonus (next 3 battles: +5% damage reduction)
                 narrative = "⚖️ **Ancient Oathstone:** You swear an oath of protection, and the stone responds with ancient power!";
                 xpGained = normalXp;
-                
+
                 // Add story flag
                 character.addStoryFlag("Swore oath at Ancient Oathstone");
-                
+
                 // Temporary defense bonus would require new tracking field - for now, just XP and story flag
                 narrative += " You feel a protective aura surrounding you. The oath binds you to this place.";
             }
-            
+
             case ARCANE_SIGIL -> {
                 // Mage: INT essence, catalyst chance
                 narrative = "📜 **Arcane Sigil:** You decipher the ancient runes, unlocking their secrets!";
                 xpGained = (int) (normalXp * 1.25); // 25% XP bonus
-                
+
                 // INT-aligned essence (Mind Crystal) - 2-3 essences
                 int essenceCount = random.nextInt(2) + 2;
                 outcomeBuilder.addItemDrop(EssenceType.MIND_CRYSTAL, essenceCount);
                 character.getInventory().addEssence(EssenceType.MIND_CRYSTAL, essenceCount);
-                
+
                 // 12% chance for catalyst
                 if (random.nextDouble() < 0.12) {
                     CatalystType[] catalysts = CatalystType.values();
@@ -1121,87 +1114,87 @@ public class ExploreAction implements CharacterAction {
                     character.getInventory().addCatalyst(catalyst, 1);
                     narrative += " The sigil also reveals a hidden " + catalyst.getDisplayName() + "!";
                 }
-                
+
                 narrative += " Your magical knowledge unlocked ancient wisdom!";
             }
-            
+
             case MANA_RIFT -> {
                 // Mage: Bonus XP, reduced damage taken next battle (temporary buff)
                 narrative = "🌀 **Mana Rift:** You stabilize the chaotic energy, gaining control over the rift!";
                 xpGained = (int) (normalXp * 1.30); // 30% XP bonus
-                
+
                 // Add story flag
                 character.addStoryFlag("Stabilized a Mana Rift");
-                
+
                 // Temporary buff would require new tracking - for now, just XP and story flag
                 narrative += " The stabilized energy will protect you in your next battle.";
             }
-            
+
             case MASS_GRAVE -> {
                 // Necromancer: Grave XP, story flag
                 narrative = "🪦 **Mass Grave:** You commune with the spirits, learning from their memories!";
                 xpGained = (int) (normalXp * 1.25); // 25% XP bonus
-                
+
                 // Add story flag
                 character.addStoryFlag("Communed with mass grave");
-                
+
                 narrative += " The dead have shared their knowledge with you.";
             }
-            
+
             case LINGERING_SPIRIT -> {
                 // Necromancer: Temporary XP bonus (next 2 actions: +10% XP)
                 narrative = "👁️ **Lingering Spirit:** You extract knowledge from the spectral form!";
                 xpGained = (int) (normalXp * 1.20); // 20% XP bonus
-                
+
                 // Add story flag
                 character.addStoryFlag("Extracted knowledge from spirit");
-                
+
                 // Temporary XP bonus would require new tracking - for now, just XP and story flag
                 narrative += " The spirit's knowledge will enhance your next actions.";
             }
-            
+
             case DESECRATED_SHRINE -> {
                 // Priest: Blessing (small XP buff), title progress
                 narrative = "🕯️ **Desecrated Shrine:** You cleanse the darkness, restoring the shrine's sanctity!";
                 xpGained = (int) (normalXp * 1.25); // 25% XP bonus
-                
+
                 // Add story flag
                 character.addStoryFlag("Cleansed a desecrated shrine");
-                
+
                 // LUCK-aligned essence chance (Fate Clover)
                 if (random.nextDouble() < 0.20) {
                     outcomeBuilder.addItemDrop(EssenceType.FATE_CLOVER, 1);
                     character.getInventory().addEssence(EssenceType.FATE_CLOVER, 1);
                     narrative += " The restored shrine blesses you with a " + EssenceType.FATE_CLOVER.getDisplayName() + "!";
                 }
-                
+
                 narrative += " Your faith has purified this place.";
             }
-            
+
             case LOST_PILGRIM -> {
                 // Priest: Bonus XP, LUCK essence chance
                 narrative = "🕊️ **Lost Pilgrim:** You comfort the weary traveler, guiding them to safety!";
                 xpGained = (int) (normalXp * 1.30); // 30% XP bonus
-                
+
                 // LUCK-aligned essence (Fate Clover) - 1-2 essences
                 int essenceCount = random.nextInt(2) + 1;
                 outcomeBuilder.addItemDrop(EssenceType.FATE_CLOVER, essenceCount);
                 character.getInventory().addEssence(EssenceType.FATE_CLOVER, essenceCount);
-                
+
                 narrative += " Your compassion has been rewarded!";
             }
         }
-        
+
         // Apply dark relic XP bonus if active
         if (character.getDarkRelicActionsRemaining() > 0 && xpGained > 0) {
             int bonusXp = (int) (xpGained * character.getDarkRelicXpBonus());
             xpGained += bonusXp;
             character.decrementDarkRelicActions();
         }
-        
+
         // Add XP and check for level up
         boolean leveledUp = character.addXp(xpGained);
-        
+
         return outcomeBuilder
                 .narrative(narrative)
                 .xpGained(xpGained)
@@ -1214,65 +1207,65 @@ public class ExploreAction implements CharacterAction {
      * Handles a class-exclusive event for a non-matching class (consolation rewards).
      */
     private RPGActionOutcome handleNonMatchingClassEvent(ClassExclusiveEventType eventType, RPGCharacter character,
-                                                        RPGConfig config) {
+                                                         RPGConfig config) {
         String narrative = "";
         int xpGained = 0;
-        
+
         // Consolation: 10-15% of normal explore XP
         int baseXp = 30 + (character.getLevel() * 5);
         int variance = random.nextInt(20) - 10;
         int normalXp = (int) ((baseXp + variance) * config.getXpMultiplier());
         xpGained = (int) (normalXp * (0.10 + random.nextDouble() * 0.05)); // 10-15% of normal XP
-        
+
         CharacterClass requiredClass = eventType.getRequiredClass();
         String requiredClassName = requiredClass.getDisplayName();
-        
+
         switch (eventType) {
             case LOCKED_CHEST -> {
                 narrative = "🔐 **Locked Chest:** You examine the lock, but it's beyond your skill. If only someone more… dexterous were here.";
                 character.addStoryFlag("Discovered locked chest but couldn't open it");
             }
-            
+
             case HIDDEN_PASSAGE -> {
                 narrative = "🕳️ **Hidden Passage:** The opening is too narrow for you to slip through. The passage collapses as you attempt to enter.";
             }
-            
+
             case CRUMBLING_OBSTACLE -> {
                 narrative = "🪨 **Crumbling Obstacle:** The barrier is too strong for you to break. You're forced to turn back.";
             }
-            
+
             case ANCIENT_OATHSTONE -> {
                 narrative = "⚖️ **Ancient Oathstone:** The stone doesn't respond to your touch. Only a " + requiredClassName + " could activate its power.";
             }
-            
+
             case ARCANE_SIGIL -> {
                 narrative = "📜 **Arcane Sigil:** The glyphs are incomprehensible to you. Their secrets remain locked to those with magical knowledge.";
             }
-            
+
             case MANA_RIFT -> {
                 narrative = "🌀 **Mana Rift:** The unstable energy is too dangerous for you to approach. A " + requiredClassName + " might be able to stabilize it.";
             }
-            
+
             case MASS_GRAVE -> {
                 narrative = "🪦 **Mass Grave:** You feel unease in this place. The spirits here don't respond to you. You leave quickly.";
             }
-            
+
             case LINGERING_SPIRIT -> {
                 narrative = "👁️ **Lingering Spirit:** The spectral form vanishes as you approach. It seems to only respond to those who understand death.";
             }
-            
+
             case DESECRATED_SHRINE -> {
                 narrative = "🕯️ **Desecrated Shrine:** The darkness here is too strong for you to cleanse. The shrine remains tainted.";
             }
-            
+
             case LOST_PILGRIM -> {
                 narrative = "🕊️ **Lost Pilgrim:** You try to help, but the traveler needs spiritual guidance beyond your ability. A " + requiredClassName + " might be able to comfort them.";
             }
         }
-        
+
         // Add XP and check for level up
         boolean leveledUp = character.addXp(xpGained, loreRecognitionService);
-        
+
         return RPGActionOutcome.builder()
                 .narrative(narrative)
                 .xpGained(xpGained)

@@ -13,7 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.time.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,37 +52,9 @@ public class TatumTechEventScheduler {
     private final ScheduledExecutorService scheduler;
     private final String recapMonthYear;
     private final String recapVideoUrl;
-    private JDA jda;
-
     // Track which dates have been posted this year (guildId -> set of dates posted)
     private final ConcurrentHashMap<String, ConcurrentHashMap<String, Boolean>> postedDates = new ConcurrentHashMap<>();
-
-    /**
-     * Represents a scheduled event date.
-     */
-    private static class EventDate {
-        final int month;  // 1-12
-        final int day;    // 1-31
-        final EventVersion version;
-
-        EventDate(int month, int day, EventVersion version) {
-            this.month = month;
-            this.day = day;
-            this.version = version;
-        }
-
-        String getKey() {
-            return month + "-" + day;
-        }
-    }
-
-    /**
-     * Event version enum.
-     */
-    private enum EventVersion {
-        VERSION_A,
-        VERSION_B
-    }
+    private JDA jda;
 
     /**
      * Creates a new TatumTechEventScheduler.
@@ -115,7 +90,7 @@ public class TatumTechEventScheduler {
 
         // Calculate initial delay to next check (check at top of each hour)
         long initialDelay = calculateInitialDelay();
-        
+
         // Run check every hour
         scheduler.scheduleAtFixedRate(() -> {
             try {
@@ -166,7 +141,7 @@ public class TatumTechEventScheduler {
             if (eventDate.month == currentMonth && eventDate.day == currentDay) {
                 logger.info("Scheduled Tatum Tech event date detected: {} {} (Version {})",
                         currentMonth, currentDay, eventDate.version);
-                
+
                 // Post to all configured guilds
                 for (Guild guild : jda.getGuilds()) {
                     try {
@@ -199,7 +174,7 @@ public class TatumTechEventScheduler {
         // Check if we've already posted this event today
         ConcurrentHashMap<String, Boolean> guildPostedDates = postedDates.computeIfAbsent(
                 guildId, k -> new ConcurrentHashMap<>());
-        
+
         String todayKey = LocalDate.now().toString() + "-" + dateKey;
         if (guildPostedDates.containsKey(todayKey)) {
             logger.debug("Already posted Tatum Tech event {} to guild {} today", dateKey, guildId);
@@ -222,21 +197,21 @@ public class TatumTechEventScheduler {
         // Try TextChannel first, then NewsChannel
         TextChannel textChannel = guild.getTextChannelById(channelId);
         NewsChannel newsChannel = guild.getNewsChannelById(channelId);
-        
+
         if (textChannel == null && newsChannel == null) {
             logger.warn("Configured promotion channel {} not found in guild {} (tried TextChannel and NewsChannel)",
                     channelId, guildId);
             return;
         }
-        
+
         MessageChannel channel = textChannel != null ? textChannel : newsChannel;
 
         // Post the event message
         postEventMessage(channel, eventDate);
-        
+
         // Mark as posted
         guildPostedDates.put(todayKey, true);
-        
+
         // Clean up old entries (keep only current year)
         cleanupOldEntries(guildId);
     }
@@ -249,7 +224,7 @@ public class TatumTechEventScheduler {
      */
     private void postEventMessage(MessageChannel channel, EventDate eventDate) {
         EmbedBuilder embed = new EmbedBuilder();
-        
+
         // Set title and color based on version
         if (eventDate.version == EventVersion.VERSION_A) {
             embed.setTitle("🎮 TATUM TECH - CALLING ALL GAME LOVERS!");
@@ -317,6 +292,33 @@ public class TatumTechEventScheduler {
         if (scheduler != null && !scheduler.isShutdown()) {
             scheduler.shutdown();
             logger.info("Tatum Tech event scheduler stopped");
+        }
+    }
+
+    /**
+     * Event version enum.
+     */
+    private enum EventVersion {
+        VERSION_A,
+        VERSION_B
+    }
+
+    /**
+     * Represents a scheduled event date.
+     */
+    private static class EventDate {
+        final int month;  // 1-12
+        final int day;    // 1-31
+        final EventVersion version;
+
+        EventDate(int month, int day, EventVersion version) {
+            this.month = month;
+            this.day = day;
+            this.version = version;
+        }
+
+        String getKey() {
+            return month + "-" + day;
         }
     }
 }

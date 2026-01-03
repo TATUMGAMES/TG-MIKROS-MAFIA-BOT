@@ -39,10 +39,10 @@ public class InMemoryReputationService implements ReputationService {
     /**
      * Creates a new InMemoryReputationService.
      *
-     * @param apiClient        the API client for making requests
+     * @param apiClient            the API client for making requests
      * @param reputationApiBaseUrl the base URL for the reputation API (e.g., https://tg-api-new.uc.r.appspot.com)
-     * @param reputationApiKey the reputation API key
-     * @param apiKeyType       the API key type (dev or prod)
+     * @param reputationApiKey     the reputation API key
+     * @param apiKeyType           the API key type (dev or prod)
      */
     public InMemoryReputationService(TatumGamesApiClient apiClient, String reputationApiBaseUrl,
                                      String reputationApiKey, String apiKeyType) {
@@ -52,7 +52,7 @@ public class InMemoryReputationService implements ReputationService {
         this.reputationApiBaseUrl = reputationApiBaseUrl;
         this.reputationApiKey = reputationApiKey;
         this.apiKeyType = apiKeyType;
-        logger.info("InMemoryReputationService initialized with API key type: {} and base URL: {}", 
+        logger.info("InMemoryReputationService initialized with API key type: {} and base URL: {}",
                 apiKeyType, reputationApiBaseUrl);
     }
 

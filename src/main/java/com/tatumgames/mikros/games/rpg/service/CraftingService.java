@@ -1,12 +1,6 @@
 package com.tatumgames.mikros.games.rpg.service;
 
-import com.tatumgames.mikros.games.rpg.model.CraftedItemType;
-import com.tatumgames.mikros.games.rpg.model.CraftingResult;
-import com.tatumgames.mikros.games.rpg.model.EssenceType;
-import com.tatumgames.mikros.games.rpg.model.InfusionType;
-import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
-import com.tatumgames.mikros.games.rpg.model.RPGStats;
-import com.tatumgames.mikros.games.rpg.service.LoreRecognitionService;
+import com.tatumgames.mikros.games.rpg.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +15,7 @@ public class CraftingService {
     private static final int MAX_CRAFTED_BONUS_PER_STAT = 5;
     private static final Random random = new Random();
     private final LoreRecognitionService loreRecognitionService;
-    
+
     /**
      * Creates a new CraftingService.
      *
@@ -57,7 +51,7 @@ public class CraftingService {
         RPGStats stats = character.getStats();
         int intelligence = stats.getIntelligence();
         double catalystPreserveChance = intelligence / 2.0 / 100.0; // INT/2%
-        
+
         // Apply infusion effects for catalyst preservation
         InfusionType activeInfusion = character.getInventory().getActiveInfusion();
         boolean infusionConsumed = false;
@@ -66,7 +60,7 @@ public class CraftingService {
             catalystPreserveChance += 0.05;
             infusionConsumed = true;
         }
-        
+
         boolean catalystPreserved = random.nextDouble() < catalystPreserveChance;
 
         // Craft item (consumes materials)
@@ -98,7 +92,7 @@ public class CraftingService {
      * Crafts an infusion for a character.
      * Infusions are temporary single-use items that auto-consume on next action.
      *
-     * @param character the character crafting
+     * @param character    the character crafting
      * @param infusionType the infusion type to craft
      * @return the crafting result
      */
@@ -123,7 +117,7 @@ public class CraftingService {
             if (!hasAllEssences || inventory.getCatalystCount(com.tatumgames.mikros.games.rpg.model.CatalystType.RUNIC_BINDING) < 1) {
                 return CraftingResult.INSUFFICIENT_MATERIALS;
             }
-            
+
             // Consume materials
             for (EssenceType essence : EssenceType.values()) {
                 inventory.removeEssence(essence, 1);
@@ -133,12 +127,12 @@ public class CraftingService {
             // Regular infusion: check standard materials
             int essenceCount = inventory.getEssenceCount(infusionType.getRequiredEssence());
             int catalystCount = inventory.getCatalystCount(infusionType.getRequiredCatalyst());
-            
-            if (essenceCount < infusionType.getEssenceCount() || 
-                catalystCount < infusionType.getCatalystCount()) {
+
+            if (essenceCount < infusionType.getEssenceCount() ||
+                    catalystCount < infusionType.getCatalystCount()) {
                 return CraftingResult.INSUFFICIENT_MATERIALS;
             }
-            
+
             // Consume materials
             inventory.removeEssence(infusionType.getRequiredEssence(), infusionType.getEssenceCount());
             inventory.removeCatalyst(infusionType.getRequiredCatalyst(), infusionType.getCatalystCount());
@@ -146,10 +140,10 @@ public class CraftingService {
 
         // Set active infusion (expires in 24 hours)
         inventory.setActiveInfusion(infusionType);
-        
+
         // Track infusion crafting for lore recognition
         character.addInfusionCrafted(infusionType);
-        
+
         // Check for lore recognition milestones
         if (loreRecognitionService != null) {
             loreRecognitionService.checkMilestones(character);

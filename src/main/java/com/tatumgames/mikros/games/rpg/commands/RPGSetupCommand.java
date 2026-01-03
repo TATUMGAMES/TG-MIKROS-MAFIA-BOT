@@ -87,16 +87,16 @@ public class RPGSetupCommand implements CommandHandler {
         if (boss != null && channel instanceof TextChannel textChannel) {
             // Announce the boss in the configured channel
             String announcement = String.format("""
-                    🐲 **A New Boss Has Appeared!** 🐲
-                    
-                    **%s** (Level %d) - %s
-                    
-                    HP: **%,d**
-                    
-                    The shadows spread across Nilfheim… heroes, unite!
-                    
-                    Use `/rpg-boss-battle battle` to join the fight!
-                    """,
+                            🐲 **A New Boss Has Appeared!** 🐲
+                            
+                            **%s** (Level %d) - %s
+                            
+                            HP: **%,d**
+                            
+                            The shadows spread across Nilfheim… heroes, unite!
+                            
+                            Use `/rpg-boss-battle battle` to join the fight!
+                            """,
                     boss.getName(),
                     boss.getLevel(),
                     boss.getType().getDisplayName(),

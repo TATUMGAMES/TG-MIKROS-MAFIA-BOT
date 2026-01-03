@@ -36,8 +36,8 @@ public class TatumGamesApiClient {
      * @param apiKey     the API key for authentication (can be null/empty for mock mode)
      */
     public TatumGamesApiClient(String apiBaseUrl, String apiKey) {
-        this.apiBaseUrl = apiBaseUrl != null && !apiBaseUrl.isBlank() 
-                ? apiBaseUrl 
+        this.apiBaseUrl = apiBaseUrl != null && !apiBaseUrl.isBlank()
+                ? apiBaseUrl
                 : "https://api.tatumgames.com";
         this.apiKey = apiKey;
         this.objectMapper = new ObjectMapper();
@@ -100,8 +100,8 @@ public class TatumGamesApiClient {
      * @return the parsed response, or null if request failed
      * @throws ApiException if the request fails after retries
      */
-    public <T> T postWithApiKey(String baseUrl, String endpoint, Object requestBody, 
-                                 String apiKey, Class<T> responseClass) throws ApiException {
+    public <T> T postWithApiKey(String baseUrl, String endpoint, Object requestBody,
+                                String apiKey, Class<T> responseClass) throws ApiException {
         return executeWithRetry(() -> {
             HttpRequest request = buildRequestWithApiKey("POST", baseUrl, endpoint, requestBody, apiKey);
             return executeRequest(request, responseClass);
@@ -130,9 +130,9 @@ public class TatumGamesApiClient {
     /**
      * Builds an HTTP request with authentication and headers.
      *
-     * @param method    the HTTP method
-     * @param endpoint  the endpoint path
-     * @param body      the request body (null for GET requests)
+     * @param method   the HTTP method
+     * @param endpoint the endpoint path
+     * @param body     the request body (null for GET requests)
      * @return the HTTP request
      * @throws ApiException if request body serialization fails
      */
@@ -167,15 +167,15 @@ public class TatumGamesApiClient {
     /**
      * Builds an HTTP request with X-Apikey header for custom base URLs.
      *
-     * @param method    the HTTP method
-     * @param baseUrl   the base URL (can be different from default)
-     * @param endpoint  the endpoint path
-     * @param body      the request body (null for GET requests)
-     * @param apiKey    the API key for X-Apikey header
+     * @param method   the HTTP method
+     * @param baseUrl  the base URL (can be different from default)
+     * @param endpoint the endpoint path
+     * @param body     the request body (null for GET requests)
+     * @param apiKey   the API key for X-Apikey header
      * @return the HTTP request
      * @throws ApiException if request body serialization fails
      */
-    private HttpRequest buildRequestWithApiKey(String method, String baseUrl, String endpoint, 
+    private HttpRequest buildRequestWithApiKey(String method, String baseUrl, String endpoint,
                                                Object body, String apiKey) throws ApiException {
         String url = baseUrl + endpoint;
         HttpRequest.Builder builder = HttpRequest.newBuilder()
@@ -238,7 +238,7 @@ public class TatumGamesApiClient {
             // Handle client errors (don't retry)
             if (response.statusCode() >= 400) {
                 logger.error("Client error {}: {}", response.statusCode(), response.body());
-                throw new ApiException("Client error: " + response.statusCode() + " - " + response.body(), 
+                throw new ApiException("Client error: " + response.statusCode() + " - " + response.body(),
                         response.statusCode());
             }
 
@@ -286,10 +286,11 @@ public class TatumGamesApiClient {
     private <T> T executeWithRetry(RequestSupplier<T> requestSupplier) throws ApiException {
         ApiException lastException = null;
 
+        // Loop from 1 to MAX_RETRIES (inclusive)
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
                 return requestSupplier.get();
-                } catch (ApiException e) {
+            } catch (ApiException e) {
                 lastException = e;
 
                 // Don't retry on client errors (4xx except 429)
@@ -305,7 +306,7 @@ public class TatumGamesApiClient {
 
                 // Calculate exponential backoff delay
                 long delayMs = INITIAL_RETRY_DELAY_MS * (long) Math.pow(2, attempt - 1);
-                logger.debug("Request failed (attempt {}/{}), retrying in {}ms: {}", 
+                logger.debug("Request failed (attempt {}/{}), retrying in {}ms: {}",
                         attempt, MAX_RETRIES, delayMs, e.getMessage());
 
                 try {
@@ -318,7 +319,9 @@ public class TatumGamesApiClient {
         }
 
         logger.error("Request failed after {} attempts", MAX_RETRIES);
-        throw lastException != null ? lastException : new ApiException("Request failed after retries");
+        // lastException is guaranteed to be non-null here since we only reach this point if all attempts failed
+        // (if any attempt succeeded, we would have returned earlier)
+        throw lastException;
     }
 
     /**

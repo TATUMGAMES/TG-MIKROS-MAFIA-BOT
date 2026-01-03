@@ -87,7 +87,7 @@ public class ScrambleGuessCommand implements CommandHandler {
             long incorrectGuesses = session.getResults().stream()
                     .filter(r -> r.userId().equals(member.getId()) && !r.isCorrect())
                     .count();
-            
+
             if (incorrectGuesses >= 3) {
                 event.reply("""
                                 ❌ **No More Guesses Remaining**
@@ -117,7 +117,7 @@ public class ScrambleGuessCommand implements CommandHandler {
             int wordsRemaining = progression.getWordsRemaining();
             int currentLevel = progression.getLevel();
             int nextLevel = progression.isMaxLevel() ? currentLevel : currentLevel + 1;
-            
+
             String progressionText;
             if (progression.isMaxLevel()) {
                 progressionText = "\n\n**Progression:** Max level reached!";
@@ -130,7 +130,7 @@ public class ScrambleGuessCommand implements CommandHandler {
             String scoreText;
             if (result.bonus() > 0) {
                 int baseScore = result.score() - result.bonus();
-                scoreText = String.format("Score: **%d** (%d base + %d bonus)", 
+                scoreText = String.format("Score: **%d** (%d base + %d bonus)",
                         result.score(), baseScore, result.bonus());
             } else {
                 scoreText = String.format("Score: %d points", result.score());
@@ -159,7 +159,7 @@ public class ScrambleGuessCommand implements CommandHandler {
                     .filter(r -> r.userId().equals(member.getId()) && !r.isCorrect())
                     .count();
             int remainingGuesses = 3 - (int) incorrectGuesses;
-            
+
             event.reply(String.format("""
                             ❌ **Incorrect!**
                             

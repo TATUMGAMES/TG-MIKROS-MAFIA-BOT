@@ -11,11 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Scheduler for boss spawning.
@@ -23,28 +19,219 @@ import java.util.concurrent.TimeUnit;
  */
 public class BossScheduler {
     private static final Logger logger = LoggerFactory.getLogger(BossScheduler.class);
+    // Warning check interval: check every 30 minutes
+    private static final long WARNING_CHECK_INTERVAL_MINUTES = 30;
+    // Warning thresholds: warn when 1-2 hours remain
+    private static final long WARNING_THRESHOLD_MIN_HOURS = 1;
+    private static final long WARNING_THRESHOLD_MAX_HOURS = 2;
+    private static final List<String> NORMAL_BOSS_TEMPLATES = List.of(
+            """
+                    🐲 **A New Boss Has Appeared!** 🐲
+                    
+                    **%s** (Level %d) - %s
+                    
+                    HP: **%,d**
+                    
+                    The shadows spread across Nilfheim… heroes, unite!
+                    
+                    Use `/rpg-boss-battle battle` to join the fight!
+                    """,
 
+            """
+                    ⚔️ **A Fearsome Enemy Emerges!** ⚔️
+                    
+                    Behold: **%s**, Level %d — %s.
+                    
+                    HP: **%,d**
+                    
+                    Darkness rises once more. Champions, prepare for battle!
+                    
+                    Use `/rpg-boss-battle battle` to strike first!
+                    """,
+
+            """
+                    🛡️ **A Wild Boss Appears!** 🛡️
+                    
+                    Name: **%s**
+                    Level: **%d**
+                    Type: **%s**
+                    
+                    HP: **%,d**
+                    
+                    Gather your strength, heroes. A new challenge awaits!
+                    
+                    Join via `/rpg-boss-battle battle`!
+                    """
+    );
+    private static final List<String> SUPER_BOSS_TEMPLATES = List.of(
+            """
+                    🔥 **A SUPER BOSS HAS APPEARED!** 🔥
+                    
+                    **%s** (Level %d) - %s
+                    
+                    HP: **%,d**
+                    
+                    Special: %s
+                    
+                    This is a world-tier threat! All heroes must unite!
+                    
+                    Use `/rpg-boss-battle battle` to join the fight!
+                    """,
+
+            """
+                    💀 **A WORLD-ENDING FOE DESCENDS!** 💀
+                    
+                    **%s**, Level %d — %s
+                    
+                    HP: **%,d**
+                    
+                    Special Mechanic: %s
+                    
+                    Only the strongest can stand against this monster!
+                    
+                    Join the defense using `/rpg-boss-battle battle`!
+                    """,
+
+            """
+                    🌌 **A COSMIC BEING INVADES REALITY!** 🌌
+                    
+                    Target: **%s**
+                    Threat Level: %d
+                    Classification: %s
+                    
+                    HP: **%,d**
+                    
+                    Special Ability: %s
+                    
+                    The universe trembles. Champions, this is your ultimate test!
+                    
+                    Use `/rpg-boss-battle battle` to engage!
+                    """
+    );
+    private static final List<String> BOSS_WARNING_TEMPLATES = List.of(
+            """
+                    ⏰ **Time is almost up, where are the heroes?**
+                    
+                    **%s** (Level %d) - %s
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    
+                    Only **%d hour%s %d minute%s** left before the shadows consume Nilfheim!
+                    
+                    Use `/rpg-boss-battle battle` to join the fight!
+                    """,
+            """
+                    🚨 **Calling all heroes of Nilfheim, the world needs you!**
+                    
+                    **%s** (Level %d) - %s
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    
+                    Time remaining: **%d hour%s %d minute%s**
+                    The realm depends on your courage!
+                    
+                    Join the battle with `/rpg-boss-battle battle`!
+                    """,
+            """
+                    ⚔️ **The battle rages on, but time grows short!**
+                    
+                    **%s** (Level %d) - %s
+                    Current HP: **%,d** / %,d (%.1f%% remaining)
+                    
+                    **%d hour%s %d minute%s** remain before darkness falls!
+                    
+                    Heroes, unite! `/rpg-boss-battle battle`
+                    """,
+            """
+                    🌑 **The shadows lengthen... will you answer the call?**
+                    
+                    **%s** (Level %d) - %s
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    
+                    **%d hour%s %d minute%s** until the beast escapes!
+                    
+                    Stand with your fellow heroes: `/rpg-boss-battle battle`
+                    """,
+            """
+                    🔥 **The final hour approaches!**
+                    
+                    **%s** (Level %d) - %s
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    
+                    Only **%d hour%s %d minute%s** left!
+                    
+                    Nilfheim needs you now! `/rpg-boss-battle battle`
+                    """
+    );
+    private static final List<String> SUPER_BOSS_WARNING_TEMPLATES = List.of(
+            """
+                    ⏰ **Time is almost up, where are the heroes?**
+                    
+                    🔥 **%s** (Level %d) - %s 🔥
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    Special: %s
+                    
+                    Only **%d hour%s %d minute%s** left before the world-tier threat escapes!
+                    
+                    Use `/rpg-boss-battle battle` to join the fight!
+                    """,
+            """
+                    🚨 **Calling all heroes of Nilfheim, the world needs you!**
+                    
+                    💀 **%s** (Level %d) - %s 💀
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    Special Mechanic: %s
+                    
+                    Time remaining: **%d hour%s %d minute%s**
+                    This is a world-ending threat!
+                    
+                    Join the defense using `/rpg-boss-battle battle`!
+                    """,
+            """
+                    ⚔️ **The ultimate battle rages on, but time grows short!**
+                    
+                    🌌 **%s** (Level %d) - %s 🌌
+                    Current HP: **%,d** / %,d (%.1f%% remaining)
+                    Special Ability: %s
+                    
+                    **%d hour%s %d minute%s** remain before reality collapses!
+                    
+                    Champions, this is your moment! `/rpg-boss-battle battle`
+                    """,
+            """
+                    🌑 **The cosmic shadows lengthen... will you answer the call?**
+                    
+                    🔥 **%s** (Level %d) - %s 🔥
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    Special: %s
+                    
+                    **%d hour%s %d minute%s** until the super boss escapes!
+                    
+                    Stand with your fellow heroes: `/rpg-boss-battle battle`
+                    """,
+            """
+                    🔥 **The final hour approaches for the world-tier threat!**
+                    
+                    💀 **%s** (Level %d) - %s 💀
+                    HP: **%,d** / %,d (%.1f%% remaining)
+                    Special Mechanic: %s
+                    
+                    Only **%d hour%s %d minute%s** left!
+                    
+                    The universe needs you now! `/rpg-boss-battle battle`
+                    """
+    );
     private final BossService bossService;
     private final CharacterService characterService;
     private final WorldCurseService worldCurseService;
     private final ScheduledExecutorService scheduler;
-    private JDA jda;
-
     // Track last warning sent per boss to avoid spam: "guildId_bossId" -> Instant
     private final Map<String, Instant> lastWarningSent;
-
-    // Warning check interval: check every 30 minutes
-    private static final long WARNING_CHECK_INTERVAL_MINUTES = 30;
-
-    // Warning thresholds: warn when 1-2 hours remain
-    private static final long WARNING_THRESHOLD_MIN_HOURS = 1;
-    private static final long WARNING_THRESHOLD_MAX_HOURS = 2;
+    private JDA jda;
 
     /**
      * Creates a new BossScheduler.
      *
-     * @param bossService      the boss service
-     * @param characterService the character service (to check if RPG is enabled)
+     * @param bossService       the boss service
+     * @param characterService  the character service (to check if RPG is enabled)
      * @param worldCurseService the world curse service (for applying curses on boss expiration)
      */
     public BossScheduler(BossService bossService, CharacterService characterService, WorldCurseService worldCurseService) {
@@ -54,6 +241,10 @@ public class BossScheduler {
         this.scheduler = Executors.newScheduledThreadPool(1);
         this.lastWarningSent = new ConcurrentHashMap<>();
         logger.info("BossScheduler initialized");
+    }
+
+    private static String pickRandom(List<String> list) {
+        return list.get(ThreadLocalRandom.current().nextInt(list.size()));
     }
 
     /**
@@ -190,46 +381,6 @@ public class BossScheduler {
         }
     }
 
-    private static final List<String> NORMAL_BOSS_TEMPLATES = List.of(
-            """
-                    🐲 **A New Boss Has Appeared!** 🐲
-                    
-                    **%s** (Level %d) - %s
-                    
-                    HP: **%,d**
-                    
-                    The shadows spread across Nilfheim… heroes, unite!
-                    
-                    Use `/rpg-boss-battle battle` to join the fight!
-                    """,
-
-            """
-                    ⚔️ **A Fearsome Enemy Emerges!** ⚔️
-                    
-                    Behold: **%s**, Level %d — %s.
-                    
-                    HP: **%,d**
-                    
-                    Darkness rises once more. Champions, prepare for battle!
-                    
-                    Use `/rpg-boss-battle battle` to strike first!
-                    """,
-
-            """
-                    🛡️ **A Wild Boss Appears!** 🛡️
-                    
-                    Name: **%s**
-                    Level: **%d**
-                    Type: **%s**
-                    
-                    HP: **%,d**
-                    
-                    Gather your strength, heroes. A new challenge awaits!
-                    
-                    Join via `/rpg-boss-battle battle`!
-                    """
-    );
-
     /**
      * Announces a new normal boss.
      */
@@ -249,14 +400,34 @@ public class BossScheduler {
             return;
         }
 
-        String template = pickRandom(NORMAL_BOSS_TEMPLATES);
-
-        String announcement = String.format(template,
-                boss.getName(),
-                boss.getLevel(),
-                boss.getType().getDisplayName(),
-                boss.getMaxHp()
-        );
+        String announcement;
+        
+        // Check for Class Harmony mechanic (Unity Devourer)
+        if (boss.hasClassHarmonyMechanic()) {
+            announcement = String.format("""
+                    ❄️ **The Unity Devourer** has awakened.
+                    
+                    A fragment of broken harmony stirs in the frozen wastes. It senses when too many move as one—and it grows stronger. Only discordant forces can truly harm it.
+                    
+                    **%s** (Level %d) - %s
+                    HP: **%,d**
+                    
+                    Use `/rpg-boss-battle battle` to join the fight!
+                    """,
+                    boss.getName(),
+                    boss.getLevel(),
+                    boss.getType().getDisplayName(),
+                    boss.getMaxHp()
+            );
+        } else {
+            String template = pickRandom(NORMAL_BOSS_TEMPLATES);
+            announcement = String.format(template,
+                    boss.getName(),
+                    boss.getLevel(),
+                    boss.getType().getDisplayName(),
+                    boss.getMaxHp()
+            );
+        }
 
         channel.sendMessage(announcement).queue(
                 success -> logger.info("Boss scheduler: Successfully announced boss {} (Level {}) in channel {} for guild {}",
@@ -264,53 +435,6 @@ public class BossScheduler {
                 failure -> logger.error("Boss scheduler: Failed to send boss announcement for guild {}", guild.getName(), failure)
         );
     }
-
-    private static final List<String> SUPER_BOSS_TEMPLATES = List.of(
-            """
-                    🔥 **A SUPER BOSS HAS APPEARED!** 🔥
-                    
-                    **%s** (Level %d) - %s
-                    
-                    HP: **%,d**
-                    
-                    Special: %s
-                    
-                    This is a world-tier threat! All heroes must unite!
-                    
-                    Use `/rpg-boss-battle battle` to join the fight!
-                    """,
-
-            """
-                    💀 **A WORLD-ENDING FOE DESCENDS!** 💀
-                    
-                    **%s**, Level %d — %s
-                    
-                    HP: **%,d**
-                    
-                    Special Mechanic: %s
-                    
-                    Only the strongest can stand against this monster!
-                    
-                    Join the defense using `/rpg-boss-battle battle`!
-                    """,
-
-            """
-                    🌌 **A COSMIC BEING INVADES REALITY!** 🌌
-                    
-                    Target: **%s**
-                    Threat Level: %d
-                    Classification: %s
-                    
-                    HP: **%,d**
-                    
-                    Special Ability: %s
-                    
-                    The universe trembles. Champions, this is your ultimate test!
-                    
-                    Use `/rpg-boss-battle battle` to engage!
-                    """
-    );
-
 
     /**
      * Announces a new super boss.
@@ -330,15 +454,39 @@ public class BossScheduler {
             return;
         }
 
-        String template = pickRandom(SUPER_BOSS_TEMPLATES);
-
-        String announcement = String.format(template,
-                superBoss.getName(),
-                superBoss.getLevel(),
-                superBoss.getType().getDisplayName(),
-                superBoss.getMaxHp(),
-                superBoss.getSpecialMechanic()
-        );
+        String announcement;
+        
+        // Check for Class Harmony mechanic (Shattered Balance)
+        if (superBoss.hasClassHarmonyMechanic()) {
+            announcement = String.format("""
+                    🌌 **The Shattered Balance** emerges.
+                    
+                    A cosmic entity born from Nilfheim's original cataclysm. It feeds on dominance and certainty. Only when power is evenly divided across all paths does its armor fracture.
+                    
+                    **%s** (Level %d) - %s
+                    HP: **%,d**
+                    Special: %s
+                    
+                    This is a world-tier threat! All heroes must unite!
+                    
+                    Use `/rpg-boss-battle battle` to join the fight!
+                    """,
+                    superBoss.getName(),
+                    superBoss.getLevel(),
+                    superBoss.getType().getDisplayName(),
+                    superBoss.getMaxHp(),
+                    superBoss.getSpecialMechanic()
+            );
+        } else {
+            String template = pickRandom(SUPER_BOSS_TEMPLATES);
+            announcement = String.format(template,
+                    superBoss.getName(),
+                    superBoss.getLevel(),
+                    superBoss.getType().getDisplayName(),
+                    superBoss.getMaxHp(),
+                    superBoss.getSpecialMechanic()
+            );
+        }
 
         channel.sendMessage(announcement).queue(
                 success -> logger.info("Boss scheduler: Successfully announced super boss {} (Level {}) in channel {} for guild {}",
@@ -350,8 +498,8 @@ public class BossScheduler {
     /**
      * Applies a world curse when a boss expires undefeated.
      *
-     * @param guild the guild
-     * @param guildId the guild ID
+     * @param guild       the guild
+     * @param guildId     the guild ID
      * @param isSuperBoss whether it was a super boss
      */
     private void applyBossFailureCurse(Guild guild, String guildId, boolean isSuperBoss) {
@@ -396,10 +544,6 @@ public class BossScheduler {
             logger.warn("Boss scheduler: Applied curse {} for guild {} but could not announce (no channel)",
                     curse.getDisplayName(), guild.getName());
         }
-    }
-
-    private static String pickRandom(List<String> list) {
-        return list.get(ThreadLocalRandom.current().nextInt(list.size()));
     }
 
     /**
@@ -560,60 +704,6 @@ public class BossScheduler {
         }
     }
 
-    private static final List<String> BOSS_WARNING_TEMPLATES = List.of(
-            """
-                    ⏰ **Time is almost up, where are the heroes?**
-                    
-                    **%s** (Level %d) - %s
-                    HP: **%,d** / %,d (%.1f%% remaining)
-                    
-                    Only **%d hour%s %d minute%s** left before the shadows consume Nilfheim!
-                    
-                    Use `/rpg-boss-battle battle` to join the fight!
-                    """,
-            """
-                    🚨 **Calling all heroes of Nilfheim, the world needs you!**
-                    
-                    **%s** (Level %d) - %s
-                    HP: **%,d** / %,d (%.1f%% remaining)
-                    
-                    Time remaining: **%d hour%s %d minute%s**
-                    The realm depends on your courage!
-                    
-                    Join the battle with `/rpg-boss-battle battle`!
-                    """,
-            """
-                    ⚔️ **The battle rages on, but time grows short!**
-                    
-                    **%s** (Level %d) - %s
-                    Current HP: **%,d** / %,d (%.1f%% remaining)
-                    
-                    **%d hour%s %d minute%s** remain before darkness falls!
-                    
-                    Heroes, unite! `/rpg-boss-battle battle`
-                    """,
-            """
-                    🌑 **The shadows lengthen... will you answer the call?**
-                    
-                    **%s** (Level %d) - %s
-                    HP: **%,d** / %,d (%.1f%% remaining)
-                    
-                    **%d hour%s %d minute%s** until the beast escapes!
-                    
-                    Stand with your fellow heroes: `/rpg-boss-battle battle`
-                    """,
-            """
-                    🔥 **The final hour approaches!**
-                    
-                    **%s** (Level %d) - %s
-                    HP: **%,d** / %,d (%.1f%% remaining)
-                    
-                    Only **%d hour%s %d minute%s** left!
-                    
-                    Nilfheim needs you now! `/rpg-boss-battle battle`
-                    """
-    );
-
     /**
      * Sends an expiration warning for a normal boss.
      */
@@ -649,65 +739,6 @@ public class BossScheduler {
                 failure -> logger.error("Failed to send boss expiration warning for guild {}", guild.getName(), failure)
         );
     }
-
-    private static final List<String> SUPER_BOSS_WARNING_TEMPLATES = List.of(
-            """
-                    ⏰ **Time is almost up, where are the heroes?**
-                    
-                    🔥 **%s** (Level %d) - %s 🔥
-                    HP: **%,d** / %,d (%.1f%% remaining)
-                    Special: %s
-                    
-                    Only **%d hour%s %d minute%s** left before the world-tier threat escapes!
-                    
-                    Use `/rpg-boss-battle battle` to join the fight!
-                    """,
-            """
-                    🚨 **Calling all heroes of Nilfheim, the world needs you!**
-                    
-                    💀 **%s** (Level %d) - %s 💀
-                    HP: **%,d** / %,d (%.1f%% remaining)
-                    Special Mechanic: %s
-                    
-                    Time remaining: **%d hour%s %d minute%s**
-                    This is a world-ending threat!
-                    
-                    Join the defense using `/rpg-boss-battle battle`!
-                    """,
-            """
-                    ⚔️ **The ultimate battle rages on, but time grows short!**
-                    
-                    🌌 **%s** (Level %d) - %s 🌌
-                    Current HP: **%,d** / %,d (%.1f%% remaining)
-                    Special Ability: %s
-                    
-                    **%d hour%s %d minute%s** remain before reality collapses!
-                    
-                    Champions, this is your moment! `/rpg-boss-battle battle`
-                    """,
-            """
-                    🌑 **The cosmic shadows lengthen... will you answer the call?**
-                    
-                    🔥 **%s** (Level %d) - %s 🔥
-                    HP: **%,d** / %,d (%.1f%% remaining)
-                    Special: %s
-                    
-                    **%d hour%s %d minute%s** until the super boss escapes!
-                    
-                    Stand with your fellow heroes: `/rpg-boss-battle battle`
-                    """,
-            """
-                    🔥 **The final hour approaches for the world-tier threat!**
-                    
-                    💀 **%s** (Level %d) - %s 💀
-                    HP: **%,d** / %,d (%.1f%% remaining)
-                    Special Mechanic: %s
-                    
-                    Only **%d hour%s %d minute%s** left!
-                    
-                    The universe needs you now! `/rpg-boss-battle battle`
-                    """
-    );
 
     /**
      * Sends an expiration warning for a super boss.

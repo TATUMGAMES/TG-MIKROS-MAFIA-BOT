@@ -17,20 +17,6 @@ import java.util.Random;
  */
 public class ResurrectAction implements CharacterAction {
     private static final Random random = new Random();
-    private final WorldCurseService worldCurseService;
-    private final LoreRecognitionService loreRecognitionService;
-
-    /**
-     * Creates a new ResurrectAction.
-     *
-     * @param worldCurseService the world curse service for applying curse effects
-     * @param loreRecognitionService the lore recognition service for milestone checks
-     */
-    public ResurrectAction(WorldCurseService worldCurseService, LoreRecognitionService loreRecognitionService) {
-        this.worldCurseService = worldCurseService;
-        this.loreRecognitionService = loreRecognitionService;
-    }
-
     // Messages when target is ALIVE (blessing instead)
     private static final String[] BLESSING_MESSAGES = {
             "✨ {priest} meditates and divine energies swirl… but {target} is already alive. A soft blessing settles upon them.",
@@ -44,7 +30,6 @@ public class ResurrectAction implements CharacterAction {
             "⭐ {priest} smiles. 'No fallen soul found,' the spirits sigh. Still, {target} is touched by holiness.",
             "🔮 {priest} cracks his knuckles and looks off to the distance. Light gathers… then dissipates harmlessly. {target} receives a calm, serene blessing."
     };
-
     // Messages when target is DEAD (true resurrection)
     private static final String[] RESURRECTION_MESSAGES = {
             "✨ {priest} calls forth ancient power — and {target} gasps back to life, restored at half strength.",
@@ -58,6 +43,19 @@ public class ResurrectAction implements CharacterAction {
             "⭐ {priest} whispers to himself. The spirits relent. {target} rises, weakened but living again.",
             "🌈 {priest} looks to the skies. A beam of radiant light pierces the dark… {target} lives anew, though recovery awaits."
     };
+    private final WorldCurseService worldCurseService;
+    private final LoreRecognitionService loreRecognitionService;
+
+    /**
+     * Creates a new ResurrectAction.
+     *
+     * @param worldCurseService      the world curse service for applying curse effects
+     * @param loreRecognitionService the lore recognition service for milestone checks
+     */
+    public ResurrectAction(WorldCurseService worldCurseService, LoreRecognitionService loreRecognitionService) {
+        this.worldCurseService = worldCurseService;
+        this.loreRecognitionService = loreRecognitionService;
+    }
 
     @Override
     public String getActionName() {
@@ -112,12 +110,12 @@ public class ResurrectAction implements CharacterAction {
         if (target.isDead()) {
             // Target is dead - perform resurrection
             target.resurrect(recoveryHours);
-            
+
             // Get base resurrection message
             String baseNarrative = RESURRECTION_MESSAGES[random.nextInt(RESURRECTION_MESSAGES.length)]
                     .replace("{priest}", priest.getName())
                     .replace("{target}", target.getName());
-            
+
             // Add deity/relic-specific flavor text
             String deityFlavor = "";
             if (target.hasWorldFlag("STONE_WOLF_MARKED")) {
@@ -131,7 +129,7 @@ public class ResurrectAction implements CharacterAction {
             } else if (target.hasWorldFlag("OATH_OF_NULL")) {
                 deityFlavor = "\n\n⚖️ *Your unbound oath defies death itself...*";
             }
-            
+
             // Oathbreaker: Special resurrection flavor and corruption reduction
             String oathbreakerFlavor = "";
             if (target.getCharacterClass() == CharacterClass.OATHBREAKER) {
@@ -143,7 +141,7 @@ public class ResurrectAction implements CharacterAction {
                     oathbreakerFlavor = "\n\n⚔️💀 *The broken oath makes resurrection complicated. Holy magic and broken oaths do not mix easily.*";
                 }
             }
-            
+
             narrative = baseNarrative + deityFlavor + oathbreakerFlavor;
 
             // Priest gets +5 XP for successful resurrection (doubled during Fading Hope)
@@ -151,26 +149,26 @@ public class ResurrectAction implements CharacterAction {
             if (activeCurses.contains(WorldCurse.MAJOR_FADING_HOPE)) {
                 xpGained = 10; // Double XP during curse
             }
-            
+
             // Track cursed resurrection for Lightbearer title (Priest only)
             if (!activeCurses.isEmpty() && priest.getCharacterClass() == CharacterClass.PRIEST) {
                 priest.incrementCursedResurrections();
             }
-            
+
             // Track resurrection for lore recognition (Priest only)
             if (priest.getCharacterClass() == CharacterClass.PRIEST) {
                 priest.incrementTimesResurrectedOthers();
             }
-            
+
             // Track resurrection for lore recognition (target)
             target.incrementResurrectionCount();
-            
+
             // Check for lore recognition milestones
             if (loreRecognitionService != null) {
                 loreRecognitionService.checkMilestones(priest);
                 loreRecognitionService.checkMilestones(target);
             }
-            
+
             success = true;
         } else {
             // Target is alive - give blessing instead

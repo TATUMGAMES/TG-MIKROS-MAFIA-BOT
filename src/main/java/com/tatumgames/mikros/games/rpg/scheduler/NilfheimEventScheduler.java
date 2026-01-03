@@ -24,13 +24,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class NilfheimEventScheduler {
     private static final Logger logger = LoggerFactory.getLogger(NilfheimEventScheduler.class);
-    
+
     // Check interval: every 6 hours
     private static final long CHECK_INTERVAL_HOURS = 6;
-    
+
     // Event duration: 12 hours
     private static final long EVENT_DURATION_HOURS = 12;
-    
+
     private final NilfheimEventService eventService;
     private final CharacterService characterService;
     private final ScheduledExecutorService scheduler;
@@ -60,7 +60,7 @@ public class NilfheimEventScheduler {
 
         // Calculate initial delay to next 6-hour boundary
         long initialDelay = calculateInitialDelay();
-        
+
         // Run check every 6 hours
         scheduler.scheduleAtFixedRate(() -> {
             try {
@@ -95,11 +95,11 @@ public class NilfheimEventScheduler {
         }
 
         Instant now = Instant.now();
-        
+
         for (Guild guild : jda.getGuilds()) {
             try {
                 String guildId = guild.getId();
-                
+
                 // Check if RPG is enabled for this guild
                 RPGConfig config = characterService.getConfig(guildId);
                 if (config == null || !config.isEnabled()) {
@@ -119,13 +119,13 @@ public class NilfheimEventScheduler {
                     // Check if enough time has passed (randomized per event type)
                     // For now, use a simple approach: check if 48-96 hours have passed
                     long hoursSinceLastEvent = (now.getEpochSecond() - lastEventTime.getEpochSecond()) / 3600;
-                    
+
                     // Randomize next event time (48-96 hours)
                     // We'll use a simple check: if 48+ hours have passed, roll for event
                     if (hoursSinceLastEvent < 48) {
                         continue; // Not enough time has passed
                     }
-                    
+
                     // Roll for event (higher chance as more time passes)
                     // At 48 hours: 10% chance, at 96 hours: 100% chance
                     double chance = Math.min(1.0, (hoursSinceLastEvent - 48.0) / 48.0);
@@ -136,7 +136,7 @@ public class NilfheimEventScheduler {
 
                 // Trigger a random event
                 triggerRandomEvent(guild, guildId, now);
-                
+
             } catch (Exception e) {
                 logger.error("Error checking events for guild {}", guild.getId(), e);
             }
@@ -146,23 +146,23 @@ public class NilfheimEventScheduler {
     /**
      * Triggers a random Nilfheim event for a guild.
      *
-     * @param guild the guild
+     * @param guild   the guild
      * @param guildId the guild ID
-     * @param now the current time
+     * @param now     the current time
      */
     private void triggerRandomEvent(Guild guild, String guildId, Instant now) {
         // Select random event type (weighted: common events more likely)
         NilfheimEventType[] allEvents = NilfheimEventType.values();
         NilfheimEventType selectedEvent = allEvents[random.nextInt(allEvents.length)];
-        
+
         // Set active event (expires in 12 hours)
         Instant expiresAt = now.plusSeconds(EVENT_DURATION_HOURS * 3600);
         eventService.setActiveEvent(guildId, selectedEvent, expiresAt);
         eventService.setLastEventTime(guildId, now);
-        
-        logger.info("Triggered Nilfheim event {} for guild {} (expires at {})", 
+
+        logger.info("Triggered Nilfheim event {} for guild {} (expires at {})",
                 selectedEvent.getDisplayName(), guildId, expiresAt);
-        
+
         // Post announcement in RPG channel (if configured)
         postEventAnnouncement(guild, guildId, selectedEvent);
     }
@@ -170,8 +170,8 @@ public class NilfheimEventScheduler {
     /**
      * Posts an event announcement to the RPG channel.
      *
-     * @param guild the guild
-     * @param guildId the guild ID
+     * @param guild     the guild
+     * @param guildId   the guild ID
      * @param eventType the event type
      */
     private void postEventAnnouncement(Guild guild, String guildId, NilfheimEventType eventType) {
@@ -200,9 +200,9 @@ public class NilfheimEventScheduler {
         embed.setTimestamp(Instant.now());
 
         channel.sendMessageEmbeds(embed.build()).queue(
-                success -> logger.info("Posted Nilfheim event announcement for {} in guild {}", 
+                success -> logger.info("Posted Nilfheim event announcement for {} in guild {}",
                         eventType.getDisplayName(), guildId),
-                error -> logger.warn("Failed to post Nilfheim event announcement for {} in guild {}: {}", 
+                error -> logger.warn("Failed to post Nilfheim event announcement for {} in guild {}: {}",
                         eventType.getDisplayName(), guildId, error.getMessage())
         );
     }

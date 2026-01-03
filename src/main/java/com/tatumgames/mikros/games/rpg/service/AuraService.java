@@ -4,7 +4,10 @@ import com.tatumgames.mikros.games.rpg.achievements.LegendaryAura;
 import com.tatumgames.mikros.games.rpg.model.CharacterClass;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -22,7 +25,7 @@ public class AuraService {
      * Gets all holders of a specific aura in a guild.
      *
      * @param guildId the Discord guild ID
-     * @param aura the legendary aura
+     * @param aura    the legendary aura
      * @return list of user IDs who hold the aura
      */
     public List<String> getAuraHolders(String guildId, LegendaryAura aura) {
@@ -37,8 +40,8 @@ public class AuraService {
     /**
      * Checks if a character can acquire a legendary aura.
      *
-     * @param guildId the Discord guild ID
-     * @param aura the legendary aura
+     * @param guildId   the Discord guild ID
+     * @param aura      the legendary aura
      * @param character the character attempting to acquire
      * @return true if can acquire
      */
@@ -69,8 +72,8 @@ public class AuraService {
      * Acquires a legendary aura for a character.
      *
      * @param guildId the Discord guild ID
-     * @param aura the legendary aura
-     * @param userId the user ID acquiring the aura
+     * @param aura    the legendary aura
+     * @param userId  the user ID acquiring the aura
      * @return true if successfully acquired
      */
     public boolean acquireAura(String guildId, LegendaryAura aura, String userId) {
@@ -114,14 +117,14 @@ public class AuraService {
     /**
      * Applies Song of Nilfheim aura effect (+5% damage to all in boss battles).
      *
-     * @param guildId the Discord guild ID
+     * @param guildId      the Discord guild ID
      * @param participants list of participant user IDs
-     * @param baseDamage the base damage before aura
+     * @param baseDamage   the base damage before aura
      * @return damage with aura bonus applied (if aura holder present)
      */
     public int applyAuraEffects(String guildId, List<String> participants, int baseDamage) {
         List<String> songHolders = getAuraHolders(guildId, LegendaryAura.SONG_OF_NILFHEIM);
-        
+
         // Check if any participant has the aura
         boolean hasAuraHolder = false;
         for (String participantId : participants) {
@@ -142,13 +145,13 @@ public class AuraService {
     /**
      * Applies Hero's Mark penalty (+10% damage from bosses).
      *
-     * @param character the character with Hero's Mark
+     * @param character  the character with Hero's Mark
      * @param baseDamage the base damage from boss
      * @return damage with penalty applied
      */
     public int applyHerosMarkPenalty(RPGCharacter character, int baseDamage) {
-        if (character.getLegendaryAura() != null && 
-            character.getLegendaryAura().equals(LegendaryAura.HEROS_MARK.name())) {
+        if (character.getLegendaryAura() != null &&
+                character.getLegendaryAura().equals(LegendaryAura.HEROS_MARK.name())) {
             // Apply +10% damage penalty
             return (int) (baseDamage * 1.10);
         }
@@ -159,7 +162,7 @@ public class AuraService {
      * Checks if a character has a specific aura.
      *
      * @param character the character
-     * @param aura the aura to check
+     * @param aura      the aura to check
      * @return true if character has the aura
      */
     public boolean hasAura(RPGCharacter character, LegendaryAura aura) {
@@ -189,8 +192,8 @@ public class AuraService {
      * Removes an aura from a character (if they lose it somehow).
      *
      * @param guildId the Discord guild ID
-     * @param aura the legendary aura
-     * @param userId the user ID to remove
+     * @param aura    the legendary aura
+     * @param userId  the user ID to remove
      */
     public void removeAura(String guildId, LegendaryAura aura, String userId) {
         Map<LegendaryAura, List<String>> guildAuras = auraHolders.get(guildId);

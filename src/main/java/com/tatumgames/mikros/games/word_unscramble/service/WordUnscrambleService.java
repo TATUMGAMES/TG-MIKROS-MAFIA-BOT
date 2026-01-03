@@ -139,12 +139,12 @@ public class WordUnscrambleService {
         // Update player statistics
         if (result != null) {
             WordUnscramblePlayerStats stats = getOrCreatePlayerStats(guildId, userId);
-            
+
             if (result.isCorrect()) {
                 // Calculate time in seconds
                 long timeSeconds = result.timestamp().getEpochSecond() - session.getStartTime().getEpochSecond();
                 stats.recordCorrectAnswer(result.score(), timeSeconds);
-                
+
                 // Also add XP to community progression and check for level up
                 WordUnscrambleProgression progression = getOrCreateProgression(guildId);
                 boolean leveledUp = progression.addXp();

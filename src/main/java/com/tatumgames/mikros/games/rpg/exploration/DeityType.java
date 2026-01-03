@@ -23,7 +23,7 @@ public enum DeityType {
             CharacterClass.WARRIOR,
             CharacterClass.KNIGHT
     ),
-    
+
     /**
      * Ilyra, The Frostwind - Agility-focused deity.
      * Blessing: +15% AGI effectiveness
@@ -40,7 +40,7 @@ public enum DeityType {
             CharacterClass.ROGUE,
             null
     ),
-    
+
     /**
      * Nereth, The Hollow Mind - Intelligence-focused deity.
      * Blessing: +15% INT effectiveness

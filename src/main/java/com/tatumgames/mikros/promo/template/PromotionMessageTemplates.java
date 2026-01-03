@@ -16,8 +16,6 @@ import java.util.stream.Collectors;
  */
 public class PromotionMessageTemplates {
     private static final Logger logger = LoggerFactory.getLogger(PromotionMessageTemplates.class);
-    private final Random random;
-
     // Step 1: Introduce the game (5 templates total)
     private static final String[] STEP_1_TEMPLATES = {
             "🎮 Introducing <app_name>! <short_description>",
@@ -26,7 +24,6 @@ public class PromotionMessageTemplates {
             "This game really impressed us - <app_name>! <short_description>",
             "You're going to love <app_name>! <short_description>"
     };
-
     // Step 2: Add more details (5 templates total)
     private static final String[] STEP_2_TEMPLATES = {
             "Dive deeper into <app_name>: <long_description>",
@@ -35,7 +32,6 @@ public class PromotionMessageTemplates {
             "This project put a smile on our face. Here's why <app_name> stands out: <long_description>",
             "Join us in supporting <app_name> - <long_description>"
     };
-
     // Step 3: Multiple games promotion (5 templates total)
     private static final String[] STEP_3_TEMPLATES = {
             "🌟 MIKROS Top Picks for this month: <game_list>",
@@ -44,7 +40,6 @@ public class PromotionMessageTemplates {
             "Let's rally behind these amazing developers! This month's highlights: <game_list>",
             "These games really impressed us - check them out: <game_list>"
     };
-
     // Step 4: Final chance (5 templates total)
     private static final String[] STEP_4_TEMPLATES = {
             "⏰ Last chance to check out <app_name>! <short_description>",
@@ -53,7 +48,6 @@ public class PromotionMessageTemplates {
             "One final rally for <app_name>! <short_description>",
             "Last call to support <app_name> - <short_description>"
     };
-
     // MIKROS Marketing footer messages
     private static final String[] MIKROS_FOOTER_MESSAGES = {
             "Powered by MIKROS Marketing — a developer-first platform helping indie games reach real players. Learn more: https://developer.tatumgames.com/",
@@ -67,6 +61,7 @@ public class PromotionMessageTemplates {
             "Shared via MIKROS Marketing, supporting indie devs through community-driven discovery. https://developer.tatumgames.com/",
             "Powered by MIKROS! Modern marketing tools for indie game developers and small game studios. https://developer.tatumgames.com/"
     };
+    private final Random random;
 
     public PromotionMessageTemplates() {
         this.random = new Random();

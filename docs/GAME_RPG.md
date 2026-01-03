@@ -760,6 +760,8 @@ Items are displayed inline in action result messages:
     - Level 2 → 3: Need 4 defeats
     - And so on...
 
+**Note:** One special super boss, **The Shattered Balance**, uses the Class Harmony system (see Class Harmony Bosses section below).
+
 ### Boss Types
 
 Bosses have types that determine class bonuses:
@@ -815,8 +817,56 @@ Boss battles use a separate charge system from regular actions:
 ### Boss Catalog
 
 - **24 Normal Bosses:** 2 per level (levels 1-12)
-- **12 Super Bosses:** Epic world-tier threats
+- **20 Super Bosses:** Epic world-tier threats
 - Each boss has unique lore, type, and mechanics
+
+### Class Harmony Bosses
+
+Two special bosses use the **Class Harmony Percentage System**, which applies damage resistance based on class participation balance:
+
+#### The Unity Devourer (Normal Boss)
+
+- **Type:** Eldritch
+- **Spawn Condition:** Appears every 10 normal boss defeats (replaces random normal boss spawn)
+- **Lore:** "A fragment of the First Winter's broken harmony. It was born from the moment mortals chose uniformity over diversity. The creature senses when too many souls move as one and it grows stronger, feeding on that singular will. Only when conflicting forces strike together does its form begin to destabilize."
+- **Special Mechanic:** "Feeds on class uniformity. Grows stronger when attackers share the same path. Only balanced forces can truly harm it."
+
+#### The Shattered Balance (Super Boss)
+
+- **Type:** Eldritch
+- **Spawn Condition:** Can spawn in normal super boss rotation (every 3 normal boss defeats)
+- **Lore:** "A cosmic entity born from the cataclysm that shattered Nilfheim's original balance. It exists as a living paradox: the more unified its attackers become, the more it stabilizes. It feeds on dominance and certainty. Only when power is evenly divided across all paths does its armor truly fracture."
+- **Special Mechanic:** "Feeds on class uniformity. Grows stronger when attackers share the same path. Only balanced forces can truly harm it."
+
+#### How Class Harmony Works
+
+These bosses apply **damage resistance** based on how balanced the class composition is among attackers:
+
+1. **Class Participation Tracking:** The system tracks how many unique players of each class have attacked the boss
+2. **Percentage Calculation:** Each class's participation is calculated as a percentage of total participants
+3. **Minimum Threshold:** Only classes with ≥5% participation count toward balance (prevents "token class" exploitation)
+4. **Dominance Gap:** The system calculates the gap between the highest and lowest class percentages
+5. **Resistance Tiers:** The dominance gap maps to damage resistance:
+
+| Dominance Gap | Damage Resistance | Narrative Feedback |
+|---------------|-------------------|-------------------|
+| ≥ 60%         | 90% resistance    | "The creature stabilizes, feeding on overwhelming uniformity. Its form grows more solid with each unified strike." |
+| 45-59%        | 75% resistance    | "Discordant forces begin to crack its defenses. The creature's form wavers between stability and chaos." |
+| 30-44%        | 60% resistance    | "Discordant forces begin to crack its defenses. The creature's form wavers between stability and chaos." |
+| 20-29%        | 45% resistance    | "Discordant forces begin to crack its defenses. The creature's form wavers between stability and chaos." |
+| 10-19%        | 30% resistance    | "Discordant forces begin to crack its defenses. The creature's form wavers between stability and chaos." |
+| < 10%         | 15% resistance (floor) | "Conflicting forces tear at the creature's core. Its form destabilizes violently—the balance shifts against it!" |
+
+**Examples:**
+- **Monoculture (80% Priest, 10% Rogue, 10% Mage):** 70% gap → 90% resistance (very difficult)
+- **Balanced (7 classes, 14-15% each):** 1% gap → 15% resistance (much easier)
+- **Mixed (40% Rogue, 30% Priest, 15% others):** 25% gap → 45% resistance (moderate difficulty)
+
+**Strategy Tips:**
+- Coordinate with your server to ensure diverse class participation
+- Check `/rpg-boss-battle status` to see current class distribution and harmony status
+- The system scales from small groups (5+ players) to large groups (500+ players)
+- Resistance is applied after all other damage modifiers (class bonuses, auras, events)
 
 ### Boss Rewards
 

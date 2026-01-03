@@ -71,8 +71,8 @@ public class SuspiciousDomainList {
     /**
      * Adds a suspicious domain with a risk score.
      *
-     * @param domain     the domain
-     * @param riskScore  the risk score (higher = more suspicious)
+     * @param domain    the domain
+     * @param riskScore the risk score (higher = more suspicious)
      */
     public void addSuspiciousDomain(String domain, int riskScore) {
         if (domain != null && !domain.isBlank()) {

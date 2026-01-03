@@ -14,18 +14,18 @@ public record RPGActionOutcome(String narrative, int xpGained, boolean leveledUp
     /**
      * Creates an RPG action outcome.
      *
-     * @param narrative      the story/narrative text
-     * @param xpGained       experience points gained
-     * @param leveledUp      whether the character leveled up
-     * @param statIncreased  name of stat increased (or null)
-     * @param statAmount     amount stat was increased
-     * @param damageTaken    damage taken during action
-     * @param hpRestored     HP restored during action (e.g., from rest)
-     * @param success        whether the action was successful
-     * @param itemDrops      list of essence drops
-     * @param catalystDrops  list of catalyst drops
-     * @param isElite        whether this was an elite enemy encounter
-     * @param eliteTraits    list of elite trait names (null if not elite)
+     * @param narrative         the story/narrative text
+     * @param xpGained          experience points gained
+     * @param leveledUp         whether the character leveled up
+     * @param statIncreased     name of stat increased (or null)
+     * @param statAmount        amount stat was increased
+     * @param damageTaken       damage taken during action
+     * @param hpRestored        HP restored during action (e.g., from rest)
+     * @param success           whether the action was successful
+     * @param itemDrops         list of essence drops
+     * @param catalystDrops     list of catalyst drops
+     * @param isElite           whether this was an elite enemy encounter
+     * @param eliteTraits       list of elite trait names (null if not elite)
      * @param withdrewFromElite whether the player withdrew from an elite encounter
      */
     public RPGActionOutcome {
@@ -38,6 +38,10 @@ public record RPGActionOutcome(String narrative, int xpGained, boolean leveledUp
         if (eliteTraits == null) {
             eliteTraits = new ArrayList<>();
         }
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
@@ -124,10 +128,6 @@ public record RPGActionOutcome(String narrative, int xpGained, boolean leveledUp
                     statIncreased, statAmount, damageTaken, hpRestored, success,
                     itemDrops, catalystDrops, isElite, eliteTraits, withdrewFromElite);
         }
-    }
-
-    public static Builder builder() {
-        return new Builder();
     }
 
     // Getters

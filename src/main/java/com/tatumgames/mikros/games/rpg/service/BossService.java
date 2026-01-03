@@ -3,8 +3,6 @@ package com.tatumgames.mikros.games.rpg.service;
 import com.tatumgames.mikros.games.rpg.boss.BossCatalog;
 import com.tatumgames.mikros.games.rpg.events.NilfheimEventType;
 import com.tatumgames.mikros.games.rpg.model.*;
-import com.tatumgames.mikros.games.rpg.service.LoreRecognitionService;
-import com.tatumgames.mikros.games.rpg.service.NilfheimEventService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,32 +18,32 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class BossService {
     private static final Logger logger = LoggerFactory.getLogger(BossService.class);
-
+    private static final Random random = new Random();
     // Per-server boss state: guildId -> ServerBossState
     private final Map<String, ServerBossState> serverStates;
-
     // Damage tracking: guildId -> Map<userId, totalDamage>
     private final Map<String, Map<String, Integer>> damageTracking;
-
+    // Class participation tracking: guildId -> Map<CharacterClass, count>
+    private final Map<String, Map<CharacterClass, Integer>> classParticipation;
     private final CharacterService characterService;
     private final AuraService auraService;
     private final WorldCurseService worldCurseService;
     private final NilfheimEventService nilfheimEventService;
     private final LoreRecognitionService loreRecognitionService;
-    private static final Random random = new Random();
 
     /**
      * Creates a new BossService.
      *
-     * @param characterService the character service for tracking kills
-     * @param auraService the aura service for applying legendary aura effects
-     * @param worldCurseService the world curse service for clearing curses on defeat
-     * @param nilfheimEventService the Nilfheim event service for server-wide events
+     * @param characterService       the character service for tracking kills
+     * @param auraService            the aura service for applying legendary aura effects
+     * @param worldCurseService      the world curse service for clearing curses on defeat
+     * @param nilfheimEventService   the Nilfheim event service for server-wide events
      * @param loreRecognitionService the lore recognition service for milestone checks
      */
     public BossService(CharacterService characterService, AuraService auraService, WorldCurseService worldCurseService, NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService) {
         this.serverStates = new ConcurrentHashMap<>();
         this.damageTracking = new ConcurrentHashMap<>();
+        this.classParticipation = new ConcurrentHashMap<>();
         this.characterService = characterService;
         this.auraService = auraService;
         this.worldCurseService = worldCurseService;
@@ -89,11 +87,23 @@ public class BossService {
         }
 
         int level = state.getBossLevel();
-        BossCatalog.BossDefinition definition = BossCatalog.getRandomNormalBoss(level);
+        BossCatalog.BossDefinition definition;
+        
+        // Check if Unity Devourer should spawn (every 10th normal boss)
+        // After 9 defeats, the next spawn (10th boss) should be Unity Devourer
+        if (state.getNormalBossesDefeated() > 0 && state.getNormalBossesDefeated() % 10 == 9) {
+            definition = BossCatalog.getUnityDevourer(level);
+            logger.info("Unity Devourer spawn triggered ({} normal bosses defeated, spawning 10th boss) for guild {}", 
+                    state.getNormalBossesDefeated(), guildId);
+        } else {
+            definition = BossCatalog.getRandomNormalBoss(level);
+        }
+        
         Boss boss = BossCatalog.createBoss(definition, level);
 
         state.setCurrentBoss(boss);
         damageTracking.put(guildId, new ConcurrentHashMap<>());
+        classParticipation.put(guildId, new ConcurrentHashMap<>());
 
         // Refresh heroic charges for all characters when new boss spawns
         refreshHeroicChargesForAllCharacters();
@@ -118,6 +128,7 @@ public class BossService {
         state.setCurrentSuperBoss(superBoss);
         state.setNormalBossesSinceSuper(0); // Reset counter
         damageTracking.put(guildId, new ConcurrentHashMap<>());
+        classParticipation.put(guildId, new ConcurrentHashMap<>());
 
         // Refresh heroic charges for all characters when new boss spawns
         refreshHeroicChargesForAllCharacters();
@@ -149,8 +160,8 @@ public class BossService {
         // Check for Gravebound Presence Raise Fallen mechanic
         // If character has Gravebound Presence and would die, set HP to 1 instead
         // Note: Currently boss battles don't deal damage to characters, but this is ready for future implementation
-        if (character.getLegendaryAura() != null && 
-            character.getLegendaryAura().equals(com.tatumgames.mikros.games.rpg.achievements.LegendaryAura.GRAVEBOUND_PRESENCE.name())) {
+        if (character.getLegendaryAura() != null &&
+                character.getLegendaryAura().equals(com.tatumgames.mikros.games.rpg.achievements.LegendaryAura.GRAVEBOUND_PRESENCE.name())) {
             // Check if character would die (HP would go to 0 or below)
             // This would be checked if boss damage mechanics are added
             // For now, we just ensure the flag is set correctly
@@ -189,6 +200,20 @@ public class BossService {
             }
         }
 
+        // Check for Class Harmony mechanic and track class participation
+        boolean hasHarmonyMechanic = (boss != null && boss.hasClassHarmonyMechanic()) ||
+                (superBoss != null && superBoss.hasClassHarmonyMechanic());
+        
+        if (hasHarmonyMechanic) {
+            // Track class participation
+            classParticipation.computeIfAbsent(guildId, k -> new ConcurrentHashMap<>())
+                    .merge(character.getCharacterClass(), 1, Integer::sum);
+            
+            // Calculate and apply class harmony resistance
+            double resistance = calculateClassHarmonyResistance(guildId);
+            damage = (int) (damage * (1.0 - resistance));
+        }
+
         // Apply damage
         boolean defeated;
         if (boss != null) {
@@ -220,7 +245,7 @@ public class BossService {
         var activeCurses = worldCurseService.getActiveCurses(guildId);
         if (!activeCurses.isEmpty()) {
             character.incrementCursedBossFights();
-            
+
             // Oathbreaker: Gain corruption from acting during world curses
             if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
                 character.addCorruption(1);
@@ -299,10 +324,10 @@ public class BossService {
         int totalParticipants = (allDamage != null) ? allDamage.size() : 0;
         int rewardCount = (int) Math.ceil(totalParticipants * 0.30); // Top 30%, rounded up
         int limit = Math.max(1, rewardCount); // At least 1 person gets rewarded
-        
+
         // Get top damage dealers for XP rewards (top 30% of participants)
         Map<String, Integer> topDamage = getTopDamageDealers(guildId, limit);
-        
+
         // Calculate total XP pool based on boss type and level
         int totalXpPool;
         int bossLevel;
@@ -327,18 +352,18 @@ public class BossService {
                 for (Map.Entry<String, Integer> entry : topDamage.entrySet()) {
                     String userId = entry.getKey();
                     int playerDamage = entry.getValue();
-                    
+
                     // Track top damage dealer (rank 1)
                     if (rank == 1) {
                         topDamageDealerId = userId;
                     }
-                    
+
                     RPGCharacter character = characterService.getCharacter(userId);
                     if (character != null) {
                         // Calculate proportional XP
                         double damageRatio = (double) playerDamage / totalTopDamage;
                         int baseXp = (int) (totalXpPool * damageRatio);
-                        
+
                         // Apply rank bonus: #1 gets 20% bonus, #2 gets 10% bonus
                         double rankBonus = 1.0;
                         if (rank == 1) {
@@ -346,24 +371,24 @@ public class BossService {
                         } else if (rank == 2) {
                             rankBonus = 1.10; // 10% bonus for 2nd place
                         }
-                        
+
                         int finalXp = (int) (baseXp * rankBonus);
-                        
+
                         // Award XP
                         boolean leveledUp = character.addXp(finalXp);
-                        
+
                         logger.info("Awarded {} XP to {} (rank #{}, {} damage) for boss defeat. Leveled up: {}",
                                 finalXp, character.getName(), rank, playerDamage, leveledUp);
                     }
                     rank++;
                 }
-                
+
                 // Track top damage dealer for Hero's Mark achievement
                 if (topDamageDealerId != null) {
                     RPGCharacter topDealer = characterService.getCharacter(topDamageDealerId);
                     if (topDealer != null) {
                         topDealer.incrementTopDamageBossKills();
-                        
+
                         // TODO: Check for Hero's Mark achievement (100 normal OR 10 super)
                         // Hero's Mark: 100 top damage kills on normal bosses OR 10 on super bosses
                         // This will be implemented when we add achievement checking logic
@@ -383,10 +408,10 @@ public class BossService {
                     } else {
                         character.incrementSuperBossesKilled();
                     }
-                    
+
                     // Distribute boss rewards
                     distributeBossRewards(character, isNormalBoss);
-                    
+
                     // Check for lore recognition milestones (boss victory)
                     if (loreRecognitionService != null) {
                         loreRecognitionService.checkMilestones(character);
@@ -419,8 +444,9 @@ public class BossService {
             }
         }
 
-        // Clear damage tracking
+        // Clear damage tracking and class participation
         damageTracking.remove(guildId);
+        classParticipation.remove(guildId);
     }
 
     /**
@@ -454,6 +480,211 @@ public class BossService {
         serverStates.remove(guildId);
         damageTracking.remove(guildId);
         logger.warn("Reset boss data for server {}", guildId);
+    }
+
+    /**
+     * Distributes boss rewards to a character.
+     * Normal boss: guaranteed 1 essence + 25% catalyst
+     * Super boss: guaranteed catalyst + 1-3 essences
+     *
+     * @param character    the character receiving rewards
+     * @param isNormalBoss whether it was a normal boss
+     */
+    private void distributeBossRewards(RPGCharacter character, boolean isNormalBoss) {
+        RPGInventory inventory = character.getInventory();
+
+        if (isNormalBoss) {
+            // Normal boss: guaranteed 1 essence + 25% catalyst
+            EssenceType essence = getRandomEssence();
+            inventory.addEssence(essence, 1);
+
+            if (random.nextDouble() < 0.25) {
+                CatalystType catalyst = getRandomCatalyst();
+                inventory.addCatalyst(catalyst, 1);
+            }
+        } else {
+            // Super boss: guaranteed catalyst + 1-3 essences
+            CatalystType catalyst = getRandomCatalyst();
+            inventory.addCatalyst(catalyst, 1);
+
+            int essenceCount = random.nextInt(3) + 1; // 1-3 essences
+            for (int i = 0; i < essenceCount; i++) {
+                EssenceType essence = getRandomEssence();
+                inventory.addEssence(essence, 1);
+            }
+        }
+    }
+
+    /**
+     * Gets a random essence type.
+     *
+     * @return random essence type
+     */
+    private EssenceType getRandomEssence() {
+        EssenceType[] essences = EssenceType.values();
+        return essences[random.nextInt(essences.length)];
+    }
+
+    /**
+     * Gets a random catalyst type.
+     *
+     * @return random catalyst type
+     */
+    private CatalystType getRandomCatalyst() {
+        CatalystType[] catalysts = CatalystType.values();
+        return catalysts[random.nextInt(catalysts.length)];
+    }
+
+    /**
+     * Refreshes heroic charges for all characters when a new boss spawns.
+     */
+    private void refreshHeroicChargesForAllCharacters() {
+        Collection<RPGCharacter> allCharacters = characterService.getAllCharacters();
+        int refreshedCount = 0;
+        for (RPGCharacter character : allCharacters) {
+            character.refreshHeroicCharges();
+            refreshedCount++;
+        }
+        logger.info("Refreshed heroic charges for {} characters (new boss spawned)", refreshedCount);
+    }
+
+    /**
+     * Calculates class harmony resistance based on class participation balance.
+     * Returns a resistance value between 0.15 (15% resistance) and 0.90 (90% resistance).
+     *
+     * @param guildId the guild ID
+     * @return resistance multiplier (0.15 to 0.90)
+     */
+    private double calculateClassHarmonyResistance(String guildId) {
+        Map<CharacterClass, Integer> participation = classParticipation.get(guildId);
+        if (participation == null || participation.isEmpty()) {
+            // No participants yet, return minimum resistance
+            return 0.15;
+        }
+
+        // Calculate total participants
+        int totalParticipants = participation.values().stream().mapToInt(Integer::intValue).sum();
+        if (totalParticipants == 0) {
+            return 0.15;
+        }
+
+        // Calculate percentages for each class
+        Map<CharacterClass, Double> percentages = new LinkedHashMap<>();
+        for (Map.Entry<CharacterClass, Integer> entry : participation.entrySet()) {
+            double percentage = (entry.getValue() * 100.0) / totalParticipants;
+            percentages.put(entry.getKey(), percentage);
+        }
+
+        // Filter classes with <5% participation (don't count toward balance)
+        Map<CharacterClass, Double> validPercentages = new LinkedHashMap<>();
+        for (Map.Entry<CharacterClass, Double> entry : percentages.entrySet()) {
+            if (entry.getValue() >= 5.0) {
+                validPercentages.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        if (validPercentages.isEmpty()) {
+            // All classes below 5%, return minimum resistance
+            return 0.15;
+        }
+
+        // Calculate dominance gap (highest % - lowest %)
+        double maxPercentage = validPercentages.values().stream().mapToDouble(Double::doubleValue).max().orElse(0.0);
+        double minPercentage = validPercentages.values().stream().mapToDouble(Double::doubleValue).min().orElse(0.0);
+        double dominanceGap = maxPercentage - minPercentage;
+
+        // Map gap to resistance tier
+        if (dominanceGap >= 60.0) {
+            return 0.90; // 90% resistance
+        } else if (dominanceGap >= 45.0) {
+            return 0.75; // 75% resistance
+        } else if (dominanceGap >= 30.0) {
+            return 0.60; // 60% resistance
+        } else if (dominanceGap >= 20.0) {
+            return 0.45; // 45% resistance
+        } else if (dominanceGap >= 10.0) {
+            return 0.30; // 30% resistance
+        } else {
+            return 0.15; // 15% resistance (floor)
+        }
+    }
+
+    /**
+     * Gets class participation percentages for display.
+     *
+     * @param guildId the guild ID
+     * @return map of class -> percentage
+     */
+    public Map<CharacterClass, Double> getClassParticipationPercentages(String guildId) {
+        Map<CharacterClass, Integer> participation = classParticipation.get(guildId);
+        if (participation == null || participation.isEmpty()) {
+            return new LinkedHashMap<>();
+        }
+
+        int totalParticipants = participation.values().stream().mapToInt(Integer::intValue).sum();
+        if (totalParticipants == 0) {
+            return new LinkedHashMap<>();
+        }
+
+        Map<CharacterClass, Double> percentages = new LinkedHashMap<>();
+        for (Map.Entry<CharacterClass, Integer> entry : participation.entrySet()) {
+            double percentage = (entry.getValue() * 100.0) / totalParticipants;
+            percentages.put(entry.getKey(), percentage);
+        }
+
+        return percentages;
+    }
+
+    /**
+     * Gets harmony feedback message based on dominance gap.
+     *
+     * @param guildId the guild ID
+     * @param isSuperBoss whether this is a super boss
+     * @return narrative feedback message
+     */
+    public String getHarmonyFeedbackMessage(String guildId, boolean isSuperBoss) {
+        Map<CharacterClass, Integer> participation = classParticipation.get(guildId);
+        if (participation == null || participation.isEmpty()) {
+            return "The creature awaits its challengers...";
+        }
+
+        int totalParticipants = participation.values().stream().mapToInt(Integer::intValue).sum();
+        if (totalParticipants == 0) {
+            return "The creature awaits its challengers...";
+        }
+
+        // Calculate percentages
+        Map<CharacterClass, Double> percentages = new LinkedHashMap<>();
+        for (Map.Entry<CharacterClass, Integer> entry : participation.entrySet()) {
+            double percentage = (entry.getValue() * 100.0) / totalParticipants;
+            percentages.put(entry.getKey(), percentage);
+        }
+
+        // Filter classes with <5% participation
+        Map<CharacterClass, Double> validPercentages = new LinkedHashMap<>();
+        for (Map.Entry<CharacterClass, Double> entry : percentages.entrySet()) {
+            if (entry.getValue() >= 5.0) {
+                validPercentages.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        if (validPercentages.isEmpty()) {
+            return "The creature awaits its challengers...";
+        }
+
+        // Calculate dominance gap
+        double maxPercentage = validPercentages.values().stream().mapToDouble(Double::doubleValue).max().orElse(0.0);
+        double minPercentage = validPercentages.values().stream().mapToDouble(Double::doubleValue).min().orElse(0.0);
+        double dominanceGap = maxPercentage - minPercentage;
+
+        // Return message based on gap tier
+        if (dominanceGap >= 60.0) {
+            return "The creature stabilizes, feeding on overwhelming uniformity. Its form grows more solid with each unified strike.";
+        } else if (dominanceGap >= 30.0) {
+            return "Discordant forces begin to crack its defenses. The creature's form wavers between stability and chaos.";
+        } else {
+            return "Conflicting forces tear at the creature's core. Its form destabilizes violently—the balance shifts against it!";
+        }
     }
 
     /**
@@ -525,72 +756,6 @@ public class BossService {
         public void setCurrentSuperBoss(SuperBoss currentSuperBoss) {
             this.currentSuperBoss = currentSuperBoss;
         }
-    }
-
-    /**
-     * Distributes boss rewards to a character.
-     * Normal boss: guaranteed 1 essence + 25% catalyst
-     * Super boss: guaranteed catalyst + 1-3 essences
-     *
-     * @param character  the character receiving rewards
-     * @param isNormalBoss whether it was a normal boss
-     */
-    private void distributeBossRewards(RPGCharacter character, boolean isNormalBoss) {
-        RPGInventory inventory = character.getInventory();
-        
-        if (isNormalBoss) {
-            // Normal boss: guaranteed 1 essence + 25% catalyst
-            EssenceType essence = getRandomEssence();
-            inventory.addEssence(essence, 1);
-            
-            if (random.nextDouble() < 0.25) {
-                CatalystType catalyst = getRandomCatalyst();
-                inventory.addCatalyst(catalyst, 1);
-            }
-        } else {
-            // Super boss: guaranteed catalyst + 1-3 essences
-            CatalystType catalyst = getRandomCatalyst();
-            inventory.addCatalyst(catalyst, 1);
-            
-            int essenceCount = random.nextInt(3) + 1; // 1-3 essences
-            for (int i = 0; i < essenceCount; i++) {
-                EssenceType essence = getRandomEssence();
-                inventory.addEssence(essence, 1);
-            }
-        }
-    }
-
-    /**
-     * Gets a random essence type.
-     *
-     * @return random essence type
-     */
-    private EssenceType getRandomEssence() {
-        EssenceType[] essences = EssenceType.values();
-        return essences[random.nextInt(essences.length)];
-    }
-
-    /**
-     * Gets a random catalyst type.
-     *
-     * @return random catalyst type
-     */
-    private CatalystType getRandomCatalyst() {
-        CatalystType[] catalysts = CatalystType.values();
-        return catalysts[random.nextInt(catalysts.length)];
-    }
-
-    /**
-     * Refreshes heroic charges for all characters when a new boss spawns.
-     */
-    private void refreshHeroicChargesForAllCharacters() {
-        Collection<RPGCharacter> allCharacters = characterService.getAllCharacters();
-        int refreshedCount = 0;
-        for (RPGCharacter character : allCharacters) {
-            character.refreshHeroicCharges();
-            refreshedCount++;
-        }
-        logger.info("Refreshed heroic charges for {} characters (new boss spawned)", refreshedCount);
     }
 }
 

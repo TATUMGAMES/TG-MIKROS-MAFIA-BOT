@@ -36,18 +36,18 @@ public class WordUnscramblePlayerStats {
     /**
      * Creates a WordUnscramblePlayerStats with specific values.
      *
-     * @param userId           the user's Discord ID
-     * @param guildId          the guild ID
-     * @param totalWordsSolved total correct answers
-     * @param totalPoints      cumulative points earned
-     * @param highestScore     best single-word score
+     * @param userId             the user's Discord ID
+     * @param guildId            the guild ID
+     * @param totalWordsSolved   total correct answers
+     * @param totalPoints        cumulative points earned
+     * @param highestScore       best single-word score
      * @param fastestTimeSeconds fastest solve time in seconds
-     * @param totalAttempts    total guesses (correct + incorrect)
-     * @param wrongGuesses     total incorrect attempts
+     * @param totalAttempts      total guesses (correct + incorrect)
+     * @param wrongGuesses       total incorrect attempts
      */
     public WordUnscramblePlayerStats(String userId, String guildId, int totalWordsSolved,
-                                      int totalPoints, int highestScore, long fastestTimeSeconds,
-                                      int totalAttempts, int wrongGuesses) {
+                                     int totalPoints, int highestScore, long fastestTimeSeconds,
+                                     int totalAttempts, int wrongGuesses) {
         this.userId = Objects.requireNonNull(userId);
         this.guildId = Objects.requireNonNull(guildId);
         this.totalWordsSolved = totalWordsSolved;
@@ -61,19 +61,19 @@ public class WordUnscramblePlayerStats {
     /**
      * Records a correct answer and updates relevant stats.
      *
-     * @param score      the score achieved for this word
+     * @param score       the score achieved for this word
      * @param timeSeconds the time taken to solve in seconds
      */
     public void recordCorrectAnswer(int score, long timeSeconds) {
         totalWordsSolved++;
         totalPoints += score;
         totalAttempts++;
-        
+
         // Update highest score if this is better
         if (score > highestScore) {
             highestScore = score;
         }
-        
+
         // Update fastest time if this is faster (or if no fastest time set yet)
         if (fastestTimeSeconds == 0 || timeSeconds < fastestTimeSeconds) {
             fastestTimeSeconds = timeSeconds;

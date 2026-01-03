@@ -115,6 +115,10 @@ public class RPGStats {
         return maxHp;
     }
 
+    public void setMaxHp(int maxHp) {
+        this.maxHp = maxHp;
+    }
+
     /**
      * Gets the effective max HP after applying curse effects.
      *
@@ -134,23 +138,19 @@ public class RPGStats {
      */
     public int getEffectiveMaxHp(java.util.List<com.tatumgames.mikros.games.rpg.curse.WorldCurse> activeCurses, boolean hasFrostbite) {
         int effectiveMaxHp = maxHp;
-        
+
         // Apply Curse of Frailty (-10% HP)
         if (activeCurses != null && activeCurses.contains(com.tatumgames.mikros.games.rpg.curse.WorldCurse.MINOR_CURSE_OF_FRAILTY)) {
             effectiveMaxHp = (int) (effectiveMaxHp * 0.90);
         }
-        
+
         // Apply Frostbite (-5% max HP)
         if (hasFrostbite) {
             effectiveMaxHp = (int) (effectiveMaxHp * 0.95);
         }
-        
+
         // Ensure minimum 1 HP
         return Math.max(1, effectiveMaxHp);
-    }
-
-    public void setMaxHp(int maxHp) {
-        this.maxHp = maxHp;
     }
 
     public int getCurrentHp() {

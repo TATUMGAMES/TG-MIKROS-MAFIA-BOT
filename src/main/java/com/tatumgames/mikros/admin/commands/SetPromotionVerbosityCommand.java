@@ -19,8 +19,11 @@ import org.slf4j.LoggerFactory;
  * Command handler for /set-promotion-verbosity.
  * Allows administrators to control how often promotions are posted.
  * Admin-only command.
+ * 
+ * TODO: Currently unused - functionality has been moved to PromotionConfigCommand.
+ * This class is kept for backward compatibility or future use.
  */
-@SuppressWarnings("ClassCanBeRecord")
+@SuppressWarnings({"ClassCanBeRecord", "unused"})
 public class SetPromotionVerbosityCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(SetPromotionVerbosityCommand.class);
     private final GamePromotionService gamePromotionService;

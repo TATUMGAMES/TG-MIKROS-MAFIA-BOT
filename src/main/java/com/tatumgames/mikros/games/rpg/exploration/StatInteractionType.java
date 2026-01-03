@@ -18,7 +18,7 @@ public enum StatInteractionType {
             "STR",
             12
     ),
-    
+
     // AGI-based interactions
     COLLAPSING_ICE_BRIDGE(
             "Collapsing Ice Bridge",
@@ -32,7 +32,7 @@ public enum StatInteractionType {
             "AGI",
             15
     ),
-    
+
     // INT-based interactions
     WHISPERING_BARRIER(
             "Whispering Barrier",
@@ -46,7 +46,7 @@ public enum StatInteractionType {
             "INT",
             18
     ),
-    
+
     // LUCK-based interactions
     BURIED_CACHE(
             "Buried Cache",
@@ -60,7 +60,7 @@ public enum StatInteractionType {
             "LUCK",
             15
     ),
-    
+
     // HP-based interactions (survivability)
     BLIZZARD_PASSAGE(
             "Blizzard Passage",

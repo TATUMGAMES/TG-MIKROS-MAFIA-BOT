@@ -3,10 +3,11 @@ package com.tatumgames.mikros.games.rpg.commands;
 import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
+import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
 import com.tatumgames.mikros.games.rpg.model.Boss;
+import com.tatumgames.mikros.games.rpg.model.CharacterClass;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.model.SuperBoss;
-import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
 import com.tatumgames.mikros.games.rpg.service.BossService;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
@@ -39,8 +40,8 @@ public class RPGBossBattleCommand implements CommandHandler {
     /**
      * Creates a new RPGBossBattleCommand handler.
      *
-     * @param characterService the character service
-     * @param bossService      the boss service
+     * @param characterService  the character service
+     * @param bossService       the boss service
      * @param worldCurseService the world curse service
      */
     public RPGBossBattleCommand(CharacterService characterService, BossService bossService, WorldCurseService worldCurseService) {
@@ -196,7 +197,7 @@ public class RPGBossBattleCommand implements CommandHandler {
 
         // Use "slain" when defeated, "attacks" when not defeated
         String actionVerb = defeated ? "has slain" : "attacks";
-        
+
         // Add deity-specific dialogue if character has world flags
         String deityDialogue = "";
         if (character.hasWorldFlag("STONE_WOLF_MARKED")) {
@@ -206,7 +207,7 @@ public class RPGBossBattleCommand implements CommandHandler {
         } else if (character.hasWorldFlag("HOLLOW_MIND_MARKED")) {
             deityDialogue = "\n\n🔮 *Nereth's power flows through your mind...*";
         }
-        
+
         embed.setDescription(String.format("""
                         **%s** %s **%s**!%s
                         
@@ -235,7 +236,7 @@ public class RPGBossBattleCommand implements CommandHandler {
 
         if (defeated) {
             embed.setColor(Color.GREEN);
-            
+
             // Enhanced defeat message with lore and deity-specific dialogue
             String deityVictoryText = "";
             if (character.hasWorldFlag("STONE_WOLF_MARKED")) {
@@ -245,19 +246,19 @@ public class RPGBossBattleCommand implements CommandHandler {
             } else if (character.hasWorldFlag("HOLLOW_MIND_MARKED")) {
                 deityVictoryText = " Nereth's wisdom guided your victory!";
             }
-            
+
             String loreMessage = String.format("""
-                    **%s** has etched their name into the annals of Nilfheim's history!
-                    
-                    The shadows spread across the realm… but this boss has fallen! A heroic roar echoes through the frozen wastes as hope flickers brighter. The people of Nilfheim sing songs of **%s**'s valor, and bards will tell this tale for generations to come.%s
-                    
-                    🏛️ **Legacy:** Your name is now whispered in the halls of heroes.
-                    """,
+                            **%s** has etched their name into the annals of Nilfheim's history!
+                            
+                            The shadows spread across the realm… but this boss has fallen! A heroic roar echoes through the frozen wastes as hope flickers brighter. The people of Nilfheim sing songs of **%s**'s valor, and bards will tell this tale for generations to come.%s
+                            
+                            🏛️ **Legacy:** Your name is now whispered in the halls of heroes.
+                            """,
                     character.getName(),
                     character.getName(),
                     deityVictoryText
             );
-            
+
             embed.addField("🎉 Victory!", loreMessage, false);
 
             // Add XP reward info (if this player is in top 30% of participants)
@@ -267,22 +268,22 @@ public class RPGBossBattleCommand implements CommandHandler {
             int totalParticipants = allDamage.size();
             int rewardCount = (int) Math.ceil(totalParticipants * 0.30); // Top 30%, rounded up
             int limit = Math.max(1, rewardCount); // At least 1 person gets rewarded
-            
+
             Map<String, Integer> topDamage = bossService.getTopDamageDealers(guildId, limit);
             int playerRank = -1;
             int playerXpReward = 0;
-            
+
             // Find player's rank and calculate their XP reward
             if (!topDamage.isEmpty() && topDamage.containsKey(userId)) {
                 int rank = 1;
                 int totalTopDamage = topDamage.values().stream().mapToInt(Integer::intValue).sum();
-                
+
                 // Calculate XP pool (same as in BossService)
                 int bossLevel = boss != null ? boss.getLevel() : superBoss.getLevel();
-                int totalXpPool = boss != null 
-                    ? 500 + (bossLevel * 100) 
-                    : 1000 + (bossLevel * 200);
-                
+                int totalXpPool = boss != null
+                        ? 500 + (bossLevel * 100)
+                        : 1000 + (bossLevel * 200);
+
                 for (Map.Entry<String, Integer> entry : topDamage.entrySet()) {
                     if (entry.getKey().equals(userId)) {
                         playerRank = rank;
@@ -296,7 +297,7 @@ public class RPGBossBattleCommand implements CommandHandler {
                     rank++;
                 }
             }
-            
+
             if (playerRank > 0 && playerRank <= limit) {
                 embed.addField("✨ XP Reward",
                         String.format("You ranked **#%d** in damage dealt!\n**+%,d XP** awarded for your contribution.",
@@ -370,6 +371,26 @@ public class RPGBossBattleCommand implements CommandHandler {
 
             if (superBoss != null) {
                 embed.addField("Special Mechanic", superBoss.getSpecialMechanic(), false);
+            }
+
+            // Check for Class Harmony mechanic
+            boolean hasHarmonyMechanic = (boss != null && boss.hasClassHarmonyMechanic()) ||
+                    (superBoss != null && superBoss.hasClassHarmonyMechanic());
+            
+            if (hasHarmonyMechanic) {
+                Map<CharacterClass, Double> classPercentages = bossService.getClassParticipationPercentages(guildId);
+                String harmonyMessage = bossService.getHarmonyFeedbackMessage(guildId, superBoss != null);
+                
+                if (!classPercentages.isEmpty()) {
+                    StringBuilder classDistribution = new StringBuilder();
+                    for (Map.Entry<CharacterClass, Double> entry : classPercentages.entrySet()) {
+                        classDistribution.append(String.format("%s: **%.1f%%**\n", 
+                                entry.getKey().getDisplayName(), entry.getValue()));
+                    }
+                    embed.addField("⚖️ Class Distribution", classDistribution.toString().trim(), false);
+                }
+                
+                embed.addField("🌌 Harmony Status", harmonyMessage, false);
             }
         }
 

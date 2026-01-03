@@ -7,8 +7,6 @@ import java.util.Random;
  * Contains Version A (pre-event awareness) and Version B (exposure-focused) templates.
  */
 public class TatumTechEventTemplates {
-    private final Random random;
-
     // Version A: Pre-event awareness (most important) - includes donation support
     private static final String VERSION_A_TEMPLATE = """
             🎮 TATUM TECH - CALLING ALL GAME LOVERS!
@@ -37,7 +35,6 @@ public class TatumTechEventTemplates {
             📬 Interested in future events, featuring your game, or partnering?
             Learn more through the Tatum Tech app: https://forms.gle/cm9wMsYY6ZpPauWR8
             """;
-
     // Version B: Exposure-focused (for dev-heavy servers)
     private static final String VERSION_B_TEMPLATE = """
             🚀 TATUM TECH - DEVELOPER EXPOSURE & FUN
@@ -58,10 +55,8 @@ public class TatumTechEventTemplates {
             📬 If you want updates, early access, or to explore featuring your game download the
             Tatum Tech app. Early registration is open: https://forms.gle/cm9wMsYY6ZpPauWR8
             """;
-
     // Donation URL for Tatum Tech support
     private static final String DONATION_URL = "https://buy.stripe.com/7sI3cH8m6bmd5ck4gj";
-
     // MIKROS Marketing footer messages (same as game promotions)
     private static final String[] MIKROS_FOOTER_MESSAGES = {
             "Powered by MIKROS Marketing — a developer-first platform helping indie games reach real players. Learn more: https://developer.tatumgames.com/",
@@ -75,6 +70,7 @@ public class TatumTechEventTemplates {
             "Shared via MIKROS Marketing, supporting indie devs through community-driven discovery. https://developer.tatumgames.com/",
             "Powered by MIKROS! Modern marketing tools for indie game developers and small game studios. https://developer.tatumgames.com/"
     };
+    private final Random random;
 
     /**
      * Creates a new TatumTechEventTemplates instance.

@@ -17,12 +17,9 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -50,19 +47,11 @@ public class GamePromotionScheduler {
     private final PromotionMessageTemplates messageTemplates;
     private final ScheduledExecutorService scheduler;
     private final Random random;
-    private JDA jda;
-
     // Per-guild rotation state
     private final Map<String, GameRotationState> rotationStates = new ConcurrentHashMap<>();
-
-    /**
-     * Rotation state for a guild.
-     */
-    private static class GameRotationState {
-        Queue<String> gameQueue;  // Queue of appIds to promote
-        Instant lastPromotionTime;
-        long currentCooldownMinutes;
-    }
+    // Track last check time per guild for verbosity enforcement
+    private final Map<String, Instant> lastCheckTimes = new ConcurrentHashMap<>();
+    private JDA jda;
 
     /**
      * Creates a new GamePromotionScheduler.
@@ -139,12 +128,12 @@ public class GamePromotionScheduler {
         // Try TextChannel first, then NewsChannel
         TextChannel textChannel = guild.getTextChannelById(channelId);
         NewsChannel newsChannel = guild.getNewsChannelById(channelId);
-        
+
         if (textChannel == null && newsChannel == null) {
             logger.warn("Configured promotion channel {} not found in guild {} (tried TextChannel and NewsChannel)", channelId, guildId);
             return;
         }
-        
+
         // Use whichever channel was found
         MessageChannel channel = textChannel != null ? textChannel : newsChannel;
 
@@ -170,12 +159,12 @@ public class GamePromotionScheduler {
         // Try TextChannel first, then NewsChannel
         TextChannel textChannel = guild.getTextChannelById(channelId);
         NewsChannel newsChannel = guild.getNewsChannelById(channelId);
-        
+
         if (textChannel == null && newsChannel == null) {
             logger.warn("Configured promotion channel {} not found in guild {} (tried TextChannel and NewsChannel)", channelId, guildId);
             return 0;
         }
-        
+
         // Use whichever channel was found
         MessageChannel channel = textChannel != null ? textChannel : newsChannel;
 
@@ -298,9 +287,6 @@ public class GamePromotionScheduler {
             return 0;
         }
     }
-
-    // Track last check time per guild for verbosity enforcement
-    private final Map<String, Instant> lastCheckTimes = new ConcurrentHashMap<>();
 
     private Instant getLastCheckTime(String guildId) {
         return lastCheckTimes.get(guildId);
@@ -585,5 +571,14 @@ public class GamePromotionScheduler {
     public void shutdown() {
         scheduler.shutdown();
         logger.info("Game promotion scheduler stopped");
+    }
+
+    /**
+     * Rotation state for a guild.
+     */
+    private static class GameRotationState {
+        Queue<String> gameQueue;  // Queue of appIds to promote
+        Instant lastPromotionTime;
+        long currentCooldownMinutes;
     }
 }

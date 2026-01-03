@@ -2,7 +2,9 @@ package com.tatumgames.mikros.games.rpg.service;
 
 import com.tatumgames.mikros.games.rpg.achievements.AchievementType;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -21,8 +23,8 @@ public class AchievementService {
      * Checks if a first-to achievement can be claimed and claims it if available.
      *
      * @param guildId the Discord guild ID
-     * @param type the achievement type
-     * @param userId the user ID attempting to claim
+     * @param type    the achievement type
+     * @param userId  the user ID attempting to claim
      * @return true if the achievement was successfully claimed (first time), false if already claimed
      */
     public boolean checkAndClaimFirstTo(String guildId, AchievementType type, String userId) {
@@ -42,7 +44,7 @@ public class AchievementService {
      * Checks if a first-to achievement has already been claimed.
      *
      * @param guildId the Discord guild ID
-     * @param type the achievement type
+     * @param type    the achievement type
      * @return true if already claimed
      */
     public boolean isFirstToClaimed(String guildId, AchievementType type) {
@@ -57,7 +59,7 @@ public class AchievementService {
      * Gets the user ID who claimed a first-to achievement.
      *
      * @param guildId the Discord guild ID
-     * @param type the achievement type
+     * @param type    the achievement type
      * @return the user ID who claimed it, or null if not claimed
      */
     public String getFirstToHolder(String guildId, AchievementType type) {

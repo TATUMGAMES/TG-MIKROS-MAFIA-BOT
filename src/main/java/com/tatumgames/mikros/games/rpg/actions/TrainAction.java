@@ -19,33 +19,8 @@ import java.util.Random;
  */
 public class TrainAction implements CharacterAction {
     private static final Random random = new Random();
-    private final NilfheimEventService nilfheimEventService;
-    private final LoreRecognitionService loreRecognitionService;
-    private final WorldCurseService worldCurseService;
-
-    /**
-     * Creates a new TrainAction.
-     *
-     * @param nilfheimEventService the Nilfheim event service for server-wide events
-     * @param loreRecognitionService the lore recognition service for milestone checks
-     * @param worldCurseService the world curse service for checking active curses
-     */
-    public TrainAction(NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService, WorldCurseService worldCurseService) {
-        this.nilfheimEventService = nilfheimEventService;
-        this.loreRecognitionService = loreRecognitionService;
-        this.worldCurseService = worldCurseService;
-    }
-
-    /**
-     * Creates a new TrainAction without WorldCurseService (backward compatibility).
-     */
-    public TrainAction(NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService) {
-        this(nilfheimEventService, loreRecognitionService, null);
-    }
-
     private static final String[] STAT_NAMES = {"STR", "AGI", "INT", "LUCK"};
     private static final String[] STAT_DISPLAY_NAMES = {"Strength", "Agility", "Intelligence", "Luck"};
-
     // Strength narratives - Fantasy-themed physical training and combat
     private static final String[] STRENGTH_NARRATIVES = {
             "You wrestle with a fierce orc warrior",
@@ -69,7 +44,6 @@ public class TrainAction implements CharacterAction {
             "You practice the ancient Frostborne technique of shattering ice with pure force",
             "You build strength by carrying star fragments from Starfall Ridge to the Grand Library"
     };
-
     // Agility narratives - Fantasy-themed speed training, dodging, and acrobatics
     private static final String[] AGILITY_NARRATIVES = {
             "You practice dodging magical projectiles fired by a training golem",
@@ -93,7 +67,6 @@ public class TrainAction implements CharacterAction {
             "You train with a master assassin from Frostgate, learning their evasive techniques",
             "You master the Gale element's speed, moving faster than the eye can follow"
     };
-
     // Intelligence narratives - Fantasy-themed study, research, and magical learning
     private static final String[] INTELLIGENCE_NARRATIVES = {
             "You study ancient tomes filled with arcane knowledge in a frozen library",
@@ -117,7 +90,6 @@ public class TrainAction implements CharacterAction {
             "You decipher the Moonspire Obelisk's runes, unlocking knowledge of the first civilizations",
             "You study the Grand Library's archives on the Shattering, understanding the cataclysm's nature"
     };
-
     // Luck narratives - Fantasy-themed fortune training and fate manipulation
     private static final String[] LUCK_NARRATIVES = {
             "You practice with enchanted lucky charms and mystical talismans",
@@ -141,6 +113,29 @@ public class TrainAction implements CharacterAction {
             "You practice the art of being in the right place at the right time using Astral visions",
             "You learn to manipulate fate itself by channeling the Astral element's power"
     };
+    private final NilfheimEventService nilfheimEventService;
+    private final LoreRecognitionService loreRecognitionService;
+    private final WorldCurseService worldCurseService;
+
+    /**
+     * Creates a new TrainAction.
+     *
+     * @param nilfheimEventService   the Nilfheim event service for server-wide events
+     * @param loreRecognitionService the lore recognition service for milestone checks
+     * @param worldCurseService      the world curse service for checking active curses
+     */
+    public TrainAction(NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService, WorldCurseService worldCurseService) {
+        this.nilfheimEventService = nilfheimEventService;
+        this.loreRecognitionService = loreRecognitionService;
+        this.worldCurseService = worldCurseService;
+    }
+
+    /**
+     * Creates a new TrainAction without WorldCurseService (backward compatibility).
+     */
+    public TrainAction(NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService) {
+        this(nilfheimEventService, loreRecognitionService, null);
+    }
 
     @Override
     public String getActionName() {
@@ -222,8 +217,7 @@ public class TrainAction implements CharacterAction {
                     narrativePrefix = INTELLIGENCE_NARRATIVES[random.nextInt(INTELLIGENCE_NARRATIVES.length)];
             case 3 -> // LUCK
                     narrativePrefix = LUCK_NARRATIVES[random.nextInt(LUCK_NARRATIVES.length)];
-            default ->
-                    narrativePrefix = "You train diligently";
+            default -> narrativePrefix = "You train diligently";
         }
         String narrative = String.format("%s, you improved your %s by %d point%s!",
                 narrativePrefix,
@@ -233,7 +227,6 @@ public class TrainAction implements CharacterAction {
 
         // Oathbreaker: Gain corruption from acting during world curses
         if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER && worldCurseService != null) {
-            String guildId = config.getGuildId();
             List<WorldCurse> activeCurses = worldCurseService.getActiveCurses(guildId);
             if (!activeCurses.isEmpty()) {
                 character.addCorruption(1);
@@ -248,7 +241,7 @@ public class TrainAction implements CharacterAction {
 
         // Record the action
         character.recordAction();
-        
+
         // Track action type for achievements
         character.recordActionType("train");
 

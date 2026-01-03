@@ -26,7 +26,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Command handler for the /lookup command.
@@ -118,11 +117,12 @@ public class LookupCommand implements CommandHandler {
         } else {
             // Add field for each user found
             for (GetUserScoreDetailResponse.UserScore score : scores) {
-                StringBuilder fieldValue = new StringBuilder();
-                fieldValue.append("**Username:** `").append(score.getUsername()).append("`\n");
-                fieldValue.append("**Reputation Score:** `").append(score.getReputationScore()).append("`\n");
-
-                embed.addField("👤 " + score.getUsername(), fieldValue.toString(), false);
+                String fieldValue = String.format(
+                        "**Username:** `%s`\n**Reputation Score:** `%s`\n",
+                        score.getUsername(),
+                        score.getReputationScore()
+                );
+                embed.addField("👤 " + score.getUsername(), fieldValue, false);
             }
 
             // Check for usernames not found
@@ -132,14 +132,14 @@ public class LookupCommand implements CommandHandler {
 
             List<String> notFound = usernames.stream()
                     .filter(username -> !foundUsernames.contains(username))
-                    .collect(Collectors.toList());
+                    .toList();
 
             // Auto-create reputation entries for not-found users
             if (!notFound.isEmpty()) {
                 List<String> createdUsernames = new ArrayList<>();
                 User adminUser = event.getUser();
                 Member adminMember = event.getMember();
-                
+
                 for (String username : notFound) {
                     try {
                         // Create TrackPlayerRatingRequest for auto-creation
@@ -166,7 +166,7 @@ public class LookupCommand implements CommandHandler {
                         boolean success = reputationService.trackPlayerRating(request);
                         if (success) {
                             createdUsernames.add(username);
-                            logger.info("Auto-created reputation entry for username: {} by admin: {}", 
+                            logger.info("Auto-created reputation entry for username: {} by admin: {}",
                                     username, adminUser.getId());
                         } else {
                             logger.warn("Failed to auto-create reputation entry for username: {}", username);
@@ -182,17 +182,17 @@ public class LookupCommand implements CommandHandler {
                     for (String createdUsername : createdUsernames) {
                         createdField.append("**").append(createdUsername).append("** - Reputation Score: `10`\n");
                     }
-                    embed.addField("✅ Auto-Created", 
-                            "The following users were automatically created with initial reputation score of 10:\n" + 
-                            createdField.toString(),
+                    embed.addField("✅ Auto-Created",
+                            "The following users were automatically created with initial reputation score of 10:\n" +
+                                    createdField,
                             false);
                 }
 
                 // Show remaining not-found users (if any failed to create)
                 List<String> stillNotFound = notFound.stream()
                         .filter(username -> !createdUsernames.contains(username))
-                        .collect(Collectors.toList());
-                
+                        .toList();
+
                 if (!stillNotFound.isEmpty()) {
                     embed.addField("⚠️ Not Found",
                             "The following usernames were not found and could not be created:\n" +
@@ -225,14 +225,14 @@ public class LookupCommand implements CommandHandler {
             return Arrays.stream(input.split(","))
                     .map(String::trim)
                     .filter(s -> !s.isBlank())
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         // Otherwise, use space separation
         return Arrays.stream(input.split("\\s+"))
                 .map(String::trim)
                 .filter(s -> !s.isBlank())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
