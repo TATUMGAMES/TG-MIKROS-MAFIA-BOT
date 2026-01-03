@@ -192,5 +192,45 @@ public class RPGStats {
     public void setLuck(int luck) {
         this.luck = luck;
     }
+
+    /**
+     * Gets effective strength after applying multiplicative modifiers.
+     *
+     * @param modifier the multiplicative modifier (e.g., 1.15 for +15%)
+     * @return effective strength
+     */
+    public double getEffectiveStrength(double modifier) {
+        return strength * modifier;
+    }
+
+    /**
+     * Gets effective agility after applying multiplicative modifiers.
+     *
+     * @param modifier the multiplicative modifier (e.g., 1.15 for +15%)
+     * @return effective agility
+     */
+    public double getEffectiveAgility(double modifier) {
+        return agility * modifier;
+    }
+
+    /**
+     * Gets effective intelligence after applying multiplicative modifiers.
+     *
+     * @param modifier the multiplicative modifier (e.g., 1.15 for +15%)
+     * @return effective intelligence
+     */
+    public double getEffectiveIntelligence(double modifier) {
+        return intelligence * modifier;
+    }
+
+    /**
+     * Gets effective luck after applying multiplicative modifiers.
+     *
+     * @param modifier the multiplicative modifier (e.g., 1.15 for +15%)
+     * @return effective luck
+     */
+    public double getEffectiveLuck(double modifier) {
+        return luck * modifier;
+    }
 }
 

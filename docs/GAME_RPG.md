@@ -4,14 +4,14 @@
 
 The **RPG System** is a text-based role-playing game set in the realm of **Nilfheim** — a world wrapped in cold
 twilight, plagued by rising horrors. Players create characters, level up, perform actions, and battle community bosses.
-The system features 6 character classes, a dynamic action charge system (3-10 charges based on level), death and recovery
+The system features 7 character classes, a dynamic action charge system (3-10 charges based on level), death and recovery
 mechanics, epic boss battles, player vs player duels, and an item crafting system for permanent stat bonuses.
 
 ## How to Play
 
 1. **Create Your Character:**
     - Use `/rpg-register name:<name> class:<class>`
-    - Choose from: **WARRIOR**, **KNIGHT**, **MAGE**, **ROGUE**, **NECROMANCER**, or **PRIEST**
+    - Choose from: **WARRIOR**, **KNIGHT**, **MAGE**, **ROGUE**, **NECROMANCER**, **PRIEST**, or **OATHBREAKER**
     - One character per user
     - Your soul awakens in Nilfheim...
 
@@ -162,6 +162,7 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 | **Rogue** | Lethal Strikes (2.0x crit damage) | AGI benefits (drop chance/quantity) | Agile, Beasts | Physical, Constructs |
 | **Necromancer** | Decay (10% chance to double XP) | INT essences (+5%) | Spirits, Undead | Constructs, Physical |
 | **Priest** | Resurrection (free action) | INT essences (+5%), LUCK essences (+3%) | Undead, Demons | All (but supportive) |
+| **Oathbreaker** | Broken Oath's Power (+1% damage per corruption) | INT essences (+5%), LUCK essences (+3%) | Undead, Demons | Magical, Agile (but gains power from corruption) |
 
 ## Stat System
 
@@ -312,6 +313,74 @@ Different stats are effective or weak against different enemy types:
 - **Best For:** Consistent XP without risk, item collection (especially with high AGI)
 - **Charge Cost:** 1
 
+#### Irrevocable World Encounters (Level 5+, Ultra-Rare)
+
+During exploration, you may encounter ultra-rare events (≤1% chance) that present **permanent, mutually exclusive choices**. These encounters only unlock after **Level 5+** and can occur **up to 3 times per encounter type per character** (maintaining the "once per character" restriction for the first encounter of each type).
+
+**Stonebound Divinities:**
+- Ancient gods bound in stone offer blessings with corresponding curses
+- **Vaelgor, The Stone Wolf:** +15% STR effectiveness, -5% INT effectiveness
+- **Ilyra, The Frostwind:** +15% AGI effectiveness, -5% STR effectiveness
+- **Nereth, The Hollow Mind:** +15% INT effectiveness, -5% AGI effectiveness
+- **Walk Away:** No change, but you refuse the path of the gods
+- Preferred classes have 2x encounter chance for their aligned deity
+
+**Disguised God Test:**
+- Gods walk among mortals in disguise, testing your character
+- Choice determines which stat is tested (STR, AGI, or INT)
+- Success grants +10% stat effectiveness and world flag
+- Failure grants world flag but no stat bonus
+- Delayed reveal: "You later dream of frost cracking under iron claws..."
+
+**Oath of Null:**
+- The anti-god path - refuse all divine chains
+- **Effect:** +5% resistance to world curses, immune to god-marked debuffs
+- **Title:** "Unbound"
+- Some gods won't assist you later, others secretly respect your choice
+
+**Blood Relics:**
+- Powerful artifacts forged from failed gods or dead titans
+- **Blood-Forged Blade:** +10% boss damage, -5% max HP
+- **Frozen Crown:** +10% AGI defense, charge refresh +2 hours slower
+- **Soul Anchor:** +15% curse resistance, -10% XP gain
+- Each relic grants power at a permanent cost
+
+#### Stat-Gated World Interactions (Level 10+, Common)
+
+During exploration, you may encounter environmental obstacles (10-15% chance) that require **minimum stat thresholds**. Success and failure both provide meaningful outcomes. These interactions unlock at **Level 10+** (moved from Level 5+ to create better progression) and can occur **up to 3 times per interaction type per character**.
+
+**Stat Requirement Formula:** `Required Stat = 10 + (level × 1.5)`
+
+**STR Interactions:**
+- **Frostbound Boulder:** Clear path, bonus XP, chance for hidden enemy/rune
+- **Frozen Gate:** Force open, bonus materials, shortcut unlocked
+- Failure: Minor HP damage, reduced XP, narrative consequence
+
+**AGI Interactions:**
+- **Collapsing Ice Bridge:** Cross safely, bonus materials
+- **Narrow Crevice:** Slip through, rare catalyst, hidden area unlocked
+- Failure: HP loss, forced rest state, or lose 1 charge next refresh
+
+**INT Interactions:**
+- **Whispering Barrier:** Decode runes, barrier fades, rare lore fragment
+- **Ancient Library:** Decipher texts, +1 stat point, crafting bonus catalyst
+- Failure: Runes overwhelm, lose 1 charge next refresh, or temporary -5% XP
+
+**LUCK Interactions:**
+- **Buried Cache:** Rare catalyst, infusion, small chance at relic fragment
+- **Mysterious Glimmer:** Random rare item, +1 essence of each type
+- Failure: Cache crumbles, but increased LUCK check odds for 24h (pity mechanic)
+
+**HP Interactions (Survivability):**
+- **Blizzard Passage:** Endure the storm, +10% max HP (temporary 24h), bonus XP
+- **Toxic Miasma:** Resist poison, gain immunity to next negative event, bonus materials
+- Failure: Forced retreat, HP loss, delayed charge refresh, or temporary stat penalties
+
+**Key Design:**
+- Failure is content - every failure provides narrative, partial reward, or delayed consequence
+- Never blocks progression - always an alternative path
+- Stats unlock paths, not just damage - specialization is rewarded
+
 ### Train 💪
 
 - **Type:** Stat improvement
@@ -345,6 +414,77 @@ Different stats are effective or weak against different enemy types:
 - **Nilfheim Event Bonus:** During "A Stormwarden's Blessing" event, battles deal +5% damage
 - **Item Drops:**
   - Base: 20% chance on victory, 5% chance on defeat
+
+#### Elite Enemies ⭐
+
+Elite enemies are rare, enhanced variants of standard enemies that appear during battles. They are significantly more dangerous but offer greater rewards.
+
+**Spawn Conditions:**
+- Character level 6+ required
+- Base spawn chance: 5% (increases to 8% at level 15+)
+- Cannot spawn during boss battles
+- Cannot spawn as pack enemies (elites are separate)
+
+**Elite Modifiers:**
+- **HP:** +40-60% (randomized)
+- **Damage:** +25-40% (randomized)
+- **Accuracy:** +10-15% (affects battle rolls)
+- **Resistance:** +10% to weak stat (reduces player effectiveness)
+
+**Elite Traits:**
+Each elite enemy has 1-2 random traits that modify combat:
+- **Frost-Hardened:** Takes 15% less damage from STR-based attacks
+- **Savage Pack Leader:** First attack deals +50% damage (if withdrawal fails)
+- **Rune-Touched:** INT attacks are 10% weaker
+- **Blood Frenzied:** Gains +10% damage when below 50% HP
+- **Unstable Essence:** Explodes on death, dealing 5% max HP unavoidable damage
+- **Shadow-Bound:** AGI attacks are 10% weaker
+- **Void Whisperer:** INT attacks are 15% stronger but also resisted
+- **Ironclad:** Takes 20% less damage from STR-based attacks
+- **Cursed Blood:** Deals 5% more damage but takes 5% more damage
+- **Ancient Ward:** 15% resistance to all stat types
+
+**Withdrawal Option:**
+When an elite is detected, players can attempt to withdraw:
+- Success chance: 60% base + (AGI or LUCK, whichever is higher)/2%
+- Success: Escape with 5-10% HP damage, no XP, no drops
+- Failure: Enemy gets first strike bonus (+25% damage), battle proceeds
+
+**Elite Rewards (Victory):**
+- **XP Bonus:** +30-50% additional XP
+- **Guaranteed Drop:** Always drops a crafting material (essence or catalyst)
+- **Rare Drop Chance:** 5-8% chance for additional rare item (infusion, catalyst, or rare essence)
+- **Achievement Progress:** Tracks elite kills for "Elite Slayer" achievement
+
+**Elite Defeat Penalties:**
+- Higher HP loss (already scales with enemy power)
+- **15% chance** to lose an action charge on next refresh
+- **10% chance** for temporary curse (12 hours) - weakens resolve
+
+**Elite Progression Variants:**
+
+**God-Touched Elites (Level 15+):**
+- 20% chance elite is God-Touched (if character has deity blessing)
+- Special narrative variations based on deity relationship
+- Same deity: Narrative recognition, no mechanical change
+- Different deity: +5% enemy power, narrative hostility
+
+**Cursed Elites:**
+- 30% chance elite is Cursed variant (if world curses are active)
+- Carries curse-related loot (higher drop chance)
+- Additional "Cursed Mark" trait: +10% damage, guaranteed cursed essence drop
+- Special narrative variations (15 variations)
+
+**Narrative Variety:**
+- 10 elite detection narratives
+- 15 elite victory narratives
+- 15 elite defeat narratives
+- 10 withdrawal success narratives
+- 10 withdrawal failure narratives
+- 10 God-Touched (same deity) narratives
+- 10 God-Touched (different deity) narratives
+- 15 Cursed elite detection narratives
+- Trait-specific narrative snippets integrated into battle descriptions
   - **LUCK Bonus:** +0.3% per LUCK point (capped at +10%)
   - **LUCK Rare Items:** LUCK/10% chance for catalysts instead of essences
 - **Risk:** High damage on defeat, possible death
@@ -788,6 +928,204 @@ When a boss expires undefeated, a curse is announced in the RPG channel:
 
 When curses are removed (boss defeated), players are notified that the curse has lifted.
 
+## Irrevocable World Encounters
+
+Ultra-rare exploration events (≤1% chance) that present **permanent, mutually exclusive choices** with **both buffs and drawbacks**. These encounters only unlock after **Level 5+** and can occur **up to 3 times per encounter type per character** (maintaining the "once per character" restriction for the first encounter of each type).
+
+### Stonebound Divinities
+
+Ancient gods of Nilfheim were bound into stone after the Shattering. Their power still leaks into the world.
+
+**Encounter:**
+> "You find a colossal statue cracked with frost. Ancient runes glow faintly. You feel it watching you."
+
+**Deity Choices:**
+
+| Deity | Blessing | Curse | World Flag | Preferred Classes |
+|-------|----------|-------|------------|-------------------|
+| **Vaelgor, The Stone Wolf** | +15% STR effectiveness | -5% INT effectiveness | `STONE_WOLF_MARKED` | Warrior, Knight |
+| **Ilyra, The Frostwind** | +15% AGI effectiveness | -5% STR effectiveness | `FROSTWIND_MARKED` | Rogue |
+| **Nereth, The Hollow Mind** | +15% INT effectiveness | -5% AGI effectiveness | `HOLLOW_MIND_MARKED` | Mage, Necromancer, Priest |
+| **Walk Away** | No change | No change | `REFUSED_THE_STONE` | All |
+
+**Future Effects:**
+- Boss dialogue changes based on deity
+- Curse resistance varies by deity
+- Resurrection flavor text changes
+- Title: "Stone Wolf's Chosen" (for Vaelgor)
+
+### Disguised God Test
+
+The gods of Nilfheim cannot intervene directly—so they **walk among mortals** and test them.
+
+**Encounter:**
+> "A weary traveler asks for help. Their eyes linger too long… as if measuring you."
+
+**Choices (NOT labeled as gods):**
+- Offer protection (STR test): If STR ≥ 18 → +10% STR, flag: `STR_TEST_PASSED`
+- Offer strategy (INT test): If INT ≥ 20 → +10% INT, flag: `INT_TEST_PASSED`
+- Scout ahead (AGI test): If AGI ≥ 17 → +10% AGI, flag: `AGI_TEST_PASSED`
+- Ignore: No change, flag: `IGNORED_THE_TEST`
+
+**Delayed Reveal:**
+> "You later dream of frost cracking under iron claws. You have been seen."
+
+### Oath of Null
+
+Some believe Nilfheim survives because mortals refuse divine chains.
+
+**Encounter:**
+> "You find a stone circle, ancient and untouched. A voice whispers: 'Some believe Nilfheim survives because mortals refuse divine chains.'"
+
+**Choice:** Refuse all divine paths
+
+**Effect:**
+- +5% resistance to world curses
+- Immune to deity-marked debuffs
+- Title: "Unbound"
+- Flag: `OATH_OF_NULL`
+- Some gods won't assist you later, others secretly respect you more
+
+### Blood Relics
+
+Relics forged from failed gods or dead titans.
+
+**Encounter:**
+> "A weapon embedded in ice hums with life. Removing it will change you."
+
+**Relic Choices:**
+
+| Relic | Power | Cost | World Flag |
+|-------|-------|------|------------|
+| **Blood-Forged Blade** | +10% boss damage | -5% max HP | `BLOOD_BLADE_BEARER` |
+| **Frozen Crown** | +10% AGI defense | Charge refresh +2h slower | `CROWNED_IN_ICE` |
+| **Soul Anchor** | +15% curse resistance | -10% XP gain | `ANCHORED_SOUL` |
+
+**Choice:** Take the relic or leave it
+
+**Permanent Effect:**
+- Stat modifiers are permanent and multiplicative
+- Cannot be removed or changed
+- Affects all future gameplay
+
+## Stat-Gated World Interactions
+
+Common exploration encounters (10-15% chance) that require **minimum stat thresholds**. Success and failure both provide meaningful outcomes.
+
+### How It Works
+
+**Trigger Conditions:**
+- Only during `/rpg-action explore`
+- Minimum level: **10+** (moved from Level 5+ to create better progression)
+- Appears in ~10–15% of exploration events
+- Maximum **3 times per interaction type per character** (ensures variety and prevents spam)
+- Each interaction specifies required stat, required value, success outcome, failure outcome
+
+**Stat Check Formula:**
+```
+Required Stat = 10 + (player.level × 1.5)
+```
+
+This keeps:
+- Early stats meaningful
+- High-level players still challenged
+- Specialization rewarded
+
+### Interaction Types
+
+#### STR-Based Interactions
+
+**Frostbound Boulder:**
+- Requirement: STR ≥ (10 + level × 1.5)
+- Success: Clear path, +20% XP, chance for hidden enemy/rune, STR-aligned essences
+- Failure: Minor HP damage (5% max HP), reduced XP, narrative: "Brute force wasn't enough"
+
+**Frozen Gate:**
+- Requirement: STR ≥ (12 + level × 1.5)
+- Success: Force open, bonus materials, shortcut unlocked, STR-aligned essences
+- Failure: Gate resists, take environmental damage (8% max HP), forced rest next action
+
+#### AGI-Based Interactions
+
+**Collapsing Ice Bridge:**
+- Requirement: AGI ≥ (10 + level × 1.5)
+- Success: Cross safely, bonus materials, AGI-aligned essences
+- Failure: Fall into freezing water, HP loss (10% max HP), forced rest state
+
+**Narrow Crevice:**
+- Requirement: AGI ≥ (15 + level × 1.5)
+- Success: Slip through, rare catalyst, hidden area unlocked, AGI-aligned essences
+- Failure: Get stuck, lose 1 charge next refresh, partial reward (1 essence)
+
+#### INT-Based Interactions
+
+**Whispering Barrier:**
+- Requirement: INT ≥ (12 + level × 1.5)
+- Success: Decode runes, barrier fades, rare lore fragment, bonus exploration roll, INT-aligned essences
+- Failure: Runes overwhelm, lose 1 charge next refresh, partial lore fragment (1 essence)
+
+**Ancient Library:**
+- Requirement: INT ≥ (18 + level × 1.5)
+- Success: Decipher texts, +1 stat point (random), crafting bonus catalyst, INT-aligned essences
+- Failure: Texts too complex, temporary -5% XP for 24h, hint for future
+
+#### LUCK-Based Interactions
+
+**Buried Cache:**
+- Requirement: LUCK ≥ (10 + level × 1.5)
+- Success: Rare catalyst, infusion, small chance at relic fragment, LUCK-aligned essences
+- Failure: Cache crumbles, small XP, increased LUCK check odds for 24h (pity mechanic)
+
+**Mysterious Glimmer:**
+- Requirement: LUCK ≥ (15 + level × 1.5)
+- Success: Random rare item, +1 essence of each type, story flag chance
+- Failure: Glimmer fades, +5% item drop chance for next 3 explores
+
+#### HP-Based Interactions (Survivability)
+
+**Blizzard Passage:**
+- Requirement: Max HP ≥ (100 + level × 10)
+- Success: Endure the storm, +10% max HP (temporary 24h), bonus XP, HP-aligned essences
+- Failure: Forced retreat, -10% HP, delayed charge refresh
+
+**Toxic Miasma:**
+- Requirement: Max HP ≥ (120 + level × 10)
+- Success: Resist poison, gain immunity to next negative event, bonus materials, HP-aligned essences
+- Failure: Poisoned, -15% HP, -5% all stats for 24h
+
+### Failure Safeguards
+
+Every stat check failure must result in **one of the following**:
+- Partial reward (essence, small XP)
+- Temporary debuff (with clear duration)
+- Delayed consequence (pity mechanic, future bonus)
+- Narrative flag (story progression)
+- World state change (charge penalty, stat penalty)
+
+**Never:**
+- "Nothing happens"
+- Hard progression blocks
+- Permanent stat loss (only temporary penalties)
+
+### Integration with Existing Systems
+
+**Stat Modifiers:**
+- Deity blessings and relics apply multiplicative stat modifiers
+- Modifiers affect combat effectiveness, not raw stats
+- Stack with existing stat effectiveness system
+
+**World Flags:**
+- Separate from story flags (max 2 story flags, unlimited world flags)
+- Track permanent choices and unlock future content
+- Affect boss dialogue, resurrection text, curse resistance
+
+**Titles:**
+- "Unbound" (Oath of Null)
+- "Stone Wolf's Chosen" (Vaelgor blessing)
+- "Icewalker" (AGI interaction mastery)
+- "Rune-Seer" (INT interaction mastery)
+- "Fortune's Favorite" (LUCK interaction mastery)
+
 ## Scoring Rules
 
 ### Level Progression
@@ -925,10 +1263,10 @@ are fewer. Yet fate stirs… and your journey begins.
 
 ---
 
-**Last Updated:** 2025-12-24 (World Curse System added)  
+**Last Updated:** 2026-01-01 (Enhanced Encounters: Level 10+ Stat Interactions, 3x limits, expanded narratives)  
 **Game Type:** Text-Based RPG  
 **Realm:** Nilfheim  
 **Command Prefix:** `rpg-*`  
 **Action System:** Dynamic charges (3-10 based on level), 12h refresh  
 **Boss System:** 48 normal + 20 super bosses  
-**Features:** Dual System, Item & Crafting System, Dynamic Charges, World Curse System
+**Features:** Dual System, Item & Crafting System, Dynamic Charges, World Curse System, Irrevocable World Encounters, Stat-Gated Interactions

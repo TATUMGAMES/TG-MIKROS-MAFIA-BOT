@@ -197,14 +197,25 @@ public class RPGBossBattleCommand implements CommandHandler {
         // Use "slain" when defeated, "attacks" when not defeated
         String actionVerb = defeated ? "has slain" : "attacks";
         
+        // Add deity-specific dialogue if character has world flags
+        String deityDialogue = "";
+        if (character.hasWorldFlag("STONE_WOLF_MARKED")) {
+            deityDialogue = "\n\n🐺 *The Stone Wolf's mark glows as you face the beast...*";
+        } else if (character.hasWorldFlag("FROSTWIND_MARKED")) {
+            deityDialogue = "\n\n🌪️ *Ilyra's winds guide your strikes...*";
+        } else if (character.hasWorldFlag("HOLLOW_MIND_MARKED")) {
+            deityDialogue = "\n\n🔮 *Nereth's power flows through your mind...*";
+        }
+        
         embed.setDescription(String.format("""
-                        **%s** %s **%s**!
+                        **%s** %s **%s**!%s
                         
                         💥 **Damage Dealt: %d**
                         """,
                 character.getName(),
                 actionVerb,
                 bossName,
+                deityDialogue,
                 damage
         ));
 
@@ -225,16 +236,26 @@ public class RPGBossBattleCommand implements CommandHandler {
         if (defeated) {
             embed.setColor(Color.GREEN);
             
-            // Enhanced defeat message with lore
+            // Enhanced defeat message with lore and deity-specific dialogue
+            String deityVictoryText = "";
+            if (character.hasWorldFlag("STONE_WOLF_MARKED")) {
+                deityVictoryText = " The Stone Wolf's blessing empowered your final strike!";
+            } else if (character.hasWorldFlag("FROSTWIND_MARKED")) {
+                deityVictoryText = " Ilyra's winds carried your blade true!";
+            } else if (character.hasWorldFlag("HOLLOW_MIND_MARKED")) {
+                deityVictoryText = " Nereth's wisdom guided your victory!";
+            }
+            
             String loreMessage = String.format("""
                     **%s** has etched their name into the annals of Nilfheim's history!
                     
-                    The shadows spread across the realm… but this boss has fallen! A heroic roar echoes through the frozen wastes as hope flickers brighter. The people of Nilfheim sing songs of **%s**'s valor, and bards will tell this tale for generations to come.
+                    The shadows spread across the realm… but this boss has fallen! A heroic roar echoes through the frozen wastes as hope flickers brighter. The people of Nilfheim sing songs of **%s**'s valor, and bards will tell this tale for generations to come.%s
                     
                     🏛️ **Legacy:** Your name is now whispered in the halls of heroes.
                     """,
                     character.getName(),
-                    character.getName()
+                    character.getName(),
+                    deityVictoryText
             );
             
             embed.addField("🎉 Victory!", loreMessage, false);

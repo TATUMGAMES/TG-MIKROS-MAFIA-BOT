@@ -1,13 +1,16 @@
 package com.tatumgames.mikros.games.rpg.actions;
 
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
+import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
 import com.tatumgames.mikros.games.rpg.events.NilfheimEventType;
 import com.tatumgames.mikros.games.rpg.model.InfusionType;
 import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.service.LoreRecognitionService;
 import com.tatumgames.mikros.games.rpg.service.NilfheimEventService;
+import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -18,16 +21,26 @@ public class TrainAction implements CharacterAction {
     private static final Random random = new Random();
     private final NilfheimEventService nilfheimEventService;
     private final LoreRecognitionService loreRecognitionService;
+    private final WorldCurseService worldCurseService;
 
     /**
      * Creates a new TrainAction.
      *
      * @param nilfheimEventService the Nilfheim event service for server-wide events
      * @param loreRecognitionService the lore recognition service for milestone checks
+     * @param worldCurseService the world curse service for checking active curses
      */
-    public TrainAction(NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService) {
+    public TrainAction(NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService, WorldCurseService worldCurseService) {
         this.nilfheimEventService = nilfheimEventService;
         this.loreRecognitionService = loreRecognitionService;
+        this.worldCurseService = worldCurseService;
+    }
+
+    /**
+     * Creates a new TrainAction without WorldCurseService (backward compatibility).
+     */
+    public TrainAction(NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService) {
+        this(nilfheimEventService, loreRecognitionService, null);
     }
 
     private static final String[] STAT_NAMES = {"STR", "AGI", "INT", "LUCK"};
@@ -217,6 +230,16 @@ public class TrainAction implements CharacterAction {
                 statDisplayName,
                 statIncrease,
                 statIncrease > 1 ? "s" : "");
+
+        // Oathbreaker: Gain corruption from acting during world curses
+        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER && worldCurseService != null) {
+            String guildId = config.getGuildId();
+            List<WorldCurse> activeCurses = worldCurseService.getActiveCurses(guildId);
+            if (!activeCurses.isEmpty()) {
+                character.addCorruption(1);
+                narrative += "\n\n⚔️💀 **Corruption:** The world's curses resonate with your broken oath, increasing your corruption.";
+            }
+        }
 
         // Consume active infusion if used
         if (infusionConsumed) {

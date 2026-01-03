@@ -9,7 +9,8 @@ import java.util.List;
  */
 public record RPGActionOutcome(String narrative, int xpGained, boolean leveledUp, String statIncreased, int statAmount,
                                int damageTaken, int hpRestored, boolean success,
-                               List<ItemDrop> itemDrops, List<CatalystDrop> catalystDrops) {
+                               List<ItemDrop> itemDrops, List<CatalystDrop> catalystDrops,
+                               boolean isElite, List<String> eliteTraits, boolean withdrewFromElite) {
     /**
      * Creates an RPG action outcome.
      *
@@ -23,6 +24,9 @@ public record RPGActionOutcome(String narrative, int xpGained, boolean leveledUp
      * @param success        whether the action was successful
      * @param itemDrops      list of essence drops
      * @param catalystDrops  list of catalyst drops
+     * @param isElite        whether this was an elite enemy encounter
+     * @param eliteTraits    list of elite trait names (null if not elite)
+     * @param withdrewFromElite whether the player withdrew from an elite encounter
      */
     public RPGActionOutcome {
         if (itemDrops == null) {
@@ -30,6 +34,9 @@ public record RPGActionOutcome(String narrative, int xpGained, boolean leveledUp
         }
         if (catalystDrops == null) {
             catalystDrops = new ArrayList<>();
+        }
+        if (eliteTraits == null) {
+            eliteTraits = new ArrayList<>();
         }
     }
 
@@ -47,6 +54,9 @@ public record RPGActionOutcome(String narrative, int xpGained, boolean leveledUp
         private boolean success = true;
         private List<ItemDrop> itemDrops = new ArrayList<>();
         private List<CatalystDrop> catalystDrops = new ArrayList<>();
+        private boolean isElite = false;
+        private List<String> eliteTraits = new ArrayList<>();
+        private boolean withdrewFromElite = false;
 
         public Builder narrative(String narrative) {
             this.narrative = narrative;
@@ -94,10 +104,25 @@ public record RPGActionOutcome(String narrative, int xpGained, boolean leveledUp
             return this;
         }
 
+        public Builder isElite(boolean isElite) {
+            this.isElite = isElite;
+            return this;
+        }
+
+        public Builder eliteTraits(List<String> eliteTraits) {
+            this.eliteTraits = eliteTraits != null ? new ArrayList<>(eliteTraits) : new ArrayList<>();
+            return this;
+        }
+
+        public Builder withdrewFromElite(boolean withdrewFromElite) {
+            this.withdrewFromElite = withdrewFromElite;
+            return this;
+        }
+
         public RPGActionOutcome build() {
             return new RPGActionOutcome(narrative, xpGained, leveledUp,
                     statIncreased, statAmount, damageTaken, hpRestored, success,
-                    itemDrops, catalystDrops);
+                    itemDrops, catalystDrops, isElite, eliteTraits, withdrewFromElite);
         }
     }
 

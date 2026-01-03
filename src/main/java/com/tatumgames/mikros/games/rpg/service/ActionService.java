@@ -28,18 +28,30 @@ public class ActionService {
      * @param auraService the aura service (needed for Song of Nilfheim)
      * @param nilfheimEventService the Nilfheim event service (needed for server-wide events)
      * @param loreRecognitionService the lore recognition service (needed for milestone checks)
+     * @param bossService the boss service (optional, for elite enemy system)
      */
-    public ActionService(CharacterService characterService, WorldCurseService worldCurseService, AuraService auraService, com.tatumgames.mikros.games.rpg.service.NilfheimEventService nilfheimEventService, com.tatumgames.mikros.games.rpg.service.LoreRecognitionService loreRecognitionService) {
+    public ActionService(CharacterService characterService, WorldCurseService worldCurseService, AuraService auraService, com.tatumgames.mikros.games.rpg.service.NilfheimEventService nilfheimEventService, com.tatumgames.mikros.games.rpg.service.LoreRecognitionService loreRecognitionService, com.tatumgames.mikros.games.rpg.service.BossService bossService) {
         this.actions = new HashMap<>();
 
+        // Create new services for world encounters and stat interactions
+        com.tatumgames.mikros.games.rpg.service.WorldEncounterService worldEncounterService = new com.tatumgames.mikros.games.rpg.service.WorldEncounterService();
+        com.tatumgames.mikros.games.rpg.service.StatInteractionService statInteractionService = new com.tatumgames.mikros.games.rpg.service.StatInteractionService();
+
         // Register available actions
-        registerAction(new ExploreAction(worldCurseService, auraService, nilfheimEventService, loreRecognitionService));
-        registerAction(new TrainAction(nilfheimEventService, loreRecognitionService));
-        registerAction(new BattleAction(worldCurseService, auraService, nilfheimEventService, loreRecognitionService));
+        registerAction(new ExploreAction(worldCurseService, auraService, nilfheimEventService, loreRecognitionService, worldEncounterService, statInteractionService));
+        registerAction(new TrainAction(nilfheimEventService, loreRecognitionService, worldCurseService));
+        registerAction(new BattleAction(worldCurseService, auraService, nilfheimEventService, loreRecognitionService, bossService));
         registerAction(new RestAction());
         registerAction(new DonateAction(characterService));
 
         logger.info("ActionService initialized with {} actions", actions.size());
+    }
+
+    /**
+     * Creates a new ActionService without BossService (backward compatibility).
+     */
+    public ActionService(CharacterService characterService, WorldCurseService worldCurseService, AuraService auraService, com.tatumgames.mikros.games.rpg.service.NilfheimEventService nilfheimEventService, com.tatumgames.mikros.games.rpg.service.LoreRecognitionService loreRecognitionService) {
+        this(characterService, worldCurseService, auraService, nilfheimEventService, loreRecognitionService, null);
     }
 
     /**

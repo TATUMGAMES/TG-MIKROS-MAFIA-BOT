@@ -31,6 +31,14 @@ public class LoreRecognitionService {
         checkTheShatteringsEcho(character);
         checkStormwardensRespect(character);
         checkTheGrandLibrarysScholar(character);
+        
+        // Check irrevocable encounter milestones
+        checkDeityPathCompletion(character);
+        checkRelicBearer(character);
+        checkOathOfNull(character);
+        
+        // Check Oathbreaker path choice (level 10-12)
+        checkOathbreakerPathChoice(character);
     }
 
     /**
@@ -148,6 +156,90 @@ public class LoreRecognitionService {
             if (!character.getStoryFlags().contains(flag) && character.getStoryFlags().size() < 2) {
                 character.addStoryFlag(flag);
                 logger.info("Character {} earned story flag: {}", character.getName(), flag);
+            }
+        }
+    }
+
+    /**
+     * Deity Path Completion: After receiving a deity blessing.
+     */
+    private void checkDeityPathCompletion(RPGCharacter character) {
+        if (character.getDeityBlessing() != null) {
+            String flag = "Chosen by the gods";
+            if (!character.getStoryFlags().contains(flag) && character.getStoryFlags().size() < 2) {
+                character.addStoryFlag(flag);
+                logger.info("Character {} earned story flag: {}", character.getName(), flag);
+            }
+        }
+    }
+
+    /**
+     * Relic Bearer: After taking a blood relic.
+     */
+    private void checkRelicBearer(RPGCharacter character) {
+        if (character.getRelicChoice() != null) {
+            String flag = "Bearer of ancient power";
+            if (!character.getStoryFlags().contains(flag) && character.getStoryFlags().size() < 2) {
+                character.addStoryFlag(flag);
+                logger.info("Character {} earned story flag: {}", character.getName(), flag);
+            }
+        }
+    }
+
+    /**
+     * Oath of Null: After taking the anti-god path.
+     */
+    private void checkOathOfNull(RPGCharacter character) {
+        if ("UNBOUND".equals(character.getPhilosophicalPath())) {
+            String flag = "Unbound by choice";
+            if (!character.getStoryFlags().contains(flag) && character.getStoryFlags().size() < 2) {
+                character.addStoryFlag(flag);
+                logger.info("Character {} earned story flag: {}", character.getName(), flag);
+            }
+        }
+    }
+
+    /**
+     * Oathbreaker Path Choice: At level 10-12, Oathbreakers must choose Embrace or Purge.
+     * This is a permanent choice that affects corruption cap and bonuses.
+     */
+    private void checkOathbreakerPathChoice(RPGCharacter character) {
+        // Only for Oathbreakers who haven't chosen a path yet
+        if (character.getCharacterClass() != CharacterClass.OATHBREAKER || character.getOathbreakerPath() != null) {
+            return;
+        }
+        
+        // Trigger at level 10-12 (randomly within this range)
+        int level = character.getLevel();
+        if (level >= 10 && level <= 12) {
+            // 30% chance per milestone check to trigger path choice
+            // This ensures it happens eventually but not immediately
+            if (Math.random() < 0.30) {
+                // Auto-choose based on corruption (high = Embrace, low = Purge)
+                // In full implementation, this would be a player choice
+                int corruption = character.getCorruption();
+                String chosenPath;
+                String narrative;
+                
+                if (corruption >= 8) {
+                    // High corruption -> Embrace
+                    chosenPath = "EMBRACE";
+                    character.setOathbreakerPath(chosenPath);
+                    narrative = "⚔️💀 **The Broken Oath Calls:** You have fully embraced the broken oath. " +
+                            "Demons whisper your name, and corruption flows freely. Your corruption cap increases to 20. " +
+                            "The path of defiance is yours.";
+                } else {
+                    // Low corruption -> Purge
+                    chosenPath = "PURGE";
+                    character.setOathbreakerPath(chosenPath);
+                    narrative = "⚔️💀 **Seeking Redemption:** You seek to purge the broken oath, finding resilience. " +
+                            "Your corruption cap is reduced to 10, but you gain +5% damage reduction and -10% curse penalties. " +
+                            "The path of redemption is yours.";
+                }
+                
+                logger.info("Oathbreaker {} chose path: {} at level {}", character.getName(), chosenPath, level);
+                // Note: Narrative is logged but not returned - this happens during milestone check
+                // The path choice is permanent and affects future gameplay
             }
         }
     }

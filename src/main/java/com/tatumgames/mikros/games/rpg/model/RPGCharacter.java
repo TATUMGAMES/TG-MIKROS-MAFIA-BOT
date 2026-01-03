@@ -39,6 +39,7 @@ public class RPGCharacter {
     private int enemiesKilled = 0;
     private int bossesKilled = 0;
     private int superBossesKilled = 0;
+    private int eliteKills = 0; // Elite enemy kills
 
     // Inventory system
     private RPGInventory inventory;
@@ -84,9 +85,32 @@ public class RPGCharacter {
     private double darkRelicXpBonus = 0.0; // XP bonus multiplier (0.05 = +5%)
     private double darkRelicDamagePenalty = 0.0; // Damage penalty multiplier (0.10 = +10% damage taken)
     
+    // Elite enemy system tracking
+    private Instant temporaryCurseExpiresAt = null; // Temporary curse expiration (12h)
+    private boolean loseChargeOnNextRefresh = false; // Flag for losing charge on next refresh
+    
+    // Oathbreaker corruption system
+    private int corruption = 0; // Current corruption (0-15 base, 0-20 if Embraced, 0-10 if Purged)
+    private int corruptionCap = 15; // Max corruption (15 base, 20 if Embraced, 10 if Purged)
+    private String oathbreakerPath = null; // Path choice: "EMBRACE", "PURGE", or null
+    private int oathFragments = 0; // Oath fragments collected from elites
+    private int backlashEventsTriggered = 0; // Track for achievements
+    private boolean hasRefusedDeity = false; // Track deity refusal
+    
     // Lore recognition tracking
     private int timesResurrectedOthers = 0; // Times Priest resurrected others (for The Rescuer recognition)
     private java.util.Set<com.tatumgames.mikros.games.rpg.model.InfusionType> infusionsCrafted; // Set of infusion types crafted (for Master of Elements recognition)
+    
+    // Irrevocable World Encounters tracking
+    private String deityBlessing; // Which deity blessed them (enum name or null)
+    private String relicChoice; // Which relic they took (enum name or null)
+    private String philosophicalPath; // "UNBOUND", "GODMARKED", or null
+    private java.util.Set<String> worldFlags; // Permanent world flags (separate from story flags)
+    private java.util.Map<String, Double> statModifiers; // Permanent multiplicative stat modifiers (e.g., "STR_EFFECTIVENESS" -> 1.15)
+    
+    // Encounter/Interaction count tracking (max 3 per type)
+    private java.util.Map<String, Integer> worldEncounterCounts; // Map: encounter type name -> count (max 3)
+    private java.util.Map<String, Integer> statInteractionCounts; // Map: interaction type name -> count (max 3)
 
     /**
      * Creates a new RPG character.
@@ -119,6 +143,7 @@ public class RPGCharacter {
         this.enemiesKilled = 0;
         this.bossesKilled = 0;
         this.superBossesKilled = 0;
+        this.eliteKills = 0;
 
         // Initialize inventory
         this.inventory = new RPGInventory();
@@ -162,9 +187,30 @@ public class RPGCharacter {
         this.darkRelicXpBonus = 0.0;
         this.darkRelicDamagePenalty = 0.0;
         
+        // Initialize elite enemy system tracking
+        this.temporaryCurseExpiresAt = null;
+        this.loseChargeOnNextRefresh = false;
+        
+        // Initialize Oathbreaker corruption system
+        this.corruption = 0;
+        this.corruptionCap = 15;
+        this.oathbreakerPath = null;
+        this.oathFragments = 0;
+        this.backlashEventsTriggered = 0;
+        this.hasRefusedDeity = false;
+        
         // Initialize lore recognition tracking
         this.timesResurrectedOthers = 0;
         this.infusionsCrafted = new java.util.HashSet<>();
+        
+        // Initialize irrevocable world encounters tracking
+        this.deityBlessing = null;
+        this.relicChoice = null;
+        this.philosophicalPath = null;
+        this.worldFlags = new java.util.HashSet<>();
+        this.statModifiers = new java.util.HashMap<>();
+        this.worldEncounterCounts = new java.util.HashMap<>();
+        this.statInteractionCounts = new java.util.HashMap<>();
     }
 
     /**
@@ -310,6 +356,13 @@ public class RPGCharacter {
             // Calculate how many full refresh cycles have passed
             int refreshCycles = (int) (hoursSinceRefresh / effectiveRefreshHours);
             actionCharges = Math.min(maxCharges, actionCharges + refreshCycles * maxCharges);
+            
+            // Apply elite defeat penalty (lose one charge on refresh)
+            if (loseChargeOnNextRefresh && refreshCycles > 0) {
+                actionCharges = Math.max(0, actionCharges - 1);
+                loseChargeOnNextRefresh = false; // Clear flag after applying
+            }
+            
             lastChargeRefreshTime = now;
         }
     }
@@ -536,6 +589,22 @@ public class RPGCharacter {
      */
     public void incrementSuperBossesKilled() {
         this.superBossesKilled++;
+    }
+
+    /**
+     * Gets the number of elite enemies killed.
+     *
+     * @return the number of elite enemies killed
+     */
+    public int getEliteKills() {
+        return eliteKills;
+    }
+
+    /**
+     * Increments the elite enemies killed counter.
+     */
+    public void incrementEliteKills() {
+        this.eliteKills++;
     }
 
     // Inventory system getters/setters
@@ -949,6 +1018,105 @@ public class RPGCharacter {
         this.darkRelicDamagePenalty = darkRelicDamagePenalty;
     }
 
+    // Elite enemy system getters/setters
+
+    public Instant getTemporaryCurseExpiresAt() {
+        return temporaryCurseExpiresAt;
+    }
+
+    public void setTemporaryCurseExpiresAt(Instant temporaryCurseExpiresAt) {
+        this.temporaryCurseExpiresAt = temporaryCurseExpiresAt;
+    }
+
+    public boolean hasTemporaryCurse() {
+        if (temporaryCurseExpiresAt == null) {
+            return false;
+        }
+        if (Instant.now().isAfter(temporaryCurseExpiresAt)) {
+            // Curse expired, clear it
+            temporaryCurseExpiresAt = null;
+            return false;
+        }
+        return true;
+    }
+
+    public boolean isLoseChargeOnNextRefresh() {
+        return loseChargeOnNextRefresh;
+    }
+
+    public void setLoseChargeOnNextRefresh(boolean loseChargeOnNextRefresh) {
+        this.loseChargeOnNextRefresh = loseChargeOnNextRefresh;
+    }
+
+    // Oathbreaker corruption system getters/setters
+
+    public int getCorruption() {
+        return corruption;
+    }
+
+    public void addCorruption(int amount) {
+        this.corruption = Math.min(corruptionCap, Math.max(0, corruption + amount));
+    }
+
+    public void removeCorruption(int amount) {
+        this.corruption = Math.max(0, corruption - amount);
+    }
+
+    public int getCorruptionCap() {
+        return corruptionCap;
+    }
+
+    public void setCorruptionCap(int corruptionCap) {
+        this.corruptionCap = corruptionCap;
+        // Clamp current corruption to new cap
+        if (corruption > corruptionCap) {
+            corruption = corruptionCap;
+        }
+    }
+
+    public String getOathbreakerPath() {
+        return oathbreakerPath;
+    }
+
+    public void setOathbreakerPath(String path) {
+        if (path != null && !path.equals("EMBRACE") && !path.equals("PURGE")) {
+            throw new IllegalArgumentException("Oathbreaker path must be EMBRACE, PURGE, or null");
+        }
+        this.oathbreakerPath = path;
+        // Update corruption cap based on path
+        if ("EMBRACE".equals(path)) {
+            setCorruptionCap(20);
+        } else if ("PURGE".equals(path)) {
+            setCorruptionCap(10);
+        } else {
+            setCorruptionCap(15); // Default
+        }
+    }
+
+    public int getOathFragments() {
+        return oathFragments;
+    }
+
+    public void incrementOathFragments() {
+        this.oathFragments++;
+    }
+
+    public int getBacklashEventsTriggered() {
+        return backlashEventsTriggered;
+    }
+
+    public void incrementBacklashEvents() {
+        this.backlashEventsTriggered++;
+    }
+
+    public boolean hasRefusedDeity() {
+        return hasRefusedDeity;
+    }
+
+    public void setHasRefusedDeity(boolean hasRefusedDeity) {
+        this.hasRefusedDeity = hasRefusedDeity;
+    }
+
     // Lore recognition tracking getters/setters
 
     public int getTimesResurrectedOthers() {
@@ -965,5 +1133,107 @@ public class RPGCharacter {
 
     public void addInfusionCrafted(com.tatumgames.mikros.games.rpg.model.InfusionType infusionType) {
         this.infusionsCrafted.add(infusionType);
+    }
+
+    // Irrevocable World Encounters getters/setters
+
+    public String getDeityBlessing() {
+        return deityBlessing;
+    }
+
+    public void setDeityBlessing(String deityBlessing) {
+        this.deityBlessing = deityBlessing;
+    }
+
+    public String getRelicChoice() {
+        return relicChoice;
+    }
+
+    public void setRelicChoice(String relicChoice) {
+        this.relicChoice = relicChoice;
+    }
+
+    public String getPhilosophicalPath() {
+        return philosophicalPath;
+    }
+
+    public void setPhilosophicalPath(String philosophicalPath) {
+        this.philosophicalPath = philosophicalPath;
+    }
+
+    public java.util.Set<String> getWorldFlags() {
+        return new java.util.HashSet<>(worldFlags);
+    }
+
+    public void setWorldFlags(java.util.Set<String> worldFlags) {
+        this.worldFlags = worldFlags != null ? new java.util.HashSet<>(worldFlags) : new java.util.HashSet<>();
+    }
+
+    public void addWorldFlag(String flag) {
+        this.worldFlags.add(flag);
+    }
+
+    public boolean hasWorldFlag(String flag) {
+        return this.worldFlags.contains(flag);
+    }
+
+    public java.util.Map<String, Double> getStatModifiers() {
+        return new java.util.HashMap<>(statModifiers);
+    }
+
+    public void setStatModifiers(java.util.Map<String, Double> statModifiers) {
+        this.statModifiers = statModifiers != null ? new java.util.HashMap<>(statModifiers) : new java.util.HashMap<>();
+    }
+
+    public void addStatModifier(String key, Double value) {
+        this.statModifiers.put(key, value);
+    }
+
+    public Double getStatModifier(String key) {
+        return this.statModifiers.get(key);
+    }
+
+    // Encounter/Interaction count tracking getters/setters
+
+    public java.util.Map<String, Integer> getWorldEncounterCounts() {
+        return new java.util.HashMap<>(worldEncounterCounts);
+    }
+
+    public void setWorldEncounterCounts(java.util.Map<String, Integer> counts) {
+        this.worldEncounterCounts = counts != null ? new java.util.HashMap<>(counts) : new java.util.HashMap<>();
+    }
+
+    public int getWorldEncounterCount(String encounterType) {
+        return worldEncounterCounts.getOrDefault(encounterType, 0);
+    }
+
+    public void incrementWorldEncounterCount(String encounterType) {
+        int current = worldEncounterCounts.getOrDefault(encounterType, 0);
+        worldEncounterCounts.put(encounterType, current + 1);
+    }
+
+    public boolean canTriggerWorldEncounter(String encounterType) {
+        return getWorldEncounterCount(encounterType) < 3;
+    }
+
+    public java.util.Map<String, Integer> getStatInteractionCounts() {
+        return new java.util.HashMap<>(statInteractionCounts);
+    }
+
+    public void setStatInteractionCounts(java.util.Map<String, Integer> counts) {
+        this.statInteractionCounts = counts != null ? new java.util.HashMap<>(counts) : new java.util.HashMap<>();
+    }
+
+    public int getStatInteractionCount(String interactionType) {
+        return statInteractionCounts.getOrDefault(interactionType, 0);
+    }
+
+    public void incrementStatInteractionCount(String interactionType) {
+        int current = statInteractionCounts.getOrDefault(interactionType, 0);
+        statInteractionCounts.put(interactionType, current + 1);
+    }
+
+    public boolean canTriggerStatInteraction(String interactionType) {
+        return getStatInteractionCount(interactionType) < 3;
     }
 }

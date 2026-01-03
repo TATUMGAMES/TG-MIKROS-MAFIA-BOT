@@ -216,6 +216,58 @@ public class RPGProfileCommand implements CommandHandler {
             embed.addField("📜 Legend", flags, false);
         }
 
+        // Irrevocable World Encounters
+        StringBuilder irrevocableInfo = new StringBuilder();
+        boolean hasIrrevocable = false;
+        
+        if (character.getDeityBlessing() != null) {
+            String deityName = character.getDeityBlessing().replace("_", " ");
+            irrevocableInfo.append(String.format("🏛️ **Deity:** %s\n", deityName));
+            hasIrrevocable = true;
+        }
+        
+        if (character.getRelicChoice() != null) {
+            String relicName = character.getRelicChoice().replace("_", " ");
+            irrevocableInfo.append(String.format("⚔️ **Relic:** %s\n", relicName));
+            hasIrrevocable = true;
+        }
+        
+        if (character.getPhilosophicalPath() != null) {
+            String pathName = character.getPhilosophicalPath();
+            if ("UNBOUND".equals(pathName)) {
+                irrevocableInfo.append("⚖️ **Path:** Unbound\n");
+            } else if ("GODMARKED".equals(pathName)) {
+                irrevocableInfo.append("👤 **Path:** God-Marked\n");
+            } else {
+                irrevocableInfo.append(String.format("📿 **Path:** %s\n", pathName));
+            }
+            hasIrrevocable = true;
+        }
+        
+        if (hasIrrevocable) {
+            embed.addField("🔮 Irrevocable Choices", irrevocableInfo.toString().trim(), false);
+        }
+
+        // World Flags (separate from story flags)
+        if (!character.getWorldFlags().isEmpty()) {
+            String worldFlags = String.join(" | ", character.getWorldFlags());
+            embed.addField("🌍 World Flags", worldFlags, false);
+        }
+
+        // Active Stat Modifiers
+        var statModifiers = character.getStatModifiers();
+        if (!statModifiers.isEmpty()) {
+            StringBuilder modifierInfo = new StringBuilder();
+            for (var entry : statModifiers.entrySet()) {
+                String statName = entry.getKey().replace("_EFFECTIVENESS", "").replace("_", " ");
+                double modifier = entry.getValue();
+                double percentChange = (modifier - 1.0) * 100;
+                String sign = percentChange >= 0 ? "+" : "";
+                modifierInfo.append(String.format("%s: **%s%.0f%%**\n", statName, sign, percentChange));
+            }
+            embed.addField("⚡ Active Modifiers", modifierInfo.toString().trim(), false);
+        }
+
         // Active World Curses
         if (!activeCurses.isEmpty()) {
             StringBuilder curseDisplay = new StringBuilder();

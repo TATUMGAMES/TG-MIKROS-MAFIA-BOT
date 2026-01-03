@@ -88,6 +88,19 @@ public class RestAction implements CharacterAction {
             narrative += " The warmth of rest removes the lingering effects of frostbite.";
         }
 
+        // Oathbreaker: Corruption decay on rest
+        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+            int corruptionBefore = character.getCorruption();
+            if (corruptionBefore > 0) {
+                character.removeCorruption(1);
+                if (corruptionBefore >= 10) {
+                    narrative += " The broken oath's weight lessens with rest. Some corruption fades away.";
+                } else if (corruptionBefore >= 5) {
+                    narrative += " Rest helps you resist the corruption's pull. You feel slightly more in control.";
+                }
+            }
+        }
+
         // Fully restore HP
         character.getStats().fullHeal();
 

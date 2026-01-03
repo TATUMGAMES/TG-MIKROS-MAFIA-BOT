@@ -64,6 +64,16 @@ public class TitleService {
         // Lightbearer (Priest) and Bound to Death (Necromancer) are checked separately
         // when resurrections are performed or March of the Dead is active
 
+        // Irrevocable World Encounter titles
+        if ("UNBOUND".equals(character.getPhilosophicalPath()) && !hasTitle(character, Title.UNBOUND)) {
+            newlyUnlocked.add(Title.UNBOUND);
+        }
+        if (character.hasWorldFlag("STONE_WOLF_MARKED") && !hasTitle(character, Title.STONE_WOLF_CHOSEN)) {
+            newlyUnlocked.add(Title.STONE_WOLF_CHOSEN);
+        }
+        // Icewalker, Rune-Seer, Fortune's Favorite are awarded based on stat interaction successes
+        // (tracked via world flags or story flags)
+
         // Note: First-to titles and feat titles like "The Unbroken" and "Gravecaller" are handled
         // by achievement system and resurrection tracking, not here
 
@@ -128,6 +138,21 @@ public class TitleService {
             character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.NECROMANCER) {
             available.add(Title.BOUND_TO_DEATH);
         }
+
+        // Irrevocable World Encounter titles
+        if ("UNBOUND".equals(character.getPhilosophicalPath())) {
+            available.add(Title.UNBOUND);
+        }
+        if (character.hasWorldFlag("STONE_WOLF_MARKED")) {
+            available.add(Title.STONE_WOLF_CHOSEN);
+        }
+        if (character.hasWorldFlag("FROSTWIND_MARKED")) {
+            // Could add "Frostwind's Chosen" title if needed
+        }
+        if (character.hasWorldFlag("HOLLOW_MIND_MARKED")) {
+            // Could add "Hollow Mind's Chosen" title if needed
+        }
+        // Icewalker, Rune-Seer, Fortune's Favorite can be added based on stat interaction tracking
 
         // First-to titles (if character has the title set, they have it)
         if (character.getTitle() != null) {

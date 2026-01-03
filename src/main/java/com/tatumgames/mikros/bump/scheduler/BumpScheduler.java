@@ -201,6 +201,7 @@ public class BumpScheduler {
     
     /**
      * Checks if a bot is present in the guild.
+     * Uses an API call to verify actual membership (not just cache).
      *
      * @param guild the guild
      * @param bot   the bot to check
@@ -213,8 +214,17 @@ public class BumpScheduler {
             return true;
         }
         
-        Member botMember = guild.getMemberById(botId);
-        return botMember != null;
+        try {
+            // Use retrieveMemberById which makes an API call instead of checking cache
+            // This ensures we get accurate membership status
+            Member botMember = guild.retrieveMemberById(botId).complete();
+            return botMember != null;
+        } catch (Exception e) {
+            // If API call fails (e.g., bot not in server, network error), assume not present
+            logger.debug("Could not retrieve bot {} from guild {}: {}", 
+                    bot.getDisplayName(), guild.getId(), e.getMessage());
+            return false;
+        }
     }
     
     /**

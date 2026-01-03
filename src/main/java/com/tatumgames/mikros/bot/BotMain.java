@@ -169,8 +169,8 @@ public class BotMain extends ListenerAdapter {
         this.worldCurseService = new WorldCurseService();
         this.nilfheimEventService = new InMemoryNilfheimEventService();
         this.loreRecognitionService = new LoreRecognitionService();
-        this.actionService = new ActionService(characterService, worldCurseService, auraService, nilfheimEventService, loreRecognitionService);
         this.bossService = new BossService(characterService, auraService, worldCurseService, nilfheimEventService, loreRecognitionService);
+        this.actionService = new ActionService(characterService, worldCurseService, auraService, nilfheimEventService, loreRecognitionService, bossService);
         this.bossScheduler = new BossScheduler(bossService, characterService, worldCurseService);
         this.nilfheimEventScheduler = new NilfheimEventScheduler(nilfheimEventService, characterService);
         this.promoService = new PromoDetectionService();

@@ -201,10 +201,30 @@ public class BossService {
         damageTracking.computeIfAbsent(guildId, k -> new ConcurrentHashMap<>())
                 .merge(character.getDiscordId(), damage, Integer::sum);
 
+        // Oathbreaker: Gain corruption from boss damage
+        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+            int corruptionGain = 0;
+            if (superBoss != null) {
+                // Super boss: +1 per 150 damage
+                corruptionGain = damage / 150;
+            } else {
+                // Normal boss: +1 per 200 damage
+                corruptionGain = damage / 200;
+            }
+            if (corruptionGain > 0) {
+                character.addCorruption(corruptionGain);
+            }
+        }
+
         // Track cursed boss fight participation
         var activeCurses = worldCurseService.getActiveCurses(guildId);
         if (!activeCurses.isEmpty()) {
             character.incrementCursedBossFights();
+            
+            // Oathbreaker: Gain corruption from acting during world curses
+            if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+                character.addCorruption(1);
+            }
         }
 
         if (defeated) {
@@ -222,7 +242,7 @@ public class BossService {
 
         // Add stat bonuses
         switch (character.getCharacterClass()) {
-            case WARRIOR, KNIGHT -> baseDamage += character.getStats().getStrength() * 10;
+            case WARRIOR, KNIGHT, OATHBREAKER -> baseDamage += character.getStats().getStrength() * 10;
             case MAGE, NECROMANCER, PRIEST -> baseDamage += character.getStats().getIntelligence() * 10;
             case ROGUE -> baseDamage += character.getStats().getAgility() * 10;
         }
@@ -254,6 +274,8 @@ public class BossService {
             case NECROMANCER:
                 return (bossType == BossType.SPIRIT || bossType == BossType.UNDEAD) ? 1.2 : 1.0;
             case PRIEST:
+                return (bossType == BossType.UNDEAD || bossType == BossType.DEMON) ? 1.2 : 1.0;
+            case OATHBREAKER:
                 return (bossType == BossType.UNDEAD || bossType == BossType.DEMON) ? 1.2 : 1.0;
             default:
                 return 1.0;

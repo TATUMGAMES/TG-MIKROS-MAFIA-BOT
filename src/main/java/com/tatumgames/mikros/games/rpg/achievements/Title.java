@@ -34,7 +34,20 @@ public enum Title {
     HOPE_UNBROKEN("Hope Unbroken", 0, TitleType.FEAT, 0.0), // Participated in 5 cursed boss fights
     CURSEWALKER("Cursewalker", 0, TitleType.FEAT, 0.0), // Acted during both Minor + Major curse simultaneously
     LIGHTBEARER("Lightbearer", 0, TitleType.FEAT, 0.02), // Priest: 10 resurrections during cursed worlds (2% resurrection XP bonus)
-    BOUND_TO_DEATH("Bound to Death", 0, TitleType.FEAT, 0.0); // Necromancer: Active during March of the Dead
+    BOUND_TO_DEATH("Bound to Death", 0, TitleType.FEAT, 0.0), // Necromancer: Active during March of the Dead
+
+    // Irrevocable World Encounter Titles
+    UNBOUND("Unbound", 0, TitleType.FEAT, 0.0), // Oath of Null path
+    STONE_WOLF_CHOSEN("Stone Wolf's Chosen", 0, TitleType.FEAT, 0.0), // Vaelgor blessing
+    ICEWALKER("Icewalker", 0, TitleType.FEAT, 0.0), // AGI interaction mastery
+    RUNE_SEER("Rune-Seer", 0, TitleType.FEAT, 0.0), // INT interaction mastery
+    FORTUNES_FAVORITE("Fortune's Favorite", 0, TitleType.FEAT, 0.0), // LUCK interaction mastery
+
+    // Oathbreaker Titles
+    THE_UNSWORN("The Unsworn", 0, TitleType.FEAT, 0.02), // Reach 10 corruption without embracing (2% damage bonus)
+    MARKED_BY_SILENCE("Marked by Silence", 0, TitleType.FEAT, 0.02), // Refuse all gods and survive to level 15 (2% XP bonus)
+    BREAKER_OF_CHAINS("Breaker of Chains", 0, TitleType.FEAT, 0.02), // Defeat super boss at max corruption (2% boss damage bonus)
+    THE_CONTESTED("The Contested", 0, TitleType.FEAT, 0.02); // Trigger 3 backlash events and survive (2% corruption bonus)
 
     private final String displayName;
     private final int requiredLevel;

@@ -112,9 +112,39 @@ public class ResurrectAction implements CharacterAction {
         if (target.isDead()) {
             // Target is dead - perform resurrection
             target.resurrect(recoveryHours);
-            narrative = RESURRECTION_MESSAGES[random.nextInt(RESURRECTION_MESSAGES.length)]
+            
+            // Get base resurrection message
+            String baseNarrative = RESURRECTION_MESSAGES[random.nextInt(RESURRECTION_MESSAGES.length)]
                     .replace("{priest}", priest.getName())
                     .replace("{target}", target.getName());
+            
+            // Add deity/relic-specific flavor text
+            String deityFlavor = "";
+            if (target.hasWorldFlag("STONE_WOLF_MARKED")) {
+                deityFlavor = "\n\n🐺 *The Stone Wolf's blessing pulls you back from the void...*";
+            } else if (target.hasWorldFlag("FROSTWIND_MARKED")) {
+                deityFlavor = "\n\n🌪️ *Ilyra's winds guide your soul home...*";
+            } else if (target.hasWorldFlag("HOLLOW_MIND_MARKED")) {
+                deityFlavor = "\n\n🔮 *Nereth's power anchors your spirit...*";
+            } else if (target.hasWorldFlag("ANCHORED_SOUL")) {
+                deityFlavor = "\n\n⚓ *Your Soul Anchor tethers you to life...*";
+            } else if (target.hasWorldFlag("OATH_OF_NULL")) {
+                deityFlavor = "\n\n⚖️ *Your unbound oath defies death itself...*";
+            }
+            
+            // Oathbreaker: Special resurrection flavor and corruption reduction
+            String oathbreakerFlavor = "";
+            if (target.getCharacterClass() == CharacterClass.OATHBREAKER) {
+                int corruptionBefore = target.getCorruption();
+                if (corruptionBefore >= 2) {
+                    target.removeCorruption(2);
+                    oathbreakerFlavor = "\n\n⚔️💀 *The Priest's holy magic conflicts with your broken oath, purging some corruption. The broken oath makes resurrection... complicated.*";
+                } else {
+                    oathbreakerFlavor = "\n\n⚔️💀 *The broken oath makes resurrection complicated. Holy magic and broken oaths do not mix easily.*";
+                }
+            }
+            
+            narrative = baseNarrative + deityFlavor + oathbreakerFlavor;
 
             // Priest gets +5 XP for successful resurrection (doubled during Fading Hope)
             xpGained = 5;

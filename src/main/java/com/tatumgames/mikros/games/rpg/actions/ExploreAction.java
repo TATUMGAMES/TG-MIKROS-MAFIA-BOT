@@ -31,6 +31,8 @@ public class ExploreAction implements CharacterAction {
     private final AuraService auraService;
     private final NilfheimEventService nilfheimEventService;
     private final LoreRecognitionService loreRecognitionService;
+    private final com.tatumgames.mikros.games.rpg.service.WorldEncounterService worldEncounterService;
+    private final com.tatumgames.mikros.games.rpg.service.StatInteractionService statInteractionService;
 
     /**
      * Creates a new ExploreAction.
@@ -39,12 +41,18 @@ public class ExploreAction implements CharacterAction {
      * @param auraService the aura service for Song of Nilfheim curse reduction
      * @param nilfheimEventService the Nilfheim event service for server-wide events
      * @param loreRecognitionService the lore recognition service for milestone checks
+     * @param worldEncounterService the world encounter service for irrevocable encounters
+     * @param statInteractionService the stat interaction service for stat-gated interactions
      */
-    public ExploreAction(WorldCurseService worldCurseService, AuraService auraService, NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService) {
+    public ExploreAction(WorldCurseService worldCurseService, AuraService auraService, NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService,
+                         com.tatumgames.mikros.games.rpg.service.WorldEncounterService worldEncounterService,
+                         com.tatumgames.mikros.games.rpg.service.StatInteractionService statInteractionService) {
         this.worldCurseService = worldCurseService;
         this.auraService = auraService;
         this.nilfheimEventService = nilfheimEventService;
         this.loreRecognitionService = loreRecognitionService;
+        this.worldEncounterService = worldEncounterService;
+        this.statInteractionService = statInteractionService;
     }
 
     private static final String[] NARRATIVES = {
@@ -181,6 +189,23 @@ public class ExploreAction implements CharacterAction {
         if (wanderingFigure != null) {
             // Wandering figure encountered - handle it and return
             return handleWanderingFigure(wanderingFigure, character, config, activeCurses, songReduction);
+        }
+
+        // Check for irrevocable world encounter (Level 5+, once per character, ≤1% chance)
+        if (character.getLevel() >= 5 && character.getDeityBlessing() == null && 
+            character.getRelicChoice() == null && character.getPhilosophicalPath() == null) {
+            com.tatumgames.mikros.games.rpg.exploration.WorldEncounterType encounter = worldEncounterService.rollForIrrevocableEncounter(character);
+            if (encounter != null) {
+                return worldEncounterService.handleEncounter(encounter, character, config, activeCurses, songReduction);
+            }
+        }
+
+        // Check for stat-gated interaction (Level 10+, 10-15% chance, max 3 per type)
+        if (character.getLevel() >= 10) {
+            com.tatumgames.mikros.games.rpg.exploration.StatInteractionType interaction = statInteractionService.rollForStatInteraction(character);
+            if (interaction != null) {
+                return statInteractionService.handleStatInteraction(interaction, character, config, activeCurses, songReduction);
+            }
         }
 
         // Check for negative exploration event (rare, 5% base chance, reduced by AGI/LUCK)
@@ -333,6 +358,16 @@ public class ExploreAction implements CharacterAction {
         // Record the action
         character.recordAction();
         
+        // Oathbreaker: Gain corruption from acting during world curses
+        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER && !activeCurses.isEmpty()) {
+            character.addCorruption(1);
+            // Update narrative if not already updated
+            String currentNarrative = outcomeBuilder.build().narrative();
+            if (!currentNarrative.contains("⚔️💀 **Corruption:**")) {
+                outcomeBuilder.narrative(currentNarrative + "\n\n⚔️💀 **Corruption:** The world's curses resonate with your broken oath, increasing your corruption.");
+            }
+        }
+        
         // Track action type and increment explore count for achievements
         character.recordActionType("explore");
         character.incrementExploreCount();
@@ -374,10 +409,16 @@ public class ExploreAction implements CharacterAction {
             case ROGUE:
                 // Already has AGI benefits, no additional bonus needed
                 break;
+            case OATHBREAKER:
+                // +5% chance for INT-aligned (Mind Crystal)
+                if (random.nextDouble() < 0.05) {
+                    return EssenceType.MIND_CRYSTAL;
+                }
+                break;
         }
         
-        // Priest also gets +3% chance for LUCK-aligned (Fate Clover)
-        if (characterClass == CharacterClass.PRIEST) {
+        // Priest and Oathbreaker also get +3% chance for LUCK-aligned (Fate Clover)
+        if (characterClass == CharacterClass.PRIEST || characterClass == CharacterClass.OATHBREAKER) {
             if (random.nextDouble() < 0.03) {
                 return EssenceType.FATE_CLOVER;
             }
