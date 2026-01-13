@@ -42,7 +42,7 @@ public class RPGRegisterCommand implements CommandHandler {
     public CommandData getCommandData() {
         return Commands.slash("rpg-register", "Create your RPG character and begin your adventure in Nilfheim")
                 .addOption(OptionType.STRING, "name", "Your character's name", true)
-                .addOption(OptionType.STRING, "class", "Your character class (WARRIOR, KNIGHT, MAGE, ROGUE, NECROMANCER, PRIEST)", true);
+                .addOption(OptionType.STRING, "class", "Your character class (WARRIOR, KNIGHT, MAGE, ROGUE, NECROMANCER, PRIEST, OATHBREAKER)", true);
     }
 
     @Override
@@ -101,7 +101,7 @@ public class RPGRegisterCommand implements CommandHandler {
         try {
             characterClass = CharacterClass.valueOf(classString);
         } catch (IllegalArgumentException e) {
-            event.reply("❌ Invalid class! Choose from: **WARRIOR**, **KNIGHT**, **MAGE**, **ROGUE**, **NECROMANCER**, or **PRIEST**")
+            event.reply("❌ Invalid class! Choose from: **WARRIOR**, **KNIGHT**, **MAGE**, **ROGUE**, **NECROMANCER**, **PRIEST**, or **OATHBREAKER**")
                     .setEphemeral(true)
                     .queue();
             return;
