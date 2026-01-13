@@ -22,7 +22,7 @@ public class WorldCurseService {
      * Enforces max limits: 1 minor + 1 major curse at a time.
      *
      * @param guildId the guild ID
-     * @param curse the curse to apply
+     * @param curse   the curse to apply
      * @return true if curse was applied, false if max limit reached
      */
     public boolean applyCurse(String guildId, WorldCurse curse) {
@@ -55,7 +55,7 @@ public class WorldCurseService {
      * Removes a specific curse from a guild.
      *
      * @param guildId the guild ID
-     * @param curse the curse to remove
+     * @param curse   the curse to remove
      */
     public void removeCurse(String guildId, WorldCurse curse) {
         List<WorldCurse> guildCurses = activeCurses.get(guildId);
@@ -121,7 +121,7 @@ public class WorldCurseService {
      * Checks if a specific curse is active for a guild.
      *
      * @param guildId the guild ID
-     * @param curse the curse to check
+     * @param curse   the curse to check
      * @return true if the curse is active
      */
     public boolean hasCurse(String guildId, WorldCurse curse) {
@@ -151,6 +151,33 @@ public class WorldCurseService {
                 .filter(c -> c.getType() == WorldCurse.CurseType.MAJOR)
                 .toList();
         return majorCurses.get(new Random().nextInt(majorCurses.size()));
+    }
+
+    /**
+     * Gets curse resistance multiplier for a character.
+     * Oath of Null provides +5% curse resistance (0.95 multiplier = 5% reduction).
+     *
+     * @param character the character
+     * @return resistance multiplier (1.0 = no resistance, 0.95 = 5% resistance)
+     */
+    public double getCurseResistance(com.tatumgames.mikros.games.rpg.model.RPGCharacter character) {
+        if (character == null) {
+            return 1.0;
+        }
+
+        // Oath of Null provides +5% curse resistance
+        if (character.hasWorldFlag("OATH_OF_NULL")) {
+            return 0.95; // 5% resistance = 95% of curse effect
+        }
+
+        // Check for Soul Anchor relic (+15% curse resistance)
+        Double soulAnchorModifier = character.getStatModifier("CURSE_RESISTANCE");
+        if (soulAnchorModifier != null && soulAnchorModifier > 1.0) {
+            // soulAnchorModifier is 1.15, so resistance is 0.85 (15% reduction)
+            return 1.0 / soulAnchorModifier;
+        }
+
+        return 1.0; // No resistance
     }
 }
 

@@ -32,9 +32,9 @@ import java.util.Set;
 @SuppressWarnings("ClassCanBeRecord")
 public class BanSuggestionsCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(BanSuggestionsCommand.class);
-    private final MessageAnalysisService messageAnalysisService;
     private static final Set<SuggestionSeverity> BAN_SEVERITIES =
             EnumSet.of(SuggestionSeverity.HIGH, SuggestionSeverity.CRITICAL);
+    private final MessageAnalysisService messageAnalysisService;
 
     /**
      * Creates a new BanSuggestionsCommand handler.

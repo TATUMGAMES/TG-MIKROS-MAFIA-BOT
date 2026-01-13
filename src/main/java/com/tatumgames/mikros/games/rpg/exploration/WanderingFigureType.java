@@ -53,8 +53,8 @@ public enum WanderingFigureType {
     private final String outcome3Narrative;
 
     WanderingFigureType(String displayName, String description, int minLevel,
-                       CharacterClass preferredClass, String outcome1Narrative,
-                       String outcome2Narrative, String outcome3Narrative) {
+                        CharacterClass preferredClass, String outcome1Narrative,
+                        String outcome2Narrative, String outcome3Narrative) {
         this.displayName = displayName;
         this.description = description;
         this.minLevel = minLevel;

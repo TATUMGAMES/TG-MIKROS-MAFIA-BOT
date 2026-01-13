@@ -6,7 +6,8 @@ import java.util.Objects;
 /**
  * Represents a Word Unscramble game result for a single player attempt.
  */
-public record WordUnscrambleResult(String userId, String username, String answer, int score, int bonus, boolean isCorrect,
+public record WordUnscrambleResult(String userId, String username, String answer, int score, int bonus,
+                                   boolean isCorrect,
                                    Instant timestamp) {
     /**
      * Creates a new WordUnscrambleResult.

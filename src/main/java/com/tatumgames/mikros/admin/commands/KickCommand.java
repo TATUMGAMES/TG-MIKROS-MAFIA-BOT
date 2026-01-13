@@ -70,11 +70,6 @@ public class KickCommand implements CommandHandler {
             return; // stop executing the command
         }
 
-        if (targetUser == null) {
-            event.reply("You must specify a user.").setEphemeral(true).queue();
-            return;
-        }
-
         if (targetMember == null) {
             event.reply("❌ User is not a member of this server.")
                     .setEphemeral(true)

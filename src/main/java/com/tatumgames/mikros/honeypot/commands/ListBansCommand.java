@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
 @SuppressWarnings("ClassCanBeRecord")
 public class ListBansCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(ListBansCommand.class);
-    private final ModerationLogService moderationLogService;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm");
+    private final ModerationLogService moderationLogService;
 
     /**
      * Creates a new ListBansCommand handler.

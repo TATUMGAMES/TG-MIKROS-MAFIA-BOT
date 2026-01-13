@@ -16,33 +16,6 @@ public class MessagePatternTracker {
     // Key: "userId:contentHash" -> List of MessageRecord
     private final Map<String, List<MessageRecord>> messagePatterns;
 
-    /**
-     * Record of a message posting.
-     */
-    public static class MessageRecord {
-        private final String channelId;
-        private final Instant timestamp;
-        private final String contentHash;
-
-        public MessageRecord(String channelId, Instant timestamp, String contentHash) {
-            this.channelId = channelId;
-            this.timestamp = timestamp;
-            this.contentHash = contentHash;
-        }
-
-        public String getChannelId() {
-            return channelId;
-        }
-
-        public Instant getTimestamp() {
-            return timestamp;
-        }
-
-        public String getContentHash() {
-            return contentHash;
-        }
-    }
-
     public MessagePatternTracker() {
         this.messagePatterns = new ConcurrentHashMap<>();
     }
@@ -75,9 +48,9 @@ public class MessagePatternTracker {
     /**
      * Checks if a message pattern indicates multi-channel spam.
      *
-     * @param userId       the user ID
-     * @param contentHash  the content hash
-     * @param threshold    the number of channels threshold
+     * @param userId            the user ID
+     * @param contentHash       the content hash
+     * @param threshold         the number of channels threshold
      * @param timeWindowSeconds the time window in seconds
      * @return true if multi-channel spam detected, false otherwise
      */
@@ -95,10 +68,10 @@ public class MessagePatternTracker {
 
         Instant cutoff = Instant.now().minusSeconds(timeWindowSeconds);
         List<String> uniqueChannels = records.stream()
-                .filter(r -> r.getTimestamp().isAfter(cutoff))
-                .map(MessageRecord::getChannelId)
+                .filter(r -> r.timestamp().isAfter(cutoff))
+                .map(MessageRecord::channelId)
                 .distinct()
-                .collect(Collectors.toList());
+                .toList();
 
         return uniqueChannels.size() >= threshold;
     }
@@ -113,7 +86,7 @@ public class MessagePatternTracker {
 
         messagePatterns.entrySet().removeIf(entry -> {
             List<MessageRecord> records = entry.getValue();
-            records.removeIf(r -> r.getTimestamp().isBefore(cutoff));
+            records.removeIf(r -> r.timestamp().isBefore(cutoff));
             return records.isEmpty();
         });
     }
@@ -142,5 +115,14 @@ public class MessagePatternTracker {
             return String.valueOf(content.hashCode());
         }
     }
+
+    /**
+     * Record of a message posting.
+     */
+    public record MessageRecord(
+            String channelId,
+            Instant timestamp,
+            String contentHash
+    ) {}
 }
 

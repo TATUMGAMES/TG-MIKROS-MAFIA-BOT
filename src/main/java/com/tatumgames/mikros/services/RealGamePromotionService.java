@@ -23,10 +23,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RealGamePromotionService implements GamePromotionService {
     private static final Logger logger = LoggerFactory.getLogger(RealGamePromotionService.class);
-    private static final String PROMOTION_API_URL = "https://tg-api-new.uc.r.appspot.com/mikros/discord";
 
     private final TatumGamesApiClient apiClient;
     private final String promotionApiKey;
+    private final String promotionApiBaseUrl; // Store base URL (without /mikros/discord)
     private final ObjectMapper objectMapper;
 
     // Guild configuration storage
@@ -37,33 +37,22 @@ public class RealGamePromotionService implements GamePromotionService {
     private final Map<String, Map<String, PromotionStepRecord>> promotionSteps;
 
     /**
-     * Record of promotion step and last post time for an app.
-     */
-    private static class PromotionStepRecord {
-        int lastStep;           // 1-4, or 0 if never posted
-        Instant lastPostTime;   // When last step was posted
-
-        PromotionStepRecord(int lastStep, Instant lastPostTime) {
-            this.lastStep = lastStep;
-            this.lastPostTime = lastPostTime;
-        }
-    }
-
-    /**
      * Creates a new RealGamePromotionService.
      *
-     * @param apiClient      the API client for making requests
-     * @param promotionApiKey the API key for promotion API calls
+     * @param apiClient           the API client for making requests
+     * @param promotionApiKey     the API key for promotion API calls
+     * @param promotionApiBaseUrl the base URL for the API (e.g., https://tg-api-new.uc.r.appspot.com)
      */
-    public RealGamePromotionService(TatumGamesApiClient apiClient, String promotionApiKey) {
+    public RealGamePromotionService(TatumGamesApiClient apiClient, String promotionApiKey, String promotionApiBaseUrl) {
         this.apiClient = apiClient;
         this.promotionApiKey = promotionApiKey;
+        this.promotionApiBaseUrl = promotionApiBaseUrl;
         this.promotionChannels = new ConcurrentHashMap<>();
         this.promotionVerbosity = new ConcurrentHashMap<>();
         this.promotionSteps = new ConcurrentHashMap<>();
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
-        logger.info("RealGamePromotionService initialized");
+        logger.info("RealGamePromotionService initialized with base URL: {}", promotionApiBaseUrl);
     }
 
     @Override
@@ -159,9 +148,10 @@ public class RealGamePromotionService implements GamePromotionService {
         }
 
         try {
+            // Construct full URL: baseUrl + /mikros/discord/getAllApps
             GetAllAppsResponse response = apiClient.getWithApiKey(
-                    PROMOTION_API_URL,
-                    "/getAllApps",
+                    promotionApiBaseUrl + "/mikros/discord", // Base URL with path
+                    "/getAllApps", // Endpoint
                     promotionApiKey,
                     GetAllAppsResponse.class
             );
@@ -173,7 +163,7 @@ public class RealGamePromotionService implements GamePromotionService {
             logger.warn("API returned empty or invalid response, falling back to stub");
             return loadStubApps();
         } catch (TatumGamesApiClient.ApiException e) {
-            logger.error("Failed to fetch apps from API (status: {}), falling back to stub: {}", 
+            logger.error("Failed to fetch apps from API (status: {}), falling back to stub: {}",
                     e.getStatusCode(), e.getMessage());
             return loadStubApps();
         } catch (Exception e) {
@@ -252,5 +242,18 @@ public class RealGamePromotionService implements GamePromotionService {
                 .mapToInt(Map::size)
                 .sum());
         return stats;
+    }
+
+    /**
+     * Record of promotion step and last post time for an app.
+     */
+    private static class PromotionStepRecord {
+        int lastStep;           // 1-4, or 0 if never posted
+        Instant lastPostTime;   // When last step was posted
+
+        PromotionStepRecord(int lastStep, Instant lastPostTime) {
+            this.lastStep = lastStep;
+            this.lastPostTime = lastPostTime;
+        }
     }
 }

@@ -38,8 +38,8 @@ public class RPGResurrectCommand implements CommandHandler {
     /**
      * Creates a new RPGResurrectCommand handler.
      *
-     * @param characterService the character service
-     * @param worldCurseService the world curse service
+     * @param characterService       the character service
+     * @param worldCurseService      the world curse service
      * @param loreRecognitionService the lore recognition service
      */
     public RPGResurrectCommand(CharacterService characterService, WorldCurseService worldCurseService, LoreRecognitionService loreRecognitionService) {

@@ -81,9 +81,9 @@ public class RPGStatsCommand implements CommandHandler {
         embed.addField(
                 "⚔️ Combat Statistics",
                 String.format("""
-                        💀 Enemies Defeated: **%d**
-                        🐲 Bosses Defeated: **%d**
-                        👹 Super Bosses Defeated: **%d**""",
+                                💀 Enemies Defeated: **%d**
+                                🐲 Bosses Defeated: **%d**
+                                👹 Super Bosses Defeated: **%d**""",
                         character.getEnemiesKilled(),
                         character.getBossesKilled(),
                         character.getSuperBossesKilled()),
@@ -95,9 +95,9 @@ public class RPGStatsCommand implements CommandHandler {
         embed.addField(
                 "📈 Character Progress",
                 String.format("""
-                        Level: **%d**
-                        XP: **%d** / %d (%.1f%%)
-                        XP to Next Level: **%d**""",
+                                Level: **%d**
+                                XP: **%d** / %d (%.1f%%)
+                                XP to Next Level: **%d**""",
                         character.getLevel(),
                         character.getXp(),
                         character.getXpToNextLevel(),
@@ -119,9 +119,9 @@ public class RPGStatsCommand implements CommandHandler {
         embed.addField(
                 "❤️ Current Status",
                 String.format("""
-                        HP: **%d** / %d
-                        Action Charges: **%d** / %d
-                        Status: **%s**""",
+                                HP: **%d** / %d
+                                Action Charges: **%d** / %d
+                                Status: **%s**""",
                         character.getStats().getCurrentHp(),
                         character.getStats().getMaxHp(),
                         character.getActionCharges(),
@@ -134,10 +134,10 @@ public class RPGStatsCommand implements CommandHandler {
         embed.addField(
                 "📊 Stats",
                 String.format("""
-                        ⚔️ STR: **%d**
-                        🏃 AGI: **%d**
-                        🧠 INT: **%d**
-                        🍀 LUCK: **%d**""",
+                                ⚔️ STR: **%d**
+                                🏃 AGI: **%d**
+                                🧠 INT: **%d**
+                                🍀 LUCK: **%d**""",
                         character.getStats().getStrength(),
                         character.getStats().getAgility(),
                         character.getStats().getIntelligence(),

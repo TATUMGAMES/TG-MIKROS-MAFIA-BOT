@@ -56,7 +56,7 @@ public enum NilfheimEventType {
     private final EventEffectType effectType;
 
     NilfheimEventType(String displayName, String description, int minHoursBetween, int maxHoursBetween,
-                     double effectValue, EventEffectType effectType) {
+                      double effectValue, EventEffectType effectType) {
         this.displayName = displayName;
         this.description = description;
         this.minHoursBetween = minHoursBetween;

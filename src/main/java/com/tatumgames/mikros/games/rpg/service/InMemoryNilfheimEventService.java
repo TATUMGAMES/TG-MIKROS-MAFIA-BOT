@@ -5,8 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * In-memory implementation of NilfheimEventService.
@@ -17,22 +17,9 @@ public class InMemoryNilfheimEventService implements NilfheimEventService {
 
     // Map: guildId -> ActiveEvent (contains eventType and expiresAt)
     private final Map<String, ActiveEvent> activeEvents;
-    
+
     // Map: guildId -> last event time
     private final Map<String, Instant> lastEventTimes;
-
-    /**
-     * Represents an active event with expiration time.
-     */
-    private static class ActiveEvent {
-        final NilfheimEventType eventType;
-        final Instant expiresAt;
-
-        ActiveEvent(NilfheimEventType eventType, Instant expiresAt) {
-            this.eventType = eventType;
-            this.expiresAt = expiresAt;
-        }
-    }
 
     public InMemoryNilfheimEventService() {
         this.activeEvents = new ConcurrentHashMap<>();
@@ -85,6 +72,19 @@ public class InMemoryNilfheimEventService implements NilfheimEventService {
         activeEvents.remove(guildId);
         lastEventTimes.remove(guildId);
         logger.info("Cleared all event data for guild {}", guildId);
+    }
+
+    /**
+     * Represents an active event with expiration time.
+     */
+    private static class ActiveEvent {
+        final NilfheimEventType eventType;
+        final Instant expiresAt;
+
+        ActiveEvent(NilfheimEventType eventType, Instant expiresAt) {
+            this.eventType = eventType;
+            this.expiresAt = expiresAt;
+        }
     }
 }
 

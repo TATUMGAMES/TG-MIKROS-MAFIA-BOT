@@ -28,8 +28,8 @@ import java.util.List;
 @SuppressWarnings("ClassCanBeRecord")
 public class ScrambleLeaderboardCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(ScrambleLeaderboardCommand.class);
-    private final WordUnscrambleService wordUnscrambleService;
     private static final int ENTRIES_PER_PAGE = 25;
+    private final WordUnscrambleService wordUnscrambleService;
 
     /**
      * Creates a new ScrambleLeaderboardCommand handler.

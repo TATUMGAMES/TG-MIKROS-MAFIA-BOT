@@ -48,7 +48,7 @@ public class RPGCraftCommand implements CommandHandler {
     @Override
     public CommandData getCommandData() {
         OptionData itemOption = new OptionData(OptionType.STRING, "item", "Item to craft", true);
-        
+
         // Add permanent stat bonus items
         for (CraftedItemType itemType : CraftedItemType.values()) {
             itemOption.addChoice(
@@ -56,7 +56,7 @@ public class RPGCraftCommand implements CommandHandler {
                     "PERMANENT_" + itemType.name()
             );
         }
-        
+
         // Add consumable infusions
         for (InfusionType infusionType : InfusionType.values()) {
             itemOption.addChoice(
@@ -128,15 +128,15 @@ public class RPGCraftCommand implements CommandHandler {
         }
 
         String itemName = itemOption.getAsString();
-        
+
         // Determine if it's a permanent item or infusion
         boolean isInfusion = itemName.startsWith("INFUSION_");
         boolean isPermanent = itemName.startsWith("PERMANENT_");
-        
+
         CraftingResult result;
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("⚒️ Crafting");
-        
+
         if (isInfusion) {
             // Handle infusion crafting
             String infusionName = itemName.substring("INFUSION_".length());
@@ -149,9 +149,9 @@ public class RPGCraftCommand implements CommandHandler {
                         .queue();
                 return;
             }
-            
+
             result = craftingService.craftInfusion(character, infusionType);
-            
+
             if (result == CraftingResult.SUCCESS) {
                 embed.setColor(Color.GREEN);
                 embed.setDescription(String.format(
@@ -166,7 +166,7 @@ public class RPGCraftCommand implements CommandHandler {
                 embed.setColor(Color.RED);
                 StringBuilder required = new StringBuilder();
                 required.append("❌ **Insufficient Materials or Infusion Already Active**\n\n");
-                
+
                 if (character.getInventory().hasActiveInfusion()) {
                     required.append("You already have an active infusion. Max 1 infusion at a time.\n\n");
                 } else {
@@ -187,7 +187,7 @@ public class RPGCraftCommand implements CommandHandler {
                                 infusionType.getCatalystCount()));
                     }
                 }
-                
+
                 embed.setDescription(required.toString());
             }
         } else if (isPermanent) {
@@ -202,9 +202,9 @@ public class RPGCraftCommand implements CommandHandler {
                         .queue();
                 return;
             }
-            
+
             result = craftingService.craft(character, itemType);
-            
+
             if (result == CraftingResult.SUCCESS) {
                 embed.setColor(Color.GREEN);
                 embed.setDescription(String.format(
@@ -261,9 +261,9 @@ public class RPGCraftCommand implements CommandHandler {
                         .queue();
                 return;
             }
-            
+
             result = craftingService.craft(character, itemType);
-            
+
             if (result == CraftingResult.SUCCESS) {
                 embed.setColor(Color.GREEN);
                 embed.setDescription(String.format(
@@ -317,9 +317,9 @@ public class RPGCraftCommand implements CommandHandler {
         event.replyEmbeds(embed.build()).queue();
 
         // Log crafting attempt
-        String itemDisplayName = isInfusion ? 
+        String itemDisplayName = isInfusion ?
                 InfusionType.valueOf(itemName.substring("INFUSION_".length())).getDisplayName() :
-                (isPermanent ? 
+                (isPermanent ?
                         CraftedItemType.valueOf(itemName.substring("PERMANENT_".length())).getDisplayName() :
                         itemName);
         logger.info("Crafting attempted by {}: item={}, result={}",

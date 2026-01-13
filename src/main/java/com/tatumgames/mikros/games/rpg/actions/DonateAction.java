@@ -7,7 +7,10 @@ import com.tatumgames.mikros.games.rpg.service.CharacterService;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
@@ -17,7 +20,7 @@ import java.util.stream.Collectors;
 public class DonateAction implements CharacterAction {
     private static final Random random = new Random();
     private static final long ACTIVE_THRESHOLD_HOURS = 24;
-    
+
     private final CharacterService characterService;
 
     /**
@@ -147,7 +150,7 @@ public class DonateAction implements CharacterAction {
      * Checks if a character can receive a donation (hasn't received one this refresh cycle).
      *
      * @param recipient the potential recipient
-     * @param donor the donor
+     * @param donor     the donor
      * @return true if can receive donation
      */
     private boolean canReceiveDonation(RPGCharacter recipient, RPGCharacter donor) {

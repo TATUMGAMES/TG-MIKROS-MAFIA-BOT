@@ -63,7 +63,7 @@ public class BossCatalog {
         int attack = 50 + (level * 20);
         String bossId = "boss_" + definition.name.toLowerCase().replaceAll("\\s+", "_") + "_" + level;
 
-        return new Boss(bossId, definition.name, definition.type, level, maxHp, attack);
+        return new Boss(bossId, definition.name, definition.type, level, maxHp, attack, definition.hasClassHarmonyMechanic);
     }
 
     /**
@@ -79,7 +79,7 @@ public class BossCatalog {
         String bossId = "superboss_" + definition.name.toLowerCase().replaceAll("\\s+", "_") + "_" + level;
 
         return new SuperBoss(
-                bossId, definition.name, definition.type, level, maxHp, attack, definition.specialMechanic);
+                bossId, definition.name, definition.type, level, maxHp, attack, definition.specialMechanic, definition.hasClassHarmonyMechanic);
     }
 
     private static void initializeNormalBosses() {
@@ -281,18 +281,52 @@ public class BossCatalog {
                 "The Shattering Echo", BossType.ELDRITCH,
                 "A remnant of the cataclysm that created the Shattering of the First Winter.",
                 "Recreates fragments of the original Shattering, dealing massive area damage."));
+
+        SUPER_BOSSES.add(new SuperBossDefinition(
+                "The Shattered Balance", BossType.ELDRITCH,
+                "A cosmic entity born from the cataclysm that shattered Nilfheim's original balance. It exists as a living paradox: the more unified its attackers become, the more it stabilizes. It feeds on dominance and certainty. Only when power is evenly divided across all paths does its armor truly fracture.",
+                "Feeds on class uniformity. Grows stronger when attackers share the same path. Only balanced forces can truly harm it.",
+                true));
+    }
+
+    /**
+     * Gets "The Unity Devourer" boss definition.
+     * This is a special boss that spawns every 10 normal boss defeats.
+     *
+     * @param level the boss level
+     * @return the Unity Devourer boss definition
+     */
+    public static BossDefinition getUnityDevourer(int level) {
+        return new BossDefinition(
+                "The Unity Devourer",
+                BossType.ELDRITCH,
+                "A fragment of the First Winter's broken harmony. It was born from the moment mortals chose uniformity over diversity. The creature senses when too many souls move as one and it grows stronger, feeding on that singular will. Only when conflicting forces strike together does its form begin to destabilize.",
+                true
+        );
     }
 
     /**
      * Boss definition for normal bosses.
      */
-    public record BossDefinition(String name, BossType type, String lore) {
+    public record BossDefinition(String name, BossType type, String lore, boolean hasClassHarmonyMechanic) {
+        /**
+         * Creates a boss definition without class harmony mechanic.
+         */
+        public BossDefinition(String name, BossType type, String lore) {
+            this(name, type, lore, false);
+        }
     }
 
     /**
      * Super boss definition.
      */
-    public record SuperBossDefinition(String name, BossType type, String lore, String specialMechanic) {
+    public record SuperBossDefinition(String name, BossType type, String lore, String specialMechanic, boolean hasClassHarmonyMechanic) {
+        /**
+         * Creates a super boss definition without class harmony mechanic.
+         */
+        public SuperBossDefinition(String name, BossType type, String lore, String specialMechanic) {
+            this(name, type, lore, specialMechanic, false);
+        }
     }
 }
 

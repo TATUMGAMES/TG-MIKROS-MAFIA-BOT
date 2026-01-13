@@ -17,52 +17,6 @@ import java.util.List;
  */
 public class ConfigLoader {
     private static final Logger logger = LoggerFactory.getLogger(ConfigLoader.class);
-
-    /**
-     * Environment type for the application.
-     */
-    public enum Environment {
-        /**
-         * Development environment.
-         */
-        DEV("dev"),
-
-        /**
-         * Production environment.
-         */
-        PROD("prod");
-
-        private final String value;
-
-        Environment(String value) {
-            this.value = value;
-        }
-
-        /**
-         * Gets the string value of the environment.
-         *
-         * @return the environment value
-         */
-        public String getValue() {
-            return value;
-        }
-
-        /**
-         * Converts a string to an Environment enum.
-         * Defaults to PROD if value is null, blank, or unrecognized.
-         *
-         * @param value the string value to convert
-         * @return the Environment enum, defaults to PROD
-         */
-        public static Environment fromString(String value) {
-            if (value == null || value.isBlank()) {
-                return PROD; // Default to prod for safety
-            }
-            String lower = value.toLowerCase().trim();
-            return "dev".equals(lower) ? DEV : PROD;
-        }
-    }
-
     private final Dotenv dotenv;
     private final Environment environment;
     private final String botToken;
@@ -76,7 +30,6 @@ public class ConfigLoader {
     private final String reputationApiUrl;
     private final String tatumTechRecapMonthYear;
     private final String tatumTechRecapVideoUrl;
-
     /**
      * Creates a new ConfigLoader instance and loads configuration.
      *
@@ -103,25 +56,25 @@ public class ConfigLoader {
                         "Error: {}", e.getMessage());
             }
             tempDotenv = null;
-            
+
             // Try manual fallback: read .env file directly with multiple encoding attempts
             try {
                 Path envPath = Paths.get(".env");
                 if (Files.exists(envPath)) {
                     logger.info("Attempting to manually read .env file with multiple encoding attempts...");
-                    
+
                     // Try multiple encodings in order of likelihood
                     Charset[] encodingsToTry = {
-                        StandardCharsets.UTF_8,
-                        Charset.forName("Windows-1252"),  // Common Windows encoding
-                        Charset.forName("ISO-8859-1"),    // Latin-1
-                        StandardCharsets.US_ASCII,
-                        Charset.defaultCharset()          // System default as last resort
+                            StandardCharsets.UTF_8,
+                            Charset.forName("Windows-1252"),  // Common Windows encoding
+                            Charset.forName("ISO-8859-1"),    // Latin-1
+                            StandardCharsets.US_ASCII,
+                            Charset.defaultCharset()          // System default as last resort
                     };
-                    
+
                     List<String> lines = null;
                     Charset successfulEncoding = null;
-                    
+
                     for (Charset encoding : encodingsToTry) {
                         try {
                             lines = Files.readAllLines(envPath, encoding);
@@ -133,7 +86,7 @@ public class ConfigLoader {
                             logger.debug("Failed to read .env with {}: {}", encoding.name(), encodingException.getMessage());
                         }
                     }
-                    
+
                     if (lines != null && successfulEncoding != null) {
                         // Parse manually and set as system properties
                         int loadedCount = 0;
@@ -158,7 +111,7 @@ public class ConfigLoader {
                             }
                         }
                         if (loadedCount > 0) {
-                            logger.info("Successfully loaded {} variables from .env file using {} encoding", 
+                            logger.info("Successfully loaded {} variables from .env file using {} encoding",
                                     loadedCount, successfulEncoding.name());
                         } else {
                             logger.warn("Read .env file but found no valid key-value pairs");
@@ -184,8 +137,12 @@ public class ConfigLoader {
         this.mafiaGuildId = getEnv("MIKROS_MAFIA_GUILD_ID", "");
 
         // Load API configuration (optional - can be empty for mock mode)
+        // Base URL for all MIKROS API endpoints
+        String mikrosBaseUrl = environment == Environment.DEV
+                ? "https://tg-api-new-stage.uc.r.appspot.com"
+                : "https://tg-api-new.uc.r.appspot.com";
         this.mikrosApiKey = getEnv("MIKROS_API_KEY", "");
-        this.mikrosApiUrl = getEnv("MIKROS_API_URL", "https://api.tatumgames.com");
+        this.mikrosApiUrl = getEnv("MIKROS_API_URL", mikrosBaseUrl);
 
         if (mikrosApiKey == null || mikrosApiKey.isBlank()) {
             logger.warn("MIKROS_API_KEY not set - API client will operate in mock mode");
@@ -213,8 +170,12 @@ public class ConfigLoader {
                     : reputationApiKeyProd;
         }
 
-        this.reputationApiUrl = getEnv("REPUTATION_API_URL",
-                "https://tg-api-new-stage.uc.r.appspot.com/mikros/marketing/discord");
+        // Reputation API uses the same base URL as MIKROS API, with /mikros/discord path
+        // This is kept for backward compatibility but will be constructed from base URL
+        String reputationBaseUrl = environment == Environment.DEV
+                ? "https://tg-api-new-stage.uc.r.appspot.com"
+                : "https://tg-api-new.uc.r.appspot.com";
+        this.reputationApiUrl = getEnv("REPUTATION_API_URL", reputationBaseUrl + "/mikros/discord");
 
         if (reputationApiKey == null || reputationApiKey.isBlank()) {
             logger.warn("REPUTATION_API_KEY not set - reputation service will use stub responses");
@@ -323,6 +284,19 @@ public class ConfigLoader {
     }
 
     /**
+     * Gets the MIKROS API base URL based on environment.
+     * Production: https://tg-api-new.uc.r.appspot.com
+     * Development: https://tg-api-new-stage.uc.r.appspot.com
+     *
+     * @return the base URL (without trailing slash)
+     */
+    public String getMikrosApiBaseUrl() {
+        return environment == Environment.DEV
+                ? "https://tg-api-new-stage.uc.r.appspot.com"
+                : "https://tg-api-new.uc.r.appspot.com";
+    }
+
+    /**
      * Gets the reputation API key for authentication.
      *
      * @return the API key, or empty string if not configured
@@ -374,5 +348,50 @@ public class ConfigLoader {
      */
     public String getTatumTechRecapVideoUrl() {
         return tatumTechRecapVideoUrl;
+    }
+
+    /**
+     * Environment type for the application.
+     */
+    public enum Environment {
+        /**
+         * Development environment.
+         */
+        DEV("dev"),
+
+        /**
+         * Production environment.
+         */
+        PROD("prod");
+
+        private final String value;
+
+        Environment(String value) {
+            this.value = value;
+        }
+
+        /**
+         * Converts a string to an Environment enum.
+         * Defaults to PROD if value is null, blank, or unrecognized.
+         *
+         * @param value the string value to convert
+         * @return the Environment enum, defaults to PROD
+         */
+        public static Environment fromString(String value) {
+            if (value == null || value.isBlank()) {
+                return PROD; // Default to prod for safety
+            }
+            String lower = value.toLowerCase().trim();
+            return "dev".equals(lower) ? DEV : PROD;
+        }
+
+        /**
+         * Gets the string value of the environment.
+         *
+         * @return the environment value
+         */
+        public String getValue() {
+            return value;
+        }
     }
 }

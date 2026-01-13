@@ -88,7 +88,7 @@ Discord Bot.
 
 | Command            | Description                                | Permission    | Module |
 |--------------------|--------------------------------------------|---------------|--------|
-| `/rpg-register`    | Create RPG character (6 classes)           | Everyone      | RPG    |
+| `/rpg-register`    | Create RPG character (7 classes)           | Everyone      | RPG    |
 | `/rpg-profile`     | View character profile                     | Everyone      | RPG    |
 | `/rpg-action`      | Perform action (explore/train/battle/rest) | Everyone      | RPG    |
 | `/rpg-resurrect`   | Resurrect dead player (Priest-only)        | Everyone      | RPG    |
@@ -254,7 +254,7 @@ Discord Bot.
 
 **Features:**
 
-- **6 character classes:** Warrior, Knight, Mage, Rogue, Necromancer, Priest
+- **7 character classes:** Warrior, Knight, Mage, Rogue, Necromancer, Priest, Oathbreaker
 - Level and XP progression (exponential growth)
 - Stat growth system (+5 HP, +1 all stats per level)
 - **Action Charge System:** Dynamic charges (3-10 based on level), refresh every 12 hours
@@ -262,6 +262,7 @@ Discord Bot.
 - **65+ narrative encounters** (Nilfheim-themed)
 - **Wandering Figures:** Ultra-rare (0.5% chance) encounters with mysterious figures during exploration
 - **66 enemy types** for battles with stat effectiveness system
+- **Elite Enemies:** Rare enhanced enemy variants (Level 6+, 5-8% spawn chance) with custom modifiers, traits, and enhanced rewards
 - **Pack Enemies:** Rare pack enemies (e.g., "Ice Wolf Pack") deal 15% more damage and use pack-specific narrative
 - **Server-Wide Events:** Nilfheim Calms affect all players (every 48-96 hours, 12-hour duration)
 - **Consumable Infusions:** Temporary single-use crafting items with powerful effects (6 types)
@@ -273,6 +274,8 @@ Discord Bot.
 - **Boss Progression:** Levels increase based on defeats
 - **Class Bonuses:** +20% damage vs specific boss types
 - **World Curse System:** Temporary world-wide curses when bosses expire undefeated
+- **Elite Enemy System:** Rare enhanced enemies with traits, withdrawal mechanics, and special progression variants (God-Touched, Cursed Elites)
+- **Oathbreaker Class:** Unique corruption-based class with path choices, backlash events, and special god interactions
 - **Nilfheim Lore Integration**
 
 **Services:**
@@ -486,7 +489,7 @@ Discord Bot.
 ### RPG Models
 
 - `RPGCharacter` - Character data (with charges, death/recovery)
-- `CharacterClass` - Character class enum (6 classes)
+- `CharacterClass` - Character class enum (7 classes)
 - `RPGStats` - Character stats (HP, STR, AGI, INT, LUCK)
 - `RPGActionOutcome` - Action results
 - `Boss` - Normal boss data

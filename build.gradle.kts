@@ -1,6 +1,7 @@
 plugins {
     id("java")
     id("application")
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "com.tatumgames.mikros"
@@ -12,10 +13,10 @@ repositories {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(17)
     }
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 dependencies {
@@ -43,6 +44,25 @@ dependencies {
 
 application {
     mainClass.set("com.tatumgames.mikros.bot.BotMain")
+}
+
+// Configure Shadow plugin to create fat JAR
+tasks.shadowJar {
+    archiveBaseName.set("TG-MIKROS-BOT-discord")
+    archiveClassifier.set("")
+    archiveVersion.set("")
+    manifest {
+        attributes(
+            "Main-Class" to "com.tatumgames.mikros.bot.BotMain"
+        )
+    }
+    // Merge service files (important for SLF4J and other services)
+    mergeServiceFiles()
+}
+
+// Make shadowJar the default JAR task
+tasks.build {
+    dependsOn(tasks.shadowJar)
 }
 
 tasks.test {
