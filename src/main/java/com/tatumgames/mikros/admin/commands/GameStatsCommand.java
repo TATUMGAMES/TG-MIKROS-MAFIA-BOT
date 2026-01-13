@@ -187,22 +187,7 @@ public class GameStatsCommand implements CommandHandler {
         embed.setDescription("Specific content experiencing engagement spikes");
         embed.setColor(new Color(255, 69, 0));
 
-        StringBuilder contentText = new StringBuilder();
-        for (ContentStat stat : content) {
-            contentText.append(String.format("""
-                            **%d. %s** (%s) — +%.1f%%
-                                   %,d plays
-                            
-                            """,
-                    stat.rank(),
-                    stat.contentName(),
-                    stat.contentType(),
-                    stat.growthPercentage(),
-                    stat.usageCount()
-            ));
-        }
-
-        embed.addField("📈 Hot Content", contentText.toString(), false);
+        embed.addField("📈 Hot Content", buildTrendingContentText(content), false);
         embed.setFooter("Data provided by MIKROS Analytics");
         embed.setTimestamp(Instant.now());
 
@@ -221,22 +206,7 @@ public class GameStatsCommand implements CommandHandler {
         embed.setDescription("Casual, competitive, and hyper-casual trends");
         embed.setColor(new Color(255, 69, 0));
 
-        StringBuilder content = new StringBuilder();
-        for (GameplayTypeStat type : types) {
-            content.append(String.format("""
-                            **%d. %s** — +%.1f%%
-                                   %,d players | %.1f%% market share
-                            
-                            """,
-                    type.rank(),
-                    type.gameplayType(),
-                    type.growthPercentage(),
-                    type.playerCount(),
-                    type.marketShare()
-            ));
-        }
-
-        embed.addField("📈 Growth Rankings", content.toString(), false);
+        embed.addField("📈 Growth Rankings", buildTrendingGameplayTypesText(types), false);
         embed.setFooter("Data provided by MIKROS Analytics");
         embed.setTimestamp(Instant.now());
 
@@ -321,22 +291,7 @@ public class GameStatsCommand implements CommandHandler {
         embed.setDescription("Top content by total engagement");
         embed.setColor(new Color(255, 215, 0));
 
-        StringBuilder contentText = new StringBuilder();
-        for (ContentStat stat : content) {
-            contentText.append(String.format("""
-                            **%d. %s** (%s)
-                                   %,d plays | +%.1f%% growth
-                            
-                            """,
-                    stat.rank(),
-                    stat.contentName(),
-                    stat.contentType(),
-                    stat.usageCount(),
-                    stat.growthPercentage()
-            ));
-        }
-
-        embed.addField("🏆 Top Content", contentText.toString(), false);
+        embed.addField("🏆 Top Content", buildPopularContentText(content), false);
         embed.setFooter("Data provided by MIKROS Analytics");
         embed.setTimestamp(Instant.now());
 
@@ -355,6 +310,93 @@ public class GameStatsCommand implements CommandHandler {
         embed.setDescription("Top gameplay styles by player preference");
         embed.setColor(new Color(255, 215, 0));
 
+        embed.addField("🏆 Top Types", buildPopularGameplayTypesText(types), false);
+        embed.setFooter("Data provided by MIKROS Analytics");
+        embed.setTimestamp(Instant.now());
+
+        event.replyEmbeds(embed.build()).queue();
+        logger.info("Popular gameplay types requested");
+    }
+
+    /**
+     * Builds formatted text for trending content statistics.
+     *
+     * @param content list of content statistics
+     * @return formatted text string
+     */
+    private String buildTrendingContentText(List<ContentStat> content) {
+        StringBuilder contentText = new StringBuilder();
+        for (ContentStat stat : content) {
+            contentText.append(String.format("""
+                            **%d. %s** (%s) — +%.1f%%
+                                   %,d plays
+                            
+                            """,
+                    stat.rank(),
+                    stat.contentName(),
+                    stat.contentType(),
+                    stat.growthPercentage(),
+                    stat.usageCount()
+            ));
+        }
+        return contentText.toString();
+    }
+
+    /**
+     * Builds formatted text for trending gameplay types statistics.
+     *
+     * @param types list of gameplay type statistics
+     * @return formatted text string
+     */
+    private String buildTrendingGameplayTypesText(List<GameplayTypeStat> types) {
+        StringBuilder content = new StringBuilder();
+        for (GameplayTypeStat type : types) {
+            content.append(String.format("""
+                            **%d. %s** — +%.1f%%
+                                   %,d players | %.1f%% market share
+                            
+                            """,
+                    type.rank(),
+                    type.gameplayType(),
+                    type.growthPercentage(),
+                    type.playerCount(),
+                    type.marketShare()
+            ));
+        }
+        return content.toString();
+    }
+
+    /**
+     * Builds formatted text for popular content statistics.
+     *
+     * @param content list of content statistics
+     * @return formatted text string
+     */
+    private String buildPopularContentText(List<ContentStat> content) {
+        StringBuilder contentText = new StringBuilder();
+        for (ContentStat stat : content) {
+            contentText.append(String.format("""
+                            **%d. %s** (%s)
+                                   %,d plays | +%.1f%% growth
+                            
+                            """,
+                    stat.rank(),
+                    stat.contentName(),
+                    stat.contentType(),
+                    stat.usageCount(),
+                    stat.growthPercentage()
+            ));
+        }
+        return contentText.toString();
+    }
+
+    /**
+     * Builds formatted text for popular gameplay types statistics.
+     *
+     * @param types list of gameplay type statistics
+     * @return formatted text string
+     */
+    private String buildPopularGameplayTypesText(List<GameplayTypeStat> types) {
         StringBuilder content = new StringBuilder();
         for (GameplayTypeStat type : types) {
             content.append(String.format("""
@@ -369,13 +411,7 @@ public class GameStatsCommand implements CommandHandler {
                     type.growthPercentage()
             ));
         }
-
-        embed.addField("🏆 Top Types", content.toString(), false);
-        embed.setFooter("Data provided by MIKROS Analytics");
-        embed.setTimestamp(Instant.now());
-
-        event.replyEmbeds(embed.build()).queue();
-        logger.info("Popular gameplay types requested");
+        return content.toString();
     }
 
     /**

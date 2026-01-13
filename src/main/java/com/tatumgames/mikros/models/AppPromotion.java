@@ -91,6 +91,24 @@ public class AppPromotion {
         return now.isAfter(campaign.getStartDate()) && now.isBefore(campaign.getEndDate());
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AppPromotion that = (AppPromotion) o;
+        return Objects.equals(appId, that.appId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(appId);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("AppPromotion{appId='%s', appName='%s'}", appId, appName);
+    }
+
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
         @JsonProperty("appId")
@@ -594,24 +612,6 @@ public class AppPromotion {
                 return new SocialMedia(this);
             }
         }
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        AppPromotion that = (AppPromotion) o;
-        return Objects.equals(appId, that.appId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(appId);
-    }
-
-    @Override
-    public String toString() {
-        return String.format("AppPromotion{appId='%s', appName='%s'}", appId, appName);
     }
 }
 

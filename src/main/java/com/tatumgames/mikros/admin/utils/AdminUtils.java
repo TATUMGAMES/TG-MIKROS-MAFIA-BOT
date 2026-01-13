@@ -65,8 +65,8 @@ public class AdminUtils {
         }
 
         GuildChannel guildChannel = channelOption.getAsChannel();
-        MessageChannel messageChannel = null;
-        
+        MessageChannel messageChannel;
+
         if (guildChannel instanceof TextChannel textChannel) {
             messageChannel = textChannel;
         } else if (guildChannel instanceof NewsChannel newsChannel) {

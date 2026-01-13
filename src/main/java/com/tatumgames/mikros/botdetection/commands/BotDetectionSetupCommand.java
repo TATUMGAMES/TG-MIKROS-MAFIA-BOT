@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -51,7 +52,7 @@ public class BotDetectionSetupCommand implements CommandHandler {
             return;
         }
 
-        Boolean enabled = event.getOption("enabled", b -> b.getAsBoolean());
+        Boolean enabled = event.getOption("enabled", OptionMapping::getAsBoolean);
         if (enabled == null) {
             event.reply("❌ You must specify enabled (true/false).")
                     .setEphemeral(true)

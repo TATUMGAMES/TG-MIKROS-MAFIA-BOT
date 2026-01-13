@@ -13,11 +13,12 @@ public class SuperBoss {
     private final BossType type;
     private final int level;
     private final int maxHp;
-    private int currentHp;
     private final int attack;
     private final String specialMechanic;
+    private final boolean hasClassHarmonyMechanic;
     private final Instant spawnTime;
     private final Instant expiresAt;
+    private int currentHp;
     private boolean defeated;
 
     /**
@@ -32,6 +33,22 @@ public class SuperBoss {
      * @param specialMechanic description of special mechanic
      */
     public SuperBoss(String bossId, String name, BossType type, int level, int maxHp, int attack, String specialMechanic) {
+        this(bossId, name, type, level, maxHp, attack, specialMechanic, false);
+    }
+
+    /**
+     * Creates a new SuperBoss with class harmony mechanic flag.
+     *
+     * @param bossId          unique boss identifier
+     * @param name            boss name
+     * @param type            boss type
+     * @param level           super boss level
+     * @param maxHp           maximum HP (50,000 × level)
+     * @param attack          attack power
+     * @param specialMechanic description of special mechanic
+     * @param hasClassHarmonyMechanic whether this boss uses the class harmony system
+     */
+    public SuperBoss(String bossId, String name, BossType type, int level, int maxHp, int attack, String specialMechanic, boolean hasClassHarmonyMechanic) {
         this.bossId = Objects.requireNonNull(bossId);
         this.name = Objects.requireNonNull(name);
         this.type = Objects.requireNonNull(type);
@@ -40,6 +57,7 @@ public class SuperBoss {
         this.currentHp = maxHp;
         this.attack = attack;
         this.specialMechanic = specialMechanic;
+        this.hasClassHarmonyMechanic = hasClassHarmonyMechanic;
         this.spawnTime = Instant.now();
         this.expiresAt = spawnTime.plusSeconds(24 * 3600); // 24 hours
         this.defeated = false;
@@ -117,6 +135,10 @@ public class SuperBoss {
 
     public void setDefeated(boolean defeated) {
         this.defeated = defeated;
+    }
+
+    public boolean hasClassHarmonyMechanic() {
+        return hasClassHarmonyMechanic;
     }
 }
 

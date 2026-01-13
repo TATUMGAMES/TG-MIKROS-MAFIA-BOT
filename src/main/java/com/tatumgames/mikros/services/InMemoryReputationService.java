@@ -32,27 +32,28 @@ public class InMemoryReputationService implements ReputationService {
     private final Map<String, List<BehaviorReport>> reportStore;
     private final ObjectMapper objectMapper;
     private final TatumGamesApiClient apiClient;
-    private final String reputationApiUrl;
+    private final String reputationApiBaseUrl; // Base URL (without /mikros/discord)
     private final String reputationApiKey;
     private final String apiKeyType;
 
     /**
      * Creates a new InMemoryReputationService.
      *
-     * @param apiClient        the API client for making requests
-     * @param reputationApiUrl the reputation API base URL
-     * @param reputationApiKey the reputation API key
-     * @param apiKeyType       the API key type (dev or prod)
+     * @param apiClient            the API client for making requests
+     * @param reputationApiBaseUrl the base URL for the reputation API (e.g., https://tg-api-new.uc.r.appspot.com)
+     * @param reputationApiKey     the reputation API key
+     * @param apiKeyType           the API key type (dev or prod)
      */
-    public InMemoryReputationService(TatumGamesApiClient apiClient, String reputationApiUrl,
+    public InMemoryReputationService(TatumGamesApiClient apiClient, String reputationApiBaseUrl,
                                      String reputationApiKey, String apiKeyType) {
         this.reportStore = new ConcurrentHashMap<>();
         this.objectMapper = new ObjectMapper();
         this.apiClient = apiClient;
-        this.reputationApiUrl = reputationApiUrl;
+        this.reputationApiBaseUrl = reputationApiBaseUrl;
         this.reputationApiKey = reputationApiKey;
         this.apiKeyType = apiKeyType;
-        logger.info("InMemoryReputationService initialized with API key type: {}", apiKeyType);
+        logger.info("InMemoryReputationService initialized with API key type: {} and base URL: {}",
+                apiKeyType, reputationApiBaseUrl);
     }
 
     @Override
@@ -126,8 +127,8 @@ public class InMemoryReputationService implements ReputationService {
 
         try {
             TrackPlayerRatingResponse response = apiClient.postWithApiKey(
-                    reputationApiUrl,
-                    "/trackUserRating",
+                    reputationApiBaseUrl + "/mikros/discord", // Base URL with path
+                    "/trackUserRating", // Endpoint
                     request,
                     reputationApiKey,
                     TrackPlayerRatingResponse.class
@@ -206,8 +207,8 @@ public class InMemoryReputationService implements ReputationService {
 
             // Make API call
             GetUserScoreDetailResponse response = apiClient.postWithApiKey(
-                    reputationApiUrl,
-                    "/getUserScoreDetails", // Note: plural "Details"
+                    reputationApiBaseUrl + "/mikros/discord", // Base URL with path
+                    "/getUserScoreDetails", // Endpoint (Note: plural "Details")
                     request,
                     reputationApiKey,
                     GetUserScoreDetailResponse.class

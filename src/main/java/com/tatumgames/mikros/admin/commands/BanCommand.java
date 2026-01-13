@@ -82,11 +82,6 @@ public class BanCommand implements CommandHandler {
             return;
         }
 
-        if (targetUser == null) {
-            event.reply("You must specify a user.").setEphemeral(true).queue();
-            return;
-        }
-
         if (targetMember == null) {
             event.reply("❌ User is not a member of this server.")
                     .setEphemeral(true)

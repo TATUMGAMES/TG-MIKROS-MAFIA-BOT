@@ -29,7 +29,7 @@ import java.util.EnumSet;
 public class BumpConfigCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(BumpConfigCommand.class);
     private final BumpService bumpService;
-    
+
     /**
      * Creates a new BumpConfigCommand handler.
      *
@@ -38,7 +38,7 @@ public class BumpConfigCommand implements CommandHandler {
     public BumpConfigCommand(BumpService bumpService) {
         this.bumpService = bumpService;
     }
-    
+
     @Override
     public CommandData getCommandData() {
         return Commands.slash("admin-bump-config", "Configure auto-bump settings (admin only)")
@@ -58,13 +58,13 @@ public class BumpConfigCommand implements CommandHandler {
                 .setGuildOnly(true)
                 .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
-    
+
     @Override
     public void handle(SlashCommandInteractionEvent event) {
         // Check if user has permission
         Member member = event.getMember();
         Guild guild = event.getGuild();
-        
+
         if (member == null || guild == null ||
                 !member.hasPermission(Permission.ADMINISTRATOR)) {
             event.reply("❌ You must be an administrator to use this command.")
@@ -72,16 +72,16 @@ public class BumpConfigCommand implements CommandHandler {
                     .queue();
             return;
         }
-        
+
         String subcommand = event.getSubcommandName();
         if (subcommand == null) {
             event.reply("❌ Please specify a subcommand.").setEphemeral(true).queue();
             return;
         }
-        
+
         // Get guild id
         String guildId = guild.getId();
-        
+
         switch (subcommand) {
             case "view" -> handleView(event, guildId);
             case "set-interval" -> handleSetInterval(event, guildId);
@@ -90,50 +90,50 @@ public class BumpConfigCommand implements CommandHandler {
             default -> event.reply("❌ Unknown subcommand.").setEphemeral(true).queue();
         }
     }
-    
+
     private void handleView(SlashCommandInteractionEvent event, String guildId) {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("⚙️ Auto-Bump Configuration");
         embed.setColor(Color.CYAN);
-        
+
         BumpConfig config = bumpService.getConfig(guildId);
         String channelId = config.getChannelId();
         EnumSet<BumpConfig.BumpBot> enabledBots = config.getEnabledBots();
         int intervalHours = config.getIntervalHours();
-        
+
         // Status field
         embed.addField(
                 "Status",
                 config.isEnabled() ? "✅ Enabled" : "❌ Not configured",
                 true
         );
-        
+
         // Bump channel field
         embed.addField(
                 "Bump Channel",
                 channelId != null ? "<#" + channelId + ">" : "❌ Not configured",
                 true
         );
-        
+
         // Enabled bots field
         String botsDisplay = enabledBots.isEmpty()
                 ? "❌ None"
                 : String.join(", ", enabledBots.stream()
-                        .map(BumpConfig.BumpBot::getDisplayName)
-                        .toList());
+                .map(BumpConfig.BumpBot::getDisplayName)
+                .toList());
         embed.addField(
                 "Enabled Bots",
                 botsDisplay,
                 true
         );
-        
+
         // Interval field
         embed.addField(
                 "Bump Interval",
                 intervalHours + " hour(s)",
                 true
         );
-        
+
         // Last bump times
         if (!enabledBots.isEmpty()) {
             StringBuilder lastBumps = new StringBuilder();
@@ -152,12 +152,12 @@ public class BumpConfigCommand implements CommandHandler {
                     false
             );
         }
-        
+
         embed.setTimestamp(Instant.now());
-        
+
         event.replyEmbeds(embed.build()).queue();
     }
-    
+
     private void handleSetInterval(SlashCommandInteractionEvent event, String guildId) {
         // Check if bump is set up
         if (bumpService.getBumpChannel(guildId) == null) {
@@ -166,7 +166,7 @@ public class BumpConfigCommand implements CommandHandler {
                     .queue();
             return;
         }
-        
+
         // Get the interval option
         Integer interval = event.getOption("interval", OptionMapping::getAsInt);
         if (interval == null) {
@@ -175,7 +175,7 @@ public class BumpConfigCommand implements CommandHandler {
                     .queue();
             return;
         }
-        
+
         // Validate interval
         if (interval < 1 || interval > 24) {
             event.reply("❌ Interval must be between 1 and 24 hours.")
@@ -183,10 +183,10 @@ public class BumpConfigCommand implements CommandHandler {
                     .queue();
             return;
         }
-        
+
         // Save the configuration
         bumpService.setBumpInterval(guildId, interval);
-        
+
         // Send confirmation
         event.reply(String.format(
                 "✅ **Bump Interval Updated**\n\n" +
@@ -195,11 +195,11 @@ public class BumpConfigCommand implements CommandHandler {
                 interval,
                 interval
         )).queue();
-        
+
         logger.info("Bump interval set to {} hours for guild {} by user {}",
                 interval, guildId, event.getUser().getId());
     }
-    
+
     private void handleUpdateBots(SlashCommandInteractionEvent event, String guildId) {
         // Check if bump is set up
         if (bumpService.getBumpChannel(guildId) == null) {
@@ -208,7 +208,7 @@ public class BumpConfigCommand implements CommandHandler {
                     .queue();
             return;
         }
-        
+
         // Get the bots option
         String botsValue = event.getOption("bots", OptionMapping::getAsString);
         if (botsValue == null) {
@@ -217,7 +217,7 @@ public class BumpConfigCommand implements CommandHandler {
                     .queue();
             return;
         }
-        
+
         // Parse bots selection
         EnumSet<BumpConfig.BumpBot> enabledBots = parseBotsSelection(botsValue);
         if (enabledBots.isEmpty()) {
@@ -226,15 +226,15 @@ public class BumpConfigCommand implements CommandHandler {
                     .queue();
             return;
         }
-        
+
         // Save the configuration
         bumpService.setEnabledBots(guildId, enabledBots);
-        
+
         // Build bot list string
         String botsList = String.join(", ", enabledBots.stream()
                 .map(BumpConfig.BumpBot::getDisplayName)
                 .toList());
-        
+
         // Send confirmation
         event.reply(String.format(
                 "✅ **Enabled Bots Updated**\n\n" +
@@ -242,11 +242,11 @@ public class BumpConfigCommand implements CommandHandler {
                         "The bot will now bump using these services.",
                 botsList
         )).queue();
-        
-        logger.info("Enabled bots updated for guild {} by user {}: {}", 
+
+        logger.info("Enabled bots updated for guild {} by user {}: {}",
                 guildId, event.getUser().getId(), enabledBots);
     }
-    
+
     private void handleDisable(SlashCommandInteractionEvent event, String guildId) {
         // Check if bump is already disabled
         if (bumpService.getBumpChannel(guildId) == null) {
@@ -257,10 +257,10 @@ public class BumpConfigCommand implements CommandHandler {
                     .queue();
             return;
         }
-        
+
         // Clear all bump data for this guild
         bumpService.clearGuildData(guildId);
-        
+
         // Send confirmation
         event.reply("✅ **Auto-Bump Disabled**\n\n" +
                         "Auto-bump has been disabled for this server.\n\n" +
@@ -271,10 +271,10 @@ public class BumpConfigCommand implements CommandHandler {
                         "• All bump tracking data\n\n" +
                         "To re-enable, use `/admin-bump-setup`.")
                 .queue();
-        
+
         logger.info("Auto-bump disabled for guild {} by user {}", guildId, event.getUser().getId());
     }
-    
+
     /**
      * Parses the bots selection string into an EnumSet.
      *
@@ -289,7 +289,7 @@ public class BumpConfigCommand implements CommandHandler {
             default -> EnumSet.noneOf(BumpConfig.BumpBot.class);
         };
     }
-    
+
     @Override
     public String getCommandName() {
         return "admin-bump-config";

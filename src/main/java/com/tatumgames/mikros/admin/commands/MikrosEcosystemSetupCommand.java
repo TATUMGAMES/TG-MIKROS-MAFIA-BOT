@@ -17,8 +17,11 @@ import org.slf4j.LoggerFactory;
 /**
  * Command handler for /admin-mikros-ecosystem-setup.
  * Allows administrators to configure the MIKROS Ecosystem channel for their server.
+ * 
+ * TODO: Currently unused - re-enable when MIKROS Analytics API integration is complete.
+ * This class is kept for future use when the API integration is ready.
  */
-@SuppressWarnings("ClassCanBeRecord")
+@SuppressWarnings({"ClassCanBeRecord", "unused"})
 public class MikrosEcosystemSetupCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(MikrosEcosystemSetupCommand.class);
     private final GameStatsService gameStatsService;

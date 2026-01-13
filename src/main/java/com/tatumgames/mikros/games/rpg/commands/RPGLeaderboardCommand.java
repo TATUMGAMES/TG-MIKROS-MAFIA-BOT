@@ -26,15 +26,15 @@ import java.util.List;
 @SuppressWarnings("ClassCanBeRecord")
 public class RPGLeaderboardCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RPGLeaderboardCommand.class);
+    private static final int ENTRIES_PER_PAGE = 25;
     private final CharacterService characterService;
     private final ConfigLoader configLoader;
-    private static final int ENTRIES_PER_PAGE = 25;
 
     /**
      * Creates a new RPGLeaderboardCommand handler.
      *
      * @param characterService the character service
-     * @param configLoader the configuration loader
+     * @param configLoader     the configuration loader
      */
     public RPGLeaderboardCommand(CharacterService characterService, ConfigLoader configLoader) {
         this.characterService = characterService;
@@ -93,7 +93,7 @@ public class RPGLeaderboardCommand implements CommandHandler {
         String mafiaGuildId = configLoader.getMafiaGuildId();
         Guild currentGuild = event.getGuild();
         Guild mafiaGuild = null;
-        
+
         if (currentGuild != null) {
             // If MIKROS_MAFIA_GUILD_ID is configured and matches current guild, use it
             // Otherwise, if not configured, assume current guild is the Mafia guild

@@ -17,12 +17,9 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -50,19 +47,11 @@ public class GamePromotionScheduler {
     private final PromotionMessageTemplates messageTemplates;
     private final ScheduledExecutorService scheduler;
     private final Random random;
-    private JDA jda;
-
     // Per-guild rotation state
     private final Map<String, GameRotationState> rotationStates = new ConcurrentHashMap<>();
-
-    /**
-     * Rotation state for a guild.
-     */
-    private static class GameRotationState {
-        Queue<String> gameQueue;  // Queue of appIds to promote
-        Instant lastPromotionTime;
-        long currentCooldownMinutes;
-    }
+    // Track last check time per guild for verbosity enforcement
+    private final Map<String, Instant> lastCheckTimes = new ConcurrentHashMap<>();
+    private JDA jda;
 
     /**
      * Creates a new GamePromotionScheduler.
@@ -122,31 +111,44 @@ public class GamePromotionScheduler {
     }
 
     /**
-     * Checks and posts promotions for a specific guild.
+     * Gets the promotion channel for a guild, or null if not found or not configured.
+     * Logs appropriate warnings when channel is configured but not found.
      *
-     * @param guild the guild to check
+     * @param guild the guild
+     * @return the message channel, or null if not found/configured
      */
-    private void checkGuildPromotions(Guild guild) {
+    private MessageChannel getPromotionChannel(Guild guild) {
         String guildId = guild.getId();
-
-        // Get configured promotion channel
         String channelId = gamePromotionService.getPromotionChannel(guildId);
+        
         if (channelId == null) {
-            // Guild hasn't set up promotions
-            return;
+            return null;
         }
 
         // Try TextChannel first, then NewsChannel
         TextChannel textChannel = guild.getTextChannelById(channelId);
         NewsChannel newsChannel = guild.getNewsChannelById(channelId);
-        
+
         if (textChannel == null && newsChannel == null) {
             logger.warn("Configured promotion channel {} not found in guild {} (tried TextChannel and NewsChannel)", channelId, guildId);
+            return null;
+        }
+
+        // Use whichever channel was found
+        return textChannel != null ? textChannel : newsChannel;
+    }
+
+    /**
+     * Checks and posts promotions for a specific guild.
+     *
+     * @param guild the guild to check
+     */
+    private void checkGuildPromotions(Guild guild) {
+        MessageChannel channel = getPromotionChannel(guild);
+        if (channel == null) {
+            // Guild hasn't set up promotions or channel not found
             return;
         }
-        
-        // Use whichever channel was found
-        MessageChannel channel = textChannel != null ? textChannel : newsChannel;
 
         postPromotionsToChannel(guild, channel);
     }
@@ -160,24 +162,19 @@ public class GamePromotionScheduler {
      */
     public int forceCheckGuild(Guild guild) {
         String guildId = guild.getId();
-
+        
+        // Check if channel is configured (for info logging)
         String channelId = gamePromotionService.getPromotionChannel(guildId);
         if (channelId == null) {
             logger.info("Guild {} has no promotion channel configured", guildId);
             return 0;
         }
 
-        // Try TextChannel first, then NewsChannel
-        TextChannel textChannel = guild.getTextChannelById(channelId);
-        NewsChannel newsChannel = guild.getNewsChannelById(channelId);
-        
-        if (textChannel == null && newsChannel == null) {
-            logger.warn("Configured promotion channel {} not found in guild {} (tried TextChannel and NewsChannel)", channelId, guildId);
+        MessageChannel channel = getPromotionChannel(guild);
+        if (channel == null) {
+            // Channel was configured but not found (warning already logged in getPromotionChannel)
             return 0;
         }
-        
-        // Use whichever channel was found
-        MessageChannel channel = textChannel != null ? textChannel : newsChannel;
 
         return postPromotionsToChannel(guild, channel);
     }
@@ -234,7 +231,7 @@ public class GamePromotionScheduler {
         // At this point activeApps is guaranteed NOT EMPTY
         // -----------------------------------------
 
-        AppPromotion firstApp = activeApps.getFirst();
+        AppPromotion firstApp = activeApps.get(0);
         int lastStepForFirstApp = gamePromotionService.getLastPromotionStep(guildId, firstApp.getAppId());
 
         if (firstApp.getCampaign() != null && stepManager.shouldPostStep3(
@@ -298,9 +295,6 @@ public class GamePromotionScheduler {
             return 0;
         }
     }
-
-    // Track last check time per guild for verbosity enforcement
-    private final Map<String, Instant> lastCheckTimes = new ConcurrentHashMap<>();
 
     private Instant getLastCheckTime(String guildId) {
         return lastCheckTimes.get(guildId);
@@ -509,7 +503,7 @@ public class GamePromotionScheduler {
         if (app.getCampaign() != null &&
                 app.getCampaign().getImages() != null &&
                 !app.getCampaign().getImages().isEmpty()) {
-            String imageUrl = app.getCampaign().getImages().getFirst().getAppLogo();
+            String imageUrl = app.getCampaign().getImages().get(0).getAppLogo();
             if (imageUrl != null && !imageUrl.isBlank() && !imageUrl.contains("...")) {
                 embed.setImage(imageUrl);
             }
@@ -553,17 +547,17 @@ public class GamePromotionScheduler {
             // Add primary CTA for this app
             List<String> ctas = messageTemplates.getAvailableCtas(app);
             if (!ctas.isEmpty()) {
-                appInfo.append("\n").append(ctas.getFirst()); // Use first available CTA
+                appInfo.append("\n").append(ctas.get(0)); // Use first available CTA
             }
 
             embed.addField(app.getAppName(), appInfo.toString(), false);
         }
 
         // Add social media links if available (from first app)
-        if (!apps.isEmpty() && apps.getFirst().getCampaign() != null &&
-                apps.getFirst().getCampaign().getSocialMedia() != null) {
+        if (!apps.isEmpty() && apps.get(0).getCampaign() != null &&
+                apps.get(0).getCampaign().getSocialMedia() != null) {
             String socialLink = messageTemplates.getRandomSocialMediaLink(
-                    apps.getFirst().getCampaign().getSocialMedia());
+                    apps.get(0).getCampaign().getSocialMedia());
             if (socialLink != null) {
                 embed.addField("📱 Follow Us", socialLink, false);
             }
@@ -585,5 +579,14 @@ public class GamePromotionScheduler {
     public void shutdown() {
         scheduler.shutdown();
         logger.info("Game promotion scheduler stopped");
+    }
+
+    /**
+     * Rotation state for a guild.
+     */
+    private static class GameRotationState {
+        Queue<String> gameQueue;  // Queue of appIds to promote
+        Instant lastPromotionTime;
+        long currentCooldownMinutes;
     }
 }

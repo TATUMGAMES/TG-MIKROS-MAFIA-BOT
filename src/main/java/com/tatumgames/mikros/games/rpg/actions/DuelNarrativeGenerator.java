@@ -11,8 +11,8 @@ public class DuelNarrativeGenerator {
     /**
      * Generates a narrative for a duel outcome.
      *
-     * @param challenger the challenging character
-     * @param target     the target character
+     * @param challenger     the challenging character
+     * @param target         the target character
      * @param challengerWins whether the challenger won
      * @return narrative description
      */
@@ -130,11 +130,28 @@ public class DuelNarrativeGenerator {
                         "**%s**'s holy power proved superior, claiming victory over **%s**!",
                         challengerName, targetName);
             };
+            case OATHBREAKER -> switch (targetClass) {
+                case WARRIOR, KNIGHT -> String.format(
+                        "**%s**'s broken oath grants power that overwhelms **%s**'s defenses. " +
+                                "The Oathbreaker's corruption-fueled strength claimed victory!",
+                        challengerName, targetName);
+                case MAGE, NECROMANCER, PRIEST -> String.format(
+                        "**%s**'s broken oath resonates with dark power, overwhelming **%s**'s magic. " +
+                                "The Oathbreaker's contested nature triumphed!",
+                        challengerName, targetName);
+                case ROGUE -> String.format(
+                        "**%s**'s corruption-enhanced strikes found their mark despite **%s**'s speed. " +
+                                "The Oathbreaker's power claimed victory!",
+                        challengerName, targetName);
+                default -> String.format(
+                        "**%s**'s broken oath proved superior, claiming victory over **%s**!",
+                        challengerName, targetName);
+            };
         };
     }
 
     private String generateDefeatNarrative(CharacterClass challengerClass, CharacterClass targetClass,
-                                            String challengerName, String targetName) {
+                                           String challengerName, String targetName) {
         // Reverse the roles for defeat narrative
         return generateVictoryNarrative(targetClass, challengerClass, targetName, challengerName);
     }

@@ -83,6 +83,20 @@ public enum CharacterClass {
             6,   // Base AGI
             15,  // Base INT
             10   // Base LUCK
+    ),
+
+    /**
+     * Oathbreaker - A mortal who broke a divine oath and survived.
+     * Role: Contested / Risk-Reward
+     * Special: Corruption system - gains power from corruption but takes more damage.
+     * Focus: STR + LUCK based combat with corruption mechanics.
+     */
+    OATHBREAKER("Oathbreaker", "⚔️💀",
+            95,  // Base HP
+            10,  // Base STR
+            9,   // Base AGI
+            12,  // Base INT
+            8    // Base LUCK
     );
 
     private final String displayName;

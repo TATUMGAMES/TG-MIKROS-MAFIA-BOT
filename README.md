@@ -223,7 +223,7 @@ for game developers and studios.
 
 **Character System:**
 
-- **Six classes:** Warrior, Knight, Mage, Rogue, Necromancer, Priest
+- **Seven classes:** Warrior, Knight, Mage, Rogue, Necromancer, Priest, Oathbreaker
 - Persistent character progression
 - Level and XP system
 - **Balanced Stat System:** Every stat (STR, AGI, INT, LUCK, HP) has meaningful advantages AND disadvantages
@@ -551,6 +551,7 @@ Includes:
 
 ```
 /rpg-register name:Aragorn class:WARRIOR
+/rpg-register name:Oathkeeper class:OATHBREAKER
 /rpg-profile
 /rpg-action type:explore
 /rpg-action type:battle

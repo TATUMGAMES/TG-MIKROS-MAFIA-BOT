@@ -66,13 +66,17 @@ public class SetupPromotionChannelCommand implements CommandHandler {
         gamePromotionService.setPromotionChannel(guildId, channelId);
 
         // Send confirmation
-        event.reply(String.format(
-                "✅ **Game Promotion Channel Configured**\n\n" +
-                        "Promotions will now be posted in %s\n\n" +
-                        "**Next Steps:**\n" +
-                        "• Use `/admin-promotion-config set-verbosity` to control posting frequency\n" +
-                        "• Use `/admin-promotion-config force-check` to test immediately\n\n" +
-                        "Default frequency: **MEDIUM** (every 12 hours)",
+        event.reply(String.format("""
+                ✅ **Game Promotion Channel Configured**
+                
+                Promotions will now be posted in %s
+                
+                **Next Steps:**
+                • Use `/admin-promotion-config set-verbosity` to control posting frequency
+                • Use `/admin-promotion-config force-check` to test immediately
+                
+                Default frequency: **MEDIUM** (every 12 hours)
+                """,
                 channel.getAsMention()
         )).queue();
 

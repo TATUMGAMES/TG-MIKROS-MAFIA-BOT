@@ -115,6 +115,10 @@ public class RPGStats {
         return maxHp;
     }
 
+    public void setMaxHp(int maxHp) {
+        this.maxHp = maxHp;
+    }
+
     /**
      * Gets the effective max HP after applying curse effects.
      *
@@ -134,23 +138,19 @@ public class RPGStats {
      */
     public int getEffectiveMaxHp(java.util.List<com.tatumgames.mikros.games.rpg.curse.WorldCurse> activeCurses, boolean hasFrostbite) {
         int effectiveMaxHp = maxHp;
-        
+
         // Apply Curse of Frailty (-10% HP)
         if (activeCurses != null && activeCurses.contains(com.tatumgames.mikros.games.rpg.curse.WorldCurse.MINOR_CURSE_OF_FRAILTY)) {
             effectiveMaxHp = (int) (effectiveMaxHp * 0.90);
         }
-        
+
         // Apply Frostbite (-5% max HP)
         if (hasFrostbite) {
             effectiveMaxHp = (int) (effectiveMaxHp * 0.95);
         }
-        
+
         // Ensure minimum 1 HP
         return Math.max(1, effectiveMaxHp);
-    }
-
-    public void setMaxHp(int maxHp) {
-        this.maxHp = maxHp;
     }
 
     public int getCurrentHp() {
@@ -191,6 +191,46 @@ public class RPGStats {
 
     public void setLuck(int luck) {
         this.luck = luck;
+    }
+
+    /**
+     * Gets effective strength after applying multiplicative modifiers.
+     *
+     * @param modifier the multiplicative modifier (e.g., 1.15 for +15%)
+     * @return effective strength
+     */
+    public double getEffectiveStrength(double modifier) {
+        return strength * modifier;
+    }
+
+    /**
+     * Gets effective agility after applying multiplicative modifiers.
+     *
+     * @param modifier the multiplicative modifier (e.g., 1.15 for +15%)
+     * @return effective agility
+     */
+    public double getEffectiveAgility(double modifier) {
+        return agility * modifier;
+    }
+
+    /**
+     * Gets effective intelligence after applying multiplicative modifiers.
+     *
+     * @param modifier the multiplicative modifier (e.g., 1.15 for +15%)
+     * @return effective intelligence
+     */
+    public double getEffectiveIntelligence(double modifier) {
+        return intelligence * modifier;
+    }
+
+    /**
+     * Gets effective luck after applying multiplicative modifiers.
+     *
+     * @param modifier the multiplicative modifier (e.g., 1.15 for +15%)
+     * @return effective luck
+     */
+    public double getEffectiveLuck(double modifier) {
+        return luck * modifier;
     }
 }
 

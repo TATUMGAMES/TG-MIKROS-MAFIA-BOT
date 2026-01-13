@@ -124,7 +124,7 @@ public class GameStatsCommand implements CommandHandler {
             String progressBar = buildProgressBar(progression.getProgressPercentage());
             int wordsRemaining = progression.getWordsRemaining();
             int nextLevel = progression.getLevel() + 1;
-            
+
             String progressText;
             if (progression.isMaxLevel()) {
                 progressText = String.format("**Level %d**\nXP: %d / %d\n%s\n%.1f%%\n\n**Progress:** Max level reached!",
@@ -143,7 +143,7 @@ public class GameStatsCommand implements CommandHandler {
                         wordsRemaining,
                         nextLevel);
             }
-            
+
             embed.addField("📊 Progression", progressText, false);
         }
 
@@ -174,7 +174,7 @@ public class GameStatsCommand implements CommandHandler {
             String scoreText;
             if (winner.bonus() > 0) {
                 int baseScore = winner.score() - winner.bonus();
-                scoreText = String.format("%d points (%d base + %d bonus)", 
+                scoreText = String.format("%d points (%d base + %d bonus)",
                         winner.score(), baseScore, winner.bonus());
             } else {
                 scoreText = String.format("%d points", winner.score());

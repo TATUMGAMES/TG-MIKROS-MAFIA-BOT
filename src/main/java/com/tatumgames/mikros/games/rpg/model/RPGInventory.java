@@ -14,7 +14,7 @@ public class RPGInventory {
     private final Map<EssenceType, Integer> essences;
     private final Map<CatalystType, Integer> catalysts;
     private final Map<String, Integer> craftedBonuses; // stat name -> bonus amount (0-5)
-    
+
     // Active infusion (max 1 at a time)
     private InfusionType activeInfusion;
     private Instant infusionExpiresAt;
@@ -26,14 +26,14 @@ public class RPGInventory {
         this.essences = new HashMap<>();
         this.catalysts = new HashMap<>();
         this.craftedBonuses = new HashMap<>();
-        
+
         // Initialize crafted bonuses to 0
         this.craftedBonuses.put("STR", 0);
         this.craftedBonuses.put("AGI", 0);
         this.craftedBonuses.put("INT", 0);
         this.craftedBonuses.put("LUCK", 0);
         this.craftedBonuses.put("HP", 0);
-        
+
         // Initialize infusion fields
         this.activeInfusion = null;
         this.infusionExpiresAt = null;
@@ -146,9 +146,9 @@ public class RPGInventory {
     public boolean hasMaterials(CraftedItemType itemType) {
         int essenceCount = getEssenceCount(itemType.getRequiredEssence());
         int catalystCount = getCatalystCount(itemType.getRequiredCatalyst());
-        
+
         return essenceCount >= itemType.getEssenceCount() &&
-               catalystCount >= itemType.getCatalystCount();
+                catalystCount >= itemType.getCatalystCount();
     }
 
     /**
@@ -161,7 +161,7 @@ public class RPGInventory {
         if (!hasMaterials(itemType)) {
             return false;
         }
-        
+
         int currentBonus = getCraftedBonus(itemType.getStatName());
         return currentBonus < MAX_CRAFTED_BONUS_PER_STAT;
     }
@@ -176,10 +176,10 @@ public class RPGInventory {
         // Consume materials
         int essenceCount = getEssenceCount(itemType.getRequiredEssence());
         int catalystCount = getCatalystCount(itemType.getRequiredCatalyst());
-        
+
         essences.put(itemType.getRequiredEssence(), essenceCount - itemType.getEssenceCount());
         catalysts.put(itemType.getRequiredCatalyst(), catalystCount - itemType.getCatalystCount());
-        
+
         // Apply bonus (enforce cap)
         String statName = itemType.getStatName();
         int currentBonus = getCraftedBonus(statName);

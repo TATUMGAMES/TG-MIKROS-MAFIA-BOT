@@ -2,8 +2,8 @@ package com.tatumgames.mikros.games.rpg.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
-import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
+import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -33,7 +33,7 @@ public class RPGProfileCommand implements CommandHandler {
     /**
      * Creates a new RPGProfileCommand handler.
      *
-     * @param characterService the character service
+     * @param characterService  the character service
      * @param worldCurseService the world curse service
      */
     public RPGProfileCommand(CharacterService characterService, WorldCurseService worldCurseService) {
@@ -79,7 +79,7 @@ public class RPGProfileCommand implements CommandHandler {
 
         // Build profile embed
         EmbedBuilder embed = new EmbedBuilder();
-        
+
         // Build title with character title prefix if present
         String titlePrefix = character.getTitle() != null ? character.getTitle() + " " : "";
         embed.setTitle(String.format(
@@ -170,24 +170,24 @@ public class RPGProfileCommand implements CommandHandler {
         craftedBonuses.append(String.format("INT: **+%d/5**\n", inventory.getCraftedBonus("INT")));
         craftedBonuses.append(String.format("LUCK: **+%d/5** | ", inventory.getCraftedBonus("LUCK")));
         craftedBonuses.append(String.format("HP: **+%d/5**", inventory.getCraftedBonus("HP")));
-        
+
         embed.addField("✨ Crafted Bonuses", craftedBonuses.toString(), false);
 
         // Temporary Debuffs
         StringBuilder debuffs = new StringBuilder();
         boolean hasDebuffs = false;
-        
+
         if (character.hasFrostbite()) {
             debuffs.append("🩸 **Frostbite:** Max HP reduced by 5% (removed by rest)\n");
             hasDebuffs = true;
         }
-        
+
         if (character.getDarkRelicActionsRemaining() > 0) {
             debuffs.append(String.format("🕯️ **Dark Relic:** +5%% XP, +10%% damage taken (%d actions remaining)\n",
                     character.getDarkRelicActionsRemaining()));
             hasDebuffs = true;
         }
-        
+
         if (hasDebuffs) {
             embed.addField("⚠️ Temporary Effects", debuffs.toString().trim(), false);
         }
@@ -214,6 +214,58 @@ public class RPGProfileCommand implements CommandHandler {
         if (!character.getStoryFlags().isEmpty()) {
             String flags = String.join(" | ", character.getStoryFlags());
             embed.addField("📜 Legend", flags, false);
+        }
+
+        // Irrevocable World Encounters
+        StringBuilder irrevocableInfo = new StringBuilder();
+        boolean hasIrrevocable = false;
+
+        if (character.getDeityBlessing() != null) {
+            String deityName = character.getDeityBlessing().replace("_", " ");
+            irrevocableInfo.append(String.format("🏛️ **Deity:** %s\n", deityName));
+            hasIrrevocable = true;
+        }
+
+        if (character.getRelicChoice() != null) {
+            String relicName = character.getRelicChoice().replace("_", " ");
+            irrevocableInfo.append(String.format("⚔️ **Relic:** %s\n", relicName));
+            hasIrrevocable = true;
+        }
+
+        if (character.getPhilosophicalPath() != null) {
+            String pathName = character.getPhilosophicalPath();
+            if ("UNBOUND".equals(pathName)) {
+                irrevocableInfo.append("⚖️ **Path:** Unbound\n");
+            } else if ("GODMARKED".equals(pathName)) {
+                irrevocableInfo.append("👤 **Path:** God-Marked\n");
+            } else {
+                irrevocableInfo.append(String.format("📿 **Path:** %s\n", pathName));
+            }
+            hasIrrevocable = true;
+        }
+
+        if (hasIrrevocable) {
+            embed.addField("🔮 Irrevocable Choices", irrevocableInfo.toString().trim(), false);
+        }
+
+        // World Flags (separate from story flags)
+        if (!character.getWorldFlags().isEmpty()) {
+            String worldFlags = String.join(" | ", character.getWorldFlags());
+            embed.addField("🌍 World Flags", worldFlags, false);
+        }
+
+        // Active Stat Modifiers
+        var statModifiers = character.getStatModifiers();
+        if (!statModifiers.isEmpty()) {
+            StringBuilder modifierInfo = new StringBuilder();
+            for (var entry : statModifiers.entrySet()) {
+                String statName = entry.getKey().replace("_EFFECTIVENESS", "").replace("_", " ");
+                double modifier = entry.getValue();
+                double percentChange = (modifier - 1.0) * 100;
+                String sign = percentChange >= 0 ? "+" : "";
+                modifierInfo.append(String.format("%s: **%s%.0f%%**\n", statName, sign, percentChange));
+            }
+            embed.addField("⚡ Active Modifiers", modifierInfo.toString().trim(), false);
         }
 
         // Active World Curses
