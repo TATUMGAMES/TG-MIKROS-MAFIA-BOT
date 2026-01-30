@@ -12,14 +12,15 @@ public class SuperBoss {
     private final String name;
     private final BossType type;
     private final int level;
-    private final int maxHp;
-    private final int attack;
+    private int maxHp;
+    private int attack;
     private final String specialMechanic;
     private final boolean hasClassHarmonyMechanic;
     private final Instant spawnTime;
     private final Instant expiresAt;
     private int currentHp;
     private boolean defeated;
+    private int empowermentLevel; // 0 = none, 1 = 3 failures, 2 = 5 failures
 
     /**
      * Creates a new SuperBoss.
@@ -61,6 +62,7 @@ public class SuperBoss {
         this.spawnTime = Instant.now();
         this.expiresAt = spawnTime.plusSeconds(24 * 3600); // 24 hours
         this.defeated = false;
+        this.empowermentLevel = 0;
     }
 
     /**
@@ -139,6 +141,26 @@ public class SuperBoss {
 
     public boolean hasClassHarmonyMechanic() {
         return hasClassHarmonyMechanic;
+    }
+
+    public int getEmpowermentLevel() {
+        return empowermentLevel;
+    }
+
+    public void setEmpowermentLevel(int empowermentLevel) {
+        this.empowermentLevel = empowermentLevel;
+    }
+
+    public void setMaxHp(int maxHp) {
+        this.maxHp = maxHp;
+        // Adjust current HP if it exceeds new max
+        if (this.currentHp > maxHp) {
+            this.currentHp = maxHp;
+        }
+    }
+
+    public void setAttack(int attack) {
+        this.attack = attack;
     }
 }
 
