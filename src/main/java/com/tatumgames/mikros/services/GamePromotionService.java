@@ -62,6 +62,18 @@ public interface GamePromotionService {
     int getLastPromotionStep(String guildId, String appId);
 
     /**
+     * Gets the last promotion step posted for a campaign in a guild.
+     * Returns 0 if never promoted, or 1-4 for the last step posted.
+     * Uses campaignId to track campaigns independently, allowing multiple campaigns per app.
+     *
+     * @param guildId    the guild ID
+     * @param appId      the app ID
+     * @param campaignId the campaign ID (can be null for backward compatibility)
+     * @return promotion step (0-4)
+     */
+    int getLastPromotionStep(String guildId, String appId, String campaignId);
+
+    /**
      * Records that a promotion step was posted for an app in a guild.
      *
      * @param guildId  the guild ID
@@ -70,6 +82,18 @@ public interface GamePromotionService {
      * @param postTime the time when posted
      */
     void recordPromotionStep(String guildId, String appId, int step, Instant postTime);
+
+    /**
+     * Records that a promotion step was posted for a campaign in a guild.
+     * Uses campaignId to track campaigns independently, allowing multiple campaigns per app.
+     *
+     * @param guildId    the guild ID
+     * @param appId      the app ID
+     * @param campaignId the campaign ID (can be null for backward compatibility)
+     * @param step       the promotion step (1-4)
+     * @param postTime   the time when posted
+     */
+    void recordPromotionStep(String guildId, String appId, String campaignId, int step, Instant postTime);
 
     /**
      * Checks if an app has been promoted in a guild (any step).
@@ -81,6 +105,17 @@ public interface GamePromotionService {
     boolean hasAppBeenPromoted(String guildId, String appId);
 
     /**
+     * Checks if a campaign has been promoted in a guild (any step).
+     * Uses campaignId to track campaigns independently, allowing multiple campaigns per app.
+     *
+     * @param guildId    the guild ID
+     * @param appId      the app ID
+     * @param campaignId the campaign ID (can be null for backward compatibility)
+     * @return true if campaign has been promoted
+     */
+    boolean hasAppBeenPromoted(String guildId, String appId, String campaignId);
+
+    /**
      * Gets the last post time for an app in a guild.
      *
      * @param guildId the guild ID
@@ -88,5 +123,16 @@ public interface GamePromotionService {
      * @return the last post time, or null if never posted
      */
     Instant getLastAppPostTime(String guildId, String appId);
+
+    /**
+     * Gets the last post time for a campaign in a guild.
+     * Uses campaignId to track campaigns independently, allowing multiple campaigns per app.
+     *
+     * @param guildId    the guild ID
+     * @param appId      the app ID
+     * @param campaignId the campaign ID (can be null for backward compatibility)
+     * @return the last post time, or null if never posted
+     */
+    Instant getLastAppPostTime(String guildId, String appId, String campaignId);
 }
 

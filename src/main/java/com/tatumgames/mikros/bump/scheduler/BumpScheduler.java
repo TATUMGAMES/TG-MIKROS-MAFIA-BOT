@@ -139,16 +139,43 @@ public class BumpScheduler {
         int intervalHours = config.getIntervalHours();
         Instant now = Instant.now();
 
-        // Check each enabled bot
+        // Collect all bots that need bumping
+        EnumSet<BumpConfig.BumpBot> botsToBump = EnumSet.noneOf(BumpConfig.BumpBot.class);
         for (BumpConfig.BumpBot bot : enabledBots) {
             try {
                 if (shouldBump(guild, bot, config, intervalHours, now)) {
-                    sendBumpCommand(channel, bot);
-                    bumpService.recordBumpTime(guildId, bot, now);
-                    logger.info("Executed bump for bot {} in guild {}", bot.getDisplayName(), guildId);
+                    botsToBump.add(bot);
                 }
             } catch (Exception e) {
+                logger.error("Error checking bump for bot {} in guild {}", bot, guildId, e);
+            }
+        }
+
+        // Send reminder based on number of bots that need bumping
+        if (botsToBump.isEmpty()) {
+            // No bots need bumping
+            return;
+        } else if (botsToBump.size() == 1) {
+            // Single bot needs bumping - send single bot message
+            BumpConfig.BumpBot bot = botsToBump.iterator().next();
+            try {
+                sendBumpCommand(channel, bot);
+                bumpService.recordBumpTime(guildId, bot, now);
+                logger.info("Executed bump for bot {} in guild {}", bot.getDisplayName(), guildId);
+            } catch (Exception e) {
                 logger.error("Error executing bump for bot {} in guild {}", bot, guildId, e);
+            }
+        } else {
+            // Multiple bots need bumping - send combined message
+            try {
+                sendCombinedBumpReminder(channel, botsToBump);
+                // Record bump time for all bots
+                for (BumpConfig.BumpBot bot : botsToBump) {
+                    bumpService.recordBumpTime(guildId, bot, now);
+                }
+                logger.info("Executed combined bump reminder for {} bots in guild {}", botsToBump.size(), guildId);
+            } catch (Exception e) {
+                logger.error("Error executing combined bump reminder in guild {}", guildId, e);
             }
         }
     }
@@ -251,6 +278,69 @@ public class BumpScheduler {
             case DISBOARD -> DISBOARD_MIN_COOLDOWN_HOURS;
             case DISURL -> DISURL_MIN_COOLDOWN_HOURS;
         };
+    }
+
+    /**
+     * Sends a combined bump reminder for multiple bots.
+     *
+     * @param channel the channel to send in
+     * @param bots    the set of bots to bump
+     */
+    private void sendCombinedBumpReminder(TextChannel channel, EnumSet<BumpConfig.BumpBot> bots) {
+        // Build bot names list
+        String botNames = bots.stream()
+                .map(BumpConfig.BumpBot::getDisplayName)
+                .reduce((a, b) -> a + " and " + b)
+                .orElse("");
+
+        EmbedBuilder embed = new EmbedBuilder();
+        embed.setTitle("⏰ Time to Bump the Server!");
+        embed.setDescription(String.format(
+                "Please run /bump to bump the server on **%s**.\n\n" +
+                        "This helps keep the server visible on server listing sites! 🚀",
+                botNames
+        ));
+        embed.setColor(Color.CYAN);
+        embed.setFooter("Click the buttons below for quick actions");
+        embed.setTimestamp(Instant.now());
+
+        // Create buttons for each bot
+        MessageCreateBuilder messageBuilder = new MessageCreateBuilder()
+                .setEmbeds(embed.build());
+
+        // Add button rows for each bot (Discord allows up to 5 buttons per row, 5 rows max)
+        int buttonCount = 0;
+        for (BumpConfig.BumpBot bot : bots) {
+            if (buttonCount >= 15) { // Max 15 buttons total (3 per bot * 5 bots max)
+                break;
+            }
+
+            Button copyCommandButton = Button.secondary(
+                    "bump_copy_" + bot.name().toLowerCase(),
+                    "📋 Copy " + bot.getDisplayName()
+            ).withEmoji(Emoji.fromUnicode("📋"));
+
+            Button instructionsButton = Button.link(
+                    bot == BumpConfig.BumpBot.DISBOARD
+                            ? "https://disboard.org/help"
+                            : "https://disurl.com/help",
+                    "📖 " + bot.getDisplayName() + " Help"
+            ).withEmoji(Emoji.fromUnicode("📖"));
+
+            Button botMentionButton = Button.secondary(
+                    "bump_mention_" + bot.name().toLowerCase(),
+                    "👤 Mention " + bot.getDisplayName()
+            ).withEmoji(Emoji.fromUnicode("👤"));
+
+            messageBuilder.addActionRow(copyCommandButton, instructionsButton, botMentionButton);
+            buttonCount += 3;
+        }
+
+        channel.sendMessage(messageBuilder.build()).queue(
+                success -> logger.info("Sent combined bump reminder for {} in channel {}", botNames, channel.getId()),
+                error -> logger.warn("Failed to send combined bump reminder to channel {}: {}",
+                        channel.getId(), error.getMessage())
+        );
     }
 
     /**

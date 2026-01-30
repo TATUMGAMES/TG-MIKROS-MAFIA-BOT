@@ -2,6 +2,7 @@ package com.tatumgames.mikros.services.scheduler;
 
 import com.tatumgames.mikros.models.AppPromotion;
 import com.tatumgames.mikros.models.PromotionVerbosity;
+import com.tatumgames.mikros.promo.cta.CTAPrioritySelector;
 import com.tatumgames.mikros.promo.manager.PromotionStepManager;
 import com.tatumgames.mikros.promo.template.PromotionMessageTemplates;
 import com.tatumgames.mikros.services.GamePromotionService;
@@ -62,7 +63,11 @@ public class GamePromotionScheduler {
         this.gamePromotionService = gamePromotionService;
         this.stepManager = new PromotionStepManager();
         this.messageTemplates = new PromotionMessageTemplates();
-        this.scheduler = Executors.newScheduledThreadPool(1);
+        this.scheduler = Executors.newScheduledThreadPool(1, r -> {
+            Thread t = new Thread(r, "game-promotion-scheduler");
+            t.setDaemon(true);
+            return t;
+        });
         this.random = new Random();
         logger.info("GamePromotionScheduler initialized");
     }
@@ -227,33 +232,42 @@ public class GamePromotionScheduler {
         }
 
         // -----------------------------------------
-        // Step 3: Multi-game promotion check
+        // Multi-game promotion check (dynamic position)
         // At this point activeApps is guaranteed NOT EMPTY
         // -----------------------------------------
 
         AppPromotion firstApp = activeApps.get(0);
-        int lastStepForFirstApp = gamePromotionService.getLastPromotionStep(guildId, firstApp.getAppId());
+        if (firstApp.getCampaign() != null) {
+            String firstAppCampaignId = firstApp.getCampaign().getCampaignId();
+            int lastStepForFirstApp = gamePromotionService.getLastPromotionStep(guildId, firstApp.getAppId(), firstAppCampaignId);
 
-        if (firstApp.getCampaign() != null && stepManager.shouldPostStep3(
-                activeApps,
-                lastStepForFirstApp,
-                firstApp.getCampaign().getStartDate(),
-                firstApp.getCampaign().getEndDate(),
-                now)) {
+            // Get dynamic multi-game step position
+            int multiGameStepPosition = stepManager.getMultiGameStepPosition(
+                    firstApp.getCampaign().getStartDate(),
+                    firstApp.getCampaign().getEndDate());
 
-            try {
-                postMultiGamePromotion(channel, activeApps);
+            if (stepManager.shouldPostStep3(
+                    activeApps,
+                    lastStepForFirstApp,
+                    firstApp.getCampaign().getStartDate(),
+                    firstApp.getCampaign().getEndDate(),
+                    now)) {
 
-                // Record step 3 for all apps
-                for (AppPromotion app : activeApps) {
-                    gamePromotionService.recordPromotionStep(guildId, app.getAppId(), 3, now);
+                try {
+                    postMultiGamePromotion(channel, activeApps);
+
+                    // Record multi-game step for all apps at the calculated position
+                    for (AppPromotion app : activeApps) {
+                        String campaignId = app.getCampaign() != null ? app.getCampaign().getCampaignId() : null;
+                        gamePromotionService.recordPromotionStep(guildId, app.getAppId(), campaignId, multiGameStepPosition, now);
+                    }
+
+                    logger.info("Posted multi-game promotion (step {}) in guild {}", multiGameStepPosition, guildId);
+                    return 1;
+
+                } catch (Exception e) {
+                    logger.error("Failed to post multi-game promotion", e);
                 }
-
-                logger.info("Posted multi-game promotion (step 3) in guild {}", guildId);
-                return 1;
-
-            } catch (Exception e) {
-                logger.error("Failed to post multi-game promotion", e);
             }
         }
 
@@ -268,8 +282,9 @@ public class GamePromotionScheduler {
             return 0;
         }
 
-        int lastStep = gamePromotionService.getLastPromotionStep(guildId, nextApp.getAppId());
-        Instant lastPostTime = gamePromotionService.getLastAppPostTime(guildId, nextApp.getAppId());
+        String nextAppCampaignId = nextApp.getCampaign() != null ? nextApp.getCampaign().getCampaignId() : null;
+        int lastStep = gamePromotionService.getLastPromotionStep(guildId, nextApp.getAppId(), nextAppCampaignId);
+        Instant lastPostTime = gamePromotionService.getLastAppPostTime(guildId, nextApp.getAppId(), nextAppCampaignId);
         int nextStep = stepManager.determineNextStep(nextApp, lastStep, lastPostTime, activeApps, now);
 
         if (nextStep == 0) {
@@ -277,14 +292,19 @@ public class GamePromotionScheduler {
             return 0;
         }
 
-        // Skip step 3 (already handled earlier)
-        if (nextStep == 3) {
-            return 0;
+        // Skip multi-game step if it's the calculated position (already handled earlier)
+        if (nextApp.getCampaign() != null) {
+            int multiGameStepPosition = stepManager.getMultiGameStepPosition(
+                    nextApp.getCampaign().getStartDate(),
+                    nextApp.getCampaign().getEndDate());
+            if (nextStep == multiGameStepPosition) {
+                return 0; // Multi-game step handled separately
+            }
         }
 
         try {
             postAppPromotion(channel, nextApp, nextStep, activeApps);
-            gamePromotionService.recordPromotionStep(guildId, nextApp.getAppId(), nextStep, now);
+            gamePromotionService.recordPromotionStep(guildId, nextApp.getAppId(), nextAppCampaignId, nextStep, now);
 
             logger.info("Posted promotion step {} for app {} in guild {}",
                     nextStep, nextApp.getAppId(), guildId);
@@ -459,7 +479,7 @@ public class GamePromotionScheduler {
      *
      * @param channel the channel
      * @param app     the app promotion
-     * @param step    the promotion step (1, 2, or 4)
+     * @param step    the promotion step number
      * @param allApps all active apps (for context)
      */
     private void postAppPromotion(MessageChannel channel, AppPromotion app, int step, List<AppPromotion> allApps) {
@@ -467,33 +487,67 @@ public class GamePromotionScheduler {
         embed.setTitle("🎮 " + app.getAppName());
         embed.setColor(Color.CYAN);
 
-        // Get message template for this step
-        String template = messageTemplates.getTemplate(step);
+        // Determine step type and get appropriate template
+        PromotionStepManager.StepType stepType = PromotionStepManager.StepType.INTRODUCTION;
+        if (app.getCampaign() != null) {
+            int totalSteps = stepManager.calculateStepCount(
+                    app.getCampaign().getStartDate(),
+                    app.getCampaign().getEndDate());
+            int multiGameStepPosition = stepManager.getMultiGameStepPosition(
+                    app.getCampaign().getStartDate(),
+                    app.getCampaign().getEndDate());
+            boolean isMultiGameStep = (step == multiGameStepPosition);
+            stepType = stepManager.getStepType(step, totalSteps, isMultiGameStep);
+        }
+
+        // Create campaign key for template tracking
+        String campaignKey = app.getAppId() + ":" +
+                (app.getCampaign() != null && app.getCampaign().getCampaignId() != null
+                        ? app.getCampaign().getCampaignId() : "none");
+
+        // Get message template for this step type
+        String template = messageTemplates.getTemplate(stepType, campaignKey);
         String message = messageTemplates.formatMessage(template, app, allApps);
 
         embed.setDescription(message);
 
-        // Add CTAs (at least one required)
-        List<String> availableCtas = messageTemplates.getAvailableCtas(app);
-        if (!availableCtas.isEmpty()) {
-            String ctaText = messageTemplates.getRandomCta();
-            StringBuilder ctaSection = new StringBuilder(ctaText + "\n");
+        // Add CTAs using priority selector (conversion-optimized)
+        if (app.getCampaign() != null && app.getCampaign().getEffectiveCTAs() != null) {
+            AppPromotion.CTAs ctas = app.getCampaign().getEffectiveCTAs();
 
-            // Include at least one CTA, randomly select from available
-            int ctaCount = Math.min(availableCtas.size(), random.nextInt(3) + 1); // 1-3 CTAs
-            for (int i = 0; i < ctaCount && i < availableCtas.size(); i++) {
-                ctaSection.append(availableCtas.get(i));
-                if (i < ctaCount - 1) {
-                    ctaSection.append(" | ");
+            // Get prioritized CTAs (allow secondary with 30-40% chance)
+            PromotionMessageTemplates.PrioritizedCTAs prioritizedCTAs =
+                    messageTemplates.getPrioritizedCTAs(app, true);
+
+            if (prioritizedCTAs.hasAnyCTAs()) {
+                // Primary CTAs section
+                List<CTAPrioritySelector.CTALink> primaryCTAs =
+                        prioritizedCTAs.getPrimaryCTAs();
+
+                if (!primaryCTAs.isEmpty()) {
+                    String primaryHeader = messageTemplates.getIntentDrivenCtaHeader(ctas);
+
+                    // Join primary CTAs with " | "
+                    String primarySection = primaryHeader + "\n" + primaryCTAs.stream()
+                            .map(CTAPrioritySelector.CTALink::toMarkdown)
+                            .collect(Collectors.joining(" | "));
+
+                    embed.addField("🎯 Play Now", primarySection, false);
+                }
+
+                // Optional secondary CTA section (30-40% chance)
+                CTAPrioritySelector.CTALink secondaryCTA =
+                        prioritizedCTAs.getSecondaryCTA();
+
+                if (secondaryCTA != null) {
+                    embed.addField("👀 Learn More", secondaryCTA.toMarkdown(), false);
                 }
             }
-
-            embed.addField("🔗 Links", ctaSection.toString(), false);
         }
 
         // Optionally add social media links (~30% chance)
-        if (app.getCampaign() != null && app.getCampaign().getSocialMedia() != null) {
-            String socialLink = messageTemplates.getRandomSocialMediaLink(app.getCampaign().getSocialMedia());
+        if (app.getCampaign() != null && app.getCampaign().getEffectiveSocialMedia() != null) {
+            String socialLink = messageTemplates.getRandomSocialMediaLink(app.getCampaign().getEffectiveSocialMedia());
             if (socialLink != null) {
                 embed.addField("📱 Follow Us", socialLink, false);
             }
@@ -509,8 +563,10 @@ public class GamePromotionScheduler {
             }
         }
 
-        // Add MIKROS Marketing footer (always on step 4, randomly on steps 1-2)
-        if (messageTemplates.shouldShowMikrosFooter(step)) {
+        // Add MIKROS Marketing footer (always on final step and multi-game, randomly on others)
+        boolean isFinalStep = (stepType == PromotionStepManager.StepType.FINAL_CHANCE);
+        boolean isMultiGame = (stepType == PromotionStepManager.StepType.MULTI_GAME);
+        if (isFinalStep || isMultiGame || (step == 1 && random.nextInt(100) < 35)) {
             embed.setFooter(messageTemplates.getRandomMikrosFooter());
         } else {
             embed.setFooter("Powered by MIKROS Marketing");
@@ -524,7 +580,7 @@ public class GamePromotionScheduler {
     }
 
     /**
-     * Posts a multi-game promotion (step 3).
+     * Posts a multi-game promotion.
      *
      * @param channel the channel
      * @param apps    list of active apps to promote
@@ -534,8 +590,8 @@ public class GamePromotionScheduler {
         embed.setTitle("🌟 MIKROS Top Picks for this month");
         embed.setColor(Color.MAGENTA);
 
-        // Get template for step 3
-        String template = messageTemplates.getTemplate(3);
+        // Get template for multi-game step type
+        String template = messageTemplates.getTemplate(PromotionStepManager.StepType.MULTI_GAME, null);
         String message = messageTemplates.formatMessage(template, null, apps);
 
         embed.setDescription(message);
@@ -544,10 +600,18 @@ public class GamePromotionScheduler {
         for (AppPromotion app : apps) {
             StringBuilder appInfo = new StringBuilder(app.getShortDescription());
 
-            // Add primary CTA for this app
-            List<String> ctas = messageTemplates.getAvailableCtas(app);
-            if (!ctas.isEmpty()) {
-                appInfo.append("\n").append(ctas.get(0)); // Use first available CTA
+            // Add primary CTA for this app (no secondary in multi-game view)
+            if (app.getCampaign() != null && app.getCampaign().getEffectiveCTAs() != null) {
+                PromotionMessageTemplates.PrioritizedCTAs prioritizedCTAs =
+                        messageTemplates.getPrioritizedCTAs(app, false); // No secondary for multi-game
+
+                List<CTAPrioritySelector.CTALink> primaryCTAs =
+                        prioritizedCTAs.getPrimaryCTAs();
+
+                if (!primaryCTAs.isEmpty()) {
+                    // Use first primary CTA
+                    appInfo.append("\n").append(primaryCTAs.get(0).toMarkdown());
+                }
             }
 
             embed.addField(app.getAppName(), appInfo.toString(), false);
@@ -555,9 +619,9 @@ public class GamePromotionScheduler {
 
         // Add social media links if available (from first app)
         if (!apps.isEmpty() && apps.get(0).getCampaign() != null &&
-                apps.get(0).getCampaign().getSocialMedia() != null) {
+                apps.get(0).getCampaign().getEffectiveSocialMedia() != null) {
             String socialLink = messageTemplates.getRandomSocialMediaLink(
-                    apps.get(0).getCampaign().getSocialMedia());
+                    apps.get(0).getCampaign().getEffectiveSocialMedia());
             if (socialLink != null) {
                 embed.addField("📱 Follow Us", socialLink, false);
             }
@@ -577,8 +641,10 @@ public class GamePromotionScheduler {
      * Stops the scheduler.
      */
     public void shutdown() {
-        scheduler.shutdown();
-        logger.info("Game promotion scheduler stopped");
+        if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.shutdown();
+            logger.info("Game promotion scheduler stopped");
+        }
     }
 
     /**

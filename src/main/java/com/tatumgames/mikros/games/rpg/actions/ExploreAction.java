@@ -1,5 +1,7 @@
 package com.tatumgames.mikros.games.rpg.actions;
 
+import com.tatumgames.mikros.games.rpg.biome.BiomeLore;
+import com.tatumgames.mikros.games.rpg.biome.BiomeType;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
 import com.tatumgames.mikros.games.rpg.events.NilfheimEventType;
@@ -22,97 +24,6 @@ import java.util.Random;
  */
 public class ExploreAction implements CharacterAction {
     private static final Random random = new Random();
-    private static final String[] NARRATIVES = {
-            // Original 15 narratives
-            "You ventured into an ancient forest and discovered a hidden shrine. The spirits blessed your journey.",
-            "While exploring a misty valley, you helped a lost traveler find their way home.",
-            "You stumbled upon a mysterious cave filled with glowing crystals. Their energy invigorates you.",
-            "In a bustling market square, you learned valuable techniques from a traveling merchant.",
-            "You climbed a towering mountain and witnessed a breathtaking sunrise. Clarity washes over you.",
-            "Deep in a dungeon, you found ancient texts that expanded your knowledge.",
-            "You crossed paths with a friendly bard who shared tales of legendary heroes.",
-            "While resting by a enchanted spring, you felt your potential grow stronger.",
-            "You discovered ruins of an old civilization and learned from their forgotten wisdom.",
-            "A chance encounter with a wise hermit taught you valuable life lessons.",
-            "You found a peaceful grove where time seems to stand still. Meditation here brings growth.",
-            "In the depths of a library, you uncovered secrets that broaden your understanding.",
-            "You helped villagers defend against bandits, earning their gratitude and respect.",
-            "While foraging in the wilderness, you found rare herbs that boost your vitality.",
-            "You solved an ancient puzzle in a long-forgotten temple, unlocking hidden knowledge.",
-            // Nilfheim-specific narratives (20 additional)
-            "You discover a frozen shrine emitting faint blue light.",
-            "Tracks in the snow lead you to an abandoned campsite.",
-            "A wandering merchant greets you, then vanishes in a flurry of snow.",
-            "You find a rune-inscribed stone warm to the touch.",
-            "A mysterious whisper echoes through a frost cavern.",
-            "You witness two spirits dancing in the moonlight before fading away.",
-            "A sudden blizzard almost blinds you, but you push onward.",
-            "You spot a distant figure watching you… then it disappears.",
-            "A strange glowing feather lands in your palm.",
-            "You wander into a hollow tree filled with shimmering frost-bugs.",
-            "You hear soft music carried by the wind — but no musician in sight.",
-            "A frozen river cracks beneath you, revealing runes below.",
-            "You find a broken sword half-buried in the ice.",
-            "A ghostly wolf follows you for miles, then stops and howls.",
-            "You discover a frostflower blooming defiantly in the snow.",
-            "A cavern wall glitters with crystals containing trapped wisps.",
-            "You find a torn page describing an ancient Nilfheim prophecy.",
-            "A glowing moth guides you safely through a twisting ravine.",
-            "You uncover footprints that abruptly stop mid-stride.",
-            "You stumble onto a frozen battlefield where echoes of war linger.",
-            "You trace ancient runes carved into an iceberg shaped like a giant's skull.",
-            "A faint trail of warmth leads you to a buried emberstone.",
-            "You glimpse a mythical frost stag before it bounds into the blizzard.",
-            "A forgotten watchtower creaks as the wind pushes against its frozen wood.",
-            "You find a shattered mirror that reflects a version of you that doesn't move.",
-            "A hidden hot spring steams gently in the cold air.",
-            "You hear distant drums echoing from beneath the ground.",
-            "A shard of pale crystal pulses faintly as you approach.",
-            "You witness a meteor streak across the sky, embedding itself into a glacier.",
-            "Frozen statues line a canyon, each face twisted in terror.",
-            "A phantom caravan trudges by, fading as it passes.",
-            "You encounter a whispering fissure that seems to respond to your thoughts.",
-            "An eerie silence descends — even the wind stops.",
-            "You find a glowing rune marking the next lunar eclipse.",
-            "A frozen clocktower ticks once as you walk past, then stops again.",
-            "You hear a lullaby sung by an unseen voice.",
-            "Strange footprints circle around you… and disappear.",
-            "You catch a glimpse of a shadow that mirrors your movements perfectly.",
-            "You find a torn cloak clasp made of dragonbone.",
-            "The sky ripples with aurora lights that form strange, ancient symbols.",
-            // New Nilfheim lore narratives (30 additional)
-            "You discover ancient ruins from before the Shattering, their runes still glowing faintly.",
-            "A Stormwarden passes by, leaving behind a trail of crackling Gale energy.",
-            "You find a hidden entrance to the Grand Library of Nil City, filled with forbidden knowledge.",
-            "The twin moons align, revealing a path through the Spirit Veil that wasn't there before.",
-            "You stumble upon the Moonspire Obelisk, its ancient runic inscriptions pulsing with power.",
-            "A fragment of the Shattering of the First Winter drifts past, frozen in time.",
-            "You discover a training ground used by Frostborne warriors, their techniques still visible in the ice.",
-            "The Eight Elements converge here - you feel Frost, Gale, Ember, Void, and Astral energies mixing.",
-            "You find a hidden chamber beneath Starfall Ridge, filled with star fragments and cosmic energy.",
-            "A portal to the Arcane Veil flickers before you, offering glimpses of other realities.",
-            "You discover the remains of a Frostgate outpost, its banners still fluttering in the eternal wind.",
-            "Ancient Frostborne runes carved into a glacier begin to glow as you approach.",
-            "You witness a Stormwarden training with the Gale element, their movements a blur of wind and lightning.",
-            "A library of the first civilizations after the Shattering reveals secrets of the Eight Elements.",
-            "You find a meditation circle where the Astral element is strongest, showing you possible futures.",
-            "The Mortal and Arcane Veils thin here, allowing you to see spirits from both realms.",
-            "You discover a hidden hot spring that never freezes, said to be blessed by the Frost element.",
-            "Ancient battlefields from the Shattering still echo with the sounds of war.",
-            "You find a cache of weapons forged by the Frostborne, still sharp after centuries.",
-            "A Stormwarden's journal reveals techniques for mastering the Gale element.",
-            "You discover a shrine to the Eight Elements, each one represented by glowing crystals.",
-            "The Grand Library's forbidden section opens to you, revealing knowledge of the Void element.",
-            "You find a map leading to Frostgate, marked with routes through the Ice Wastes.",
-            "Ancient prophecies carved into the Moonspire Obelisk begin to make sense as you read them.",
-            "You discover a hidden passage to Nil City, its spires visible through the mist.",
-            "A fragment of the first winter's ice contains memories of the Shattering itself.",
-            "You find a training manual from the Frostborne warriors, detailing their combat techniques.",
-            "The Spirit Veil parts briefly, allowing you to communicate with a long-lost spirit.",
-            "You discover a cache of Astral element crystals, their power showing you glimpses of fate.",
-            "Ancient runes from Starfall Ridge tell the story of the first civilizations after the Shattering.",
-            "You find a hidden chamber beneath the Grand Library, filled with knowledge of the Eight Elements."
-    };
     // Ambush enemy names (lore creatures for Tier 2 events)
     private static final String[] AMBUSH_ENEMIES = {
             "Frost Wraith", "Ice Troll", "Shadow Stalker", "Frozen Revenant",
@@ -170,6 +81,9 @@ public class ExploreAction implements CharacterAction {
         // Check for Song of Nilfheim aura (reduces curse penalties by 1-2%)
         double songReduction = auraService.getSongOfNilfheimCurseReduction(guildId);
 
+        // Check for temporary stat debuff and decrement/clear if needed
+        character.decrementTemporaryStatDebuffActions();
+
         // Check for class-exclusive exploration event (very rare, 1-2% base chance, separate from negative events)
         ClassExclusiveEventType classEvent = rollForClassExclusiveEvent(character);
         if (classEvent != null) {
@@ -201,7 +115,14 @@ public class ExploreAction implements CharacterAction {
             }
         }
 
-        // Check for negative exploration event (rare, 5% base chance, reduced by AGI/LUCK)
+        // Check for rare discovery event (10-15% chance, high reward, some risk)
+        ExplorationEventType discoveryEvent = rollForDiscoveryEvent(character);
+        if (discoveryEvent != null) {
+            // Discovery event triggered - handle it and return
+            return handleDiscoveryEvent(discoveryEvent, character, config, activeCurses, songReduction);
+        }
+
+        // Check for negative exploration event (rare, 8% base chance, reduced by AGI/LUCK)
         ExplorationEventType negativeEvent = rollForNegativeEvent(character);
         String narrative;
         int xpGained = 0;
@@ -219,24 +140,38 @@ public class ExploreAction implements CharacterAction {
             damageTaken = eventOutcome.damageTaken();
             leveledUp = eventOutcome.leveledUp();
         } else {
-            // Normal exploration - select random narrative
-            narrative = NARRATIVES[random.nextInt(NARRATIVES.length)];
+            // Normal exploration - select biome-specific narrative
+            BiomeType biome = character.getCurrentBiome();
+            narrative = BiomeLore.getRandomLore(biome);
 
             // Calculate XP gain (scales with level and config multiplier)
-            int baseXp = 30 + (character.getLevel() * 5);
-            int variance = random.nextInt(20) - 10; // +/- 10
+            int baseXp = 35 + (character.getLevel() * 6);
+            int variance = random.nextInt(31) - 15; // +/- 15
             xpGained = (int) ((baseXp + variance) * config.getXpMultiplier());
+
+            // Apply level scaling bonus: +2% XP per level above 5, capped at +30% at level 20
+            int level = character.getLevel();
+            if (level > 5) {
+                double levelScaling = Math.min(0.30, (level - 5) * 0.02); // +2% per level above 5, max +30%
+                xpGained = (int) (xpGained * (1.0 + levelScaling));
+            }
         }
 
         // Apply Curse of Clouded Mind (-5% XP, but ensure minimum 90%) - only if not already handled by event
         if (!eventTriggered && activeCurses.contains(WorldCurse.MINOR_CURSE_OF_CLOUDED_MIND)) {
-            int baseXp = 30 + (character.getLevel() * 5);
-            int variance = random.nextInt(20) - 10;
+            int baseXp = 35 + (character.getLevel() * 6);
+            int variance = random.nextInt(31) - 15;
             double cloudedPenalty = 0.95 * songReduction; // Apply Song reduction
             xpGained = (int) (xpGained * cloudedPenalty);
             // Ensure minimum 90% of original
             int minXpWithCurse = (int) ((baseXp + variance) * config.getXpMultiplier() * 0.90);
             xpGained = Math.max(minXpWithCurse, xpGained);
+        }
+
+        // Apply Cursed Discovery XP penalty if active
+        if (character.getCursedDiscoveryActionsRemaining() > 0 && xpGained > 0) {
+            xpGained = (int) (xpGained * (1.0 - character.getCursedDiscoveryXpPenalty()));
+            character.decrementCursedDiscoveryActions();
         }
 
         // Apply Nilfheim event effects
@@ -423,13 +358,13 @@ public class ExploreAction implements CharacterAction {
 
     /**
      * Rolls for a negative exploration event.
-     * Base chance: 5%, reduced by AGI (-0.2% per AGI) and LUCK (-0.1% per LUCK), minimum 1%.
+     * Base chance: 8%, reduced by AGI (-0.2% per AGI) and LUCK (-0.1% per LUCK), minimum 2%.
      *
      * @param character the character exploring
      * @return the event type if triggered, null otherwise
      */
     private ExplorationEventType rollForNegativeEvent(RPGCharacter character) {
-        double baseChance = 0.05; // 5%
+        double baseChance = 0.08; // 8%
         int agility = character.getStats().getAgility();
         int luck = character.getStats().getLuck();
 
@@ -439,8 +374,8 @@ public class ExploreAction implements CharacterAction {
         // LUCK reduction: -0.1% per LUCK (max -2% at 20 LUCK)
         double luckReduction = Math.min(0.02, luck * 0.001);
 
-        // Final chance: base - reductions, minimum 1%
-        double finalChance = Math.max(0.01, baseChance - agiReduction - luckReduction);
+        // Final chance: base - reductions, minimum 2%
+        double finalChance = Math.max(0.02, baseChance - agiReduction - luckReduction);
 
         if (random.nextDouble() < finalChance) {
             // Event triggered - select tier (Tier 1: 75%, Tier 2: 20%, Tier 3: 5%)
@@ -451,14 +386,20 @@ public class ExploreAction implements CharacterAction {
                         ExplorationEventType.SLIPPED_ON_ICE,
                         ExplorationEventType.PICKPOCKETED_BY_THIEVES,
                         ExplorationEventType.MOCKED_BY_ANGRY_MOB,
-                        ExplorationEventType.LOST_IN_THE_FOG
+                        ExplorationEventType.LOST_IN_THE_FOG,
+                        ExplorationEventType.ENVIRONMENTAL_HAZARD,
+                        ExplorationEventType.EXHAUSTION,
+                        ExplorationEventType.TEMPORARY_STAT_DEBUFF
                 };
                 return tier1Events[random.nextInt(tier1Events.length)];
             } else if (tierRoll < 0.95) {
                 // Tier 2: Dangerous Encounters
                 ExplorationEventType[] tier2Events = {
                         ExplorationEventType.AMBUSHED_BY_CREATURE,
-                        ExplorationEventType.FROSTBITE
+                        ExplorationEventType.FROSTBITE,
+                        ExplorationEventType.DANGEROUS_TERRAIN,
+                        ExplorationEventType.LOST_TIME,
+                        ExplorationEventType.CURSED_DISCOVERY
                 };
                 return tier2Events[random.nextInt(tier2Events.length)];
             } else {
@@ -549,9 +490,17 @@ public class ExploreAction implements CharacterAction {
 
             case LOST_IN_THE_FOG -> {
                 // XP reduced by 25% for this action only
-                int baseXp = 30 + (character.getLevel() * 5);
-                int variance = random.nextInt(20) - 10;
+                int baseXp = 35 + (character.getLevel() * 6);
+                int variance = random.nextInt(31) - 15;
                 int normalXp = (int) ((baseXp + variance) * config.getXpMultiplier());
+
+                // Apply level scaling bonus
+                int level = character.getLevel();
+                if (level > 5) {
+                    double levelScaling = Math.min(0.30, (level - 5) * 0.02);
+                    normalXp = (int) (normalXp * (1.0 + levelScaling));
+                }
+
                 xpGained = (int) (normalXp * 0.75); // 25% reduction
 
                 // Apply dark relic XP bonus if active
@@ -659,6 +608,218 @@ public class ExploreAction implements CharacterAction {
                 }
                 narrative = "👁️ **Seen by Something Ancient:** You feel an otherworldly presence watching you from the shadows. " +
                         "Something beyond mortal understanding has noticed you. This moment will be remembered.";
+            }
+
+            case ENVIRONMENTAL_HAZARD -> {
+                // Lose 3-8% HP, cannot kill
+                int maxHp = character.getStats().getMaxHp();
+                int hpLoss = (int) (maxHp * (0.03 + random.nextDouble() * 0.05)); // 3-8%
+                int currentHp = character.getStats().getCurrentHp();
+                damageTaken = Math.min(hpLoss, currentHp - 1); // Ensure at least 1 HP remains
+                character.getStats().takeDamage(damageTaken);
+                narrative = "⚠️ **Environmental Hazard:** You encounter a dangerous environmental hazard, taking " + damageTaken + " damage. At least you're still alive!";
+            }
+
+            case EXHAUSTION -> {
+                // Set flag to lose charge on next action (5% chance when this event triggers)
+                if (random.nextDouble() < 0.05) {
+                    character.setLoseChargeOnNextAction(true);
+                    narrative = "😴 **Exhaustion:** The exploration has left you exhausted. You'll lose an extra action charge on your next action.";
+                } else {
+                    narrative = "😴 **Exhaustion:** You feel tired from the exploration, but manage to push through.";
+                }
+            }
+
+            case TEMPORARY_STAT_DEBUFF -> {
+                // -1 to random stat for 3 actions (2% chance when this event triggers, rare)
+                if (random.nextDouble() < 0.02) {
+                    String[] statNames = {"STR", "AGI", "INT", "LUCK"};
+                    String[] statDisplayNames = {"Strength", "Agility", "Intelligence", "Luck"};
+                    int statIndex = random.nextInt(statNames.length);
+                    String statName = statNames[statIndex];
+                    String statDisplayName = statDisplayNames[statIndex];
+
+                    character.setTemporaryStatDebuffStat(statName);
+                    character.setTemporaryStatDebuffActionsRemaining(3);
+                    character.setTemporaryStatDebuffAmount(1);
+                    narrative = "📉 **Temporary Stat Debuff:** You've been weakened! Your " + statDisplayName + " is reduced by 1 for the next 3 actions.";
+                } else {
+                    narrative = "📉 **Temporary Stat Debuff:** You feel a momentary weakness, but it passes quickly.";
+                }
+            }
+
+            case DANGEROUS_TERRAIN -> {
+                // Lose 10-15% HP, cannot kill
+                int maxHp = character.getStats().getMaxHp();
+                int hpLoss = (int) (maxHp * (0.10 + random.nextDouble() * 0.05)); // 10-15%
+                int currentHp = character.getStats().getCurrentHp();
+                damageTaken = Math.min(hpLoss, currentHp - 1); // Ensure at least 1 HP remains
+                character.getStats().takeDamage(damageTaken);
+                narrative = "⛰️ **Dangerous Terrain:** The terrain proves treacherous! You take " + damageTaken + " damage navigating the hazards.";
+            }
+
+            case LOST_TIME -> {
+                // Set flag for next action to cost double (3% chance when this event triggers, rare)
+                if (random.nextDouble() < 0.03) {
+                    character.setNextActionCostsDouble(true);
+                    narrative = "⏰ **Lost Time:** You've become disoriented and lost track of time. Your next action will cost 2 charges instead of 1.";
+                } else {
+                    narrative = "⏰ **Lost Time:** You briefly lose track of time, but quickly regain your bearings.";
+                }
+            }
+
+            case CURSED_DISCOVERY -> {
+                // Temporary -5% XP for 5 actions (3% chance when this event triggers, rare)
+                if (random.nextDouble() < 0.03) {
+                    character.setCursedDiscoveryActionsRemaining(5);
+                    character.setCursedDiscoveryXpPenalty(0.05); // -5% XP
+                    narrative = "🔮 **Cursed Discovery:** You've discovered something cursed! Your XP gain is reduced by 5% for the next 5 actions.";
+                } else {
+                    narrative = "🔮 **Cursed Discovery:** You sense something dark, but it doesn't affect you this time.";
+                }
+            }
+
+            // Discovery events are handled separately in handleDiscoveryEvent()
+            case ANCIENT_DISCOVERY, HIDDEN_CACHE, RARE_ENCOUNTER -> {
+                // These should not reach here - they're handled in handleDiscoveryEvent()
+                narrative = "An unexpected discovery event occurred.";
+            }
+        }
+
+        return RPGActionOutcome.builder()
+                .narrative(narrative)
+                .xpGained(xpGained)
+                .leveledUp(leveledUp)
+                .damageTaken(damageTaken)
+                .hpRestored(0)
+                .success(damageTaken == 0 || character.getStats().getCurrentHp() > 0)
+                .build();
+    }
+
+    /**
+     * Rolls for a rare discovery event.
+     * Base chance: 10-15% (randomized per exploration).
+     *
+     * @param character the character exploring
+     * @return the discovery event type if triggered, null otherwise
+     */
+    private ExplorationEventType rollForDiscoveryEvent(RPGCharacter character) {
+        // Random chance between 10% and 15% per exploration
+        double baseChance = 0.10 + (random.nextDouble() * 0.05); // 10-15%
+
+        if (random.nextDouble() < baseChance) {
+            // Discovery triggered - select type (equal chance for each)
+            ExplorationEventType[] discoveryEvents = {
+                    ExplorationEventType.ANCIENT_DISCOVERY,
+                    ExplorationEventType.HIDDEN_CACHE,
+                    ExplorationEventType.RARE_ENCOUNTER
+            };
+            return discoveryEvents[random.nextInt(discoveryEvents.length)];
+        }
+
+        return null; // No discovery
+    }
+
+    /**
+     * Handles a rare discovery event and returns the outcome.
+     *
+     * @param eventType     the type of discovery event
+     * @param character     the character affected
+     * @param config        the RPG config
+     * @param activeCurses  list of active world curses
+     * @param songReduction Song of Nilfheim curse reduction multiplier
+     * @return the action outcome
+     */
+    private RPGActionOutcome handleDiscoveryEvent(ExplorationEventType eventType, RPGCharacter character,
+                                                  RPGConfig config, List<WorldCurse> activeCurses, double songReduction) {
+        String narrative = "";
+        int xpGained = 0;
+        int damageTaken = 0;
+        boolean leveledUp = false;
+
+        // Calculate base XP (will be modified by discovery type)
+        int baseXp = 35 + (character.getLevel() * 6);
+        int variance = random.nextInt(31) - 15; // ±15
+        int normalXp = (int) ((baseXp + variance) * config.getXpMultiplier());
+
+        switch (eventType) {
+            case ANCIENT_DISCOVERY -> {
+                // +50-100% XP bonus, 5-10% HP loss
+                double xpMultiplier = 0.50 + (random.nextDouble() * 0.50); // 50-100% bonus
+                xpGained = (int) (normalXp * (1.0 + xpMultiplier));
+
+                int maxHp = character.getStats().getMaxHp();
+                int hpLoss = (int) (maxHp * (0.05 + random.nextDouble() * 0.05)); // 5-10%
+                int currentHp = character.getStats().getCurrentHp();
+                damageTaken = Math.min(hpLoss, currentHp - 1); // Ensure at least 1 HP remains
+                character.getStats().takeDamage(damageTaken);
+
+                leveledUp = character.addXp(xpGained, loreRecognitionService);
+                narrative = "🏛️ **Ancient Discovery:** You've uncovered an ancient secret! You gain " + xpGained + " XP, but the discovery takes a toll, dealing " + damageTaken + " damage.";
+            }
+
+            case HIDDEN_CACHE -> {
+                // +75% XP, 10% chance for 8-12% HP loss (trap)
+                xpGained = (int) (normalXp * 1.75); // +75% XP
+
+                if (random.nextDouble() < 0.10) {
+                    // Trap triggered
+                    int maxHp = character.getStats().getMaxHp();
+                    int hpLoss = (int) (maxHp * (0.08 + random.nextDouble() * 0.04)); // 8-12%
+                    int currentHp = character.getStats().getCurrentHp();
+                    damageTaken = Math.min(hpLoss, currentHp - 1); // Ensure at least 1 HP remains
+                    character.getStats().takeDamage(damageTaken);
+                    narrative = "💎 **Hidden Cache:** You find a hidden cache of treasures! You gain " + xpGained + " XP, but a trap triggers, dealing " + damageTaken + " damage!";
+                } else {
+                    narrative = "💎 **Hidden Cache:** You find a hidden cache of treasures! You gain " + xpGained + " XP safely.";
+                }
+
+                leveledUp = character.addXp(xpGained, loreRecognitionService);
+            }
+
+            case RARE_ENCOUNTER -> {
+                // +100% XP, must survive ambush (similar to current ambush but higher stakes)
+                String enemyName = AMBUSH_ENEMIES[random.nextInt(AMBUSH_ENEMIES.length)];
+                int enemyLevel = Math.max(1, character.getLevel() + random.nextInt(3)); // Level-appropriate to slightly higher
+
+                // Calculate enemy power (similar to BattleAction)
+                int enemyPower = 20 + (enemyLevel * 10);
+                int playerPower = calculatePlayerPower(character, enemyLevel);
+
+                // Roll battle (player has better chance than normal ambush)
+                int playerRoll = random.nextInt(playerPower) + (character.getStats().getLuck() * 2);
+                int enemyRoll = random.nextInt(enemyPower) + (enemyLevel * 2); // Less enemy advantage than normal ambush
+
+                boolean victory = playerRoll > enemyRoll;
+
+                if (victory) {
+                    // Victory: moderate damage, high XP
+                    xpGained = (int) (normalXp * 2.0); // +100% XP
+                    damageTaken = random.nextInt(8) + 3; // 3-10 damage
+                    character.getStats().takeDamage(damageTaken);
+                    leveledUp = character.addXp(xpGained, loreRecognitionService);
+                    narrative = "✨ **Rare Encounter:** You encounter a rare " + enemyName + " and emerge victorious! You gain " + xpGained + " XP but take " + damageTaken + " damage.";
+                } else {
+                    // Defeat: significant damage, still get some XP
+                    xpGained = (int) (normalXp * 1.5); // +50% XP even on defeat
+                    damageTaken = (int) (enemyPower * (0.20 + random.nextDouble() * 0.10)); // 20-30% of enemy power
+                    boolean survived = character.getStats().takeDamage(damageTaken);
+                    leveledUp = character.addXp(xpGained, loreRecognitionService);
+
+                    if (!survived) {
+                        character.setIsDead(true);
+                        narrative = "✨ **Rare Encounter:** The rare " + enemyName + " was too powerful! You fall, defeated. You gain " + xpGained + " XP from the experience, but death claims you.";
+                    } else {
+                        narrative = "✨ **Rare Encounter:** The rare " + enemyName + " proves too strong! You take " + damageTaken + " damage but gain " + xpGained + " XP from the encounter.";
+                    }
+                }
+            }
+
+            default -> {
+                // Fallback (shouldn't happen)
+                xpGained = normalXp;
+                leveledUp = character.addXp(xpGained, loreRecognitionService);
+                narrative = "You explore and gain " + xpGained + " XP.";
             }
         }
 
@@ -946,6 +1107,19 @@ public class ExploreAction implements CharacterAction {
         character.recordActionType("explore");
         character.incrementExploreCount();
 
+        // Increment biome exploration counter and check for advancement
+        BiomeType currentBiome = character.getCurrentBiome();
+        boolean biomeAdvanced = character.incrementExplorationsInBiome();
+
+        if (biomeAdvanced) {
+            // Add biome advancement message
+            BiomeType nextBiome = character.getCurrentBiome();
+            narrative += String.format("\n\nAfter many explorations in the %s, you sense a shift in the realm... You have advanced to the **%s %s**!",
+                    currentBiome.getDisplayName(),
+                    nextBiome.getEmoji(),
+                    nextBiome.getDisplayName());
+        }
+
         return outcomeBuilder
                 .narrative(narrative)
                 .xpGained(xpGained)
@@ -1017,6 +1191,21 @@ public class ExploreAction implements CharacterAction {
         character.recordAction();
         character.recordActionType("explore");
         character.incrementExploreCount();
+
+        // Increment biome exploration counter and check for advancement
+        BiomeType currentBiome = character.getCurrentBiome();
+        boolean biomeAdvanced = character.incrementExplorationsInBiome();
+
+        if (biomeAdvanced) {
+            // Add biome advancement message to narrative
+            String currentNarrative = outcomeBuilder.build().narrative();
+            BiomeType nextBiome = character.getCurrentBiome();
+            String advancementMessage = String.format("\n\nAfter many explorations in the %s, you sense a shift in the realm... You have advanced to the **%s %s**!",
+                    currentBiome.getDisplayName(),
+                    nextBiome.getEmoji(),
+                    nextBiome.getDisplayName());
+            outcomeBuilder.narrative(currentNarrative + advancementMessage);
+        }
 
         return outcomeBuilder.build();
     }

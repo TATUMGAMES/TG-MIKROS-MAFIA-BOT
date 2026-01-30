@@ -154,9 +154,11 @@ public class PromotionOnboardingService {
      * Enum representing onboarding phases.
      */
     public enum Phase {
-        PHASE_1_SOFT_AWARENESS(1),  // 1 hour
-        PHASE_2_EXPECTATION(24),    // 24 hours
-        PHASE_3_AUTO_ASSIST(48);     // 48 hours
+        PHASE_1_SOFT_AWARENESS(1),      // 1 hour
+        PHASE_2_EXPECTATION(24),       // 24 hours
+        PHASE_3_AUTO_ASSIST(48),       // 48 hours
+        PHASE_4_PUBLIC_NUDGE(72),      // 72 hours (3 days)
+        PHASE_5_FINAL_DM(336);         // 336 hours (14 days)
 
         private final int hoursDelay;
 

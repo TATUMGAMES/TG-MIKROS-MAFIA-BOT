@@ -33,7 +33,8 @@ public class RealGamePromotionService implements GamePromotionService {
     private final Map<String, String> promotionChannels; // guildId -> channelId
     private final Map<String, PromotionVerbosity> promotionVerbosity; // guildId -> verbosity
 
-    // App promotion step tracking: guildId -> (appId -> PromotionStepRecord)
+    // App promotion step tracking: guildId -> (compositeKey -> PromotionStepRecord)
+    // Composite key format: "appId:campaignId" when campaignId is provided, "appId" when null
     private final Map<String, Map<String, PromotionStepRecord>> promotionSteps;
 
     /**
@@ -172,23 +173,46 @@ public class RealGamePromotionService implements GamePromotionService {
         }
     }
 
+    /**
+     * Creates a composite key for tracking promotion steps.
+     * Format: "appId:campaignId" when campaignId is provided, "appId" when null.
+     *
+     * @param appId      the app ID
+     * @param campaignId the campaign ID (can be null)
+     * @return composite key string
+     */
+    private String createCompositeKey(String appId, String campaignId) {
+        return campaignId != null && !campaignId.isBlank() ? appId + ":" + campaignId : appId;
+    }
+
     @Override
     public int getLastPromotionStep(String guildId, String appId) {
+        return getLastPromotionStep(guildId, appId, null);
+    }
+
+    @Override
+    public int getLastPromotionStep(String guildId, String appId, String campaignId) {
         if (guildId == null || guildId.isBlank() || appId == null || appId.isBlank()) {
             return 0;
         }
 
+        String key = createCompositeKey(appId, campaignId);
         Map<String, PromotionStepRecord> guildSteps = promotionSteps.get(guildId);
         if (guildSteps == null) {
             return 0;
         }
 
-        PromotionStepRecord record = guildSteps.get(appId);
+        PromotionStepRecord record = guildSteps.get(key);
         return record != null ? record.lastStep : 0;
     }
 
     @Override
     public void recordPromotionStep(String guildId, String appId, int step, Instant postTime) {
+        recordPromotionStep(guildId, appId, null, step, postTime);
+    }
+
+    @Override
+    public void recordPromotionStep(String guildId, String appId, String campaignId, int step, Instant postTime) {
         if (guildId == null || guildId.isBlank()) {
             throw new IllegalArgumentException("guildId cannot be null or blank");
         }
@@ -202,30 +226,42 @@ public class RealGamePromotionService implements GamePromotionService {
             throw new IllegalArgumentException("postTime cannot be null");
         }
 
+        String key = createCompositeKey(appId, campaignId);
         promotionSteps.computeIfAbsent(guildId, k -> new ConcurrentHashMap<>())
-                .put(appId, new PromotionStepRecord(step, postTime));
+                .put(key, new PromotionStepRecord(step, postTime));
 
-        logger.debug("Recorded promotion step {} for app {} in guild {} at {}",
-                step, appId, guildId, postTime);
+        logger.debug("Recorded promotion step {} for app {} (campaign: {}) in guild {} at {}",
+                step, appId, campaignId != null ? campaignId : "none", guildId, postTime);
     }
 
     @Override
     public boolean hasAppBeenPromoted(String guildId, String appId) {
-        return getLastPromotionStep(guildId, appId) > 0;
+        return hasAppBeenPromoted(guildId, appId, null);
+    }
+
+    @Override
+    public boolean hasAppBeenPromoted(String guildId, String appId, String campaignId) {
+        return getLastPromotionStep(guildId, appId, campaignId) > 0;
     }
 
     @Override
     public Instant getLastAppPostTime(String guildId, String appId) {
+        return getLastAppPostTime(guildId, appId, null);
+    }
+
+    @Override
+    public Instant getLastAppPostTime(String guildId, String appId, String campaignId) {
         if (guildId == null || guildId.isBlank() || appId == null || appId.isBlank()) {
             return null;
         }
 
+        String key = createCompositeKey(appId, campaignId);
         Map<String, PromotionStepRecord> guildSteps = promotionSteps.get(guildId);
         if (guildSteps == null) {
             return null;
         }
 
-        PromotionStepRecord record = guildSteps.get(appId);
+        PromotionStepRecord record = guildSteps.get(key);
         return record != null ? record.lastPostTime : null;
     }
 

@@ -35,7 +35,7 @@ public class ScrambleGuessCommand implements CommandHandler {
     @Override
     public CommandData getCommandData() {
         return Commands.slash("scramble-guess", "Guess the word in word unscramble games")
-                .addOption(OptionType.STRING, "word", "Your guess", true)
+                .addOption(OptionType.STRING, "word", "Your guess (or 'hint' for a hint)", true)
                 .setGuildOnly(true);
     }
 
@@ -59,6 +59,17 @@ public class ScrambleGuessCommand implements CommandHandler {
             return;
         }
 
+        // Check if in correct channel (if specified)
+        if (config != null && config.getGameChannelId() != null) {
+            if (!event.getChannel().getId().equals(config.getGameChannelId())) {
+                event.reply(String.format(
+                        "Please use `/scramble-guess` in <#%s>. Word Unscramble commands are restricted to the assigned channel.",
+                        config.getGameChannelId()
+                )).setEphemeral(true).queue();
+                return;
+            }
+        }
+
         String guess = event.getOption("word", OptionMapping::getAsString);
 
         // Check for active Word Unscramble game
@@ -70,6 +81,32 @@ public class ScrambleGuessCommand implements CommandHandler {
                             • Check `/scramble-stats` for community games
                             • Wait for the next hourly game reset
                             """)
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        // Handle hint request
+        if (guess != null && guess.equalsIgnoreCase("hint")) {
+            String userId = member.getId();
+            if (session.hasUsedHint(userId)) {
+                event.reply("❌ You've already used your hint for this word! You can only get one hint per word.")
+                        .setEphemeral(true)
+                        .queue();
+                return;
+            }
+
+            // Generate and send hint
+            String hint = wordUnscrambleService.generateHint(guildId, session);
+            session.markHintUsed(userId);
+
+            event.reply(String.format("""
+                            💡 **Hint:**
+                            
+                            %s
+                            
+                            You can still guess the word using `/scramble-guess word:<your_guess>`!
+                            """, hint))
                     .setEphemeral(true)
                     .queue();
             return;
@@ -136,16 +173,30 @@ public class ScrambleGuessCommand implements CommandHandler {
                 scoreText = String.format("Score: %d points", result.score());
             }
 
+            // For levels 6+, show hint format instead of full answer
+            String answerDisplay;
+            int sessionLevel = session.getLevel();
+            if (sessionLevel >= 6) {
+                String correctAnswer = session.getCorrectAnswer();
+                String wordNoSpaces = correctAnswer.replaceAll(" ", "");
+                answerDisplay = String.format("Starts with **%s**, ends with **%s**, **%d letters**",
+                        wordNoSpaces.charAt(0),
+                        wordNoSpaces.charAt(wordNoSpaces.length() - 1),
+                        wordNoSpaces.length());
+            } else {
+                answerDisplay = "**" + guess + "**";
+            }
+
             event.reply(String.format("""
                             🎉 **CORRECT!** 🎉
                             
-                            %s guessed it right: **%s**!
+                            %s guessed it right: %s!
                             
                             %s
                             Time: %d seconds%s
                             """,
                     member.getAsMention(),
-                    guess,
+                    answerDisplay,
                     scoreText,
                     timeToSolve,
                     progressionText

@@ -54,6 +54,11 @@ public class TitleService {
             newlyUnlocked.add(Title.THE_WARRIOR);
         }
 
+        // Secret boss title
+        if (character.getSecretBossesKilled() >= 5 && !hasTitle(character, Title.SECRET_CHALLENGER)) {
+            newlyUnlocked.add(Title.SECRET_CHALLENGER);
+        }
+
         // Failure-based titles (cursed worlds)
         if (character.getCursedBossFights() >= 5 && !hasTitle(character, Title.HOPE_UNBROKEN)) {
             newlyUnlocked.add(Title.HOPE_UNBROKEN);
@@ -118,6 +123,11 @@ public class TitleService {
         }
         if (character.getBattleStreak() >= 15) {
             available.add(Title.THE_WARRIOR);
+        }
+
+        // Secret boss title
+        if (character.getSecretBossesKilled() >= 5) {
+            available.add(Title.SECRET_CHALLENGER);
         }
 
         // Failure-based titles (cursed worlds)

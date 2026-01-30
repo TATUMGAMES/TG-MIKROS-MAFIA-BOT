@@ -210,6 +210,7 @@ public class AppPromotion {
         private final List<String> screenshotUrls;
         private final List<String> videoUrls;
         private final SocialMedia socialMedia;
+        private final Tracking tracking;
 
         private Campaign(Builder builder) {
             this.campaignId = builder.campaignId;
@@ -221,6 +222,7 @@ public class AppPromotion {
             this.screenshotUrls = builder.screenshotUrls;
             this.videoUrls = builder.videoUrls;
             this.socialMedia = builder.socialMedia;
+            this.tracking = builder.tracking;
         }
 
         public String getCampaignId() {
@@ -259,6 +261,40 @@ public class AppPromotion {
             return socialMedia;
         }
 
+        public Tracking getTracking() {
+            return tracking;
+        }
+
+        /**
+         * Gets the effective CTAs to use - tracking CTAs if enabled and date valid, otherwise regular CTAs.
+         *
+         * @return CTAs object to use
+         */
+        public CTAs getEffectiveCTAs() {
+            Instant now = Instant.now();
+            if (tracking != null && tracking.isEnabled() &&
+                    startDate != null && endDate != null &&
+                    !now.isBefore(startDate) && !now.isAfter(endDate)) {
+                return tracking.getCtas() != null ? tracking.getCtas() : ctas;
+            }
+            return ctas;
+        }
+
+        /**
+         * Gets the effective social media to use - tracking social media if enabled and date valid, otherwise regular social media.
+         *
+         * @return SocialMedia object to use
+         */
+        public SocialMedia getEffectiveSocialMedia() {
+            Instant now = Instant.now();
+            if (tracking != null && tracking.isEnabled() &&
+                    startDate != null && endDate != null &&
+                    !now.isBefore(startDate) && !now.isAfter(endDate)) {
+                return tracking.getSocialMedia() != null ? tracking.getSocialMedia() : socialMedia;
+            }
+            return socialMedia;
+        }
+
         @JsonPOJOBuilder(withPrefix = "")
         public static class Builder {
             @JsonProperty("campaignId")
@@ -284,6 +320,9 @@ public class AppPromotion {
 
             @JsonProperty("socialMedia")
             private SocialMedia socialMedia;
+
+            @JsonProperty("tracking")
+            private Tracking tracking;
 
             public Builder campaignId(String campaignId) {
                 this.campaignId = campaignId;
@@ -334,6 +373,11 @@ public class AppPromotion {
                 return this;
             }
 
+            public Builder tracking(Tracking tracking) {
+                this.tracking = tracking;
+                return this;
+            }
+
             public Campaign build() {
                 return new Campaign(this);
             }
@@ -381,6 +425,7 @@ public class AppPromotion {
         private final String steamStore;
         private final String samsungStore;
         private final String amazonStore;
+        private final String itchStore;
         private final String website;
         private final String other;
 
@@ -390,6 +435,7 @@ public class AppPromotion {
             this.steamStore = builder.steamStore;
             this.samsungStore = builder.samsungStore;
             this.amazonStore = builder.amazonStore;
+            this.itchStore = builder.itchStore;
             this.website = builder.website;
             this.other = builder.other;
         }
@@ -419,6 +465,11 @@ public class AppPromotion {
             return amazonStore;
         }
 
+        @JsonProperty("itch_store")
+        public String getItchStore() {
+            return itchStore;
+        }
+
         public String getWebsite() {
             return website;
         }
@@ -434,6 +485,7 @@ public class AppPromotion {
             private String steamStore;
             private String samsungStore;
             private String amazonStore;
+            private String itchStore;
             private String website;
             private String other;
 
@@ -464,6 +516,12 @@ public class AppPromotion {
             @JsonProperty("amazon_store")
             public Builder amazonStore(String amazonStore) {
                 this.amazonStore = amazonStore;
+                return this;
+            }
+
+            @JsonProperty("itch_store")
+            public Builder itchStore(String itchStore) {
+                this.itchStore = itchStore;
                 return this;
             }
 
@@ -610,6 +668,108 @@ public class AppPromotion {
 
             public SocialMedia build() {
                 return new SocialMedia(this);
+            }
+        }
+    }
+
+    /**
+     * Represents tracking information for a campaign with UTM-tracked URLs.
+     */
+    @JsonDeserialize(builder = Tracking.Builder.class)
+    public static class Tracking {
+        private final boolean enabled;
+        private final CTAs ctas;
+        private final SocialMedia socialMedia;
+        private final String utmSource;
+        private final String utmMedium;
+        private final String utmCampaign;
+
+        private Tracking(Builder builder) {
+            this.enabled = builder.enabled;
+            this.ctas = builder.ctas;
+            this.socialMedia = builder.socialMedia;
+            this.utmSource = builder.utmSource;
+            this.utmMedium = builder.utmMedium;
+            this.utmCampaign = builder.utmCampaign;
+        }
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public CTAs getCtas() {
+            return ctas;
+        }
+
+        public SocialMedia getSocialMedia() {
+            return socialMedia;
+        }
+
+        public String getUtmSource() {
+            return utmSource;
+        }
+
+        public String getUtmMedium() {
+            return utmMedium;
+        }
+
+        public String getUtmCampaign() {
+            return utmCampaign;
+        }
+
+        @JsonPOJOBuilder(withPrefix = "")
+        public static class Builder {
+            @JsonProperty("enabled")
+            private boolean enabled;
+
+            @JsonProperty("ctas")
+            private CTAs ctas;
+
+            @JsonProperty("social_media")
+            private SocialMedia socialMedia;
+
+            @JsonProperty("utmSource")
+            private String utmSource;
+
+            @JsonProperty("utmMedium")
+            private String utmMedium;
+
+            @JsonProperty("utmCampaign")
+            private String utmCampaign;
+
+            public Builder enabled(boolean enabled) {
+                this.enabled = enabled;
+                return this;
+            }
+
+            public Builder ctas(CTAs ctas) {
+                this.ctas = ctas;
+                return this;
+            }
+
+            @JsonProperty("social_media")
+            public Builder socialMedia(SocialMedia socialMedia) {
+                this.socialMedia = socialMedia;
+                return this;
+            }
+
+            public Builder utmSource(String utmSource) {
+                this.utmSource = utmSource;
+                return this;
+            }
+
+            public Builder utmMedium(String utmMedium) {
+                this.utmMedium = utmMedium;
+                return this;
+            }
+
+            public Builder utmCampaign(String utmCampaign) {
+                this.utmCampaign = utmCampaign;
+                return this;
+            }
+
+            public Tracking build() {
+                return new Tracking(this);
             }
         }
     }

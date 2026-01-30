@@ -61,7 +61,8 @@ public class BossCatalog {
     public static Boss createBoss(BossDefinition definition, int level) {
         int maxHp = 10000 * level;
         int attack = 50 + (level * 20);
-        String bossId = "boss_" + definition.name.toLowerCase().replaceAll("\\s+", "_") + "_" + level;
+        String baseId = "boss_" + definition.name.toLowerCase().replaceAll("\\s+", "_") + "_" + level;
+        String bossId = baseId + "_" + UUID.randomUUID().toString().substring(0, 8);
 
         return new Boss(bossId, definition.name, definition.type, level, maxHp, attack, definition.hasClassHarmonyMechanic);
     }
@@ -76,7 +77,8 @@ public class BossCatalog {
     public static SuperBoss createSuperBoss(SuperBossDefinition definition, int level) {
         int maxHp = 50000 * level;
         int attack = 200 + (level * 50);
-        String bossId = "superboss_" + definition.name.toLowerCase().replaceAll("\\s+", "_") + "_" + level;
+        String baseId = "superboss_" + definition.name.toLowerCase().replaceAll("\\s+", "_") + "_" + level;
+        String bossId = baseId + "_" + UUID.randomUUID().toString().substring(0, 8);
 
         return new SuperBoss(
                 bossId, definition.name, definition.type, level, maxHp, attack, definition.specialMechanic, definition.hasClassHarmonyMechanic);

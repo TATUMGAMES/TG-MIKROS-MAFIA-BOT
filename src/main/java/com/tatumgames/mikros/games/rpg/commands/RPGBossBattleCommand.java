@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 /**
@@ -52,8 +53,19 @@ public class RPGBossBattleCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
+        net.dv8tion.jda.api.interactions.commands.build.OptionData actionOption =
+                new net.dv8tion.jda.api.interactions.commands.build.OptionData(
+                        net.dv8tion.jda.api.interactions.commands.OptionType.STRING,
+                        "action",
+                        "Action to perform",
+                        true)
+                        .addChoice("Battle", "battle")
+                        .addChoice("Status", "status")
+                        .addChoice("Leaderboard", "leaderboard")
+                        .addChoice("Secret Boss", "secret-boss");
+
         return Commands.slash("rpg-boss-battle", "Battle the current community boss")
-                .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.STRING, "action", "Action: battle, status, or leaderboard", false);
+                .addOptions(actionOption);
     }
 
     @Override
@@ -96,10 +108,23 @@ public class RPGBossBattleCommand implements CommandHandler {
             return;
         }
 
+        // Check if in correct channel (if specified)
+        if (config != null && config.getRpgChannelId() != null) {
+            if (!event.getChannel().getId().equals(config.getRpgChannelId())) {
+                event.reply(String.format(
+                        "Please use `/rpg-boss-battle` in <#%s>. RPG commands are restricted to the assigned channel.",
+                        config.getRpgChannelId()
+                )).setEphemeral(true).queue();
+                return;
+            }
+        }
+
         OptionMapping actionOption = event.getOption("action");
-        String action = (actionOption != null)
-                ? actionOption.getAsString().toLowerCase()
-                : "battle";
+        if (actionOption == null) {
+            event.reply("❌ You must specify an action.").setEphemeral(true).queue();
+            return;
+        }
+        String action = actionOption.getAsString().toLowerCase();
 
         switch (action) {
             case "battle":
@@ -111,8 +136,11 @@ public class RPGBossBattleCommand implements CommandHandler {
             case "leaderboard":
                 handleLeaderboard(event, guildId);
                 break;
+            case "secret-boss":
+                handleSecretBossBattle(event, userId, guildId);
+                break;
             default:
-                event.reply("❌ Invalid action! Use: **battle**, **status**, or **leaderboard**")
+                event.reply("❌ Invalid action! Use: **battle**, **status**, **leaderboard**, or **secret-boss**")
                         .setEphemeral(true)
                         .queue();
         }
@@ -191,6 +219,8 @@ public class RPGBossBattleCommand implements CommandHandler {
         embed.setColor(Color.RED);
 
         String bossName = boss != null ? boss.getName() : superBoss.getName();
+        int bossLevel = boss != null ? boss.getLevel() : superBoss.getLevel();
+        String bossNameWithLevel = String.format("%s (level %d)", bossName, bossLevel);
         int currentHp = boss != null ? boss.getCurrentHp() : superBoss.getCurrentHp();
         int maxHp = boss != null ? boss.getMaxHp() : superBoss.getMaxHp();
         boolean defeated = boss != null ? boss.isDefeated() : superBoss.isDefeated();
@@ -215,7 +245,7 @@ public class RPGBossBattleCommand implements CommandHandler {
                         """,
                 character.getName(),
                 actionVerb,
-                bossName,
+                bossNameWithLevel,
                 deityDialogue,
                 damage
         ));
@@ -279,7 +309,6 @@ public class RPGBossBattleCommand implements CommandHandler {
                 int totalTopDamage = topDamage.values().stream().mapToInt(Integer::intValue).sum();
 
                 // Calculate XP pool (same as in BossService)
-                int bossLevel = boss != null ? boss.getLevel() : superBoss.getLevel();
                 int totalXpPool = boss != null
                         ? 500 + (bossLevel * 100)
                         : 1000 + (bossLevel * 200);
@@ -338,6 +367,140 @@ public class RPGBossBattleCommand implements CommandHandler {
         logger.info("User {} battled boss in guild {} - Damage: {}", userId, guildId, damage);
     }
 
+    private void handleSecretBossBattle(SlashCommandInteractionEvent event, String userId, String guildId) {
+        // Check if user has a character
+        RPGCharacter character = characterService.getCharacter(userId);
+        if (character == null) {
+            event.reply("❌ You don't have a character yet! Use `/rpg-register` to create one.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        // Check if character can act
+        if (character.isDead() || character.isRecovering()) {
+            event.reply("❌ You cannot battle bosses while dead or recovering!")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        // Check if character has event charges
+        if (!character.canPerformEventAction()) {
+            int remaining = character.getEventCharges();
+            event.reply(String.format("""
+                            ⚔️ **No Event Charges Available**
+                            
+                            Event charges remaining: **%d/%d**
+                            
+                            Event charges are granted when secret bosses appear.
+                            """,
+                    remaining,
+                    character.getMaxEventCharges()
+            )).setEphemeral(true).queue();
+            return;
+        }
+
+        // Check for active secret boss
+        BossService.ServerBossState state = bossService.getState(guildId);
+        if (state == null) {
+            event.reply("❌ No secret boss active! Secret bosses appear through mysterious triggers.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        Boss secretBoss = state.getSecretBoss(userId);
+        if (secretBoss == null) {
+            event.reply("❌ No secret boss active! Secret bosses appear through mysterious triggers.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        if (secretBoss.isDefeated() || secretBoss.isExpired()) {
+            state.removeSecretBoss(userId);
+            event.reply("❌ Your secret boss has expired or been defeated.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        // Battle secret boss (this consumes an event charge)
+        int damage = bossService.attackSecretBoss(guildId, userId, character);
+
+        if (damage == 0) {
+            event.reply("❌ Failed to battle secret boss. Please try again.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        // Consume event charge after successful battle
+        character.useEventCharge();
+        int remainingCharges = character.getEventCharges();
+
+        // Build response
+        EmbedBuilder embed = new EmbedBuilder();
+        embed.setTitle("🔮 " + character.getName() + " Has Encountered a Secret Boss!");
+        embed.setColor(Color.MAGENTA);
+
+        String bossName = secretBoss.getName();
+        int bossLevel = secretBoss.getLevel();
+        String bossNameWithLevel = String.format("%s (level %d)", bossName, bossLevel);
+        int currentHp = secretBoss.getCurrentHp();
+        int maxHp = secretBoss.getMaxHp();
+        boolean defeated = secretBoss.isDefeated();
+
+        String actionVerb = defeated ? "has slain" : "attacks";
+
+        embed.setDescription(String.format("""
+                        **%s** %s **%s**!
+                        
+                        💥 **Damage Dealt: %d**
+                        """,
+                character.getName(),
+                actionVerb,
+                bossNameWithLevel,
+                damage
+        ));
+
+        // Boss HP bar
+        double hpPercent = (double) currentHp / maxHp;
+        int filledBlocks = (int) (hpPercent * 20);
+        StringBuilder hpBar = new StringBuilder();
+        for (int i = 0; i < 20; i++) {
+            hpBar.append(i < filledBlocks ? "█" : "░");
+        }
+
+        embed.addField("Secret Boss HP", String.format("%s\n%d / %d (%.1f%%)",
+                hpBar.toString(), currentHp, maxHp, hpPercent * 100), false);
+
+        if (!defeated) {
+            // Time remaining
+            Instant expiresAt = secretBoss.getExpiresAt();
+            Duration timeRemaining = Duration.between(Instant.now(), expiresAt);
+            long hours = timeRemaining.toHours();
+            long minutes = timeRemaining.toMinutesPart();
+
+            embed.addField("⏰ Time Remaining",
+                    String.format("%dh %dm until secret boss expires", hours, minutes), false);
+        } else {
+            embed.addField("🎉 Victory!", "The secret boss has been defeated!", false);
+        }
+
+        embed.addField("Secret Boss Charges",
+                String.format("**%d/%d** Charges Remaining | You have 10 attempts total to defeat this secret boss!",
+                        remainingCharges, character.getMaxEventCharges()), false);
+
+        embed.setTimestamp(Instant.now());
+
+        event.replyEmbeds(embed.build()).queue();
+
+        logger.debug("Secret boss battle: {} dealt {} damage to {} in guild {}",
+                character.getName(), damage, bossName, guildId);
+    }
+
     private void handleStatus(SlashCommandInteractionEvent event, String guildId) {
         BossService.ServerBossState state = bossService.getState(guildId);
         if (state == null) {
@@ -394,12 +557,48 @@ public class RPGBossBattleCommand implements CommandHandler {
             }
         }
 
+        // Time remaining and losing streak
+        if (boss != null || superBoss != null) {
+            Instant expiresAt = boss != null ? boss.getExpiresAt() : superBoss.getExpiresAt();
+            long secondsRemaining = expiresAt.getEpochSecond() - Instant.now().getEpochSecond();
+            Duration duration = Duration.ofSeconds(Math.max(0, secondsRemaining));
+            long hours = duration.toHours();
+            long minutes = duration.toMinutesPart();
+
+            String timeRemaining = String.format("%dh %dm", hours, minutes);
+            embed.addField("⏰ Time Remaining", timeRemaining, true);
+
+            // Losing streak
+            int consecutiveFailures = state.getConsecutiveFailures();
+            if (consecutiveFailures > 0) {
+                embed.addField("📉 Losing Streak", String.format("**%d** consecutive failure%s",
+                        consecutiveFailures, consecutiveFailures > 1 ? "s" : ""), true);
+            }
+
+            // Empowerment level
+            int empowermentLevel = 0;
+            if (consecutiveFailures >= 5) {
+                empowermentLevel = 2;
+            } else if (consecutiveFailures >= 3) {
+                empowermentLevel = 1;
+            }
+            if (empowermentLevel > 0) {
+                embed.addField("⚡ Empowerment", String.format("Level **%d** (stats boosted)", empowermentLevel), true);
+            }
+        }
+
         // Active World Curses
         var activeCurses = worldCurseService.getActiveCurses(guildId);
         if (!activeCurses.isEmpty()) {
             StringBuilder curseDisplay = new StringBuilder();
             for (WorldCurse curse : activeCurses) {
-                curseDisplay.append(String.format("%s\n*%s*\n\n", curse.getDisplayName(), curse.getDescription()));
+                String bossName = worldCurseService.getBossNameForCurse(guildId, curse);
+                if (bossName != null) {
+                    curseDisplay.append(String.format("%s (from **%s**)\n*%s*\n\n",
+                            curse.getDisplayName(), bossName, curse.getDescription()));
+                } else {
+                    curseDisplay.append(String.format("%s\n*%s*\n\n", curse.getDisplayName(), curse.getDescription()));
+                }
             }
             embed.addField("🌑 Active World Curses", curseDisplay.toString().trim(), false);
             embed.setColor(Color.RED); // Change color to indicate cursed state
@@ -424,8 +623,22 @@ public class RPGBossBattleCommand implements CommandHandler {
         embed.setTitle("🏆 Boss Battle Leaderboard");
         embed.setColor(Color.YELLOW);
 
+        // Check if there's an active boss
+        BossService.ServerBossState state = bossService.getState(guildId);
+        Boss currentBoss = state != null ? state.getCurrentBoss() : null;
+        SuperBoss currentSuperBoss = state != null ? state.getCurrentSuperBoss() : null;
+
+        boolean hasActiveBoss = (currentBoss != null && !currentBoss.isDefeated() && !currentBoss.isExpired()) ||
+                (currentSuperBoss != null && !currentSuperBoss.isDefeated() && !currentSuperBoss.isExpired());
+
         if (topDamage.isEmpty()) {
-            embed.setDescription("No damage dealt yet. Be the first to battle!");
+            if (hasActiveBoss) {
+                // Active boss exists but no damage dealt yet
+                embed.setDescription("No damage dealt yet. Be the first to battle!");
+            } else {
+                // No active boss - show lore-friendly message
+                embed.setDescription(formatLoreFriendlyNoBossMessage(state));
+            }
         } else {
             StringBuilder leaderboard = new StringBuilder();
             int rank = 1;
@@ -460,6 +673,85 @@ public class RPGBossBattleCommand implements CommandHandler {
         String emptyPart = "░".repeat(barLength - filled);
 
         return filledPart + emptyPart;
+    }
+
+    /**
+     * Calculates the next boss spawn time based on current boss state.
+     * Bosses spawn every 24 hours.
+     *
+     * @param state the boss state for the guild
+     * @return the next spawn time, or null if cannot be determined
+     */
+    private Instant calculateNextBossSpawnTime(BossService.ServerBossState state) {
+        if (state == null) {
+            return null;
+        }
+
+        Instant now = Instant.now();
+        Boss currentBoss = state.getCurrentBoss();
+        SuperBoss currentSuperBoss = state.getCurrentSuperBoss();
+
+        // If there's an active boss, next spawn is 24 hours from its spawn time
+        if (currentBoss != null && !currentBoss.isDefeated() && !currentBoss.isExpired()) {
+            return currentBoss.getSpawnTime().plus(24, ChronoUnit.HOURS);
+        }
+
+        if (currentSuperBoss != null && !currentSuperBoss.isDefeated() && !currentSuperBoss.isExpired()) {
+            return currentSuperBoss.getSpawnTime().plus(24, ChronoUnit.HOURS);
+        }
+
+        // If boss exists but is expired or defeated, calculate from expiration/defeat time
+        if (currentBoss != null) {
+            Instant referenceTime = currentBoss.isExpired() ? currentBoss.getExpiresAt() : currentBoss.getSpawnTime();
+            Instant nextSpawn = referenceTime.plus(24, ChronoUnit.HOURS);
+            // If next spawn is in the past, it should have already spawned, so return null
+            return nextSpawn.isAfter(now) ? nextSpawn : null;
+        }
+
+        if (currentSuperBoss != null) {
+            Instant referenceTime = currentSuperBoss.isExpired() ? currentSuperBoss.getExpiresAt() : currentSuperBoss.getSpawnTime();
+            Instant nextSpawn = referenceTime.plus(24, ChronoUnit.HOURS);
+            return nextSpawn.isAfter(now) ? nextSpawn : null;
+        }
+
+        // No boss state - cannot determine next spawn
+        return null;
+    }
+
+    /**
+     * Formats a lore-friendly message when no active boss exists.
+     * Includes time until next boss spawn if calculable.
+     *
+     * @param state the boss state for the guild
+     * @return formatted lore-friendly message
+     */
+    private String formatLoreFriendlyNoBossMessage(BossService.ServerBossState state) {
+        Instant nextSpawn = calculateNextBossSpawnTime(state);
+
+        String baseMessage = "While danger has retreated to the shadows, it's a beautiful day out in Nilfheim. " +
+                "No world ending dangers today.";
+
+        if (nextSpawn != null) {
+            Instant now = Instant.now();
+            Duration timeUntilSpawn = Duration.between(now, nextSpawn);
+            long hours = timeUntilSpawn.toHours();
+            long minutes = timeUntilSpawn.toMinutes() % 60;
+
+            if (hours > 0) {
+                if (minutes > 0) {
+                    return baseMessage + String.format("\n\n⏰ The next threat emerges in **%d hours and %d minutes**.", hours, minutes);
+                } else {
+                    return baseMessage + String.format("\n\n⏰ The next threat emerges in **%d hour%s**.", hours, hours != 1 ? "s" : "");
+                }
+            } else if (minutes > 0) {
+                return baseMessage + String.format("\n\n⏰ The next threat emerges in **%d minute%s**.", minutes, minutes != 1 ? "s" : "");
+            } else {
+                return baseMessage + "\n\n⏰ A new threat will emerge soon.";
+            }
+        }
+
+        // No time estimate available
+        return baseMessage + "\n\n⏰ Bosses spawn every 24 hours. Stay vigilant, heroes.";
     }
 
     private String getMedal(int rank) {
