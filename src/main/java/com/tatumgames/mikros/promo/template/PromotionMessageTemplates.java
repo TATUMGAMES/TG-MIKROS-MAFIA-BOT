@@ -1,21 +1,31 @@
 package com.tatumgames.mikros.promo.template;
 
 import com.tatumgames.mikros.models.AppPromotion;
+import com.tatumgames.mikros.promo.cta.CTAPrioritySelector;
+import com.tatumgames.mikros.promo.manager.PromotionStepManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * Manages message templates for app promotions.
  * <p>
- * Contains 20 templates total (5 per step) with community support and rallying messages.
+ * Contains templates for different step types with community support and rallying messages.
+ * Supports dynamic step counts based on campaign duration.
  */
 public class PromotionMessageTemplates {
     private static final Logger logger = LoggerFactory.getLogger(PromotionMessageTemplates.class);
+
+    // Reminder: Intermediate steps for longer campaigns (5 templates total)
+    private static final String[] REMINDER_TEMPLATES = {
+            "Still loving <app_name>? <short_description>",
+            "Don't forget about <app_name>! <short_description>",
+            "Here's a reminder about <app_name>: <short_description>",
+            "Let's keep supporting <app_name>! <short_description>",
+            "Have you tried <app_name> yet? <short_description>"
+    };
     // Step 1: Introduce the game (5 templates total)
     private static final String[] STEP_1_TEMPLATES = {
             "🎮 Introducing <app_name>! <short_description>",
@@ -48,6 +58,8 @@ public class PromotionMessageTemplates {
             "One final rally for <app_name>! <short_description>",
             "Last call to support <app_name> - <short_description>"
     };
+    // Template tracking per campaign to avoid immediate repetition
+    private final Map<String, List<String>> templateHistory = new HashMap<>();
     // MIKROS Marketing footer messages
     private static final String[] MIKROS_FOOTER_MESSAGES = {
             "Powered by MIKROS Marketing — a developer-first platform helping indie games reach real players. Learn more: https://developer.tatumgames.com/",
@@ -62,9 +74,11 @@ public class PromotionMessageTemplates {
             "Powered by MIKROS! Modern marketing tools for indie game developers and small game studios. https://developer.tatumgames.com/"
     };
     private final Random random;
+    private final CTAPrioritySelector ctaPrioritySelector;
 
     public PromotionMessageTemplates() {
         this.random = new Random();
+        this.ctaPrioritySelector = new CTAPrioritySelector();
     }
 
     /**
@@ -72,21 +86,74 @@ public class PromotionMessageTemplates {
      *
      * @param step the promotion step (1-4)
      * @return a template string
+     * @deprecated Use getTemplate(StepType, String) instead for better template selection
      */
+    @Deprecated
     public String getTemplate(int step) {
-        String[] templates = switch (step) {
-            case 1 -> STEP_1_TEMPLATES;
-            case 2 -> STEP_2_TEMPLATES;
-            case 3 -> STEP_3_TEMPLATES;
-            case 4 -> STEP_4_TEMPLATES;
+        PromotionStepManager.StepType stepType = switch (step) {
+            case 1 -> PromotionStepManager.StepType.INTRODUCTION;
+            case 2 -> PromotionStepManager.StepType.DEEP_DIVE;
+            case 3 -> PromotionStepManager.StepType.MULTI_GAME;
+            case 4 -> PromotionStepManager.StepType.FINAL_CHANCE;
             default -> throw new IllegalArgumentException("Invalid step: " + step);
+        };
+        return getTemplate(stepType, null);
+    }
+
+    /**
+     * Gets a template for a step type, avoiding recent repetition.
+     *
+     * @param stepType    the step type
+     * @param campaignKey unique key for the campaign (appId:campaignId) for tracking, or null
+     * @return a template string
+     */
+    public String getTemplate(PromotionStepManager.StepType stepType, String campaignKey) {
+        String[] templates = switch (stepType) {
+            case INTRODUCTION -> STEP_1_TEMPLATES;
+            case DEEP_DIVE -> STEP_2_TEMPLATES;
+            case REMINDER -> REMINDER_TEMPLATES;
+            case MULTI_GAME -> STEP_3_TEMPLATES;
+            case FINAL_CHANCE -> STEP_4_TEMPLATES;
         };
 
         if (templates.length == 0) {
-            logger.warn("No templates available for step {}", step);
+            logger.warn("No templates available for step type {}", stepType);
             return "";
         }
 
+        // If campaign key provided, track templates to avoid repetition
+        if (campaignKey != null && !campaignKey.isBlank()) {
+            List<String> history = templateHistory.computeIfAbsent(campaignKey, k -> new ArrayList<>());
+
+            // Get templates not recently used (last 3-5)
+            List<String> availableTemplates = new ArrayList<>(Arrays.asList(templates));
+            int historySize = Math.min(history.size(), 5);
+
+            if (historySize > 0) {
+                // Remove recently used templates
+                List<String> recentTemplates = history.subList(Math.max(0, history.size() - historySize), history.size());
+                availableTemplates.removeAll(recentTemplates);
+            }
+
+            // If all templates were recently used, use all templates
+            if (availableTemplates.isEmpty()) {
+                availableTemplates = new ArrayList<>(Arrays.asList(templates));
+            }
+
+            // Select random from available templates
+            String selected = availableTemplates.get(random.nextInt(availableTemplates.size()));
+
+            // Track this selection
+            history.add(selected);
+            // Keep history size manageable (last 10 templates)
+            if (history.size() > 10) {
+                history.remove(0);
+            }
+
+            return selected;
+        }
+
+        // No tracking, just random selection
         return templates[random.nextInt(templates.length)];
     }
 
@@ -121,10 +188,23 @@ public class PromotionMessageTemplates {
     }
 
     /**
+     * Gets intent-driven CTA header text based on available CTAs.
+     * Replaces generic text with conversion-optimized language.
+     *
+     * @param ctas the CTAs object
+     * @return intent-driven CTA header text
+     */
+    public String getIntentDrivenCtaHeader(AppPromotion.CTAs ctas) {
+        return ctaPrioritySelector.getIntentDrivenCtaHeader(ctas);
+    }
+
+    /**
      * Gets a random CTA (Call to Action) text.
+     * @deprecated Use getIntentDrivenCtaHeader instead for conversion-optimized text.
      *
      * @return CTA text
      */
+    @Deprecated
     public String getRandomCta() {
         String[] ctas = {
                 "Where to Get It?:",
@@ -184,6 +264,15 @@ public class PromotionMessageTemplates {
         if (socialMedia.getDiscord() != null && !socialMedia.getDiscord().contains("<")) {
             availableLinks.add("[Discord](" + socialMedia.getDiscord() + ")");
         }
+        if (socialMedia.getLinkedin() != null && !socialMedia.getLinkedin().contains("<")) {
+            availableLinks.add("[LinkedIn](" + socialMedia.getLinkedin() + ")");
+        }
+        if (socialMedia.getTiktok() != null && !socialMedia.getTiktok().contains("<")) {
+            availableLinks.add("[TikTok](" + socialMedia.getTiktok() + ")");
+        }
+        if (socialMedia.getTwitch() != null && !socialMedia.getTwitch().contains("<")) {
+            availableLinks.add("[Twitch](" + socialMedia.getTwitch() + ")");
+        }
 
         if (availableLinks.isEmpty()) {
             return null;
@@ -193,18 +282,40 @@ public class PromotionMessageTemplates {
     }
 
     /**
+     * Gets prioritized CTA links using the priority selector.
+     * Returns primary CTAs and optionally secondary CTA.
+     *
+     * @param app            the app promotion
+     * @param allowSecondary whether to allow secondary CTA (30-40% chance if true)
+     * @return structured CTA selection with primary and optional secondary
+     */
+    public PrioritizedCTAs getPrioritizedCTAs(AppPromotion app, boolean allowSecondary) {
+        if (app.getCampaign() == null || app.getCampaign().getEffectiveCTAs() == null) {
+            return new PrioritizedCTAs(List.of(), null);
+        }
+
+        AppPromotion.CTAs ctas = app.getCampaign().getEffectiveCTAs();
+        List<CTAPrioritySelector.CTALink> primaryCTAs = ctaPrioritySelector.selectPrimaryCTAs(ctas);
+        CTAPrioritySelector.CTALink secondaryCTA = ctaPrioritySelector.selectSecondaryCTA(ctas, allowSecondary);
+
+        return new PrioritizedCTAs(primaryCTAs, secondaryCTA);
+    }
+
+    /**
      * Gets a list of available CTA links from the app's campaign.
      * Filters out placeholder URLs.
+     * @deprecated Use getPrioritizedCTAs instead for conversion-optimized selection.
      *
      * @param app the app promotion
      * @return list of formatted CTA links
      */
+    @Deprecated
     public List<String> getAvailableCtas(AppPromotion app) {
-        if (app.getCampaign() == null || app.getCampaign().getCtas() == null) {
+        if (app.getCampaign() == null || app.getCampaign().getEffectiveCTAs() == null) {
             return List.of();
         }
 
-        AppPromotion.CTAs ctas = app.getCampaign().getCtas();
+        AppPromotion.CTAs ctas = app.getCampaign().getEffectiveCTAs();
         List<String> available = new java.util.ArrayList<>();
 
         if (ctas.getWebsite() != null && !ctas.getWebsite().contains("<")) {
@@ -225,6 +336,9 @@ public class PromotionMessageTemplates {
         if (ctas.getAmazonStore() != null && !ctas.getAmazonStore().contains("<")) {
             available.add(formatCtaLink("Amazon Appstore", ctas.getAmazonStore()));
         }
+        if (ctas.getItchStore() != null && !ctas.getItchStore().contains("<")) {
+            available.add(formatCtaLink("Itch.io", ctas.getItchStore()));
+        }
         if (ctas.getOther() != null && !ctas.getOther().contains("<")) {
             available.add(formatCtaLink("Other", ctas.getOther()));
         }
@@ -232,6 +346,31 @@ public class PromotionMessageTemplates {
         return available.stream()
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Represents prioritized CTA selection with primary and optional secondary CTAs.
+     */
+    public static class PrioritizedCTAs {
+        private final List<CTAPrioritySelector.CTALink> primaryCTAs;
+        private final CTAPrioritySelector.CTALink secondaryCTA;
+
+        public PrioritizedCTAs(List<CTAPrioritySelector.CTALink> primaryCTAs, CTAPrioritySelector.CTALink secondaryCTA) {
+            this.primaryCTAs = primaryCTAs != null ? primaryCTAs : List.of();
+            this.secondaryCTA = secondaryCTA;
+        }
+
+        public List<CTAPrioritySelector.CTALink> getPrimaryCTAs() {
+            return primaryCTAs;
+        }
+
+        public CTAPrioritySelector.CTALink getSecondaryCTA() {
+            return secondaryCTA;
+        }
+
+        public boolean hasAnyCTAs() {
+            return !primaryCTAs.isEmpty() || secondaryCTA != null;
+        }
     }
 
     /**
