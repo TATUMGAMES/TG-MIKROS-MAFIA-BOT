@@ -30,7 +30,7 @@ public class BumpConfig {
         this.guildId = Objects.requireNonNull(guildId);
         this.channelId = null;
         this.enabledBots = EnumSet.noneOf(BumpBot.class);
-        this.intervalHours = 4; // Default: 4 hours
+        this.intervalHours = 8; // Default: 8 hours
         this.lastBumpTime = new HashMap<>();
     }
 

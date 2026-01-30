@@ -105,7 +105,7 @@ public class BumpSetupCommand implements CommandHandler {
                 "✅ **Auto-Bump Configured**\n\n" +
                         "Bump channel: %s\n" +
                         "Enabled bots: %s\n" +
-                        "Default interval: **4 hours**\n\n" +
+                        "Default interval: **8 hours**\n\n" +
                         "**Next Steps:**\n" +
                         "• Use `/admin-bump-config set-interval` to change the bump interval (1-24 hours)\n" +
                         "• Use `/admin-bump-config view` to see current settings\n\n" +

@@ -77,6 +77,7 @@ public class BotMain extends ListenerAdapter {
     private final AchievementService achievementService;
     private final AuraService auraService;
     private final WorldCurseService worldCurseService;
+    private final BlessingService blessingService;
     private final BossService bossService;
     private final BossScheduler bossScheduler;
     private final PromoDetectionService promoService;
@@ -152,11 +153,15 @@ public class BotMain extends ListenerAdapter {
         this.achievementService = new AchievementService();
         this.auraService = new AuraService();
         this.worldCurseService = new WorldCurseService();
+        this.blessingService = new BlessingService();
         this.nilfheimEventService = new InMemoryNilfheimEventService();
         this.loreRecognitionService = new LoreRecognitionService();
-        this.bossService = new BossService(characterService, auraService, worldCurseService, nilfheimEventService, loreRecognitionService);
+        this.bossService = new BossService(characterService, auraService, worldCurseService, nilfheimEventService, loreRecognitionService, blessingService);
+        // Set dependencies for LoreRecognitionService (circular dependency resolution)
+        this.loreRecognitionService.setBossService(bossService);
+        this.loreRecognitionService.setCharacterService(characterService);
         this.actionService = new ActionService(characterService, worldCurseService, auraService, nilfheimEventService, loreRecognitionService, bossService);
-        this.bossScheduler = new BossScheduler(bossService, characterService, worldCurseService);
+        this.bossScheduler = new BossScheduler(bossService, characterService, worldCurseService, blessingService);
         this.nilfheimEventScheduler = new NilfheimEventScheduler(nilfheimEventService, characterService);
         this.promoService = new PromoDetectionService();
         this.promoListener = new PromoMessageListener(promoService);
@@ -206,6 +211,19 @@ public class BotMain extends ListenerAdapter {
 
             logger.info("Bot is now online and ready");
 
+            // Register shutdown hook to gracefully shut down all schedulers
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                logger.info("Shutting down schedulers...");
+                bot.gamePromotionScheduler.shutdown();
+                bot.bossScheduler.shutdown();
+                bot.monthlyReportService.shutdown();
+                bot.wordUnscrambleResetScheduler.shutdown();
+                bot.promotionOnboardingScheduler.stop();
+                bot.tatumTechEventScheduler.stop();
+                bot.bumpScheduler.stop();
+                logger.info("All schedulers shut down");
+            }, "scheduler-shutdown-hook"));
+
         } catch (Exception e) {
             logger.error("Failed to start bot", e);
             System.exit(1);
@@ -254,8 +272,8 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new GameConfigCommand(wordUnscrambleService));
 
         // RPG System commands
-        registerHandler(new RPGRegisterCommand(characterService));
-        registerHandler(new RPGProfileCommand(characterService, worldCurseService));
+        registerHandler(new RPGRegisterCommand(characterService, bossService));
+        registerHandler(new RPGProfileCommand(characterService, worldCurseService, blessingService));
         registerHandler(new RPGActionCommand(characterService, actionService, achievementService, worldCurseService));
         registerHandler(new RPGResurrectCommand(characterService, worldCurseService, loreRecognitionService));
         registerHandler(new RPGBossBattleCommand(characterService, bossService, worldCurseService));
