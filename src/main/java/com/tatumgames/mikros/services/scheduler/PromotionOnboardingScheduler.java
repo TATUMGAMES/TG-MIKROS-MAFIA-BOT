@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import org.slf4j.Logger;
@@ -41,6 +42,14 @@ public class PromotionOnboardingScheduler {
             "general",
             "chat",
             "off-topic"
+    );
+
+    // Channel name keywords for public nudge (case-insensitive, in priority order)
+    private static final List<String> PUBLIC_NUDGE_CHANNEL_KEYWORDS = Arrays.asList(
+            "announcement",
+            "announcements",
+            "admin",
+            "moderator"
     );
 
     private final PromotionOnboardingService onboardingService;
@@ -150,6 +159,18 @@ public class PromotionOnboardingScheduler {
             executePhase3(guild);
             onboardingService.markPhaseCompleted(guildId, phase3);
         }
+
+        PromotionOnboardingService.Phase phase4 = PromotionOnboardingService.Phase.PHASE_4_PUBLIC_NUDGE;
+        if (onboardingService.shouldProcessPhase(guildId, phase4)) {
+            executePhase4(guild);
+            onboardingService.markPhaseCompleted(guildId, phase4);
+        }
+
+        PromotionOnboardingService.Phase phase5 = PromotionOnboardingService.Phase.PHASE_5_FINAL_DM;
+        if (onboardingService.shouldProcessPhase(guildId, phase5)) {
+            executePhase5(guild);
+            onboardingService.markPhaseCompleted(guildId, phase5);
+        }
     }
 
     /**
@@ -223,8 +244,10 @@ public class PromotionOnboardingScheduler {
 
             // Send confirmation DM
             String confirmMessage = String.format(
-                    "✅ Auto-configured promotion channel: %s\n\n" +
-                            "You can change this anytime with /admin-promotion-setup.",
+                    """
+                            ✅ Auto-configured promotion channel: %s
+                            
+                            You can change this anytime with /admin-promotion-setup.""",
                     matchedChannel.getAsMention()
             );
             sendDmToAdmins(guild, confirmMessage);
@@ -268,6 +291,168 @@ public class PromotionOnboardingScheduler {
     }
 
     /**
+     * Executes Phase 4: Public Admin Nudge (72 hours after first seen).
+     * Sends a public admin-visible message in an appropriate channel.
+     *
+     * @param guild the guild
+     */
+    private void executePhase4(Guild guild) {
+        String guildId = guild.getId();
+
+        // Double-check channel not configured (could have been set manually)
+        if (gamePromotionService.getPromotionChannel(guildId) != null) {
+            logger.debug("Guild {} channel configured before Phase 4, skipping public nudge", guildId);
+            return;
+        }
+
+        // Find appropriate channel for public nudge
+        MessageChannel nudgeChannel = findPublicNudgeChannel(guild);
+        if (nudgeChannel == null) {
+            logger.warn("Could not find appropriate channel for public nudge in guild {}", guildId);
+            return;
+        }
+
+        // Send public admin nudge
+        sendPublicAdminNudge(guild, nudgeChannel);
+        logger.info("Executed Phase 4 (Public Admin Nudge) for guild {}", guildId);
+    }
+
+    /**
+     * Executes Phase 5: Final DM (14 days after first seen).
+     * Sends one-time final DM to admins as last reminder.
+     *
+     * @param guild the guild
+     */
+    private void executePhase5(Guild guild) {
+        String guildId = guild.getId();
+
+        // Double-check channel not configured (could have been set manually)
+        if (gamePromotionService.getPromotionChannel(guildId) != null) {
+            logger.debug("Guild {} channel configured before Phase 5, skipping final DM", guildId);
+            return;
+        }
+
+        String message = """
+                Hey there 👋
+                
+                Just following up once — and this will be our last nudge.
+                
+                MIKROS has an **optional promotion feature** that helps indie game developers and small studios reach real players through community discovery, not ads.
+                
+                If your server enjoys learning about new games, setting up a promotions channel is a small action that can have a big impact.
+                
+                If not, no worries at all. We will stay completely quiet unless you decide otherwise.
+                
+                You can enable it anytime with:
+                **`/admin-promotion-setup`**
+                
+                Thanks for supporting healthy game communities 💙
+                """;
+
+        sendDmToAdmins(guild, message);
+        logger.info("Executed Phase 5 (Final DM) for guild {}", guildId);
+    }
+
+    /**
+     * Finds an appropriate channel for public admin nudge.
+     * Priority order:
+     * 1. Channels containing "announcement" or "announcements"
+     * 2. Channels containing "admin" or "moderator"
+     * 3. First writable system channel
+     * 4. First writable text channel (avoid "general" if possible)
+     *
+     * @param guild the guild to search
+     * @return the appropriate channel, or null if none found
+     */
+    private MessageChannel findPublicNudgeChannel(Guild guild) {
+        List<TextChannel> textChannels = guild.getTextChannels();
+
+        // Priority 1: Channels containing announcement keywords
+        for (String keyword : PUBLIC_NUDGE_CHANNEL_KEYWORDS) {
+            for (TextChannel channel : textChannels) {
+                String channelName = channel.getName().toLowerCase();
+                if (channelName.contains(keyword.toLowerCase()) &&
+                        !EXCLUDED_CHANNEL_NAMES.contains(channelName) &&
+                        channel.canTalk()) {
+                    return channel;
+                }
+            }
+        }
+
+        // Priority 2: System channel (if writable)
+        TextChannel systemChannel = guild.getSystemChannel();
+        if (systemChannel != null && systemChannel.canTalk()) {
+            return systemChannel;
+        }
+
+        // Priority 3: First writable text channel (avoid "general" if possible)
+        for (TextChannel channel : textChannels) {
+            String channelName = channel.getName().toLowerCase();
+            if (!EXCLUDED_CHANNEL_NAMES.contains(channelName) && channel.canTalk()) {
+                return channel;
+            }
+        }
+
+        // Last resort: any writable channel
+        for (TextChannel channel : textChannels) {
+            if (channel.canTalk()) {
+                return channel;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Sends a public admin-visible nudge message to a channel.
+     * Mentions admins using @admin role if available, otherwise mentions individual admins (limited).
+     *
+     * @param guild   the guild
+     * @param channel the channel to send the message to
+     */
+    private void sendPublicAdminNudge(Guild guild, MessageChannel channel) {
+        // Try to find @admin role
+        String adminMention = null;
+        List<Role> roles = guild.getRolesByName("admin", true);
+        if (!roles.isEmpty()) {
+            adminMention = roles.get(0).getAsMention();
+        } else {
+            // Fallback: mention up to 3 admins
+            List<Member> admins = guild.getMembers().stream()
+                    .filter(m -> m.hasPermission(Permission.ADMINISTRATOR))
+                    .filter(m -> !m.getUser().isBot())
+                    .limit(3)
+                    .collect(Collectors.toList());
+
+            if (!admins.isEmpty()) {
+                adminMention = admins.stream()
+                        .map(Member::getAsMention)
+                        .collect(Collectors.joining(" "));
+            }
+        }
+
+        String header = adminMention != null ? "👋 " + adminMention + " — Quick Heads-Up from MIKROS" : "👋 Hey Admins — Quick Heads-Up from MIKROS";
+
+        String message = header + "\n\n" +
+                "MIKROS includes an **opt-in game discovery feature** that helps **indie game developers and small studios** get visibility they often can't access through traditional ads.\n\n" +
+                "By setting up a dedicated promotions channel, you're:\n\n" +
+                "• Supporting indie devs building passion projects\n" +
+                "• Giving your community a place to discover new games early\n" +
+                "• Keeping all promotions organized and non-intrusive\n\n" +
+                "Nothing is posted without your approval.\n" +
+                "If you'd like to enable it, just run:\n\n" +
+                "**`/admin-promotion-setup`**\n\n" +
+                "Totally optional but if you care about indie games and discovery, this makes a real difference. 💙🎮";
+
+        channel.sendMessage(message).queue(
+                success -> logger.info("Sent public admin nudge to channel {} in guild {}",
+                        channel.getName(), guild.getId()),
+                error -> logger.warn("Failed to send public admin nudge to channel {} in guild {}: {}",
+                        channel.getName(), guild.getId(), error.getMessage())
+        );
+    }
+
+    /**
      * Sends a DM to all administrators in a guild.
      *
      * @param guild   the guild
@@ -277,7 +462,7 @@ public class PromotionOnboardingScheduler {
         List<Member> admins = guild.getMembers().stream()
                 .filter(m -> m.hasPermission(Permission.ADMINISTRATOR))
                 .filter(m -> !m.getUser().isBot())
-                .collect(Collectors.toList());
+                .toList();
 
         if (admins.isEmpty()) {
             logger.warn("No administrators found in guild {} to send onboarding DM", guild.getId());

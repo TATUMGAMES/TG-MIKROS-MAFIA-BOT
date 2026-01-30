@@ -75,14 +75,16 @@ Discord Bot.
 | `/gamestats avg-gameplay-time`       | Average gameplay time      | Everyone   | Analytics |
 | `/gamestats avg-session-time`        | Average session time       | Everyone   | Analytics |
 
-### Community Games Commands
+### Community Games Commands (Word Unscramble)
 
-| Command        | Description                         | Permission    | Module |
-|----------------|-------------------------------------|---------------|--------|
-| `/game-setup`  | Initial game configuration          | Administrator | Games  |
-| `/guess`       | Submit word guess (Word Unscramble) | Everyone      | Games  |
-| `/game-stats`  | View game leaderboard               | Everyone      | Games  |
-| `/game-config` | Configure games (5 subcommands)     | Administrator | Games  |
+| Command                  | Description                               | Permission    | Module |
+|--------------------------|-------------------------------------------|---------------|--------|
+| `/admin-scramble-setup`  | Initial Word Unscramble configuration     | Administrator | Games  |
+| `/scramble-guess`        | Submit word guess (Word Unscramble)       | Everyone      | Games  |
+| `/scramble-stats`        | View current game and leaderboard         | Everyone      | Games  |
+| `/scramble-leaderboard`  | View top players by points                | Everyone      | Games  |
+| `/scramble-profile`      | View your Word Unscramble statistics      | Everyone      | Games  |
+| `/admin-scramble-config` | Configure Word Unscramble (5 subcommands) | Administrator | Games  |
 
 ### RPG System Commands
 
@@ -96,13 +98,10 @@ Discord Bot.
 | `/rpg-leaderboard` | View RPG leaderboard                       | Everyone      | RPG    |
 | `/rpg-config`      | Configure RPG (5 subcommands)              | Administrator | RPG    |
 
-### Spelling Challenge Commands
+### Spelling / Word Unscramble (same game)
 
-| Command                 | Description               | Permission | Module   |
-|-------------------------|---------------------------|------------|----------|
-| `/spelling-challenge`   | View daily challenge      | Everyone   | Spelling |
-| `/spelling-leaderboard` | View spelling leaderboard | Everyone   | Spelling |
-| `/spell-guess`          | Submit spelling guess     | Everyone   | Spelling |
+Word Unscramble is the community spelling/unscramble game. Use the Community Games commands above: `/scramble-guess`,
+`/scramble-stats`, `/scramble-leaderboard`, `/scramble-profile`.
 
 ### Promotional Lead Generation Commands
 

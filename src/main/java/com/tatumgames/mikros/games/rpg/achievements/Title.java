@@ -19,6 +19,7 @@ public enum Title {
     THE_EXPLORER("The Explorer", 0, TitleType.FEAT, 0.02), // Explorer pattern (2% exploration XP bonus)
     THE_WARRIOR("The Warrior", 0, TitleType.FEAT, 0.02), // Battler pattern (2% battle damage bonus)
     THE_RESTFUL("The Restful", 0, TitleType.FEAT, 0.02), // Rester pattern (2% rest HP recovery bonus)
+    SECRET_CHALLENGER("Secret Challenger", 0, TitleType.FEAT, 0.02), // 5 secret bosses defeated (2% XP bonus)
 
     // First-To Titles (Myth tier, cosmetic + aura unlock)
     FIRST_BLOOD_OF_NILFHEIM("First Blood of Nilfheim", 0, TitleType.FIRST_TO, 0.0), // First boss kill ever

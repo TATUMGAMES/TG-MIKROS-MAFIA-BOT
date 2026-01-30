@@ -98,6 +98,17 @@ public class RPGDuelCommand implements CommandHandler {
             return;
         }
 
+        // Check if in correct channel (if specified)
+        if (config != null && config.getRpgChannelId() != null) {
+            if (!event.getChannel().getId().equals(config.getRpgChannelId())) {
+                event.reply(String.format(
+                        "Please use `/rpg-duel` in <#%s>. RPG commands are restricted to the assigned channel.",
+                        config.getRpgChannelId()
+                )).setEphemeral(true).queue();
+                return;
+            }
+        }
+
         // Check if challenger can duel
         if (!challenger.canDuel()) {
             if (challenger.isDead() || challenger.isRecovering()) {

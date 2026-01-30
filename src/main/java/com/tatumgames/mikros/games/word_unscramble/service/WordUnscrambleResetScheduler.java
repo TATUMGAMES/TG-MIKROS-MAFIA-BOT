@@ -14,8 +14,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Scheduler for hourly Word Unscramble game resets.
- * Resets games every hour for all configured guilds.
+ * Scheduler for Word Unscramble game resets.
+ * Resets games every 4 hours for all configured guilds.
  * <p>
  * TODO: Reward System Integration
  * - Award MIKROS discounts to winners
@@ -43,32 +43,35 @@ public class WordUnscrambleResetScheduler {
 
     /**
      * Starts the reset scheduler.
-     * Resets games every hour for all configured guilds.
+     * Resets games every 4 hours for all configured guilds.
      *
      * @param jda the JDA instance
      */
     public void start(JDA jda) {
         this.jda = jda;
 
-        // Reset games every hour
+        // Reset games every 4 hours
         scheduler.scheduleAtFixedRate(() -> {
             try {
                 checkAndResetGames();
             } catch (Exception e) {
                 logger.error("Error in Word Unscramble reset scheduler", e);
             }
-        }, 0, 1, TimeUnit.HOURS);
+        }, 0, 4, TimeUnit.HOURS);
 
-        logger.info("Word Unscramble reset scheduler started (hourly resets)");
+        logger.info("Word Unscramble reset scheduler started (4-hour resets)");
     }
 
     /**
-     * Checks all guilds and resets games hourly.
+     * Checks all guilds and resets games every 4 hours.
      */
     private void checkAndResetGames() {
         if (jda == null) {
             return;
         }
+
+        // Clean up old used-word entries (older than 60 days) to prevent memory bloat
+        wordUnscrambleService.cleanupUsedWordTrackerEntries(null);
 
         for (String guildId : wordUnscrambleService.getConfiguredGuilds()) {
             try {
@@ -77,7 +80,7 @@ public class WordUnscrambleResetScheduler {
                     continue;
                 }
 
-                // Reset game every hour
+                // Reset game every 4 hours
                 resetAndStartNewGame(guildId);
             } catch (Exception e) {
                 logger.error("Error resetting Word Unscramble game for guild {}", guildId, e);
@@ -158,7 +161,7 @@ public class WordUnscrambleResetScheduler {
             );
         } else {
             announcement = String.format(
-                    "%s **%s Ended**\n\nNo one solved it this hour!\nAnswer was: **%s**",
+                    "%s **%s Ended**\n\nNo one solved it this round!\nAnswer was: **%s**",
                     session.getGameType().getEmoji(),
                     session.getGameType().getDisplayName(),
                     session.getCorrectAnswer() != null ? session.getCorrectAnswer() : "N/A"

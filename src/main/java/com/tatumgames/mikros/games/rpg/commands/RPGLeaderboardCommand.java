@@ -2,6 +2,7 @@ package com.tatumgames.mikros.games.rpg.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.config.ConfigLoader;
+import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -49,6 +50,22 @@ public class RPGLeaderboardCommand implements CommandHandler {
 
     @Override
     public void handle(SlashCommandInteractionEvent event) {
+        Guild guild = event.getGuild();
+
+        // Check if in correct channel (if specified)
+        if (guild != null) {
+            RPGConfig config = characterService.getConfig(guild.getId());
+            if (config != null && config.getRpgChannelId() != null) {
+                if (!event.getChannel().getId().equals(config.getRpgChannelId())) {
+                    event.reply(String.format(
+                            "Please use `/rpg-leaderboard` in <#%s>. RPG commands are restricted to the assigned channel.",
+                            config.getRpgChannelId()
+                    )).setEphemeral(true).queue();
+                    return;
+                }
+            }
+        }
+
         // Get page number (default: 1)
         OptionMapping pageOption = event.getOption("page");
         int page = (pageOption != null) ? (int) pageOption.getAsLong() : 1;

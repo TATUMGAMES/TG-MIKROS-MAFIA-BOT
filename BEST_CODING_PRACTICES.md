@@ -71,6 +71,8 @@ if (condition) {
 
 - 4 spaces for indentation.
 - No tabs.
+- **Formatting:** Run `./gradlew spotlessApply` before commit to apply consistent Java formatting (Spotless with
+  google-java-format). Run `./gradlew spotlessCheck` in CI to enforce.
 
 📄 Documentation Standards
 

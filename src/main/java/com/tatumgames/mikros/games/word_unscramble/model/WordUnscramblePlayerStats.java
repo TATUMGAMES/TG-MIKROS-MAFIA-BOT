@@ -15,6 +15,8 @@ public class WordUnscramblePlayerStats {
     private long fastestTimeSeconds; // Fastest solve time in seconds (0 if no solves yet)
     private int totalAttempts;
     private int wrongGuesses;
+    private int currentStreak; // Current consecutive correct solves
+    private int longestStreak; // Longest streak achieved
 
     /**
      * Creates a new WordUnscramblePlayerStats starting with zero stats.
@@ -31,6 +33,8 @@ public class WordUnscramblePlayerStats {
         this.fastestTimeSeconds = 0; // 0 means no fastest time set yet
         this.totalAttempts = 0;
         this.wrongGuesses = 0;
+        this.currentStreak = 0;
+        this.longestStreak = 0;
     }
 
     /**
@@ -56,6 +60,8 @@ public class WordUnscramblePlayerStats {
         this.fastestTimeSeconds = fastestTimeSeconds;
         this.totalAttempts = totalAttempts;
         this.wrongGuesses = wrongGuesses;
+        this.currentStreak = 0; // Default, will be calculated if needed
+        this.longestStreak = 0; // Default, will be calculated if needed
     }
 
     /**
@@ -68,6 +74,12 @@ public class WordUnscramblePlayerStats {
         totalWordsSolved++;
         totalPoints += score;
         totalAttempts++;
+        currentStreak++; // Increment streak
+
+        // Update longest streak if current is better
+        if (currentStreak > longestStreak) {
+            longestStreak = currentStreak;
+        }
 
         // Update highest score if this is better
         if (score > highestScore) {
@@ -86,6 +98,15 @@ public class WordUnscramblePlayerStats {
     public void recordWrongGuess() {
         wrongGuesses++;
         totalAttempts++;
+        currentStreak = 0; // Reset streak on wrong guess
+    }
+
+    public int getCurrentStreak() {
+        return currentStreak;
+    }
+
+    public int getLongestStreak() {
+        return longestStreak;
     }
 
     /**

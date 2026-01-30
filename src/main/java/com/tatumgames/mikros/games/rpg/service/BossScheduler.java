@@ -1,6 +1,8 @@
 package com.tatumgames.mikros.games.rpg.service;
 
+import com.tatumgames.mikros.games.rpg.blessing.Blessing;
 import com.tatumgames.mikros.games.rpg.model.Boss;
+import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.model.SuperBoss;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -9,8 +11,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.*;
 
 /**
@@ -21,9 +26,9 @@ public class BossScheduler {
     private static final Logger logger = LoggerFactory.getLogger(BossScheduler.class);
     // Warning check interval: check every 30 minutes
     private static final long WARNING_CHECK_INTERVAL_MINUTES = 30;
-    // Warning thresholds: warn when 1-2 hours remain
-    private static final long WARNING_THRESHOLD_MIN_HOURS = 1;
-    private static final long WARNING_THRESHOLD_MAX_HOURS = 2;
+    // Warning thresholds in hours (will send warnings at these times)
+    private static final List<Long> WARNING_THRESHOLDS_HOURS = List.of(4L, 2L, 1L);
+    private static final long WARNING_THRESHOLD_30_MINUTES = 30; // in minutes
     private static final List<String> NORMAL_BOSS_TEMPLATES = List.of(
             """
                     🐲 **A New Boss Has Appeared!** 🐲
@@ -222,9 +227,12 @@ public class BossScheduler {
     private final BossService bossService;
     private final CharacterService characterService;
     private final WorldCurseService worldCurseService;
+    private final BlessingService blessingService;
     private final ScheduledExecutorService scheduler;
     // Track last warning sent per boss to avoid spam: "guildId_bossId" -> Instant
     private final Map<String, Instant> lastWarningSent;
+    // Track which players received private messages for each boss: "guildId_bossId" -> Set<userId>
+    private final Map<String, Set<String>> privateMessageSent;
     private JDA jda;
 
     /**
@@ -233,13 +241,16 @@ public class BossScheduler {
      * @param bossService       the boss service
      * @param characterService  the character service (to check if RPG is enabled)
      * @param worldCurseService the world curse service (for applying curses on boss expiration)
+     * @param blessingService   the blessing service (for granting blessings on consecutive failures)
      */
-    public BossScheduler(BossService bossService, CharacterService characterService, WorldCurseService worldCurseService) {
+    public BossScheduler(BossService bossService, CharacterService characterService, WorldCurseService worldCurseService, BlessingService blessingService) {
         this.bossService = bossService;
         this.characterService = characterService;
         this.worldCurseService = worldCurseService;
+        this.blessingService = blessingService;
         this.scheduler = Executors.newScheduledThreadPool(1);
         this.lastWarningSent = new ConcurrentHashMap<>();
+        this.privateMessageSent = new ConcurrentHashMap<>();
         logger.info("BossScheduler initialized");
     }
 
@@ -274,6 +285,15 @@ public class BossScheduler {
                 logger.error("Error in boss expiration warning check", e);
             }
         }, 0, WARNING_CHECK_INTERVAL_MINUTES, TimeUnit.MINUTES);
+
+        // Check for recent defeats to announce rewards every 1 minute
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                checkAndAnnounceRecentDefeats();
+            } catch (Exception e) {
+                logger.error("Error checking for recent defeats", e);
+            }
+        }, 0, 1, TimeUnit.MINUTES);
 
         logger.info("Boss scheduler started (spawns every 24 hours, warnings checked every {} minutes)",
                 WARNING_CHECK_INTERVAL_MINUTES);
@@ -355,52 +375,71 @@ public class BossScheduler {
     /**
      * Spawns a new boss for a guild.
      * Clears curses that expire on spawn.
+     * Checks and grants blessings based on consecutive failures.
+     * Always attempts to announce the boss after spawning.
      */
     private void spawnNewBoss(Guild guild, String guildId, BossService.ServerBossState state) {
         // Clear curses that expire on spawn
         worldCurseService.clearCursesOnSpawn(guildId);
+
+        // Check and grant blessing based on consecutive failures
+        int consecutiveFailures = state.getConsecutiveFailures();
+        if (consecutiveFailures > 0) {
+            blessingService.checkAndGrantBlessing(guildId, consecutiveFailures);
+        }
+
         // Check if super boss should spawn (every 3 normal bosses)
         if (state.getNormalBossesSinceSuper() >= 3) {
             logger.info("Boss scheduler: Spawning super boss for guild {} (normal bosses since super: {})",
                     guild.getName(), state.getNormalBossesSinceSuper());
             SuperBoss superBoss = bossService.spawnSuperBoss(guildId);
             if (superBoss != null) {
+                logger.info("Boss scheduler: Successfully spawned super boss {} for guild {}, attempting announcement",
+                        superBoss.getName(), guild.getName());
                 announceSuperBoss(guild, superBoss);
             } else {
-                logger.warn("Boss scheduler: Failed to spawn super boss for guild {}", guild.getName());
+                logger.error("Boss scheduler: Failed to spawn super boss for guild {} - spawnSuperBoss returned null",
+                        guild.getName());
             }
         } else {
             logger.info("Boss scheduler: Spawning normal boss for guild {} (normal bosses since super: {})",
                     guild.getName(), state.getNormalBossesSinceSuper());
             Boss boss = bossService.spawnNormalBoss(guildId);
             if (boss != null) {
+                logger.info("Boss scheduler: Successfully spawned normal boss {} for guild {}, attempting announcement",
+                        boss.getName(), guild.getName());
                 announceBoss(guild, boss);
             } else {
-                logger.warn("Boss scheduler: Failed to spawn normal boss for guild {}", guild.getName());
+                logger.error("Boss scheduler: Failed to spawn normal boss for guild {} - spawnNormalBoss returned null",
+                        guild.getName());
             }
         }
     }
 
     /**
      * Announces a new normal boss.
+     * Always attempts to send announcement and logs result.
      */
     private void announceBoss(Guild guild, Boss boss) {
         // Try to find RPG channel or general channel
         TextChannel channel = findRpgChannel(guild);
         if (channel == null) {
-            logger.warn("Boss scheduler: Could not find channel to announce boss {} for guild {} ({})",
+            logger.error("Boss scheduler: CRITICAL - Could not find channel to announce boss {} for guild {} ({}). " +
+                            "Boss was spawned but players will not see the announcement!",
                     boss.getName(), guild.getName(), guild.getId());
             return;
         }
 
         // Validate bot can send messages
         if (!channel.canTalk()) {
-            logger.warn("Boss scheduler: Bot cannot send messages in channel {} for guild {}",
-                    channel.getName(), guild.getName());
+            logger.error("Boss scheduler: CRITICAL - Bot cannot send messages in channel {} for guild {}. " +
+                            "Boss {} was spawned but announcement failed!",
+                    channel.getName(), guild.getName(), boss.getName());
             return;
         }
 
         String announcement;
+        String guildId = guild.getId();
         
         // Check for Class Harmony mechanic (Unity Devourer)
         if (boss.hasClassHarmonyMechanic()) {
@@ -429,32 +468,51 @@ public class BossScheduler {
             );
         }
 
+        // Add blessing announcement if active
+        Blessing blessing = blessingService.getActiveBlessing(guildId);
+        if (blessing != null) {
+            String blessingSection = formatBlessingAnnouncement(blessing);
+            announcement += "\n\n" + blessingSection;
+        }
+
         channel.sendMessage(announcement).queue(
                 success -> logger.info("Boss scheduler: Successfully announced boss {} (Level {}) in channel {} for guild {}",
                         boss.getName(), boss.getLevel(), channel.getName(), guild.getName()),
-                failure -> logger.error("Boss scheduler: Failed to send boss announcement for guild {}", guild.getName(), failure)
+                failure -> {
+                    logger.error("Boss scheduler: CRITICAL - Failed to send boss announcement for guild {} (boss: {}). " +
+                                    "Error: {}",
+                            guild.getName(), boss.getName(), failure.getMessage(), failure);
+                    // Log stack trace for debugging
+                    if (failure.getCause() != null) {
+                        logger.error("Boss announcement failure cause", failure.getCause());
+                    }
+                }
         );
     }
 
     /**
      * Announces a new super boss.
+     * Always attempts to send announcement and logs result.
      */
     private void announceSuperBoss(Guild guild, SuperBoss superBoss) {
         TextChannel channel = findRpgChannel(guild);
         if (channel == null) {
-            logger.warn("Boss scheduler: Could not find channel to announce super boss {} for guild {} ({})",
+            logger.error("Boss scheduler: CRITICAL - Could not find channel to announce super boss {} for guild {} ({}). " +
+                            "Super boss was spawned but players will not see the announcement!",
                     superBoss.getName(), guild.getName(), guild.getId());
             return;
         }
 
         // Validate bot can send messages
         if (!channel.canTalk()) {
-            logger.warn("Boss scheduler: Bot cannot send messages in channel {} for guild {}",
-                    channel.getName(), guild.getName());
+            logger.error("Boss scheduler: CRITICAL - Bot cannot send messages in channel {} for guild {}. " +
+                            "Super boss {} was spawned but announcement failed!",
+                    channel.getName(), guild.getName(), superBoss.getName());
             return;
         }
 
         String announcement;
+        String guildId = guild.getId();
         
         // Check for Class Harmony mechanic (Shattered Balance)
         if (superBoss.hasClassHarmonyMechanic()) {
@@ -488,10 +546,25 @@ public class BossScheduler {
             );
         }
 
+        // Add blessing announcement if active
+        Blessing blessing = blessingService.getActiveBlessing(guildId);
+        if (blessing != null) {
+            String blessingSection = formatBlessingAnnouncement(blessing);
+            announcement += "\n\n" + blessingSection;
+        }
+
         channel.sendMessage(announcement).queue(
                 success -> logger.info("Boss scheduler: Successfully announced super boss {} (Level {}) in channel {} for guild {}",
                         superBoss.getName(), superBoss.getLevel(), channel.getName(), guild.getName()),
-                failure -> logger.error("Boss scheduler: Failed to send super boss announcement for guild {}", guild.getName(), failure)
+                failure -> {
+                    logger.error("Boss scheduler: CRITICAL - Failed to send super boss announcement for guild {} (boss: {}). " +
+                                    "Error: {}",
+                            guild.getName(), superBoss.getName(), failure.getMessage(), failure);
+                    // Log stack trace for debugging
+                    if (failure.getCause() != null) {
+                        logger.error("Super boss announcement failure cause", failure.getCause());
+                    }
+                }
         );
     }
 
@@ -505,6 +578,17 @@ public class BossScheduler {
     private void applyBossFailureCurse(Guild guild, String guildId, boolean isSuperBoss) {
         com.tatumgames.mikros.games.rpg.curse.WorldCurse curse;
         String announcementTemplate;
+        String bossName = null;
+
+        // Get boss name for tracking
+        BossService.ServerBossState state = bossService.getState(guildId);
+        if (state != null) {
+            if (isSuperBoss && state.getCurrentSuperBoss() != null) {
+                bossName = state.getCurrentSuperBoss().getName();
+            } else if (!isSuperBoss && state.getCurrentBoss() != null) {
+                bossName = state.getCurrentBoss().getName();
+            }
+        }
 
         if (isSuperBoss) {
             curse = worldCurseService.getRandomMajorCurse();
@@ -524,8 +608,15 @@ public class BossScheduler {
                     """;
         }
 
-        // Apply the curse
-        worldCurseService.applyCurse(guildId, curse);
+        // Apply the curse (pass characterService to adjust HP if needed, and boss name for tracking)
+        worldCurseService.applyCurse(guildId, curse, characterService, bossName);
+
+        // Increment consecutive failures for empowerment
+        BossService.ServerBossState bossState = bossService.getState(guildId);
+        if (bossState != null) {
+            bossState.incrementConsecutiveFailures();
+            logger.info("Boss failure for guild {} - consecutive failures: {}", guild.getName(), bossState.getConsecutiveFailures());
+        }
 
         // Announce the curse
         TextChannel channel = findRpgChannel(guild);
@@ -658,48 +749,104 @@ public class BossScheduler {
 
     /**
      * Checks if a normal boss needs a warning and sends it.
+     * Sends warnings at 4h, 2h, 1h, and 30m remaining.
      */
     private void checkAndSendBossWarning(Guild guild, String guildId, Boss boss) {
         Instant now = Instant.now();
         Instant expiresAt = boss.getExpiresAt();
 
         long secondsRemaining = java.time.Duration.between(now, expiresAt).getSeconds();
+        if (secondsRemaining <= 0) {
+            return; // Already expired, will be handled by expiration check
+        }
+
         long hoursRemaining = secondsRemaining / 3600;
         long minutesRemaining = (secondsRemaining % 3600) / 60;
+        long totalMinutesRemaining = secondsRemaining / 60;
 
-        // Check if within warning threshold (1-2 hours)
-        if (hoursRemaining >= WARNING_THRESHOLD_MIN_HOURS && hoursRemaining <= WARNING_THRESHOLD_MAX_HOURS) {
             String warningKey = guildId + "_boss_" + boss.getBossId();
             Instant lastWarning = lastWarningSent.get(warningKey);
 
-            // Only send warning if we haven't sent one in the last hour (to avoid spam)
-            if (lastWarning == null || java.time.Duration.between(lastWarning, now).toHours() >= 1) {
-                sendBossExpirationWarning(guild, boss, hoursRemaining, minutesRemaining);
+        // Check for 30-minute warning
+        if (totalMinutesRemaining <= WARNING_THRESHOLD_30_MINUTES && totalMinutesRemaining > 15) {
+            // Check if we haven't sent a 30m warning yet (check last warning was more than 15 minutes ago or null)
+            if (lastWarning == null || java.time.Duration.between(lastWarning, now).toMinutes() >= 15) {
+                sendBossExpirationWarning(guild, boss, 0, (int) minutesRemaining);
+                // Send private messages to players with unused heroic charges
+                sendPrivateMessagesToInactivePlayers(guild, guildId, boss, null);
                 lastWarningSent.put(warningKey, now);
+                return;
+            }
+        }
+
+        // Check for hour-based warnings (4h, 2h, 1h)
+        for (long thresholdHours : WARNING_THRESHOLDS_HOURS) {
+            // Check if we're within 30 minutes of this threshold (to account for check interval)
+            long thresholdMinutes = thresholdHours * 60;
+            if (totalMinutesRemaining <= thresholdMinutes + 30 && totalMinutesRemaining >= thresholdMinutes - 30) {
+                // Check if we haven't sent a warning for this threshold yet
+                // Use threshold-specific key to allow multiple warnings
+                String thresholdKey = warningKey + "_" + thresholdHours + "h";
+                Instant lastThresholdWarning = lastWarningSent.get(thresholdKey);
+
+                if (lastThresholdWarning == null || java.time.Duration.between(lastThresholdWarning, now).toHours() >= 1) {
+                    sendBossExpirationWarning(guild, boss, hoursRemaining, (int) minutesRemaining);
+                    lastWarningSent.put(thresholdKey, now);
+                    lastWarningSent.put(warningKey, now); // Also update main key
+                    return;
+                }
             }
         }
     }
 
     /**
      * Checks if a super boss needs a warning and sends it.
+     * Sends warnings at 4h, 2h, 1h, and 30m remaining.
      */
     private void checkAndSendSuperBossWarning(Guild guild, String guildId, SuperBoss superBoss) {
         Instant now = Instant.now();
         Instant expiresAt = superBoss.getExpiresAt();
 
         long secondsRemaining = java.time.Duration.between(now, expiresAt).getSeconds();
+        if (secondsRemaining <= 0) {
+            return; // Already expired, will be handled by expiration check
+        }
+
         long hoursRemaining = secondsRemaining / 3600;
         long minutesRemaining = (secondsRemaining % 3600) / 60;
+        long totalMinutesRemaining = secondsRemaining / 60;
 
-        // Check if within warning threshold (1-2 hours)
-        if (hoursRemaining >= WARNING_THRESHOLD_MIN_HOURS && hoursRemaining <= WARNING_THRESHOLD_MAX_HOURS) {
             String warningKey = guildId + "_superboss_" + superBoss.getBossId();
             Instant lastWarning = lastWarningSent.get(warningKey);
 
-            // Only send warning if we haven't sent one in the last hour (to avoid spam)
-            if (lastWarning == null || java.time.Duration.between(lastWarning, now).toHours() >= 1) {
-                sendSuperBossExpirationWarning(guild, superBoss, hoursRemaining, minutesRemaining);
+        // Check for 30-minute warning
+        if (totalMinutesRemaining <= WARNING_THRESHOLD_30_MINUTES && totalMinutesRemaining > 15) {
+            // Check if we haven't sent a 30m warning yet (check last warning was more than 15 minutes ago or null)
+            if (lastWarning == null || java.time.Duration.between(lastWarning, now).toMinutes() >= 15) {
+                sendSuperBossExpirationWarning(guild, superBoss, 0, (int) minutesRemaining);
+                // Send private messages to players with unused heroic charges
+                sendPrivateMessagesToInactivePlayers(guild, guildId, null, superBoss);
                 lastWarningSent.put(warningKey, now);
+                return;
+            }
+        }
+
+        // Check for hour-based warnings (4h, 2h, 1h)
+        for (long thresholdHours : WARNING_THRESHOLDS_HOURS) {
+            // Check if we're within 30 minutes of this threshold (to account for check interval)
+            long thresholdMinutes = thresholdHours * 60;
+            if (totalMinutesRemaining <= thresholdMinutes + 30 && totalMinutesRemaining >= thresholdMinutes - 30) {
+                // Check if we haven't sent a warning for this threshold yet
+                // Use threshold-specific key to allow multiple warnings
+                String thresholdKey = warningKey + "_" + thresholdHours + "h";
+                Instant lastThresholdWarning = lastWarningSent.get(thresholdKey);
+
+                if (lastThresholdWarning == null || java.time.Duration.between(lastThresholdWarning, now).toHours() >= 1) {
+                    sendSuperBossExpirationWarning(guild, superBoss, hoursRemaining, (int) minutesRemaining);
+                    lastWarningSent.put(thresholdKey, now);
+                    lastWarningSent.put(warningKey, now); // Also update main key
+                    return;
+                }
             }
         }
     }
@@ -775,6 +922,233 @@ public class BossScheduler {
                         superBoss.getName(), superBoss.getLevel(), guild.getName(), hoursRemaining, minutesRemaining),
                 failure -> logger.error("Failed to send super boss expiration warning for guild {}", guild.getName(), failure)
         );
+    }
+
+    /**
+     * Sends private messages to registered players who haven't used their heroic charges.
+     * Only called on the 30-minute warning.
+     *
+     * @param guild     the guild
+     * @param guildId   the guild ID
+     * @param boss      the boss (can be null if superBoss is provided)
+     * @param superBoss the super boss (can be null if boss is provided)
+     */
+    private void sendPrivateMessagesToInactivePlayers(Guild guild, String guildId, Boss boss, SuperBoss superBoss) {
+        if (jda == null) {
+            logger.warn("Cannot send private messages: JDA instance is null");
+            return;
+        }
+
+        String bossId = boss != null ? boss.getBossId() : superBoss.getBossId();
+        String bossName = boss != null ? boss.getName() : superBoss.getName();
+        String messageKey = guildId + "_" + bossId;
+
+        // Get or create the set of users who received messages for this boss
+        Set<String> sentToUsers = privateMessageSent.computeIfAbsent(messageKey, k -> ConcurrentHashMap.newKeySet());
+
+        // Get all guild members
+        List<net.dv8tion.jda.api.entities.Member> members = guild.getMembers();
+
+        final java.util.concurrent.atomic.AtomicInteger messagesSent = new java.util.concurrent.atomic.AtomicInteger(0);
+        for (net.dv8tion.jda.api.entities.Member member : members) {
+            // Skip bots
+            if (member.getUser().isBot()) {
+                continue;
+            }
+
+            String userId = member.getUser().getId();
+
+            // Skip if already sent message to this user for this boss
+            if (sentToUsers.contains(userId)) {
+                continue;
+            }
+
+            // Check if user has a character
+            if (!characterService.hasCharacter(userId)) {
+                continue;
+            }
+
+            // Get character and check heroic charges
+            RPGCharacter character = characterService.getCharacter(userId);
+            if (character == null || character.getHeroicCharges() <= 0) {
+                continue;
+            }
+
+            // Send private message
+            int heroicCharges = character.getHeroicCharges();
+            String message = String.format("""
+                    🐲 **The world needs your help!**
+                    
+                    The boss, **%s**, has not been defeated. Time is running out—only 30 minutes remain!
+                    
+                    You still have **%d heroic charge%s** remaining. Use `/rpg-boss-battle battle` to join the fight and help save Nilfheim from the coming curse.
+                    
+                    The fate of the realm rests in your hands...
+                    """, bossName, heroicCharges, heroicCharges != 1 ? "s" : "");
+
+            member.getUser().openPrivateChannel().queue(
+                    channel -> channel.sendMessage(message).queue(
+                            success -> {
+                                sentToUsers.add(userId);
+                                messagesSent.incrementAndGet();
+                                logger.debug("Sent private boss warning to user {} for boss {}", userId, bossName);
+                            },
+                            error -> logger.warn("Failed to send private boss warning to user {}: {}", userId, error.getMessage())
+                    ),
+                    error -> logger.warn("Failed to open DM channel for user {}: {}", userId, error.getMessage())
+            );
+        }
+
+        if (messagesSent.get() > 0) {
+            logger.info("Sent {} private boss warning messages for boss {} in guild {}", messagesSent.get(), bossName, guild.getName());
+        }
+    }
+
+    /**
+     * Checks for recent boss defeats and announces rewards to participants.
+     */
+    private void checkAndAnnounceRecentDefeats() {
+        if (jda == null) {
+            return;
+        }
+
+        for (Guild guild : jda.getGuilds()) {
+            try {
+                String guildId = guild.getId();
+                BossService.DefeatInfo defeatInfo = bossService.getAndClearRecentDefeat(guildId);
+
+                if (defeatInfo != null) {
+                    announceBossDefeatRewards(guild, defeatInfo);
+                }
+            } catch (Exception e) {
+                logger.error("Error checking for recent defeats in guild {}", guild.getName(), e);
+            }
+        }
+    }
+
+    /**
+     * Announces boss defeat rewards to all participants.
+     *
+     * @param guild      the guild
+     * @param defeatInfo the defeat information
+     */
+    private void announceBossDefeatRewards(Guild guild, BossService.DefeatInfo defeatInfo) {
+        TextChannel channel = findRpgChannel(guild);
+        if (channel == null || !channel.canTalk()) {
+            logger.warn("Boss defeat rewards: Could not announce rewards for guild {} (no channel)",
+                    guild.getName());
+            return;
+        }
+
+        String bossName = defeatInfo.getBossName();
+        boolean isNormalBoss = defeatInfo.isNormalBoss();
+        String lastHitterName = defeatInfo.getLastHitterName();
+        Map<String, Integer> xpRewards = defeatInfo.getXpRewards();
+
+        // Build announcement
+        StringBuilder announcement = new StringBuilder();
+        announcement.append(String.format("""
+                🎉 **Victory! %s has been defeated!** 🎉
+                
+                All heroes who participated in the battle have received rewards!
+                
+                """, bossName));
+
+        // List participants who received XP (top 30%)
+        if (!xpRewards.isEmpty()) {
+            announcement.append("**✨ XP Rewards (Top Performers):**\n");
+            int rank = 1;
+            for (Map.Entry<String, Integer> entry : xpRewards.entrySet()) {
+                String userId = entry.getKey();
+                int xp = entry.getValue();
+                RPGCharacter character = characterService.getCharacter(userId);
+                String playerName = character != null ? character.getName() : "Unknown";
+                String medal = rank <= 3 ? (rank == 1 ? "🥇" : rank == 2 ? "🥈" : "🥉") : "";
+                announcement.append(String.format("%s **%s**: +%,d XP\n", medal, playerName, xp));
+                rank++;
+            }
+            announcement.append("\n");
+        }
+
+        // Special reward for last hitter
+        announcement.append(String.format("""
+                **⚔️ Final Blow:** **%s** dealt the finishing strike!
+                
+                """, lastHitterName));
+
+        // Last hitter gets special bonus - full action restore
+        String lastHitterId = defeatInfo.getLastHitterId();
+        RPGCharacter lastHitter = characterService.getCharacter(lastHitterId);
+        if (lastHitter != null) {
+            // Restore all action charges
+            int maxCharges = lastHitter.getMaxActionCharges();
+            lastHitter.setActionCharges(maxCharges);
+            lastHitter.setLastChargeRefreshTime(Instant.now());
+
+            announcement.append(String.format("""
+                    **%s** feels charged up! All daily actions have been fully restored! ⚡
+                    
+                    """, lastHitterName));
+        }
+
+        // Item rewards info
+        if (isNormalBoss) {
+            announcement.append("""
+                    **📦 Item Rewards:**
+                    • All participants: 1 Essence
+                    • 25% chance: 1 Catalyst
+                    """);
+        } else {
+            announcement.append("""
+                    **📦 Item Rewards:**
+                    • All participants: 1 Catalyst
+                    • All participants: 1-3 Essences
+                    """);
+        }
+
+        channel.sendMessage(announcement.toString()).queue(
+                success -> logger.info("Boss defeat rewards announced for {} in guild {}",
+                        bossName, guild.getName()),
+                failure -> logger.error("Failed to announce boss defeat rewards for guild {}", guild.getName(), failure)
+        );
+    }
+
+    /**
+     * Formats a blessing announcement section for boss announcements.
+     * Only displays stat multipliers that are actually used in boss damage calculation.
+     *
+     * @param blessing the active blessing
+     * @return formatted blessing announcement text
+     */
+    private String formatBlessingAnnouncement(Blessing blessing) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("✨ **BLESSINGS FROM THE ANCIENTS** ✨\n");
+        sb.append(blessing.getNarrative()).append("\n\n");
+        sb.append("All heroes are imbued with divine strength:\n");
+
+        // Add stat bonuses (only relevant effects for boss battles)
+        if (blessing.getStrMultiplier() > 1.0) {
+            double percent = (blessing.getStrMultiplier() - 1.0) * 100;
+            sb.append(String.format("- STR +%.0f%%\n", percent));
+        }
+        if (blessing.getAgiMultiplier() > 1.0) {
+            double percent = (blessing.getAgiMultiplier() - 1.0) * 100;
+            sb.append(String.format("- AGI +%.0f%%\n", percent));
+        }
+        if (blessing.getIntMultiplier() > 1.0) {
+            double percent = (blessing.getIntMultiplier() - 1.0) * 100;
+            sb.append(String.format("- INT +%.0f%%\n", percent));
+        }
+
+        // Add timestamp
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm")
+                .withZone(ZoneId.systemDefault());
+        String timestamp = formatter.format(blessing.getGrantedAt());
+        sb.append("\nActive since: ").append(timestamp);
+
+        sb.append("\n\n*Use this power wisely; it will vanish when the boss falls!*");
+
+        return sb.toString();
     }
 
     /**

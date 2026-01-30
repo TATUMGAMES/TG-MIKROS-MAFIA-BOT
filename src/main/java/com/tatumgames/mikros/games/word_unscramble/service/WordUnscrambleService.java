@@ -39,18 +39,9 @@ public class WordUnscrambleService {
     // Player statistics: "guildId_userId" -> WordUnscramblePlayerStats
     private final Map<String, WordUnscramblePlayerStats> playerStats;
 
-    /**
-     * Creates a new WordUnscrambleService.
-     */
-    public WordUnscrambleService() {
-        this.game = new WordUnscrambleGame();
-        this.guildConfigs = new ConcurrentHashMap<>();
-        this.activeSessions = new ConcurrentHashMap<>();
-        this.wordUnscrambleProgression = new ConcurrentHashMap<>();
-        this.playerStats = new ConcurrentHashMap<>();
-
-        logger.info("WordUnscrambleService initialized");
-    }
+    // Word rotation tracker for levels 1-5
+    private final WordUnscrambleUsedWordTracker usedWordTracker;
+    private final Random random = new Random();
 
     /**
      * Sets up Word Unscramble game for a guild.
@@ -65,6 +56,20 @@ public class WordUnscrambleService {
         guildConfigs.put(guildId, config);
         logger.info("Word Unscramble setup complete for guild {}: channel={}, games={}, resetTime={}",
                 guildId, channelId, enabledGames, resetTime);
+    }
+
+    /**
+     * Creates a new WordUnscrambleService.
+     */
+    public WordUnscrambleService() {
+        this.game = new WordUnscrambleGame();
+        this.guildConfigs = new ConcurrentHashMap<>();
+        this.activeSessions = new ConcurrentHashMap<>();
+        this.wordUnscrambleProgression = new ConcurrentHashMap<>();
+        this.playerStats = new ConcurrentHashMap<>();
+        this.usedWordTracker = new WordUnscrambleUsedWordTracker();
+
+        logger.info("WordUnscrambleService initialized");
     }
 
     /**
@@ -89,24 +94,13 @@ public class WordUnscrambleService {
     }
 
     /**
-     * Starts a new game session for a guild.
+     * Cleans up used-word tracker entries older than the reuse period (60 days) to prevent memory growth.
+     * Does not affect leaderboards, stats, or sessions.
      *
-     * @param guildId  the guild ID
-     * @param gameType the type of game to start
-     * @return the new game session
+     * @param guildId the guild ID (null to clean all guilds)
      */
-    public WordUnscrambleSession startNewGame(String guildId, WordUnscrambleType gameType) {
-        if (gameType != WordUnscrambleType.WORD_UNSCRAMBLE) {
-            throw new IllegalArgumentException("Unknown game type: " + gameType);
-        }
-
-        WordUnscrambleProgression progression = getOrCreateProgression(guildId);
-        WordUnscrambleSession session = ((WordUnscrambleGame) game).startNewSession(guildId, progression.getLevel());
-
-        activeSessions.put(guildId, session);
-
-        logger.info("Started new Word Unscramble game for guild {}", guildId);
-        return session;
+    public void cleanupUsedWordTrackerEntries(String guildId) {
+        usedWordTracker.cleanupOldEntries(guildId);
     }
 
     /**
@@ -120,44 +114,30 @@ public class WordUnscrambleService {
     }
 
     /**
-     * Handles a player's attempt to play the current game.
+     * Starts a new game session for a guild.
      *
      * @param guildId  the guild ID
-     * @param userId   the user ID
-     * @param username the username
-     * @param input    the player's input
-     * @return the game result
+     * @param gameType the type of game to start
+     * @return the new game session
      */
-    public WordUnscrambleResult handleAttempt(String guildId, String userId, String username, String input) {
-        WordUnscrambleSession session = activeSessions.get(guildId);
-        if (session == null || !session.isActive()) {
-            return null;
+    public WordUnscrambleSession startNewGame(String guildId, WordUnscrambleType gameType) {
+        if (gameType != WordUnscrambleType.WORD_UNSCRAMBLE) {
+            throw new IllegalArgumentException("Unknown game type: " + gameType);
         }
 
-        WordUnscrambleResult result = game.handleAttempt(session, userId, username, input);
+        WordUnscrambleProgression progression = getOrCreateProgression(guildId);
+        int level = progression.getLevel();
+        WordUnscrambleSession session = ((WordUnscrambleGame) game).startNewSession(guildId, level, usedWordTracker);
 
-        // Update player statistics
-        if (result != null) {
-            WordUnscramblePlayerStats stats = getOrCreatePlayerStats(guildId, userId);
-
-            if (result.isCorrect()) {
-                // Calculate time in seconds
-                long timeSeconds = result.timestamp().getEpochSecond() - session.getStartTime().getEpochSecond();
-                stats.recordCorrectAnswer(result.score(), timeSeconds);
-
-                // Also add XP to community progression and check for level up
-                WordUnscrambleProgression progression = getOrCreateProgression(guildId);
-                boolean leveledUp = progression.addXp();
-
-                if (leveledUp) {
-                    logger.info("Word Unscramble level up for guild {}: Level {} reached!", guildId, progression.getLevel());
-                }
-            } else {
-                stats.recordWrongGuess();
-            }
+        // Record word usage for levels 1-5
+        if (level >= 1 && level <= 5) {
+            usedWordTracker.recordWordUsed(guildId, level, session.getCorrectAnswer());
         }
 
-        return result;
+        activeSessions.put(guildId, session);
+
+        logger.info("Started new Word Unscramble game for guild {} at level {}", guildId, level);
+        return session;
     }
 
     /**
@@ -193,22 +173,77 @@ public class WordUnscrambleService {
     }
 
     /**
-     * Starts a random game from the enabled games for a guild.
+     * Handles a player's attempt to play the current game.
      *
-     * @param guildId the guild ID
-     * @return the new session, or null if no games are enabled
+     * @param guildId  the guild ID
+     * @param userId   the user ID
+     * @param username the username
+     * @param input    the player's input
+     * @return the game result
      */
-    public WordUnscrambleSession startRandomEnabledGame(String guildId) {
-        WordUnscrambleConfig config = guildConfigs.get(guildId);
-        if (config == null || config.getEnabledGames().isEmpty()) {
+    public WordUnscrambleResult handleAttempt(String guildId, String userId, String username, String input) {
+        WordUnscrambleSession session = activeSessions.get(guildId);
+        if (session == null || !session.isActive()) {
             return null;
         }
 
-        // Pick a random enabled game (currently only WORD_UNSCRAMBLE)
-        List<WordUnscrambleType> enabledList = new ArrayList<>(config.getEnabledGames());
-        WordUnscrambleType randomType = enabledList.get(new Random().nextInt(enabledList.size()));
+        WordUnscrambleResult result = game.handleAttempt(session, userId, username, input);
 
-        return startNewGame(guildId, randomType);
+        // Update player statistics and apply additional scoring factors
+        if (result != null) {
+            WordUnscramblePlayerStats stats = getOrCreatePlayerStats(guildId, userId);
+
+            if (result.isCorrect()) {
+                // Calculate time in seconds
+                long timeSeconds = result.timestamp().getEpochSecond() - session.getStartTime().getEpochSecond();
+
+                // Calculate accuracy BEFORE recording this solve
+                // Accuracy = (wordsSolved / totalAttempts) * 100
+                // But we need to account for this solve, so: (wordsSolved / (totalAttempts + 1)) * 100
+                double accuracy = 100.0;
+                if (stats.getTotalAttempts() > 0) {
+                    accuracy = ((double) stats.getTotalWordsSolved() / (stats.getTotalAttempts() + 1)) * 100.0;
+                }
+
+                // Apply accuracy factor to score (minimum 0.1 to prevent zero scores)
+                double accuracyFactor = Math.max(0.1, accuracy / 100.0);
+                int accuracyAdjustedScore = (int) (result.score() * accuracyFactor);
+
+                // Calculate volume bonuses before recording (need old stats)
+                int volumeBonus = calculateVolumeBonuses(stats);
+
+                // Add volume bonus
+                int finalScore = accuracyAdjustedScore + volumeBonus;
+
+                // Create new result with final score
+                WordUnscrambleResult finalResult = new WordUnscrambleResult(
+                        result.userId(),
+                        result.username(),
+                        result.answer(),
+                        finalScore,
+                        result.bonus() + volumeBonus,
+                        result.isCorrect(),
+                        result.timestamp()
+                );
+
+                // Record with final score
+                stats.recordCorrectAnswer(finalScore, timeSeconds);
+
+                // Also add XP to community progression and check for level up
+                WordUnscrambleProgression progression = getOrCreateProgression(guildId);
+                boolean leveledUp = progression.addXp();
+
+                if (leveledUp) {
+                    logger.info("Word Unscramble level up for guild {}: Level {} reached!", guildId, progression.getLevel());
+                }
+
+                return finalResult;
+            } else {
+                stats.recordWrongGuess();
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -318,6 +353,64 @@ public class WordUnscrambleService {
                     return Integer.compare(b.getHighestScore(), a.getHighestScore());
                 })
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Starts a random game from the enabled games for a guild.
+     *
+     * @param guildId the guild ID
+     * @return the new session, or null if no games are enabled
+     */
+    public WordUnscrambleSession startRandomEnabledGame(String guildId) {
+        WordUnscrambleConfig config = guildConfigs.get(guildId);
+        if (config == null || config.getEnabledGames().isEmpty()) {
+            return null;
+        }
+
+        // Pick a random enabled game (currently only WORD_UNSCRAMBLE)
+        List<WordUnscrambleType> enabledList = new ArrayList<>(config.getEnabledGames());
+        WordUnscrambleType randomType = enabledList.get(random.nextInt(enabledList.size()));
+
+        return startNewGame(guildId, randomType);
+    }
+
+    /**
+     * Calculates volume bonuses (10th word milestone, 3-streak bonus).
+     *
+     * @param stats the player stats (before recording this solve)
+     * @return the volume bonus points
+     */
+    private int calculateVolumeBonuses(WordUnscramblePlayerStats stats) {
+        int bonus = 0;
+
+        // Check for 10th word milestone (words solved will be incremented after this, so check if next will be 10th)
+        int wordsSolved = stats.getTotalWordsSolved();
+        if ((wordsSolved + 1) % 10 == 0) {
+            // Every 10th word: +100 to +200 points (randomized)
+            bonus += 100 + random.nextInt(101); // 100-200
+            logger.debug("10th word milestone bonus: {}", bonus);
+        }
+
+        // Check for 3-streak bonus (current streak will be incremented, so check if next will be 3)
+        int currentStreak = stats.getCurrentStreak();
+        if (currentStreak + 1 == 3) {
+            bonus += 50;
+            logger.debug("3-streak bonus: 50");
+        }
+
+        return bonus;
+    }
+
+    /**
+     * Generates a hint for the current word.
+     *
+     * @param guildId the guild ID
+     * @param session the game session
+     * @return a hint string
+     */
+    public String generateHint(String guildId, WordUnscrambleSession session) {
+        WordUnscrambleGame wordGame = (WordUnscrambleGame) game;
+        return wordGame.generateHintForWord(session.getCorrectAnswer(), session.getLevel());
     }
 }
 
