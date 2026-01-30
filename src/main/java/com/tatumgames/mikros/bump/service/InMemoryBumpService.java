@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 /**
  * In-memory implementation of BumpService.
  * Stores configuration in memory (expandable to database).
+ * Bump history per guild is unbounded; consider capping (e.g. last N records) or periodic trim for long-running instances.
  */
 public class InMemoryBumpService implements BumpService {
     private static final Logger logger = LoggerFactory.getLogger(InMemoryBumpService.class);
@@ -90,10 +91,10 @@ public class InMemoryBumpService implements BumpService {
     @Override
     public int getBumpInterval(String guildId) {
         if (guildId == null || guildId.isBlank()) {
-            return 4; // Default
+            return 8; // Default
         }
         BumpConfig config = configs.get(guildId);
-        return config != null ? config.getIntervalHours() : 4;
+        return config != null ? config.getIntervalHours() : 8;
     }
 
     @Override
@@ -170,7 +171,9 @@ public class InMemoryBumpService implements BumpService {
 
     @Override
     public BumpStats getBumpStats(String guildId, Instant startTime, Instant endTime) {
-        List<BumpStats.BumpRecord> allBumps = bumpHistory.getOrDefault(guildId, Collections.emptyList());
+        // Defensive copy to avoid ConcurrentModificationException if list is modified during iteration
+        List<BumpStats.BumpRecord> allBumps =
+                new ArrayList<>(bumpHistory.getOrDefault(guildId, Collections.emptyList()));
 
         int totalBumps = allBumps.size();
 
