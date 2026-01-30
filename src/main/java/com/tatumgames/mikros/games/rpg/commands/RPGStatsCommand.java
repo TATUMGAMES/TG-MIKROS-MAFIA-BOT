@@ -1,6 +1,7 @@
 package com.tatumgames.mikros.games.rpg.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -71,6 +72,20 @@ public class RPGStatsCommand implements CommandHandler {
             return;
         }
 
+        // Get guild config and check channel
+        RPGConfig config = characterService.getConfig(guild.getId());
+
+        // Check if in correct channel (if specified)
+        if (config != null && config.getRpgChannelId() != null) {
+            if (!event.getChannel().getId().equals(config.getRpgChannelId())) {
+                event.reply(String.format(
+                        "Please use `/rpg-stats` in <#%s>. RPG commands are restricted to the assigned channel.",
+                        config.getRpgChannelId()
+                )).setEphemeral(true).queue();
+                return;
+            }
+        }
+
         // Build stats embed
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle(String.format("📊 RPG Statistics - %s", character.getName()));
@@ -83,10 +98,12 @@ public class RPGStatsCommand implements CommandHandler {
                 String.format("""
                                 💀 Enemies Defeated: **%d**
                                 🐲 Bosses Defeated: **%d**
-                                👹 Super Bosses Defeated: **%d**""",
+                                👹 Super Bosses Defeated: **%d**
+                                🔮 Secret Bosses Defeated: **%d**""",
                         character.getEnemiesKilled(),
                         character.getBossesKilled(),
-                        character.getSuperBossesKilled()),
+                        character.getSuperBossesKilled(),
+                        character.getSecretBossesKilled()),
                 false
         );
 

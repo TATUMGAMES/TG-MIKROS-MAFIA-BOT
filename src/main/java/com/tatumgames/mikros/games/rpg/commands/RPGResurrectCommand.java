@@ -32,6 +32,7 @@ public class RPGResurrectCommand implements CommandHandler {
     private final CharacterService characterService;
     @SuppressWarnings("unused") // Used in constructor to create ResurrectAction
     private final WorldCurseService worldCurseService;
+    @SuppressWarnings("unused") // Used in constructor to create ResurrectAction
     private final LoreRecognitionService loreRecognitionService;
     private final ResurrectAction resurrectAction;
 
@@ -92,6 +93,17 @@ public class RPGResurrectCommand implements CommandHandler {
                     .setEphemeral(true)
                     .queue();
             return;
+        }
+
+        // Check if in correct channel (if specified)
+        if (config != null && config.getRpgChannelId() != null) {
+            if (!event.getChannel().getId().equals(config.getRpgChannelId())) {
+                event.reply(String.format(
+                        "Please use `/rpg-resurrect` in <#%s>. RPG commands are restricted to the assigned channel.",
+                        config.getRpgChannelId()
+                )).setEphemeral(true).queue();
+                return;
+            }
         }
 
         // Get target user

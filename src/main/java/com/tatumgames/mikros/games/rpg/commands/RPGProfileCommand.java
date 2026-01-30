@@ -1,9 +1,12 @@
 package com.tatumgames.mikros.games.rpg.commands;
 
 import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.games.rpg.biome.BiomeType;
+import com.tatumgames.mikros.games.rpg.blessing.Blessing;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
+import com.tatumgames.mikros.games.rpg.service.BlessingService;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -19,6 +22,11 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.time.Duration;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Command handler for /rpg-profile.
@@ -29,16 +37,19 @@ public class RPGProfileCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RPGProfileCommand.class);
     private final CharacterService characterService;
     private final WorldCurseService worldCurseService;
+    private final BlessingService blessingService;
 
     /**
      * Creates a new RPGProfileCommand handler.
      *
      * @param characterService  the character service
      * @param worldCurseService the world curse service
+     * @param blessingService   the blessing service
      */
-    public RPGProfileCommand(CharacterService characterService, WorldCurseService worldCurseService) {
+    public RPGProfileCommand(CharacterService characterService, WorldCurseService worldCurseService, BlessingService blessingService) {
         this.characterService = characterService;
         this.worldCurseService = worldCurseService;
+        this.blessingService = blessingService;
     }
 
     @Override
@@ -77,6 +88,17 @@ public class RPGProfileCommand implements CommandHandler {
         // Get guild config for cooldown info
         RPGConfig config = characterService.getConfig(guild.getId());
 
+        // Check if in correct channel (if specified)
+        if (config != null && config.getRpgChannelId() != null) {
+            if (!event.getChannel().getId().equals(config.getRpgChannelId())) {
+                event.reply(String.format(
+                        "Please use `/rpg-profile` in <#%s>. RPG commands are restricted to the assigned channel.",
+                        config.getRpgChannelId()
+                )).setEphemeral(true).queue();
+                return;
+            }
+        }
+
         // Build profile embed
         EmbedBuilder embed = new EmbedBuilder();
 
@@ -109,9 +131,20 @@ public class RPGProfileCommand implements CommandHandler {
         );
 
         // Get active curses for effective HP calculation
-        String guildId = config.getGuildId();
+        String guildId = config != null ? config.getGuildId() : guild.getId();
         var activeCurses = worldCurseService.getActiveCurses(guildId);
+        if (activeCurses == null) {
+            activeCurses = Collections.emptyList();
+        }
         int effectiveMaxHp = character.getStats().getEffectiveMaxHp(activeCurses, character.hasFrostbite());
+        int originalMaxHp = character.getStats().getMaxHp();
+
+        // Calculate HP reduction percentage if cursed
+        String hpModifier = "";
+        if (effectiveMaxHp < originalMaxHp) {
+            double reductionPercent = ((double) (originalMaxHp - effectiveMaxHp) / originalMaxHp) * 100.0;
+            hpModifier = String.format(" ⚠️ (-%.0f%%)", reductionPercent);
+        }
 
         // Stats
         embed.addField(
@@ -125,7 +158,7 @@ public class RPGProfileCommand implements CommandHandler {
                         ,
                         character.getStats().getCurrentHp(),
                         effectiveMaxHp,
-                        effectiveMaxHp < character.getStats().getMaxHp() ? " ⚠️ (Cursed)" : "",
+                        hpModifier,
                         character.getStats().getStrength(),
                         character.getStats().getAgility(),
                         character.getStats().getIntelligence(),
@@ -162,6 +195,17 @@ public class RPGProfileCommand implements CommandHandler {
         );
         embed.addField("🛡️ Heroic Charges", heroicStatus, true);
 
+        // Biome information
+        BiomeType currentBiome = character.getCurrentBiome();
+        int explorationsInBiome = character.getExplorationsInCurrentBiome();
+        String biomeStatus = String.format(
+                "%s **%s**\n\n%d/10 explorations\n\nAdvance to next biome after 10 explorations",
+                currentBiome.getEmoji(),
+                currentBiome.getDisplayName(),
+                explorationsInBiome
+        );
+        embed.addField("🗺️ Current Biome", biomeStatus, true);
+
         // Crafted bonuses
         var inventory = character.getInventory();
         StringBuilder craftedBonuses = new StringBuilder();
@@ -173,9 +217,25 @@ public class RPGProfileCommand implements CommandHandler {
 
         embed.addField("✨ Crafted Bonuses", craftedBonuses.toString(), false);
 
-        // Temporary Debuffs
+        // Temporary Debuffs and Curses
         StringBuilder debuffs = new StringBuilder();
         boolean hasDebuffs = false;
+
+        // Add curse information with boss names
+        if (!activeCurses.isEmpty()) {
+            for (WorldCurse curse : activeCurses) {
+                String bossName = worldCurseService.getBossNameForCurse(guildId, curse);
+                String curseLine;
+                if (bossName != null) {
+                    curseLine = String.format("You have been cursed by **%s** for not defeating them.\n%s: %s\n\n",
+                            bossName, curse.getDisplayName(), curse.getDescription());
+                } else {
+                    curseLine = String.format("%s: %s\n\n", curse.getDisplayName(), curse.getDescription());
+                }
+                debuffs.append(curseLine);
+                hasDebuffs = true;
+            }
+        }
 
         if (character.hasFrostbite()) {
             debuffs.append("🩸 **Frostbite:** Max HP reduced by 5% (removed by rest)\n");
@@ -196,6 +256,14 @@ public class RPGProfileCommand implements CommandHandler {
         embed.addField("⚔️ Duels",
                 String.format("**%d Wins** | **%d Losses**",
                         character.getDuelsWon(), character.getDuelsLost()),
+                true);
+
+        // Boss kills (including secret bosses)
+        embed.addField("🐲 Boss Defeats",
+                String.format("Normal: **%d** | Super: **%d** | Secret: **%d**",
+                        character.getBossesKilled(),
+                        character.getSuperBossesKilled(),
+                        character.getSecretBossesKilled()),
                 true);
 
         // Legendary Aura
@@ -235,11 +303,11 @@ public class RPGProfileCommand implements CommandHandler {
         if (character.getPhilosophicalPath() != null) {
             String pathName = character.getPhilosophicalPath();
             if ("UNBOUND".equals(pathName)) {
-                irrevocableInfo.append("⚖️ **Path:** Unbound\n");
+                irrevocableInfo.append("⚖️ **Path:** Unbound - Rejected the path of the gods\n");
             } else if ("GODMARKED".equals(pathName)) {
-                irrevocableInfo.append("👤 **Path:** God-Marked\n");
+                irrevocableInfo.append("👤 **Path:** God-Marked - Passed the test of the gods\n");
             } else {
-                irrevocableInfo.append(String.format("📿 **Path:** %s\n", pathName));
+                irrevocableInfo.append(String.format("📿 **Path:** %s - Unknown origins\n", pathName));
             }
             hasIrrevocable = true;
         }
@@ -248,9 +316,12 @@ public class RPGProfileCommand implements CommandHandler {
             embed.addField("🔮 Irrevocable Choices", irrevocableInfo.toString().trim(), false);
         }
 
-        // World Flags (separate from story flags)
-        if (!character.getWorldFlags().isEmpty()) {
-            String worldFlags = String.join(" | ", character.getWorldFlags());
+        // World Flags (separate from story flags) - filter out test flags
+        Set<String> displayFlags = character.getWorldFlags().stream()
+                .filter(flag -> !flag.contains("_TEST_"))
+                .collect(Collectors.toSet());
+        if (!displayFlags.isEmpty()) {
+            String worldFlags = String.join(" | ", displayFlags);
             embed.addField("🌍 World Flags", worldFlags, false);
         }
 
@@ -266,6 +337,26 @@ public class RPGProfileCommand implements CommandHandler {
                 modifierInfo.append(String.format("%s: **%s%.0f%%**\n", statName, sign, percentChange));
             }
             embed.addField("⚡ Active Modifiers", modifierInfo.toString().trim(), false);
+        }
+
+        // Active Blessings (class-specific, only during boss battles)
+        Blessing blessing = blessingService.getBlessingForClass(guildId, character.getCharacterClass());
+        if (blessing != null) {
+            // Get base blessing to access original grantedAt timestamp
+            Blessing baseBlessing = blessingService.getActiveBlessing(guildId);
+            StringBuilder blessingInfo = new StringBuilder();
+            blessingInfo.append(blessing.getEffectsDescription());
+
+            // Add timestamp if base blessing is available
+            if (baseBlessing != null) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm")
+                        .withZone(ZoneId.systemDefault());
+                String timestamp = formatter.format(baseBlessing.getGrantedAt());
+                blessingInfo.append("\n\nActive since: ").append(timestamp);
+            }
+
+            blessingInfo.append("\n\n*Active only during boss battles*");
+            embed.addField("💫 Active Blessings", blessingInfo.toString().trim(), false);
         }
 
         // Active World Curses

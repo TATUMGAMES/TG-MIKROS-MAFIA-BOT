@@ -3,8 +3,11 @@ package com.tatumgames.mikros.games.rpg.commands;
 import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
+import com.tatumgames.mikros.games.rpg.model.Boss;
 import com.tatumgames.mikros.games.rpg.model.CharacterClass;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
+import com.tatumgames.mikros.games.rpg.model.SuperBoss;
+import com.tatumgames.mikros.games.rpg.service.BossService;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
@@ -28,14 +31,17 @@ import java.time.Instant;
 public class RPGRegisterCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RPGRegisterCommand.class);
     private final CharacterService characterService;
+    private final BossService bossService;
 
     /**
      * Creates a new RPGRegisterCommand handler.
      *
      * @param characterService the character service
+     * @param bossService       the boss service for checking boss status
      */
-    public RPGRegisterCommand(CharacterService characterService) {
+    public RPGRegisterCommand(CharacterService characterService, BossService bossService) {
         this.characterService = characterService;
+        this.bossService = bossService;
     }
 
     @Override
@@ -67,6 +73,17 @@ public class RPGRegisterCommand implements CommandHandler {
                     .setEphemeral(true)
                     .queue();
             return;
+        }
+
+        // Check if in correct channel (if specified)
+        if (config != null && config.getRpgChannelId() != null) {
+            if (!event.getChannel().getId().equals(config.getRpgChannelId())) {
+                event.reply(String.format(
+                        "Please use `/rpg-register` in <#%s>. RPG commands are restricted to the assigned channel.",
+                        config.getRpgChannelId()
+                )).setEphemeral(true).queue();
+                return;
+            }
         }
 
         // Check if user already has a character
@@ -178,6 +195,9 @@ public class RPGRegisterCommand implements CommandHandler {
 
             event.replyEmbeds(embed.build()).queue();
 
+            // Send tutorial message as ephemeral (private)
+            sendTutorialMessage(event, character, guildId);
+
             logger.info("User {} registered character: {} ({})",
                     userId, name, characterClass.getDisplayName());
 
@@ -186,6 +206,67 @@ public class RPGRegisterCommand implements CommandHandler {
                     .setEphemeral(true)
                     .queue();
         }
+    }
+
+    /**
+     * Sends a tutorial message to the user explaining how to play.
+     *
+     * @param event     the command event
+     * @param character the newly created character
+     * @param guildId   the guild ID
+     */
+    private void sendTutorialMessage(SlashCommandInteractionEvent event, RPGCharacter character, String guildId) {
+        StringBuilder tutorial = new StringBuilder();
+        tutorial.append("📚 **Welcome to Nilfheim! Here's how to get started:**\n\n");
+
+        // Action commands explanation
+        tutorial.append("**🎮 Core Actions:**\n");
+        tutorial.append("Use `/rpg-action type:<action>` to perform actions:\n");
+        tutorial.append("• **explore** - Discover the world, encounter events, gain XP\n");
+        tutorial.append("• **train** - Improve stats and gain XP\n");
+        tutorial.append("• **battle** - Fight enemies, gain XP (risk of damage)\n");
+        tutorial.append("• **rest** - Fully restore HP\n\n");
+
+        // Action charges
+        int actionCharges = character.getActionCharges();
+        int maxActionCharges = character.getMaxActionCharges();
+        tutorial.append(String.format("**⚡ Action Charges:** You have **%d/%d** action charges.\n", actionCharges, maxActionCharges));
+        tutorial.append("Charges refresh every 12 hours. Use them wisely!\n\n");
+
+        // Boss information
+        BossService.ServerBossState bossState = bossService.getState(guildId);
+        if (bossState != null) {
+            Boss boss = bossState.getCurrentBoss();
+            SuperBoss superBoss = bossState.getCurrentSuperBoss();
+
+            if (boss != null || superBoss != null) {
+                String bossName = boss != null ? boss.getName() : superBoss.getName();
+                int currentHp = boss != null ? boss.getCurrentHp() : superBoss.getCurrentHp();
+                int maxHp = boss != null ? boss.getMaxHp() : superBoss.getMaxHp();
+                double hpPercent = (currentHp * 100.0) / maxHp;
+
+                tutorial.append(String.format("**🐲 Active Boss:** **%s** is currently in play with **%.0f%%** health.\n", bossName, hpPercent));
+                tutorial.append("Use `/rpg-boss-battle battle` to attack!\n\n");
+            } else {
+                tutorial.append("**🐲 Boss Status:** No boss is currently active. Bosses spawn every 24 hours.\n\n");
+            }
+        } else {
+            tutorial.append("**🐲 Boss Status:** No boss is currently active. Bosses spawn every 24 hours.\n\n");
+        }
+
+        // Heroic charges explanation
+        tutorial.append("**⚔️ Heroic Charges:** You have **5 heroic charges** (separate from your daily action charges).\n");
+        tutorial.append("These can only be used to attack bosses via `/rpg-boss-battle`.\n");
+        tutorial.append("Heroic charges refresh to 5 when a new boss spawns.\n\n");
+
+        // Boss battle explanation
+        tutorial.append("**🌍 Boss Battles:** Bosses are community-wide events where everyone fights together.\n");
+        tutorial.append("If a boss is not defeated within 24 hours, world curses are applied to all players.\n");
+        tutorial.append("Work together to defeat bosses and avoid consequences!\n\n");
+
+        tutorial.append("**💡 Tip:** Use `/rpg-profile` to view your stats and `/rpg-leaderboard` to see top players!");
+
+        event.getHook().sendMessage(tutorial.toString()).setEphemeral(true).queue();
     }
 
     @Override

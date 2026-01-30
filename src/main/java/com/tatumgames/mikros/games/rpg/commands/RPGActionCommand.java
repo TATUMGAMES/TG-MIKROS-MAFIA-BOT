@@ -148,9 +148,25 @@ public class RPGActionCommand implements CommandHandler {
             return;
         }
 
-        // Check action charges
+        // Check action charges (including potential double cost or extra charge loss)
         int refreshHours = config.getChargeRefreshHours();
-        if (!character.canPerformAction(refreshHours)) {
+        int requiredCharges = 1; // Base charge requirement
+
+        // Check for double cost flag
+        if (character.isNextActionCostsDouble()) {
+            requiredCharges = 2;
+        }
+
+        // Check for extra charge loss flag (consumes 1 additional charge)
+        if (character.isLoseChargeOnNextAction()) {
+            requiredCharges += 1;
+        }
+
+        // Refresh charges if needed
+        character.refreshCharges(refreshHours, worldCurseService.getActiveCurses(config.getGuildId()));
+
+        // Check if character has enough charges
+        if (character.getActionCharges() < requiredCharges) {
             long secondsRemaining = character.getSecondsUntilChargeRefresh(refreshHours);
             Duration duration = Duration.ofSeconds(secondsRemaining);
             long hours = duration.toHours();
@@ -160,15 +176,30 @@ public class RPGActionCommand implements CommandHandler {
                             ⏳ **No Action Charges Available**
                             
                             Charges remaining: **%d/%d**
+                            Required: **%d** (due to penalties)
                             Next charge refresh in: **%dh %dm**
                             
                             Use this time to check `/rpg-profile` or `/rpg-leaderboard`
                             """,
                     character.getActionCharges(),
                     character.getMaxActionCharges(),
+                    requiredCharges,
                     hours, minutes
             )).setEphemeral(true).queue();
             return;
+        }
+
+        // Consume extra charges if flags are set (before action execution)
+        if (character.isNextActionCostsDouble()) {
+            // Consume one extra charge (total 2 charges)
+            character.useActionCharge();
+            character.setNextActionCostsDouble(false);
+        }
+
+        if (character.isLoseChargeOnNextAction()) {
+            // Consume one extra charge
+            character.useActionCharge();
+            character.setLoseChargeOnNextAction(false);
         }
 
         // Get action type
@@ -209,9 +240,10 @@ public class RPGActionCommand implements CommandHandler {
             // Build result embed
             EmbedBuilder embed = new EmbedBuilder();
             embed.setTitle(String.format(
-                    "%s %s - Action Complete!",
+                    "%s %s - %s",
                     action.getActionEmoji(),
-                    capitalize(actionType)
+                    capitalize(actionType),
+                    outcome.success() ? "Action Complete!" : "Action Failed"
             ));
 
             embed.setColor(outcome.success() ? Color.GREEN : Color.ORANGE);
@@ -298,7 +330,8 @@ public class RPGActionCommand implements CommandHandler {
             ));
             embed.setTimestamp(Instant.now());
 
-            event.replyEmbeds(embed.build()).queue();
+            // Success messages are public, failure messages are private
+            event.replyEmbeds(embed.build()).setEphemeral(!outcome.success()).queue();
 
             logger.info("User {} performed action {} with character {} - XP: +{}, Level: {}",
                     userId, actionType, character.getName(), outcome.xpGained(), character.getLevel());

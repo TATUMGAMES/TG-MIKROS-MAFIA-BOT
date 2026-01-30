@@ -12,8 +12,11 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +43,12 @@ public class RPGInventoryCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("rpg-inventory", "View your RPG inventory and crafted bonuses");
+        OptionData visibilityOption = new OptionData(OptionType.STRING, "visibility", "Make inventory visible to everyone (default: private)", false)
+                .addChoice("private", "private")
+                .addChoice("public", "public");
+
+        return Commands.slash("rpg-inventory", "View your RPG inventory and crafted bonuses")
+                .addOptions(visibilityOption);
     }
 
     @Override
@@ -82,6 +90,17 @@ public class RPGInventoryCommand implements CommandHandler {
                     .setEphemeral(true)
                     .queue();
             return;
+        }
+
+        // Check if in correct channel (if specified)
+        if (config != null && config.getRpgChannelId() != null) {
+            if (!event.getChannel().getId().equals(config.getRpgChannelId())) {
+                event.reply(String.format(
+                        "Please use `/rpg-inventory` in <#%s>. RPG commands are restricted to the assigned channel.",
+                        config.getRpgChannelId()
+                )).setEphemeral(true).queue();
+                return;
+            }
         }
 
         RPGInventory inventory = character.getInventory();
@@ -135,7 +154,11 @@ public class RPGInventoryCommand implements CommandHandler {
         embed.setFooter("Use /rpg-craft to create permanent stat bonuses");
         embed.setTimestamp(Instant.now());
 
-        event.replyEmbeds(embed.build()).queue();
+        // Check visibility option (default: private/ephemeral)
+        OptionMapping visibilityOption = event.getOption("visibility");
+        boolean isPublic = visibilityOption != null && "public".equalsIgnoreCase(visibilityOption.getAsString());
+
+        event.replyEmbeds(embed.build()).setEphemeral(!isPublic).queue();
 
         logger.debug("Inventory requested for character: {}", character.getName());
     }
