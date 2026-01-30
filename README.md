@@ -51,14 +51,14 @@ for game developers and studios.
 
 ## ✨ Features
 
-### 🔨 Admin Tools (TASKS_01)
+### 🔨 Admin Tools
 
 **Moderation Commands:**
 
-- `/warn` - Issue warnings with logged reasons
-- `/kick` - Remove users from the server
-- `/ban` - Ban users with optional message deletion
-- `/history` - View complete moderation history for any user
+- `/admin-warn` - Issue warnings with logged reasons
+- `/admin-kick` - Remove users from the server
+- `/admin-ban` - Ban users with optional message deletion
+- Moderation history is tracked per user per guild (viewable via admin tools and reputation lookup)
 
 **Features:**
 
@@ -67,7 +67,7 @@ for game developers and studios.
 - Permission checks
 - Detailed action timestamps
 
-### 🛡️ Enhanced Moderation (TASKS_02)
+### 🛡️ Enhanced Moderation
 
 **Smart Suggestions:**
 
@@ -89,7 +89,7 @@ for game developers and studios.
 - Integration with moderation actions
 - Automatic bot detection reporting
 
-### 🎮 Game Promotion System (TASKS_03)
+### 🎮 Game Promotion System
 
 **Admin Commands:**
 
@@ -110,7 +110,7 @@ for game developers and studios.
 **Features:**
 
 - Automatic server bumping for Disboard and/or Disurl
-- Configurable bump interval (1-24 hours, default: 4 hours)
+- Configurable bump interval (1-24 hours, default: 8 hours)
 - Per-server independent configuration
 - Rate limit safety (respects external bot cooldowns)
 - Bot presence verification before bumping
@@ -127,7 +127,7 @@ for game developers and studios.
 
 **TODO:** Integration with MIKROS Game Promotion API
 
-### 📊 MIKROS Ecosystem Analytics (TASKS_04)
+### 📊 MIKROS Ecosystem Analytics
 
 **Setup:** Use `/admin-mikros-ecosystem-setup` to configure a channel for analytics commands.
 
@@ -165,7 +165,7 @@ for game developers and studios.
 
 **TODO:** Integration with MIKROS Analytics API (see `/docs/API_*.md`)
 
-### 🤖 Bot Detection System (TASKS_31)
+### 🤖 Bot Detection System
 
 **Automated Bot & Spam Detection:**
 
@@ -195,7 +195,7 @@ for game developers and studios.
 - Builds negative reputation scores visible in `/lookup` and `/history`
 - No positive reports for bots (only negative)
 
-### 🎲 Community Games Engine (TASKS_05)
+### 🎲 Community Games Engine
 
 **Daily Reset Games:**
 
@@ -208,18 +208,31 @@ for game developers and studios.
 
 **Player Commands:**
 
-- `/scramble-guess <word>` - Submit word unscramble guess
+- `/scramble-guess word:<guess>` - Submit word unscramble guess or request a hint (`word:hint`)
+    - **Note:** Word Unscramble commands must be used in the channel assigned by administrators via
+      `/admin-scramble-setup`
 - `/scramble-stats` - View leaderboard and time remaining
-- `/scramble-profile` - View your individual statistics (words solved, points, fastest time, accuracy, etc.)
+- `/scramble-profile` - View your individual statistics (words solved, points, fastest time, accuracy, streaks, etc.)
+- `/scramble-leaderboard` - View top players by total points
 
 **Features:**
 
-- Daily automatic resets
+- 4-hour automatic resets with 20 progressive difficulty levels
+- Word rotation system (levels 1-5: 60-day cooldown per server)
+- Level isolation (no duplicate words across levels)
+- Enhanced scoring system:
+    - Level multipliers (1.0x to 2.0x based on difficulty)
+    - Scaled first solver bonuses (50-200 points)
+    - Volume bonuses (10th word milestone, 3-streak bonus)
+    - Accuracy factor in final score
+- Hint system (one hint per word per player)
+- Partial reveals for levels 6+ (hints instead of full answers)
+- Enhanced scrambling algorithm for higher levels
 - Per-server configuration
 - Rich leaderboards with medals
-- Time-based scoring
+- Time-based scoring with diminishing returns bonuses
 
-### ⚔️ Text-Based RPG System (TASKS_06, TASKS_23)
+### ⚔️ Text-Based RPG System
 
 **Character System:**
 
@@ -239,14 +252,17 @@ for game developers and studios.
 **Player Commands:**
 
 - `/rpg-register` - Create your character (6 classes available)
+    - **Note:** RPG commands must be used in the channel assigned by administrators via `/admin-rpg-setup`
 - `/rpg-profile` - View character stats, charges, recovery status
-- `/rpg-action` - Perform actions (explore, train, battle, rest)
+- `/rpg-action` - Perform actions (explore, train, battle, rest). Failure messages are private. Explore and train now
+  have increased XP with balanced risks.
 - `/rpg-resurrect` - Resurrect dead players (Priest-only, free action)
 - `/rpg-duel` - Challenge another player to a duel (free action, 3x/24h limit)
 - `/rpg-boss-battle` - Attack community bosses (attack, status, leaderboard)
 - `/rpg-leaderboard` - View top players
-- `/rpg-inventory` - View your collected items and crafted bonuses
-- `/rpg-craft` - Craft permanent stat-boosting items from materials
+- `/rpg-inventory` - View your collected items and crafted bonuses (private by default, use `visibility:public` to
+  share)
+- `/rpg-craft` - Craft permanent stat-boosting items from materials (success messages are public, errors are private)
 
 **Admin Commands:**
 
@@ -257,9 +273,19 @@ for game developers and studios.
 
 - **Action Charge System:** Dynamic charges (3-10 based on level), refresh every 12 hours
 - **Four Action Types:** Explore, Train, Battle, Rest, Donate
-- **65+ narrative encounters** (Nilfheim-themed)
+- **U-Curve Difficulty System:** Battle difficulty scales with player level
+    - **Level 1-5:** More dangerous encounters (can face enemies up to +2 levels), 5% chance for veteran enemies (+3
+      levels), +25% damage taken
+    - **Level 6-15:** Moderate difficulty (standard enemy scaling)
+    - **Level 16+:** Challenging encounters (+15% damage taken, occasionally stronger enemies)
+- **Level-Up HP Restoration:** Restores 75% of new max HP (not 100%) to preserve battle tension
+- **Biome System:** Six biomes/zones (Frozen Wastes, Ancient Ruins, Shadowed Forests, Volcanic Depths, Mystical Heights,
+  Twisted Realms)
+    - Players start in a random biome and progress through biomes after 10 explorations
+    - Biome-specific narratives for exploration (65+ total)
+    - Biome-specific enemies for battles (66+ total)
+    - Biome information visible in `/rpg-profile`
 - **Wandering Figures:** Ultra-rare (0.5% chance) encounters with mysterious figures during exploration
-- **66 enemy types** for battles with stat effectiveness system
 - **Pack Enemies:** Rare pack enemies (e.g., "Ice Wolf Pack") deal 15% more damage and use pack-specific narrative
 - **Server-Wide Events:** Nilfheim Calms affect all players (every 48-96 hours, 12-hour duration)
 - **Consumable Infusions:** Temporary single-use crafting items with powerful effects
@@ -270,6 +296,12 @@ for game developers and studios.
 - **Boss Progression:** Levels increase based on defeats
 - **Boss XP Rewards:** Top 30% of participants receive proportional XP rewards (scales with participation)
 - **Class Bonuses:** Each class gets +20% damage vs specific boss types
+- **Blessings System:** Temporary stat boosts granted after consecutive boss failures (5, 10, 15+ failures)
+    - Class-specific stat multipliers (STR/AGI/INT +25% base, scales with tier)
+    - Minor (5 failures), Major (10 failures), Legendary (15+ failures) tiers
+    - Blessings expire immediately upon boss defeat
+    - Visible in boss announcements and `/rpg-profile`
+    - Only affects damage output (stat multipliers), as players don't take damage in boss battles
 - **Boss Expiration:** Bosses expire after 24 hours if not defeated, applying world curses (checked every 30 minutes)
 - **World Curse System:** Temporary world-wide curses when bosses expire undefeated (7 minor + 6 major curses)
 - **Achievement System:** First-to achievements, pattern achievements, legendary auras, titles, story flags
@@ -280,7 +312,7 @@ for game developers and studios.
 
 **TODO:** Quests, multiplayer, prestige system
 
-### 🧠 Word Unscramble Game (TASKS_05)
+### 🧠 Word Unscramble Game
 
 **Features:**
 
@@ -308,7 +340,7 @@ for game developers and studios.
 
 **TODO:** Hint system, RPG integration, difficulty levels
 
-### 🚀 Smart Promotional Lead Generator (TASKS_08)
+### 🚀 Smart Promotional Lead Generator
 
 **Passive Detection:**
 
@@ -479,51 +511,51 @@ Includes:
 
 ### Command Reference
 
-| Command                          | Category   | Description                                                                              | Permission       |
-|----------------------------------|------------|------------------------------------------------------------------------------------------|------------------|
-| `/warn`                          | Moderation | Warn a user with reason                                                                  | Moderate Members |
-| `/kick`                          | Moderation | Kick a user from server                                                                  | Kick Members     |
-| `/ban`                           | Moderation | Ban a user (optional message deletion)                                                   | Ban Members      |
-| `/history`                       | Moderation | View user moderation history                                                             | Moderate Members |
-| `/warn-suggestions`              | Moderation | Get AI-powered warning suggestions                                                       | Moderate Members |
-| `/ban-suggestions`               | Moderation | Get AI-powered ban suggestions                                                           | Moderate Members |
-| `/server-stats`                  | Community  | View server activity statistics (includes bot prevention count)                          | Moderate Members |
-| `/top-contributors`              | Community  | View most active members                                                                 | Everyone         |
-| `/praise`                        | Reputation | Award positive reputation                                                                | Admin Only       |
-| `/report`                        | Reputation | Report negative behavior                                                                 | Admin Only       |
-| `/lookup`                        | Reputation | Lookup user scores by username                                                           | Admin Only       |
-| `/admin-mikros-ecosystem-setup`  | Analytics  | Setup MIKROS Ecosystem channel                                                           | Administrator    |
-| `/mikros-ecosystem`              | Analytics  | View MIKROS Analytics (13 subcommands, requires channel setup)                           | Everyone         |
-| `/admin-scramble-setup`          | Games      | Setup word unscramble game                                                               | Administrator    |
-| `/admin-scramble-config`         | Games      | Configure games (5 subcommands)                                                          | Administrator    |
-| `/scramble-guess`                | Games      | Submit word unscramble guess                                                             | Everyone         |
-| `/scramble-stats`                | Games      | View game leaderboard                                                                    | Everyone         |
-| `/scramble-profile`              | Games      | View your individual statistics (words solved, points, fastest time, etc.)               | Everyone         |
-| `/rpg-register`                  | RPG        | Create RPG character (6 classes)                                                         | Everyone         |
-| `/rpg-profile`                   | RPG        | View character profile                                                                   | Everyone         |
-| `/rpg-action`                    | RPG        | Perform action (explore/train/battle/rest)                                               | Everyone         |
-| `/rpg-resurrect`                 | RPG        | Resurrect dead player (Priest-only)                                                      | Everyone         |
-| `/rpg-duel`                      | RPG        | Challenge another player to a duel (free, 3x/24h limit)                                  | Everyone         |
-| `/rpg-boss-battle`               | RPG        | Attack boss, check status, leaderboard                                                   | Everyone         |
-| `/rpg-leaderboard`               | RPG        | View RPG leaderboard                                                                     | Everyone         |
-| `/rpg-inventory`                 | RPG        | View collected items and crafted bonuses                                                 | Everyone         |
-| `/rpg-craft`                     | RPG        | Craft permanent stat-boosting items                                                      | Everyone         |
-| `/rpg-stats`                     | RPG        | View detailed RPG statistics                                                             | Everyone         |
-| `/admin-rpg-setup`               | RPG        | Setup RPG system                                                                         | Administrator    |
-| `/admin-rpg-config`              | RPG        | Configure RPG (5 subcommands)                                                            | Administrator    |
-| `/rpg-reset`                     | RPG        | Reset all RPG data for server                                                            | Administrator    |
-| `/setup-promotions`              | Promo      | Enable/disable promo detection                                                           | Administrator    |
-| `/set-promo-frequency`           | Promo      | Set promo cooldown                                                                       | Administrator    |
-| `/admin-promotion-setup`         | Admin      | Configure game promotion channel                                                         | Administrator    |
-| `/admin-promotion-config`        | Admin      | Configure promotion settings (view, update-channel, set-verbosity, disable, force-check) | Administrator    |
-| `/admin-bump-setup`              | Admin      | Set up automatic server bumping (channel, bots selection)                               | Administrator    |
-| `/admin-bump-config`             | Admin      | Configure auto-bump settings (view, set-interval, update-bots, disable)               | Administrator    |
-| `/admin-bump-stats`              | Admin      | View server bump statistics and history                                                 | Admin            |
-| `/admin-bot-detection-setup`     | Moderation | Enable/disable bot detection system                                                      | Administrator    |
-| `/admin-bot-detection-config`    | Moderation | Configure bot detection settings (8 subcommands)                                         | Administrator    |
-| `/promo-request`                  | Promo      | Request MIKROS promotional services and schedule a demo                                  | Everyone         |
+| Command                         | Category   | Description                                                                              | Permission       |
+|---------------------------------|------------|------------------------------------------------------------------------------------------|------------------|
+| `/warn`                         | Moderation | Warn a user with reason                                                                  | Moderate Members |
+| `/kick`                         | Moderation | Kick a user from server                                                                  | Kick Members     |
+| `/ban`                          | Moderation | Ban a user (optional message deletion)                                                   | Ban Members      |
+| `/history`                      | Moderation | View user moderation history                                                             | Moderate Members |
+| `/warn-suggestions`             | Moderation | Get AI-powered warning suggestions                                                       | Moderate Members |
+| `/ban-suggestions`              | Moderation | Get AI-powered ban suggestions                                                           | Moderate Members |
+| `/server-stats`                 | Community  | View server activity statistics (includes bot prevention count)                          | Moderate Members |
+| `/top-contributors`             | Community  | View most active members                                                                 | Everyone         |
+| `/praise`                       | Reputation | Award positive reputation                                                                | Admin Only       |
+| `/report`                       | Reputation | Report negative behavior                                                                 | Admin Only       |
+| `/lookup`                       | Reputation | Lookup user scores by username                                                           | Admin Only       |
+| `/admin-mikros-ecosystem-setup` | Analytics  | Setup MIKROS Ecosystem channel                                                           | Administrator    |
+| `/mikros-ecosystem`             | Analytics  | View MIKROS Analytics (13 subcommands, requires channel setup)                           | Everyone         |
+| `/admin-scramble-setup`         | Games      | Setup word unscramble game                                                               | Administrator    |
+| `/admin-scramble-config`        | Games      | Configure games (5 subcommands)                                                          | Administrator    |
+| `/scramble-guess`               | Games      | Submit word unscramble guess                                                             | Everyone         |
+| `/scramble-stats`               | Games      | View game leaderboard                                                                    | Everyone         |
+| `/scramble-profile`             | Games      | View your individual statistics (words solved, points, fastest time, etc.)               | Everyone         |
+| `/rpg-register`                 | RPG        | Create RPG character (6 classes)                                                         | Everyone         |
+| `/rpg-profile`                  | RPG        | View character profile                                                                   | Everyone         |
+| `/rpg-action`                   | RPG        | Perform action (explore/train/battle/rest). Failure messages are private.                | Everyone         |
+| `/rpg-resurrect`                | RPG        | Resurrect dead player (Priest-only, free action)                                         | Everyone         |
+| `/rpg-duel`                     | RPG        | Challenge another player to a duel (free, 3x/24h limit)                                  | Everyone         |
+| `/rpg-boss-battle`              | RPG        | Attack boss, check status, leaderboard                                                   | Everyone         |
+| `/rpg-leaderboard`              | RPG        | View RPG leaderboard                                                                     | Everyone         |
+| `/rpg-inventory`                | RPG        | View collected items and crafted bonuses (private by default, optional public)           | Everyone         |
+| `/rpg-craft`                    | RPG        | Craft permanent stat-boosting items (success messages public, errors private)            | Everyone         |
+| `/rpg-stats`                    | RPG        | View detailed RPG statistics                                                             | Everyone         |
+| `/admin-rpg-setup`              | RPG        | Setup RPG system                                                                         | Administrator    |
+| `/admin-rpg-config`             | RPG        | Configure RPG (5 subcommands)                                                            | Administrator    |
+| `/rpg-reset`                    | RPG        | Reset all RPG data for server                                                            | Administrator    |
+| `/setup-promotions`             | Promo      | Enable/disable promo detection                                                           | Administrator    |
+| `/set-promo-frequency`          | Promo      | Set promo cooldown                                                                       | Administrator    |
+| `/admin-promotion-setup`        | Admin      | Configure game promotion channel                                                         | Administrator    |
+| `/admin-promotion-config`       | Admin      | Configure promotion settings (view, update-channel, set-verbosity, disable, force-check) | Administrator    |
+| `/admin-bump-setup`             | Admin      | Set up automatic server bumping (channel, bots selection)                                | Administrator    |
+| `/admin-bump-config`            | Admin      | Configure auto-bump settings (view, set-interval, update-bots, disable)                  | Administrator    |
+| `/admin-bump-stats`             | Admin      | View server bump statistics and history                                                  | Admin            |
+| `/admin-bot-detection-setup`    | Moderation | Enable/disable bot detection system                                                      | Administrator    |
+| `/admin-bot-detection-config`   | Moderation | Configure bot detection settings (8 subcommands)                                         | Administrator    |
+| `/promo-request`                | Promo      | Request MIKROS promotional services and schedule a demo                                  | Everyone         |
 | `/support`                      | Support    | Learn how to support the MIKROS Bot development                                          | Everyone         |
-| `/info`                         | Support    | Learn about the MIKROS Bot and MIKROS Ecosystem                                        | Everyone         |
+| `/info`                         | Support    | Learn about the MIKROS Bot and MIKROS Ecosystem                                          | Everyone         |
 
 **Total Commands:** 41+ (including subcommands)
 
