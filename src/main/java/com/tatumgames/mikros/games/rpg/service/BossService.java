@@ -1,5 +1,6 @@
 package com.tatumgames.mikros.games.rpg.service;
 
+import com.tatumgames.mikros.games.rpg.blessing.Blessing;
 import com.tatumgames.mikros.games.rpg.boss.BossCatalog;
 import com.tatumgames.mikros.games.rpg.events.NilfheimEventType;
 import com.tatumgames.mikros.games.rpg.model.*;
@@ -11,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Service for managing boss battles per server.
@@ -21,15 +23,20 @@ public class BossService {
     private static final Random random = new Random();
     // Per-server boss state: guildId -> ServerBossState
     private final Map<String, ServerBossState> serverStates;
+    // Per-guild locks to prevent concurrent boss spawning
+    private final Map<String, ReentrantLock> guildLocks = new ConcurrentHashMap<>();
     // Damage tracking: guildId -> Map<userId, totalDamage>
     private final Map<String, Map<String, Integer>> damageTracking;
     // Class participation tracking: guildId -> Map<CharacterClass, count>
     private final Map<String, Map<CharacterClass, Integer>> classParticipation;
+    // Recent defeats for announcement: guildId -> DefeatInfo
+    private final Map<String, DefeatInfo> recentDefeats;
     private final CharacterService characterService;
     private final AuraService auraService;
     private final WorldCurseService worldCurseService;
     private final NilfheimEventService nilfheimEventService;
     private final LoreRecognitionService loreRecognitionService;
+    private final BlessingService blessingService;
 
     /**
      * Creates a new BossService.
@@ -39,16 +46,19 @@ public class BossService {
      * @param worldCurseService      the world curse service for clearing curses on defeat
      * @param nilfheimEventService   the Nilfheim event service for server-wide events
      * @param loreRecognitionService the lore recognition service for milestone checks
+     * @param blessingService        the blessing service for applying blessing stat boosts
      */
-    public BossService(CharacterService characterService, AuraService auraService, WorldCurseService worldCurseService, NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService) {
+    public BossService(CharacterService characterService, AuraService auraService, WorldCurseService worldCurseService, NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService, BlessingService blessingService) {
         this.serverStates = new ConcurrentHashMap<>();
         this.damageTracking = new ConcurrentHashMap<>();
         this.classParticipation = new ConcurrentHashMap<>();
+        this.recentDefeats = new ConcurrentHashMap<>();
         this.characterService = characterService;
         this.auraService = auraService;
         this.worldCurseService = worldCurseService;
         this.nilfheimEventService = nilfheimEventService;
         this.loreRecognitionService = loreRecognitionService;
+        this.blessingService = blessingService;
         logger.info("BossService initialized");
     }
 
@@ -73,68 +83,365 @@ public class BossService {
     }
 
     /**
+     * Gets or creates a lock for a specific guild.
+     * Ensures thread-safe boss spawning per guild.
+     *
+     * @param guildId the guild ID
+     * @return the lock for this guild
+     */
+    private ReentrantLock getGuildLock(String guildId) {
+        return guildLocks.computeIfAbsent(guildId, k -> new ReentrantLock());
+    }
+
+    /**
      * Spawns a new normal boss for a server.
+     * Thread-safe: Uses per-guild locks to prevent concurrent spawning.
      *
      * @param guildId the guild ID
      * @return the spawned boss
      */
     public Boss spawnNormalBoss(String guildId) {
-        ServerBossState state = getOrCreateState(guildId);
+        ReentrantLock lock = getGuildLock(guildId);
+        lock.lock();
+        try {
+            ServerBossState state = getOrCreateState(guildId);
 
-        // Check if super boss should spawn instead
-        if (state.getNormalBossesSinceSuper() >= 3) {
-            return null; // Signal to spawn super boss instead
+            // Validate: ensure only one boss is active at a time
+            Boss currentBoss = state.getCurrentBoss();
+            SuperBoss currentSuperBoss = state.getCurrentSuperBoss();
+
+            if (currentBoss != null && !currentBoss.isDefeated() && !currentBoss.isExpired()) {
+                logger.warn("Attempted to spawn normal boss when one already active for guild {} (existing bossId: {}, name: {})",
+                        guildId, currentBoss.getBossId(), currentBoss.getName());
+                return currentBoss; // Return existing boss
+            }
+            if (currentSuperBoss != null && !currentSuperBoss.isDefeated() && !currentSuperBoss.isExpired()) {
+                logger.warn("Attempted to spawn normal boss when super boss already active for guild {} (existing bossId: {}, name: {})",
+                        guildId, currentSuperBoss.getBossId(), currentSuperBoss.getName());
+                return null; // Super boss is active, cannot spawn normal boss
+            }
+
+            // Check if super boss should spawn instead
+            if (state.getNormalBossesSinceSuper() >= 3) {
+                return null; // Signal to spawn super boss instead
+            }
+
+            // Clear old boss state atomically before spawning new one
+            // This ensures the boss loop is properly closed
+            state.setCurrentBoss(null);
+            state.setCurrentSuperBoss(null);
+
+            int level = state.getBossLevel();
+            BossCatalog.BossDefinition definition;
+
+            // Check if Unity Devourer should spawn (every 10th normal boss)
+            // After 9 defeats, the next spawn (10th boss) should be Unity Devourer
+            if (state.getNormalBossesDefeated() > 0 && state.getNormalBossesDefeated() % 10 == 9) {
+                definition = BossCatalog.getUnityDevourer(level);
+                logger.info("Unity Devourer spawn triggered ({} normal bosses defeated, spawning 10th boss) for guild {}",
+                        state.getNormalBossesDefeated(), guildId);
+            } else {
+                definition = BossCatalog.getRandomNormalBoss(level);
+            }
+
+            Boss boss = BossCatalog.createBoss(definition, level);
+
+            // Apply empowerment based on consecutive failures
+            int consecutiveFailures = state.getConsecutiveFailures();
+            int empowermentLevel = 0;
+            if (consecutiveFailures >= 5) {
+                empowermentLevel = 2;
+            } else if (consecutiveFailures >= 3) {
+                empowermentLevel = 1;
+            }
+            boss.setEmpowermentLevel(empowermentLevel);
+
+            // Apply stat boosts based on empowerment
+            if (empowermentLevel > 0) {
+                applyEmpowerment(boss, empowermentLevel);
+            }
+
+            // Set new boss atomically
+            state.setCurrentBoss(boss);
+            damageTracking.put(guildId, new ConcurrentHashMap<>());
+            classParticipation.put(guildId, new ConcurrentHashMap<>());
+
+            // Refresh heroic charges for all characters when new boss spawns
+            refreshHeroicChargesForAllCharacters();
+
+            logger.info("Spawned normal boss {} (Level {}, bossId: {}) with empowerment level {} for guild {}",
+                    boss.getName(), level, boss.getBossId(), empowermentLevel, guildId);
+            return boss;
+        } finally {
+            lock.unlock();
         }
-
-        int level = state.getBossLevel();
-        BossCatalog.BossDefinition definition;
-        
-        // Check if Unity Devourer should spawn (every 10th normal boss)
-        // After 9 defeats, the next spawn (10th boss) should be Unity Devourer
-        if (state.getNormalBossesDefeated() > 0 && state.getNormalBossesDefeated() % 10 == 9) {
-            definition = BossCatalog.getUnityDevourer(level);
-            logger.info("Unity Devourer spawn triggered ({} normal bosses defeated, spawning 10th boss) for guild {}", 
-                    state.getNormalBossesDefeated(), guildId);
-        } else {
-            definition = BossCatalog.getRandomNormalBoss(level);
-        }
-        
-        Boss boss = BossCatalog.createBoss(definition, level);
-
-        state.setCurrentBoss(boss);
-        damageTracking.put(guildId, new ConcurrentHashMap<>());
-        classParticipation.put(guildId, new ConcurrentHashMap<>());
-
-        // Refresh heroic charges for all characters when new boss spawns
-        refreshHeroicChargesForAllCharacters();
-
-        logger.info("Spawned normal boss {} (Level {}) for guild {}", boss.getName(), level, guildId);
-        return boss;
     }
 
     /**
      * Spawns a new super boss for a server.
+     * Thread-safe: Uses per-guild locks to prevent concurrent spawning.
      *
      * @param guildId the guild ID
      * @return the spawned super boss
      */
     public SuperBoss spawnSuperBoss(String guildId) {
+        ReentrantLock lock = getGuildLock(guildId);
+        lock.lock();
+        try {
+            ServerBossState state = getOrCreateState(guildId);
+
+            // Validate: ensure only one boss is active at a time
+            Boss currentBoss = state.getCurrentBoss();
+            SuperBoss currentSuperBoss = state.getCurrentSuperBoss();
+
+            if (currentBoss != null && !currentBoss.isDefeated() && !currentBoss.isExpired()) {
+                logger.warn("Attempted to spawn super boss when normal boss already active for guild {} (existing bossId: {}, name: {})",
+                        guildId, currentBoss.getBossId(), currentBoss.getName());
+                return null; // Normal boss is active, cannot spawn super boss
+            }
+            if (currentSuperBoss != null && !currentSuperBoss.isDefeated() && !currentSuperBoss.isExpired()) {
+                logger.warn("Attempted to spawn super boss when one already active for guild {} (existing bossId: {}, name: {})",
+                        guildId, currentSuperBoss.getBossId(), currentSuperBoss.getName());
+                return currentSuperBoss; // Return existing super boss
+            }
+
+            // Clear old boss state atomically before spawning new one
+            // This ensures the boss loop is properly closed
+            state.setCurrentBoss(null);
+            state.setCurrentSuperBoss(null);
+
+            int level = state.getSuperBossLevel();
+            BossCatalog.SuperBossDefinition definition = BossCatalog.getSuperBoss(level);
+            SuperBoss superBoss = BossCatalog.createSuperBoss(definition, level);
+
+            // Apply empowerment based on consecutive failures
+            int consecutiveFailures = state.getConsecutiveFailures();
+            int empowermentLevel = 0;
+            if (consecutiveFailures >= 5) {
+                empowermentLevel = 2;
+            } else if (consecutiveFailures >= 3) {
+                empowermentLevel = 1;
+            }
+            superBoss.setEmpowermentLevel(empowermentLevel);
+
+            // Apply stat boosts based on empowerment
+            if (empowermentLevel > 0) {
+                applyEmpowerment(superBoss, empowermentLevel);
+            }
+
+            // Set new super boss atomically
+            state.setCurrentSuperBoss(superBoss);
+            state.setNormalBossesSinceSuper(0); // Reset counter
+            damageTracking.put(guildId, new ConcurrentHashMap<>());
+            classParticipation.put(guildId, new ConcurrentHashMap<>());
+
+            // Refresh heroic charges for all characters when new boss spawns
+            refreshHeroicChargesForAllCharacters();
+
+            logger.info("Spawned super boss {} (Level {}, bossId: {}) with empowerment level {} for guild {}",
+                    superBoss.getName(), level, superBoss.getBossId(), empowermentLevel, guildId);
+            return superBoss;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Spawns a secret boss for a specific player.
+     *
+     * @param guildId    the guild ID
+     * @param userId     the user ID
+     * @param definition the boss definition
+     * @param level      the boss level
+     * @return the spawned secret boss
+     */
+    public Boss spawnSecretBoss(String guildId, String userId, BossCatalog.BossDefinition definition, int level) {
         ServerBossState state = getOrCreateState(guildId);
 
-        int level = state.getSuperBossLevel();
-        BossCatalog.SuperBossDefinition definition = BossCatalog.getSuperBoss(level);
-        SuperBoss superBoss = BossCatalog.createSuperBoss(definition, level);
+        // Check if player already has an active secret boss
+        Boss existingBoss = state.getSecretBoss(userId);
+        if (existingBoss != null && !existingBoss.isDefeated() && !existingBoss.isExpired()) {
+            logger.warn("Attempted to spawn secret boss when one already active for user {} in guild {}", userId, guildId);
+            return existingBoss; // Return existing boss
+        }
 
-        state.setCurrentSuperBoss(superBoss);
-        state.setNormalBossesSinceSuper(0); // Reset counter
-        damageTracking.put(guildId, new ConcurrentHashMap<>());
-        classParticipation.put(guildId, new ConcurrentHashMap<>());
+        Boss boss = BossCatalog.createBoss(definition, level);
+        state.setSecretBoss(userId, boss);
 
-        // Refresh heroic charges for all characters when new boss spawns
-        refreshHeroicChargesForAllCharacters();
+        logger.info("Spawned secret boss {} (Level {}) for user {} in guild {}",
+                boss.getName(), level, userId, guildId);
+        return boss;
+    }
 
-        logger.info("Spawned super boss {} (Level {}) for guild {}", superBoss.getName(), level, guildId);
-        return superBoss;
+    /**
+     * Checks if a character qualifies for a secret boss spawn based on a milestone,
+     * and spawns one if conditions are met. Grants event charges when spawning.
+     *
+     * @param guildId      the guild ID
+     * @param userId       the user ID
+     * @param milestoneKey the milestone key (e.g., "level_10", "boss_kills_10")
+     * @param bossLevel    the level for the secret boss
+     * @return the spawned secret boss, or null if not spawned
+     */
+    public Boss checkAndSpawnSecretBoss(String guildId, String userId, String milestoneKey, int bossLevel) {
+        RPGCharacter character = characterService.getCharacter(userId);
+        if (character == null) {
+            return null;
+        }
+
+        // Check if this milestone has already triggered a secret boss
+        if (character.getSecretBossMilestones().contains(milestoneKey)) {
+            return null; // Already triggered
+        }
+
+        // Check if player already has an active secret boss
+        ServerBossState state = getState(guildId);
+        if (state != null) {
+            Boss existingBoss = state.getSecretBoss(userId);
+            if (existingBoss != null && !existingBoss.isDefeated() && !existingBoss.isExpired()) {
+                return null; // Already has active secret boss
+            }
+        }
+
+        // Spawn secret boss
+        BossCatalog.BossDefinition definition = BossCatalog.getRandomNormalBoss(bossLevel);
+        Boss boss = spawnSecretBoss(guildId, userId, definition, bossLevel);
+
+        if (boss != null) {
+            // Mark milestone as triggered
+            character.addSecretBossMilestone(milestoneKey);
+
+            // Grant event charges (fixed 10, capped at 10 total)
+            // If character already has charges, we grant up to 10 total (not add 10 to existing)
+            int eventChargesToGrant = 10; // Fixed 10 charges
+            int currentCharges = character.getEventCharges();
+            int newCharges = Math.min(10, currentCharges + eventChargesToGrant);
+            character.setEventCharges(newCharges);
+
+            logger.info("Granted {} event charges to {} for secret boss milestone {} (total: {})",
+                    eventChargesToGrant, character.getName(), milestoneKey, newCharges);
+        }
+
+        return boss;
+    }
+
+    /**
+     * Attacks a secret boss with a character.
+     *
+     * @param guildId   the guild ID
+     * @param userId    the user ID
+     * @param character the attacking character
+     * @return damage dealt
+     */
+    public int attackSecretBoss(String guildId, String userId, RPGCharacter character) {
+        ServerBossState state = getState(guildId);
+        if (state == null) {
+            return 0;
+        }
+
+        Boss boss = state.getSecretBoss(userId);
+        if (boss == null) {
+            return 0; // No secret boss
+        }
+
+        if (boss.isDefeated() || boss.isExpired()) {
+            // Clean up expired/defeated secret boss
+            state.removeSecretBoss(userId);
+            return 0;
+        }
+
+        // Calculate damage (similar to normal boss but without class harmony or aura effects)
+        int baseDamage = calculateDamage(character, boss.getType(), null);
+        double multiplier = getClassBonus(character.getCharacterClass(), boss.getType());
+        int damage = (int) (baseDamage * multiplier);
+
+        // Apply damage
+        boolean defeated = boss.takeDamage(damage);
+
+        if (defeated) {
+            logger.info("Secret boss {} defeated by {} in guild {}", boss.getName(), character.getName(), guildId);
+            // Grant special rewards for secret boss
+            distributeSecretBossRewards(character, boss.getLevel());
+            character.incrementSecretBossesKilled();
+
+            // Check for lore recognition milestones
+            if (loreRecognitionService != null) {
+                loreRecognitionService.checkMilestones(character, guildId);
+            }
+
+            // Remove defeated boss
+            state.removeSecretBoss(userId);
+        }
+
+        return damage;
+    }
+
+    /**
+     * Applies empowerment stat boosts to a boss.
+     * Empowerment level 1 (3 failures): +15% HP, +10% Attack
+     * Empowerment level 2 (5 failures): +30% HP, +20% Attack
+     *
+     * @param boss             the boss to empower
+     * @param empowermentLevel the empowerment level (1 or 2)
+     */
+    private void applyEmpowerment(Boss boss, int empowermentLevel) {
+        int originalMaxHp = boss.getMaxHp();
+        int originalCurrentHp = boss.getCurrentHp();
+        double hpRatio = originalMaxHp > 0 ? (double) originalCurrentHp / originalMaxHp : 1.0;
+
+        if (empowermentLevel == 1) {
+            // Level 1: +15% HP, +10% Attack
+            int newMaxHp = (int) (originalMaxHp * 1.15);
+            int newAttack = (int) (boss.getAttack() * 1.10);
+            int newCurrentHp = (int) (newMaxHp * hpRatio);
+            boss.setMaxHp(newMaxHp);
+            boss.setAttack(newAttack);
+            // Set current HP to maintain the same percentage
+            boss.takeDamage(originalCurrentHp - newCurrentHp);
+        } else if (empowermentLevel == 2) {
+            // Level 2: +30% HP, +20% Attack
+            int newMaxHp = (int) (originalMaxHp * 1.30);
+            int newAttack = (int) (boss.getAttack() * 1.20);
+            int newCurrentHp = (int) (newMaxHp * hpRatio);
+            boss.setMaxHp(newMaxHp);
+            boss.setAttack(newAttack);
+            // Set current HP to maintain the same percentage
+            boss.takeDamage(originalCurrentHp - newCurrentHp);
+        }
+    }
+
+    /**
+     * Applies empowerment stat boosts to a super boss.
+     * Empowerment level 1 (3 failures): +15% HP, +10% Attack
+     * Empowerment level 2 (5 failures): +30% HP, +20% Attack
+     *
+     * @param superBoss        the super boss to empower
+     * @param empowermentLevel the empowerment level (1 or 2)
+     */
+    private void applyEmpowerment(SuperBoss superBoss, int empowermentLevel) {
+        int originalMaxHp = superBoss.getMaxHp();
+        int originalCurrentHp = superBoss.getCurrentHp();
+        double hpRatio = originalMaxHp > 0 ? (double) originalCurrentHp / originalMaxHp : 1.0;
+
+        if (empowermentLevel == 1) {
+            // Level 1: +15% HP, +10% Attack
+            int newMaxHp = (int) (originalMaxHp * 1.15);
+            int newAttack = (int) (superBoss.getAttack() * 1.10);
+            int newCurrentHp = (int) (newMaxHp * hpRatio);
+            superBoss.setMaxHp(newMaxHp);
+            superBoss.setAttack(newAttack);
+            // Set current HP to maintain the same percentage
+            superBoss.takeDamage(originalCurrentHp - newCurrentHp);
+        } else if (empowermentLevel == 2) {
+            // Level 2: +30% HP, +20% Attack
+            int newMaxHp = (int) (originalMaxHp * 1.30);
+            int newAttack = (int) (superBoss.getAttack() * 1.20);
+            int newCurrentHp = (int) (newMaxHp * hpRatio);
+            superBoss.setMaxHp(newMaxHp);
+            superBoss.setAttack(newAttack);
+            // Set current HP to maintain the same percentage
+            superBoss.takeDamage(originalCurrentHp - newCurrentHp);
+        }
     }
 
     /**
@@ -175,8 +482,11 @@ public class BossService {
             }
         }
 
-        // Calculate damage based on character stats and class
-        int baseDamage = calculateDamage(character, boss != null ? boss.getType() : superBoss.getType());
+        // Get active blessing for this character's class
+        Blessing blessing = blessingService.getBlessingForClass(guildId, character.getCharacterClass());
+
+        // Calculate damage based on character stats and class (with blessing if active)
+        int baseDamage = calculateDamage(character, boss != null ? boss.getType() : superBoss.getType(), blessing);
 
         // Apply class bonuses
         double multiplier = getClassBonus(character.getCharacterClass(), boss != null ? boss.getType() : superBoss.getType());
@@ -253,7 +563,10 @@ public class BossService {
         }
 
         if (defeated) {
-            handleBossDefeat(guildId, boss != null);
+            // Track last hitter before handling defeat
+            String lastHitterId = character.getDiscordId();
+            String lastHitterName = character.getName();
+            handleBossDefeat(guildId, boss != null, lastHitterId, lastHitterName);
         }
 
         return damage;
@@ -261,15 +574,35 @@ public class BossService {
 
     /**
      * Calculates damage based on character stats.
+     * Applies blessing stat multipliers if a blessing is active.
+     *
+     * @param character the character
+     * @param bossType  the boss type
+     * @param blessing  the active blessing (can be null)
+     * @return calculated damage
      */
-    private int calculateDamage(RPGCharacter character, BossType bossType) {
+    private int calculateDamage(RPGCharacter character, BossType bossType, Blessing blessing) {
         int baseDamage = 100 + (character.getLevel() * 50);
 
-        // Add stat bonuses
+        // Apply blessing stat multipliers if active
+        double strMultiplier = blessing != null ? blessing.getStrMultiplier() : 1.0;
+        double agiMultiplier = blessing != null ? blessing.getAgiMultiplier() : 1.0;
+        double intMultiplier = blessing != null ? blessing.getIntMultiplier() : 1.0;
+
+        // Add stat bonuses (with blessing multipliers)
         switch (character.getCharacterClass()) {
-            case WARRIOR, KNIGHT, OATHBREAKER -> baseDamage += character.getStats().getStrength() * 10;
-            case MAGE, NECROMANCER, PRIEST -> baseDamage += character.getStats().getIntelligence() * 10;
-            case ROGUE -> baseDamage += character.getStats().getAgility() * 10;
+            case WARRIOR, KNIGHT, OATHBREAKER -> {
+                int effectiveStr = (int) character.getStats().getEffectiveStrength(strMultiplier);
+                baseDamage += effectiveStr * 10;
+            }
+            case MAGE, NECROMANCER, PRIEST -> {
+                int effectiveInt = (int) character.getStats().getEffectiveIntelligence(intMultiplier);
+                baseDamage += effectiveInt * 10;
+            }
+            case ROGUE -> {
+                int effectiveAgi = (int) character.getStats().getEffectiveAgility(agiMultiplier);
+                baseDamage += effectiveAgi * 10;
+            }
         }
 
         // Add luck bonus
@@ -287,30 +620,27 @@ public class BossService {
      */
     private double getClassBonus(CharacterClass characterClass, BossType bossType) {
         // Class bonuses based on boss type
-        switch (characterClass) {
-            case WARRIOR:
-                return bossType == BossType.BEAST ? 1.2 : 1.0;
-            case KNIGHT:
-                return (bossType == BossType.GIANT || bossType == BossType.UNDEAD) ? 1.2 : 1.0;
-            case MAGE:
-                return (bossType == BossType.SPIRIT || bossType == BossType.ELEMENTAL) ? 1.2 : 1.0;
-            case ROGUE:
-                return (bossType == BossType.HUMANOID || bossType == BossType.BEAST) ? 1.2 : 1.0;
-            case NECROMANCER:
-                return (bossType == BossType.SPIRIT || bossType == BossType.UNDEAD) ? 1.2 : 1.0;
-            case PRIEST:
-                return (bossType == BossType.UNDEAD || bossType == BossType.DEMON) ? 1.2 : 1.0;
-            case OATHBREAKER:
-                return (bossType == BossType.UNDEAD || bossType == BossType.DEMON) ? 1.2 : 1.0;
-            default:
-                return 1.0;
-        }
+        return switch (characterClass) {
+            case WARRIOR -> bossType == BossType.BEAST ? 1.2 : 1.0;
+            case KNIGHT -> (bossType == BossType.GIANT || bossType == BossType.UNDEAD) ? 1.2 : 1.0;
+            case MAGE -> (bossType == BossType.SPIRIT || bossType == BossType.ELEMENTAL) ? 1.2 : 1.0;
+            case ROGUE -> (bossType == BossType.HUMANOID || bossType == BossType.BEAST) ? 1.2 : 1.0;
+            case NECROMANCER -> (bossType == BossType.SPIRIT || bossType == BossType.UNDEAD) ? 1.2 : 1.0;
+            case PRIEST -> (bossType == BossType.UNDEAD || bossType == BossType.DEMON) ? 1.2 : 1.0;
+            case OATHBREAKER -> (bossType == BossType.UNDEAD || bossType == BossType.DEMON) ? 1.2 : 1.0;
+            default -> 1.0;
+        };
     }
 
     /**
      * Handles boss defeat and progression.
+     *
+     * @param guildId         the guild ID
+     * @param isNormalBoss    whether it was a normal boss
+     * @param lastHitterId    the user ID of the last hitter
+     * @param lastHitterName  the name of the last hitter
      */
-    private void handleBossDefeat(String guildId, boolean isNormalBoss) {
+    private void handleBossDefeat(String guildId, boolean isNormalBoss, String lastHitterId, String lastHitterName) {
         ServerBossState state = getState(guildId);
         if (state == null) {
             return;
@@ -318,6 +648,12 @@ public class BossService {
 
         // Clear curses that expire on defeat (victory removes curses)
         worldCurseService.clearCursesOnDefeat(guildId);
+
+        // Clear active blessing (blessings expire on boss defeat)
+        blessingService.clearBlessing(guildId);
+
+        // Reset consecutive failures on victory
+        state.resetConsecutiveFailures();
 
         // Calculate 30% of participants (rounded up) for XP rewards
         Map<String, Integer> allDamage = damageTracking.get(guildId);
@@ -338,6 +674,9 @@ public class BossService {
             bossLevel = state.getSuperBossLevel();
             totalXpPool = 1000 + (bossLevel * 200); // Base 1000 + 200 per level
         }
+
+        // Store XP rewards for announcement
+        Map<String, Integer> xpRewards = new LinkedHashMap<>();
 
         // Distribute XP to top damage dealers proportionally
         if (!topDamage.isEmpty()) {
@@ -373,6 +712,7 @@ public class BossService {
                         }
 
                         int finalXp = (int) (baseXp * rankBonus);
+                        xpRewards.put(userId, finalXp);
 
                         // Award XP
                         boolean leveledUp = character.addXp(finalXp);
@@ -414,11 +754,14 @@ public class BossService {
 
                     // Check for lore recognition milestones (boss victory)
                     if (loreRecognitionService != null) {
-                        loreRecognitionService.checkMilestones(character);
+                        loreRecognitionService.checkMilestones(character, guildId);
                     }
                 }
             }
         }
+
+        // Reset consecutive failures on victory
+        state.resetConsecutiveFailures();
 
         if (isNormalBoss) {
             state.setNormalBossesDefeated(state.getNormalBossesDefeated() + 1);
@@ -444,9 +787,38 @@ public class BossService {
             }
         }
 
+        // Store defeat info for announcement (before clearing boss state)
+        String bossName = isNormalBoss
+                ? (state.getCurrentBoss() != null ? state.getCurrentBoss().getName() : "Unknown Boss")
+                : (state.getCurrentSuperBoss() != null ? state.getCurrentSuperBoss().getName() : "Unknown Super Boss");
+
+        // Get all participants
+        Map<String, Integer> allParticipants = damageTracking.get(guildId);
+
+        // Store defeat info for announcement
+        recentDefeats.put(guildId, new DefeatInfo(
+                bossName,
+                isNormalBoss,
+                lastHitterId,
+                lastHitterName,
+                allParticipants != null ? new LinkedHashMap<>(allParticipants) : new LinkedHashMap<>(),
+                new LinkedHashMap<>(xpRewards),
+                bossLevel
+        ));
+
         // Clear damage tracking and class participation
         damageTracking.remove(guildId);
         classParticipation.remove(guildId);
+    }
+
+    /**
+     * Gets and removes recent defeat info for a guild (for announcement).
+     *
+     * @param guildId the guild ID
+     * @return defeat info, or null if none
+     */
+    public DefeatInfo getAndClearRecentDefeat(String guildId) {
+        return recentDefeats.remove(guildId);
     }
 
     /**
@@ -513,6 +885,47 @@ public class BossService {
                 inventory.addEssence(essence, 1);
             }
         }
+    }
+
+    /**
+     * Distributes special rewards for secret boss defeat.
+     * Better rewards than normal or super bosses:
+     * - Guaranteed 1 catalyst
+     * - 2-4 essences (random)
+     * - Bonus XP: 200 + (bossLevel * 50)
+     * - 10% chance for additional rare catalyst
+     *
+     * @param character the character receiving rewards
+     * @param bossLevel the level of the defeated secret boss
+     */
+    private void distributeSecretBossRewards(RPGCharacter character, int bossLevel) {
+        RPGInventory inventory = character.getInventory();
+
+        // Guaranteed catalyst
+        CatalystType catalyst = getRandomCatalyst();
+        inventory.addCatalyst(catalyst, 1);
+
+        // 2-4 essences (better than super boss)
+        int essenceCount = random.nextInt(3) + 2; // 2-4 essences
+        for (int i = 0; i < essenceCount; i++) {
+            EssenceType essence = getRandomEssence();
+            inventory.addEssence(essence, 1);
+        }
+
+        // 10% chance for additional rare catalyst
+        boolean rareCatalystGranted = random.nextDouble() < 0.10;
+        if (rareCatalystGranted) {
+            CatalystType rareCatalyst = getRandomCatalyst();
+            inventory.addCatalyst(rareCatalyst, 1);
+        }
+
+        // Grant bonus XP: 200 + (bossLevel * 50)
+        int bonusXp = 200 + (bossLevel * 50);
+        character.addXp(bonusXp, loreRecognitionService);
+
+        int totalCatalysts = rareCatalystGranted ? 2 : 1;
+        logger.info("Granted secret boss rewards to {}: {} catalyst(s), {} essences, {} XP",
+                character.getName(), totalCatalysts, essenceCount, bonusXp);
     }
 
     /**
@@ -696,8 +1109,11 @@ public class BossService {
         private int normalBossesDefeated = 0;
         private int superBossesDefeated = 0;
         private int normalBossesSinceSuper = 0;
+        // Secret bosses per player (userId -> Boss)
+        private final Map<String, Boss> secretBosses = new ConcurrentHashMap<>();
         private Boss currentBoss;
         private SuperBoss currentSuperBoss;
+        private int consecutiveFailures = 0; // Track consecutive boss failures for empowerment
 
         // Getters and setters
 
@@ -756,6 +1172,106 @@ public class BossService {
         public void setCurrentSuperBoss(SuperBoss currentSuperBoss) {
             this.currentSuperBoss = currentSuperBoss;
         }
+
+        public int getConsecutiveFailures() {
+            return consecutiveFailures;
+        }
+
+        public void setConsecutiveFailures(int consecutiveFailures) {
+            this.consecutiveFailures = consecutiveFailures;
+        }
+
+        public void incrementConsecutiveFailures() {
+            this.consecutiveFailures++;
+        }
+
+        public void resetConsecutiveFailures() {
+            this.consecutiveFailures = 0;
+        }
+
+        /**
+         * Gets the secret boss for a specific user.
+         *
+         * @param userId the user ID
+         * @return the secret boss, or null if none
+         */
+        public Boss getSecretBoss(String userId) {
+            return secretBosses.get(userId);
+        }
+
+        /**
+         * Sets a secret boss for a specific user.
+         *
+         * @param userId the user ID
+         * @param boss   the secret boss
+         */
+        public void setSecretBoss(String userId, Boss boss) {
+            if (boss == null) {
+                secretBosses.remove(userId);
+            } else {
+                secretBosses.put(userId, boss);
+            }
+        }
+
+        /**
+         * Removes a secret boss for a specific user.
+         *
+         * @param userId the user ID
+         */
+        public void removeSecretBoss(String userId) {
+            secretBosses.remove(userId);
+        }
+    }
+
+    /**
+     * Information about a recent boss defeat for announcement purposes.
+     */
+    public static class DefeatInfo {
+        private final String bossName;
+        private final boolean isNormalBoss;
+        private final String lastHitterId;
+        private final String lastHitterName;
+        private final Map<String, Integer> participants; // userId -> damage
+        private final Map<String, Integer> xpRewards; // userId -> XP awarded
+        private final int bossLevel;
+
+        public DefeatInfo(String bossName, boolean isNormalBoss, String lastHitterId, String lastHitterName,
+                          Map<String, Integer> participants, Map<String, Integer> xpRewards, int bossLevel) {
+            this.bossName = bossName;
+            this.isNormalBoss = isNormalBoss;
+            this.lastHitterId = lastHitterId;
+            this.lastHitterName = lastHitterName;
+            this.participants = participants;
+            this.xpRewards = xpRewards;
+            this.bossLevel = bossLevel;
+        }
+
+        public String getBossName() {
+            return bossName;
+        }
+
+        public boolean isNormalBoss() {
+            return isNormalBoss;
+        }
+
+        public String getLastHitterId() {
+            return lastHitterId;
+        }
+
+        public String getLastHitterName() {
+            return lastHitterName;
+        }
+
+        public Map<String, Integer> getParticipants() {
+            return participants;
+        }
+
+        public Map<String, Integer> getXpRewards() {
+            return xpRewards;
+        }
+
+        public int getBossLevel() {
+            return bossLevel; }
     }
 }
 
