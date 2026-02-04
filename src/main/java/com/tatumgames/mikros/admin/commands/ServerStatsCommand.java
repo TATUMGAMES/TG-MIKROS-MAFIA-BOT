@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.slf4j.Logger;
@@ -44,8 +45,7 @@ public class ServerStatsCommand implements CommandHandler {
         return Commands.slash("server-stats", "View server activity statistics")
                 .setGuildOnly(true)
                 .setDefaultPermissions(
-                        net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(
-                                Permission.MODERATE_MEMBERS));
+                        DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS));
     }
 
     @Override

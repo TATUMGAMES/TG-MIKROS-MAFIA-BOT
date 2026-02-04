@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -46,9 +47,7 @@ public class BanCommand implements CommandHandler {
                 .addOption(
                         OptionType.INTEGER, "delete_days", "Number of days of messages to delete (0-7)", false)
                 .setGuildOnly(true)
-                .setDefaultPermissions(
-                        net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(
-                                Permission.BAN_MEMBERS));
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS));
     }
 
     @Override

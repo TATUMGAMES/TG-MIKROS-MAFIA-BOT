@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -44,8 +45,7 @@ public class KickCommand implements CommandHandler {
                 .addOption(OptionType.STRING, "reason", "The reason for the kick", true)
                 .setGuildOnly(true)
                 .setDefaultPermissions(
-                        net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(
-                                Permission.KICK_MEMBERS));
+                        DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS));
     }
 
     @Override
@@ -86,6 +86,7 @@ public class KickCommand implements CommandHandler {
         }
 
         // Create and log the moderation action
+        assert targetUser != null;
         ModerationAction action =
                 new ModerationAction(
                         targetUser.getId(),
@@ -115,7 +116,7 @@ public class KickCommand implements CommandHandler {
                                             User: %s
                                             Reason: %s
                                             Moderator: %s
-                                                    """,
+                                                   \s""",
                                             targetUser.getName(), reason, member.getAsMention());
                             event.getHook().sendMessage(message).queue();
 

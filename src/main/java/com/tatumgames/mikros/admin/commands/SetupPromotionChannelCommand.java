@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -43,9 +44,7 @@ public class SetupPromotionChannelCommand implements CommandHandler {
                         "admin-promotion-setup", "Configure the promotion channel for your server")
                 .addOption(OptionType.CHANNEL, "channel", "The channel to post promotions in", true)
                 .setGuildOnly(true)
-                .setDefaultPermissions(
-                        net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(
-                                Permission.ADMINISTRATOR));
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
 
     @Override

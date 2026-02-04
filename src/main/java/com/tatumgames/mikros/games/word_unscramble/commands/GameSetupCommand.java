@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -51,9 +52,7 @@ public class GameSetupCommand implements CommandHandler {
                 .addOption(
                         OptionType.INTEGER, "reset_hour", "Daily reset hour (0-23 UTC, default: 0)", false)
                 .setGuildOnly(true)
-                .setDefaultPermissions(
-                        net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(
-                                Permission.ADMINISTRATOR));
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
 
     @Override
