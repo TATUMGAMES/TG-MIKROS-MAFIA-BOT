@@ -334,6 +334,22 @@ public class ExploreAction implements CharacterAction {
         character.recordActionType("explore");
         character.incrementExploreCount();
 
+        // Increment biome exploration counter and check for advancement
+        BiomeType currentBiome = character.getCurrentBiome();
+        boolean biomeAdvanced = character.incrementExplorationsInBiome();
+
+        if (biomeAdvanced) {
+            BiomeType nextBiome = character.getCurrentBiome();
+            String advancementMessage =
+                    String.format(
+                            "\n\nAfter many explorations in the %s, %s. You have advanced to the **%s %s**!",
+                            currentBiome.getDisplayName(),
+                            nextBiome.getAdvancementNarrative(),
+                            nextBiome.getEmoji(),
+                            nextBiome.getDisplayName());
+            outcomeBuilder.narrative(outcomeBuilder.build().narrative() + advancementMessage);
+        }
+
         return outcomeBuilder.build();
     }
 
@@ -1258,8 +1274,11 @@ public class ExploreAction implements CharacterAction {
             BiomeType nextBiome = character.getCurrentBiome();
             narrative +=
                     String.format(
-                            "\n\nAfter many explorations in the %s, you sense a shift in the realm... You have advanced to the **%s %s**!",
-                            currentBiome.getDisplayName(), nextBiome.getEmoji(), nextBiome.getDisplayName());
+                            "\n\nAfter many explorations in the %s, %s. You have advanced to the **%s %s**!",
+                            currentBiome.getDisplayName(),
+                            nextBiome.getAdvancementNarrative(),
+                            nextBiome.getEmoji(),
+                            nextBiome.getDisplayName());
         }
 
         return outcomeBuilder
@@ -1351,8 +1370,11 @@ public class ExploreAction implements CharacterAction {
             BiomeType nextBiome = character.getCurrentBiome();
             String advancementMessage =
                     String.format(
-                            "\n\nAfter many explorations in the %s, you sense a shift in the realm... You have advanced to the **%s %s**!",
-                            currentBiome.getDisplayName(), nextBiome.getEmoji(), nextBiome.getDisplayName());
+                            "\n\nAfter many explorations in the %s, %s. You have advanced to the **%s %s**!",
+                            currentBiome.getDisplayName(),
+                            nextBiome.getAdvancementNarrative(),
+                            nextBiome.getEmoji(),
+                            nextBiome.getDisplayName());
             outcomeBuilder.narrative(currentNarrative + advancementMessage);
         }
 

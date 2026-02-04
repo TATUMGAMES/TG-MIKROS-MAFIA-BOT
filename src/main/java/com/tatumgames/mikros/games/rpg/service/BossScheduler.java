@@ -39,9 +39,9 @@ public class BossScheduler {
                     **%s** (Level %d) - %s
 
                     HP: **%,d**
-                            
-                                    The shadows spread across Nilfheim… heroes, unite! We need champions to defeat this monster before **24 hours**.
-                            
+
+                    The shadows spread across Nilfheim… heroes, unite! We need champions to defeat this monster before **24 hours**.
+
                     Use `/rpg-boss-battle battle` to join the fight!
                     """,
                     """
@@ -50,9 +50,9 @@ public class BossScheduler {
                     Behold: **%s**, Level %d — %s.
 
                     HP: **%,d**
-                            
-                                    Darkness rises once more. Champions, prepare for battle! Defeat this beast before **24 hours** or the realm will suffer.
-                            
+
+                    Darkness rises once more. Champions, prepare for battle! Defeat this beast before **24 hours** or the realm will suffer.
+
                     Use `/rpg-boss-battle battle` to strike first!
                     """,
                     """
@@ -63,11 +63,11 @@ public class BossScheduler {
                     Type: **%s**
 
                     HP: **%,d**
-                            
-                                    Gather your strength, heroes. A new challenge awaits! You have **24 hours** to defeat this monster.
-                            
+
+                    Gather your strength, heroes. A new challenge awaits! You have **24 hours** to defeat this monster.
+
                     Join via `/rpg-boss-battle battle`!
-                            """);
+                    """);
     private static final List<String> SUPER_BOSS_TEMPLATES =
             List.of(
                     """
@@ -78,9 +78,9 @@ public class BossScheduler {
                     HP: **%,d**
 
                     Special: %s
-                            
-                                    This is a world-tier threat! All heroes must unite! Defeat it before **24 hours**.
-                            
+
+                    This is a world-tier threat! All heroes must unite! Defeat it before **24 hours**.
+
                     Use `/rpg-boss-battle battle` to join the fight!
                     """,
                     """
@@ -91,9 +91,9 @@ public class BossScheduler {
                     HP: **%,d**
 
                     Special Mechanic: %s
-                            
-                                    Only the strongest can stand against this monster! You have **24 hours** to save the realm.
-                            
+
+                    Only the strongest can stand against this monster! You have **24 hours** to save the realm.
+
                     Join the defense using `/rpg-boss-battle battle`!
                     """,
                     """
@@ -106,11 +106,11 @@ public class BossScheduler {
                     HP: **%,d**
 
                     Special Ability: %s
-                            
-                                    The universe trembles. Champions, this is your ultimate test! Defeat this foe before **24 hours**.
-                            
+
+                    The universe trembles. Champions, this is your ultimate test! Defeat this foe before **24 hours**.
+
                     Use `/rpg-boss-battle battle` to engage!
-                            """);
+                    """);
     private static final List<String> BOSS_WARNING_TEMPLATES =
             List.of(
                     """
