@@ -11,8 +11,8 @@ import java.util.stream.Collectors;
 
 /**
  * Manages message templates for app promotions.
- * <p>
- * Contains templates for different step types with community support and rallying messages.
+ *
+ * <p>Contains templates for different step types with community support and rallying messages.
  * Supports dynamic step counts based on campaign duration.
  */
 public class PromotionMessageTemplates {
@@ -90,13 +90,14 @@ public class PromotionMessageTemplates {
      */
     @Deprecated
     public String getTemplate(int step) {
-        PromotionStepManager.StepType stepType = switch (step) {
-            case 1 -> PromotionStepManager.StepType.INTRODUCTION;
-            case 2 -> PromotionStepManager.StepType.DEEP_DIVE;
-            case 3 -> PromotionStepManager.StepType.MULTI_GAME;
-            case 4 -> PromotionStepManager.StepType.FINAL_CHANCE;
-            default -> throw new IllegalArgumentException("Invalid step: " + step);
-        };
+        PromotionStepManager.StepType stepType =
+                switch (step) {
+                    case 1 -> PromotionStepManager.StepType.INTRODUCTION;
+                    case 2 -> PromotionStepManager.StepType.DEEP_DIVE;
+                    case 3 -> PromotionStepManager.StepType.MULTI_GAME;
+                    case 4 -> PromotionStepManager.StepType.FINAL_CHANCE;
+                    default -> throw new IllegalArgumentException("Invalid step: " + step);
+                };
         return getTemplate(stepType, null);
     }
 
@@ -108,13 +109,14 @@ public class PromotionMessageTemplates {
      * @return a template string
      */
     public String getTemplate(PromotionStepManager.StepType stepType, String campaignKey) {
-        String[] templates = switch (stepType) {
-            case INTRODUCTION -> STEP_1_TEMPLATES;
-            case DEEP_DIVE -> STEP_2_TEMPLATES;
-            case REMINDER -> REMINDER_TEMPLATES;
-            case MULTI_GAME -> STEP_3_TEMPLATES;
-            case FINAL_CHANCE -> STEP_4_TEMPLATES;
-        };
+        String[] templates =
+                switch (stepType) {
+                    case INTRODUCTION -> STEP_1_TEMPLATES;
+                    case DEEP_DIVE -> STEP_2_TEMPLATES;
+                    case REMINDER -> REMINDER_TEMPLATES;
+                    case MULTI_GAME -> STEP_3_TEMPLATES;
+                    case FINAL_CHANCE -> STEP_4_TEMPLATES;
+                };
 
         if (templates.length == 0) {
             logger.warn("No templates available for step type {}", stepType);
@@ -131,7 +133,8 @@ public class PromotionMessageTemplates {
 
             if (historySize > 0) {
                 // Remove recently used templates
-                List<String> recentTemplates = history.subList(Math.max(0, history.size() - historySize), history.size());
+                List<String> recentTemplates =
+                        history.subList(Math.max(0, history.size() - historySize), history.size());
                 availableTemplates.removeAll(recentTemplates);
             }
 
@@ -178,9 +181,10 @@ public class PromotionMessageTemplates {
 
         // Replace game list placeholder (for step 3)
         if (message.contains("<game_list>") && allApps != null && !allApps.isEmpty()) {
-            String gameList = allApps.stream()
-                    .map(appPromotion -> "**" + appPromotion.getAppName() + "**")
-                    .collect(Collectors.joining(", "));
+            String gameList =
+                    allApps.stream()
+                            .map(appPromotion -> "**" + appPromotion.getAppName() + "**")
+                            .collect(Collectors.joining(", "));
             message = message.replace("<game_list>", gameList);
         }
 
@@ -188,8 +192,8 @@ public class PromotionMessageTemplates {
     }
 
     /**
-     * Gets intent-driven CTA header text based on available CTAs.
-     * Replaces generic text with conversion-optimized language.
+     * Gets intent-driven CTA header text based on available CTAs. Replaces generic text with
+     * conversion-optimized language.
      *
      * @param ctas the CTAs object
      * @return intent-driven CTA header text
@@ -200,18 +204,14 @@ public class PromotionMessageTemplates {
 
     /**
      * Gets a random CTA (Call to Action) text.
-     * @deprecated Use getIntentDrivenCtaHeader instead for conversion-optimized text.
      *
      * @return CTA text
+     * @deprecated Use getIntentDrivenCtaHeader instead for conversion-optimized text.
      */
     @Deprecated
     public String getRandomCta() {
         String[] ctas = {
-                "Where to Get It?:",
-                "Play It Today:",
-                "Try It Out Today:",
-                "Play It Here:",
-                "Download Now:"
+                "Where to Get It?:", "Play It Today:", "Try It Out Today:", "Play It Here:", "Download Now:"
         };
         return ctas[random.nextInt(ctas.length)];
     }
@@ -231,8 +231,8 @@ public class PromotionMessageTemplates {
     }
 
     /**
-     * Gets a random social media link from available social media.
-     * Returns null if no social media available or randomly skipped (~70% chance).
+     * Gets a random social media link from available social media. Returns null if no social media
+     * available or randomly skipped (~70% chance).
      *
      * @param socialMedia the social media object
      * @return formatted social media link, or null
@@ -282,8 +282,8 @@ public class PromotionMessageTemplates {
     }
 
     /**
-     * Gets prioritized CTA links using the priority selector.
-     * Returns primary CTAs and optionally secondary CTA.
+     * Gets prioritized CTA links using the priority selector. Returns primary CTAs and optionally
+     * secondary CTA.
      *
      * @param app            the app promotion
      * @param allowSecondary whether to allow secondary CTA (30-40% chance if true)
@@ -296,18 +296,18 @@ public class PromotionMessageTemplates {
 
         AppPromotion.CTAs ctas = app.getCampaign().getEffectiveCTAs();
         List<CTAPrioritySelector.CTALink> primaryCTAs = ctaPrioritySelector.selectPrimaryCTAs(ctas);
-        CTAPrioritySelector.CTALink secondaryCTA = ctaPrioritySelector.selectSecondaryCTA(ctas, allowSecondary);
+        CTAPrioritySelector.CTALink secondaryCTA =
+                ctaPrioritySelector.selectSecondaryCTA(ctas, allowSecondary);
 
         return new PrioritizedCTAs(primaryCTAs, secondaryCTA);
     }
 
     /**
-     * Gets a list of available CTA links from the app's campaign.
-     * Filters out placeholder URLs.
-     * @deprecated Use getPrioritizedCTAs instead for conversion-optimized selection.
+     * Gets a list of available CTA links from the app's campaign. Filters out placeholder URLs.
      *
      * @param app the app promotion
      * @return list of formatted CTA links
+     * @deprecated Use getPrioritizedCTAs instead for conversion-optimized selection.
      */
     @Deprecated
     public List<String> getAvailableCtas(AppPromotion app) {
@@ -343,9 +343,32 @@ public class PromotionMessageTemplates {
             available.add(formatCtaLink("Other", ctas.getOther()));
         }
 
-        return available.stream()
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        return available.stream().filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    /**
+     * Determines if the MIKROS Marketing footer should be shown for a given step. Always shows on
+     * step 4 (final step) and step 3 (multi-game). Shows randomly (~35% chance) on steps 1 and 2.
+     *
+     * @param step the promotion step (1-4)
+     * @return true if footer should be shown
+     */
+    public boolean shouldShowMikrosFooter(int step) {
+        // Always show on step 3 (multi-game) and step 4 (final step)
+        if (step == 3 || step == 4) {
+            return true;
+        }
+        // 35% chance on steps 1 and 2
+        return random.nextInt(100) < 35;
+    }
+
+    /**
+     * Gets a random MIKROS Marketing footer message.
+     *
+     * @return a random footer message
+     */
+    public String getRandomMikrosFooter() {
+        return MIKROS_FOOTER_MESSAGES[random.nextInt(MIKROS_FOOTER_MESSAGES.length)];
     }
 
     /**
@@ -355,7 +378,8 @@ public class PromotionMessageTemplates {
         private final List<CTAPrioritySelector.CTALink> primaryCTAs;
         private final CTAPrioritySelector.CTALink secondaryCTA;
 
-        public PrioritizedCTAs(List<CTAPrioritySelector.CTALink> primaryCTAs, CTAPrioritySelector.CTALink secondaryCTA) {
+        public PrioritizedCTAs(
+                List<CTAPrioritySelector.CTALink> primaryCTAs, CTAPrioritySelector.CTALink secondaryCTA) {
             this.primaryCTAs = primaryCTAs != null ? primaryCTAs : List.of();
             this.secondaryCTA = secondaryCTA;
         }
@@ -372,31 +396,4 @@ public class PromotionMessageTemplates {
             return !primaryCTAs.isEmpty() || secondaryCTA != null;
         }
     }
-
-    /**
-     * Gets a random MIKROS Marketing footer message.
-     *
-     * @return a random footer message
-     */
-    public String getRandomMikrosFooter() {
-        return MIKROS_FOOTER_MESSAGES[random.nextInt(MIKROS_FOOTER_MESSAGES.length)];
-    }
-
-    /**
-     * Determines if the MIKROS Marketing footer should be shown for a given step.
-     * Always shows on step 4 (final step) and step 3 (multi-game).
-     * Shows randomly (~35% chance) on steps 1 and 2.
-     *
-     * @param step the promotion step (1-4)
-     * @return true if footer should be shown
-     */
-    public boolean shouldShowMikrosFooter(int step) {
-        // Always show on step 3 (multi-game) and step 4 (final step)
-        if (step == 3 || step == 4) {
-            return true;
-        }
-        // 35% chance on steps 1 and 2
-        return random.nextInt(100) < 35;
-    }
 }
-

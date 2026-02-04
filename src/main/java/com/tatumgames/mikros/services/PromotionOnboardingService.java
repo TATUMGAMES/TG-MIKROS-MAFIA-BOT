@@ -11,8 +11,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Service for tracking promotion channel onboarding phases per guild.
- * Tracks when bot first sees each guild and which onboarding phases have been completed.
+ * Service for tracking promotion channel onboarding phases per guild. Tracks when bot first sees
+ * each guild and which onboarding phases have been completed.
  */
 public class PromotionOnboardingService {
     private static final Logger logger = LoggerFactory.getLogger(PromotionOnboardingService.class);
@@ -31,8 +31,7 @@ public class PromotionOnboardingService {
     }
 
     /**
-     * Records when the bot first sees a guild.
-     * Only records if not already recorded (idempotent).
+     * Records when the bot first sees a guild. Only records if not already recorded (idempotent).
      *
      * @param guildId the guild ID
      */
@@ -90,10 +89,8 @@ public class PromotionOnboardingService {
     }
 
     /**
-     * Checks if a phase should be processed for a guild.
-     * A phase should be processed if:
-     * - Enough time has elapsed since first seen
-     * - The phase hasn't been completed yet
+     * Checks if a phase should be processed for a guild. A phase should be processed if: - Enough
+     * time has elapsed since first seen - The phase hasn't been completed yet
      *
      * @param guildId the guild ID
      * @param phase   the phase to check
@@ -154,11 +151,11 @@ public class PromotionOnboardingService {
      * Enum representing onboarding phases.
      */
     public enum Phase {
-        PHASE_1_SOFT_AWARENESS(1),      // 1 hour
-        PHASE_2_EXPECTATION(24),       // 24 hours
-        PHASE_3_AUTO_ASSIST(48),       // 48 hours
-        PHASE_4_PUBLIC_NUDGE(72),      // 72 hours (3 days)
-        PHASE_5_FINAL_DM(336);         // 336 hours (14 days)
+        PHASE_1_SOFT_AWARENESS(1), // 1 hour
+        PHASE_2_EXPECTATION(24), // 24 hours
+        PHASE_3_AUTO_ASSIST(48), // 48 hours
+        PHASE_4_PUBLIC_NUDGE(72), // 72 hours (3 days)
+        PHASE_5_FINAL_DM(336); // 336 hours (14 days)
 
         private final int hoursDelay;
 
@@ -171,4 +168,3 @@ public class PromotionOnboardingService {
         }
     }
 }
-
