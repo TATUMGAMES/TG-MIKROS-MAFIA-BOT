@@ -317,7 +317,7 @@ public class BotMain extends ListenerAdapter {
         registerHandler(new RPGBossBattleCommand(characterService, bossService, worldCurseService));
         registerHandler(new RPGLeaderboardCommand(characterService, config));
         registerHandler(
-                new RPGSetupCommand(characterService, bossService, bossScheduler, nilfheimEventScheduler));
+                new RPGSetupCommand(characterService, bossScheduler, nilfheimEventScheduler));
         registerHandler(new RPGConfigCommand(characterService));
         registerHandler(new RPGResetCommand(characterService, bossService));
         registerHandler(new RPGStatsCommand(characterService));

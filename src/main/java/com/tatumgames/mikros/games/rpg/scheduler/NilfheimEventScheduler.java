@@ -229,6 +229,7 @@ public class NilfheimEventScheduler {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("🌟 " + eventType.getDisplayName());
         embed.setDescription(eventType.getDescription());
+        embed.addField("Effect", eventType.getFormattedEffectDescription(), false);
         embed.setColor(Color.CYAN);
         embed.setFooter("This event will last for 12 hours");
         embed.setTimestamp(Instant.now());

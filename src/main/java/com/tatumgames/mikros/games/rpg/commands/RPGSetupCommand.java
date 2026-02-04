@@ -2,16 +2,13 @@ package com.tatumgames.mikros.games.rpg.commands;
 
 import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
-import com.tatumgames.mikros.games.rpg.model.Boss;
 import com.tatumgames.mikros.games.rpg.scheduler.NilfheimEventScheduler;
 import com.tatumgames.mikros.games.rpg.service.BossScheduler;
-import com.tatumgames.mikros.games.rpg.service.BossService;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
@@ -28,7 +25,6 @@ import org.slf4j.LoggerFactory;
 public class RPGSetupCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RPGSetupCommand.class);
     private final CharacterService characterService;
-    private final BossService bossService;
     private final BossScheduler bossScheduler;
     private final NilfheimEventScheduler nilfheimEventScheduler;
 
@@ -36,17 +32,14 @@ public class RPGSetupCommand implements CommandHandler {
      * Creates a new RPGSetupCommand handler.
      *
      * @param characterService       the character service
-     * @param bossService            the boss service
-     * @param bossScheduler          the boss scheduler (started on setup)
+     * @param bossScheduler          the boss scheduler (started on setup; spawns initial boss)
      * @param nilfheimEventScheduler the Nilfheim event scheduler (started on setup)
      */
     public RPGSetupCommand(
             CharacterService characterService,
-            BossService bossService,
             BossScheduler bossScheduler,
             NilfheimEventScheduler nilfheimEventScheduler) {
         this.characterService = characterService;
-        this.bossService = bossService;
         this.bossScheduler = bossScheduler;
         this.nilfheimEventScheduler = nilfheimEventScheduler;
     }
@@ -94,42 +87,9 @@ public class RPGSetupCommand implements CommandHandler {
         characterService.updateConfig(config);
 
         // Start schedulers (idempotent; safe to call on re-setup)
+        // BossScheduler runs immediately (delay 0) and will spawn+announce the initial boss
         bossScheduler.startIfNeeded(event.getJDA());
         nilfheimEventScheduler.startIfNeeded(event.getJDA());
-
-        // Spawn initial boss immediately
-        Boss boss = bossService.spawnNormalBoss(guildId);
-        if (boss != null && channel instanceof TextChannel textChannel) {
-            // Announce the boss in the configured channel
-            String announcement =
-                    String.format(
-                            """
-                            🐲 **A New Boss Has Appeared!** 🐲
-
-                            **%s** (Level %d) - %s
-
-                            HP: **%,d**
-
-                            The shadows spread across Nilfheim… heroes, unite!
-
-                            Use `/rpg-boss-battle battle` to join the fight!
-                                    """,
-                            boss.getName(), boss.getLevel(), boss.getType().getDisplayName(), boss.getMaxHp());
-
-            textChannel
-                    .sendMessage(announcement)
-                    .queue(
-                            success ->
-                                    logger.info(
-                                            "RPG setup: Spawned and announced initial boss {} for guild {}",
-                                            boss.getName(),
-                                            guildId),
-                            failure ->
-                                    logger.error(
-                                            "RPG setup: Failed to announce initial boss for guild {}", guildId, failure));
-        } else if (boss == null) {
-            logger.warn("RPG setup: Failed to spawn initial boss for guild {}", guildId);
-        }
 
         // Send confirmation
         event
@@ -144,23 +104,21 @@ public class RPGSetupCommand implements CommandHandler {
                         **XP Multiplier:** 1.0x (default)
                                         
                         ⚔️ The RPG system is now active!
-                        %s
+                        🐲 **A boss will spawn in the channel shortly!**
                                         
                         **Next Steps:**
                         • Use `/admin-rpg-config` to customize settings
                         • Players can register with `/rpg-register`
-                                        • Bosses spawn every 48 hours (24h livable + 24h cooldown)
+                        • Bosses spawn every 48 hours (24h livable + 24h cooldown)
                         """,
-                                channel.getAsMention(),
-                                boss != null ? "\n🐲 **A boss has spawned in the channel!**" : ""))
+                                channel.getAsMention()))
                 .queue();
 
         logger.info(
-                "RPG setup for guild {} by user {}: channel={}, bossSpawned={}",
+                "RPG setup for guild {} by user {}: channel={}",
                 guildId,
                 member.getId(),
-                channel.getId(),
-                boss != null);
+                channel.getId());
     }
 
     @Override

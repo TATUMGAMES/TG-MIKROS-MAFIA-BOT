@@ -95,6 +95,28 @@ public enum NilfheimEventType {
     }
 
     /**
+     * Returns a human-readable effect description for announcements, including duration.
+     *
+     * @return formatted effect string (e.g. "+15% catalyst drop chance on Explore actions for 12
+     *     hours")
+     */
+    public String getFormattedEffectDescription() {
+        return switch (effectType) {
+            case EXPLORE_DROP_BOOST ->
+                    "+" + (int) (effectValue * 100) + "% essence drop chance on Explore actions for 12 hours.";
+            case BATTLE_DAMAGE_BOOST ->
+                    "+" + (int) (effectValue * 100) + "% damage on Battle actions for 12 hours.";
+            case TRAIN_STAT_BOOST ->
+                    "+" + (int) effectValue + " guaranteed stat point on next Train for 12 hours.";
+            case BOSS_DAMAGE_BOOST ->
+                    "+" + (int) (effectValue * 100) + "% damage to bosses for 12 hours.";
+            case EXPLORE_CATALYST_BOOST ->
+                    "+" + (int) (effectValue * 100) + "% catalyst drop chance on Explore actions for 12 hours.";
+            case ALL_XP_BOOST -> "+" + (int) (effectValue * 100) + "% XP on all actions for 12 hours.";
+        };
+    }
+
+    /**
      * Enum representing the type of effect an event has.
      */
     public enum EventEffectType {

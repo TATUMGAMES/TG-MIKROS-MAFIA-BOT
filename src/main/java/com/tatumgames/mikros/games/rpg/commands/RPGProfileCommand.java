@@ -209,7 +209,7 @@ public class RPGProfileCommand implements CommandHandler {
         int explorationsInBiome = character.getExplorationsInCurrentBiome();
         String biomeStatus =
                 String.format(
-                        "%s **%s**\n\n%d/10 explorations\n\nAdvance to next biome after 10 explorations",
+                        "%s **%s**\n\n%d/10 explorations\nAdvance to next biome after 10 explorations",
                         currentBiome.getEmoji(), currentBiome.getDisplayName(), explorationsInBiome);
         embed.addField("🗺️ Current Biome", biomeStatus, true);
 
