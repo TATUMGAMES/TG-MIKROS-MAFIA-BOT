@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Tracks used words per guild and level to prevent repetition.
- * Used for levels 1-5 to ensure words don't repeat for a certain period (default: 2 months).
+ * Tracks used words per guild and level to prevent repetition. Used for levels 1-5 to ensure words
+ * don't repeat for a certain period (default: 2 months).
  */
 public class WordUnscrambleUsedWordTracker {
     private static final Logger logger = LoggerFactory.getLogger(WordUnscrambleUsedWordTracker.class);
@@ -41,7 +41,8 @@ public class WordUnscrambleUsedWordTracker {
             return;
         }
 
-        usedWords.computeIfAbsent(guildId, k -> new ConcurrentHashMap<>())
+        usedWords
+                .computeIfAbsent(guildId, k -> new ConcurrentHashMap<>())
                 .computeIfAbsent(level, k -> new ConcurrentHashMap<>())
                 .put(word, Instant.now());
 
@@ -131,8 +132,8 @@ public class WordUnscrambleUsedWordTracker {
     }
 
     /**
-     * Cleans up old entries (words older than reuse period).
-     * Should be called periodically to prevent memory bloat.
+     * Cleans up old entries (words older than reuse period). Should be called periodically to prevent
+     * memory bloat.
      *
      * @param guildId the guild ID (null to clean all guilds)
      */
@@ -141,8 +142,8 @@ public class WordUnscrambleUsedWordTracker {
     }
 
     /**
-     * Cleans up entries with lastUsed before the given cutoff.
-     * Useful for testing (e.g. pass Instant.now() to remove all entries).
+     * Cleans up entries with lastUsed before the given cutoff. Useful for testing (e.g. pass
+     * Instant.now() to remove all entries).
      *
      * @param guildId the guild ID (null to clean all guilds)
      * @param cutoff  entries with lastUsed before this time are removed

@@ -3,8 +3,8 @@ package com.tatumgames.mikros.games.word_unscramble.model;
 import java.util.Objects;
 
 /**
- * Tracks individual player statistics for Word Unscramble game per guild.
- * Stores cumulative stats across all game sessions.
+ * Tracks individual player statistics for Word Unscramble game per guild. Stores cumulative stats
+ * across all game sessions.
  */
 public class WordUnscramblePlayerStats {
     private final String userId;
@@ -49,9 +49,15 @@ public class WordUnscramblePlayerStats {
      * @param totalAttempts      total guesses (correct + incorrect)
      * @param wrongGuesses       total incorrect attempts
      */
-    public WordUnscramblePlayerStats(String userId, String guildId, int totalWordsSolved,
-                                     int totalPoints, int highestScore, long fastestTimeSeconds,
-                                     int totalAttempts, int wrongGuesses) {
+    public WordUnscramblePlayerStats(
+            String userId,
+            String guildId,
+            int totalWordsSolved,
+            int totalPoints,
+            int highestScore,
+            long fastestTimeSeconds,
+            int totalAttempts,
+            int wrongGuesses) {
         this.userId = Objects.requireNonNull(userId);
         this.guildId = Objects.requireNonNull(guildId);
         this.totalWordsSolved = totalWordsSolved;
@@ -167,4 +173,3 @@ public class WordUnscramblePlayerStats {
         return wrongGuesses;
     }
 }
-
