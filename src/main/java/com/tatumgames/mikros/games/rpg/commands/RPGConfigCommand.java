@@ -1,15 +1,16 @@
 package com.tatumgames.mikros.games.rpg.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -22,8 +23,8 @@ import java.awt.*;
 import java.time.Instant;
 
 /**
- * Command handler for /admin-rpg-config.
- * Allows administrators to configure RPG settings for their server.
+ * Command handler for /admin-rpg-config. Allows administrators to configure RPG settings for their
+ * server.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class RPGConfigCommand implements CommandHandler {
@@ -47,16 +48,17 @@ public class RPGConfigCommand implements CommandHandler {
                         new SubcommandData("toggle", "Enable or disable RPG system")
                                 .addOption(OptionType.BOOLEAN, "enabled", "Enable RPG?", true),
                         new SubcommandData("update-channel", "Update RPG-specific channel")
-                                .addOption(OptionType.CHANNEL, "channel", "RPG channel (or leave empty for any)", false),
+                                .addOption(
+                                        OptionType.CHANNEL, "channel", "RPG channel (or leave empty for any)", false),
                         new SubcommandData("set-charge-refresh", "Set charge refresh period in hours")
-                                .addOption(OptionType.INTEGER, "hours", "Charge refresh period in hours (1-168)", true),
+                                .addOption(
+                                        OptionType.INTEGER, "hours", "Charge refresh period in hours (1-168)", true),
                         new SubcommandData("set-xp-multiplier", "Set XP gain multiplier")
                                 .addOption(OptionType.NUMBER, "multiplier", "XP multiplier (0.1-10.0)", true),
                         new SubcommandData("set-allow-no-role", "Allow or disallow users without roles to play")
-                                .addOption(OptionType.BOOLEAN, "enabled", "Allow users without roles?", true)
-                )
+                                .addOption(OptionType.BOOLEAN, "enabled", "Allow users without roles?", true))
                 .setGuildOnly(true)
-                .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
 
     @Override
@@ -65,11 +67,8 @@ public class RPGConfigCommand implements CommandHandler {
         Member member = event.getMember();
         Guild guild = event.getGuild();
 
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ You must be an administrator to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("❌ You must be an administrator to use this command.").setEphemeral(true).queue();
             return;
         }
 
@@ -100,37 +99,19 @@ public class RPGConfigCommand implements CommandHandler {
         embed.setTitle("⚙️ RPG Configuration");
         embed.setColor(Color.CYAN);
 
-        embed.addField(
-                "Status",
-                config.isEnabled() ? "✅ Enabled" : "❌ Disabled",
-                true
-        );
+        embed.addField("Status", config.isEnabled() ? "✅ Enabled" : "❌ Disabled", true);
 
         embed.addField(
                 "RPG Channel",
-                config.getRpgChannelId() != null
-                        ? "<#" + config.getRpgChannelId() + ">"
-                        : "Any channel",
-                true
-        );
+                config.getRpgChannelId() != null ? "<#" + config.getRpgChannelId() + ">" : "Any channel",
+                true);
+
+        embed.addField("Charge Refresh Period", config.getChargeRefreshHours() + " hours", true);
+
+        embed.addField("XP Multiplier", String.format("%.1fx", config.getXpMultiplier()), true);
 
         embed.addField(
-                "Charge Refresh Period",
-                config.getChargeRefreshHours() + " hours",
-                true
-        );
-
-        embed.addField(
-                "XP Multiplier",
-                String.format("%.1fx", config.getXpMultiplier()),
-                true
-        );
-
-        embed.addField(
-                "Allow No-Role Users",
-                config.isAllowNoRoleUsers() ? "✅ Enabled" : "❌ Disabled",
-                true
-        );
+                "Allow No-Role Users", config.isAllowNoRoleUsers() ? "✅ Enabled" : "❌ Disabled", true);
 
         embed.setTimestamp(Instant.now());
 
@@ -145,10 +126,7 @@ public class RPGConfigCommand implements CommandHandler {
         config.setEnabled(enabled);
         characterService.updateConfig(config);
 
-        event.reply(String.format(
-                "✅ RPG system %s",
-                enabled ? "**enabled**" : "**disabled**"
-        )).queue();
+        event.reply(String.format("✅ RPG system %s", enabled ? "**enabled**" : "**disabled**")).queue();
 
         logger.info("RPG {} for guild {}", enabled ? "enabled" : "disabled", guildId);
     }
@@ -158,7 +136,8 @@ public class RPGConfigCommand implements CommandHandler {
 
         // Check if RPG system was set up first (channel must be set)
         if (config.getRpgChannelId() == null) {
-            event.reply("❌ RPG system not set up yet. Use `/admin-rpg-setup` first.")
+            event
+                    .reply("❌ RPG system not set up yet. Use `/admin-rpg-setup` first.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -180,10 +159,7 @@ public class RPGConfigCommand implements CommandHandler {
         config.setRpgChannelId(channel.getId());
         characterService.updateConfig(config);
 
-        event.reply(String.format(
-                "✅ RPG channel updated to %s",
-                channel.getAsMention()
-        )).queue();
+        event.reply(String.format("✅ RPG channel updated to %s", channel.getAsMention())).queue();
 
         logger.info("RPG channel updated to {} for guild {}", channel.getId(), guildId);
     }
@@ -199,7 +175,8 @@ public class RPGConfigCommand implements CommandHandler {
         int hours = hoursOption.getAsInt();
 
         if (hours < 1 || hours > 168) {
-            event.reply("❌ Charge refresh period must be between 1 and 168 hours (1 week)")
+            event
+                    .reply("❌ Charge refresh period must be between 1 and 168 hours (1 week)")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -208,10 +185,7 @@ public class RPGConfigCommand implements CommandHandler {
         config.setChargeRefreshHours(hours);
         characterService.updateConfig(config);
 
-        event.reply(String.format(
-                "✅ Charge refresh period set to **%d hours**",
-                hours
-        )).queue();
+        event.reply(String.format("✅ Charge refresh period set to **%d hours**", hours)).queue();
 
         logger.info("RPG charge refresh period set to {} hours for guild {}", hours, guildId);
     }
@@ -222,19 +196,14 @@ public class RPGConfigCommand implements CommandHandler {
         double multiplier = (multiplierOption != null) ? multiplierOption.getAsDouble() : 1.0;
 
         if (multiplier < 0.1 || multiplier > 10.0) {
-            event.reply("❌ XP multiplier must be between 0.1 and 10.0")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ XP multiplier must be between 0.1 and 10.0").setEphemeral(true).queue();
             return;
         }
 
         config.setXpMultiplier(multiplier);
         characterService.updateConfig(config);
 
-        event.reply(String.format(
-                "✅ XP multiplier set to **%.1fx**",
-                multiplier
-        )).queue();
+        event.reply(String.format("✅ XP multiplier set to **%.1fx**", multiplier)).queue();
 
         logger.info("RPG XP multiplier set to {}x for guild {}", multiplier, guildId);
     }
@@ -247,10 +216,12 @@ public class RPGConfigCommand implements CommandHandler {
         config.setAllowNoRoleUsers(enabled);
         characterService.updateConfig(config);
 
-        event.reply(String.format(
+        event
+                .reply(
+                        String.format(
                 "✅ Users without roles are now **%s** to play RPG games.",
-                enabled ? "allowed" : "not allowed"
-        )).queue();
+                                enabled ? "allowed" : "not allowed"))
+                .queue();
 
         logger.info("RPG allowNoRoleUsers set to {} for guild {}", enabled, guildId);
     }
@@ -260,4 +231,3 @@ public class RPGConfigCommand implements CommandHandler {
         return "admin-rpg-config";
     }
 }
-

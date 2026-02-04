@@ -4,24 +4,46 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Manages lists of suspicious domains and TLDs.
- * Includes static lists and dynamic domain tracking.
+ * Manages lists of suspicious domains and TLDs. Includes static lists and dynamic domain tracking.
  */
 public class SuspiciousDomainList {
     private static final SuspiciousDomainList INSTANCE = new SuspiciousDomainList();
 
     // Static list of suspicious TLDs
-    private static final Set<String> SUSPICIOUS_TLDS = Set.of(
-            ".ru", ".xyz", ".top", ".click", ".tk", ".ml", ".ga", ".cf",
-            ".gq", ".pw", ".bid", ".download", ".stream", ".review"
-    );
+    private static final Set<String> SUSPICIOUS_TLDS =
+            Set.of(
+                    ".ru",
+                    ".xyz",
+                    ".top",
+                    ".click",
+                    ".tk",
+                    ".ml",
+                    ".ga",
+                    ".cf",
+                    ".gq",
+                    ".pw",
+                    ".bid",
+                    ".download",
+                    ".stream",
+                    ".review");
 
     // Static list of known URL shorteners
-    private static final Set<String> URL_SHORTENERS = Set.of(
-            "bit.ly", "tinyurl.com", "goo.gl", "t.co", "short.link",
-            "goo.su", "tiny.cc", "is.gd", "ow.ly", "buff.ly", "rebrand.ly",
-            "shorturl.at", "cutt.ly", "v.gd"
-    );
+    private static final Set<String> URL_SHORTENERS =
+            Set.of(
+                    "bit.ly",
+                    "tinyurl.com",
+                    "goo.gl",
+                    "t.co",
+                    "short.link",
+                    "goo.su",
+                    "tiny.cc",
+                    "is.gd",
+                    "ow.ly",
+                    "buff.ly",
+                    "rebrand.ly",
+                    "shorturl.at",
+                    "cutt.ly",
+                    "v.gd");
 
     // Dynamic domain risk scoring: domain -> risk score
     private final ConcurrentHashMap<String, Integer> domainRiskScores;
@@ -64,8 +86,8 @@ public class SuspiciousDomainList {
             return false;
         }
         String lowerDomain = domain.toLowerCase();
-        return URL_SHORTENERS.contains(lowerDomain) ||
-                URL_SHORTENERS.stream().anyMatch(lowerDomain::contains);
+        return URL_SHORTENERS.contains(lowerDomain)
+                || URL_SHORTENERS.stream().anyMatch(lowerDomain::contains);
     }
 
     /**
@@ -103,9 +125,7 @@ public class SuspiciousDomainList {
         if (domain == null || domain.isBlank()) {
             return false;
         }
-        return isSuspiciousTld(domain) ||
-                isUrlShortener(domain) ||
-                getDomainRiskScore(domain) >= 3;
+        return isSuspiciousTld(domain) || isUrlShortener(domain) || getDomainRiskScore(domain) >= 3;
     }
 
     /**
@@ -119,4 +139,3 @@ public class SuspiciousDomainList {
         }
     }
 }
-

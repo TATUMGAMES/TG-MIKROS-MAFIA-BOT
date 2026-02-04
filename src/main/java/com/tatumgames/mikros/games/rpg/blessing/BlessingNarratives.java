@@ -3,8 +3,8 @@ package com.tatumgames.mikros.games.rpg.blessing;
 import java.util.Random;
 
 /**
- * Utility class providing narrative templates for blessing announcements.
- * Provides variety in storytelling to keep the world immersive.
+ * Utility class providing narrative templates for blessing announcements. Provides variety in
+ * storytelling to keep the world immersive.
  */
 public class BlessingNarratives {
     private static final Random random = new Random();

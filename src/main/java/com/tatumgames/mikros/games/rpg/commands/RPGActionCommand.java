@@ -1,6 +1,5 @@
 package com.tatumgames.mikros.games.rpg.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.games.rpg.achievements.AchievementType;
 import com.tatumgames.mikros.games.rpg.actions.CharacterAction;
@@ -12,6 +11,7 @@ import com.tatumgames.mikros.games.rpg.service.AchievementService;
 import com.tatumgames.mikros.games.rpg.service.ActionService;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -28,8 +28,8 @@ import java.time.Duration;
 import java.time.Instant;
 
 /**
- * Command handler for /rpg-action.
- * Allows players to perform daily actions (explore, train, battle).
+ * Command handler for /rpg-action. Allows players to perform daily actions (explore, train,
+ * battle).
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class RPGActionCommand implements CommandHandler {
@@ -47,7 +47,11 @@ public class RPGActionCommand implements CommandHandler {
      * @param achievementService the achievement service for checking first-to achievements
      * @param worldCurseService  the world curse service for tracking cursed world participation
      */
-    public RPGActionCommand(CharacterService characterService, ActionService actionService, AchievementService achievementService, WorldCurseService worldCurseService) {
+    public RPGActionCommand(
+            CharacterService characterService,
+            ActionService actionService,
+            AchievementService achievementService,
+            WorldCurseService worldCurseService) {
         this.characterService = characterService;
         this.actionService = actionService;
         this.achievementService = achievementService;
@@ -56,8 +60,10 @@ public class RPGActionCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("rpg-action", "Perform an action with your character (3 charges, refresh every 12h)")
-                .addOption(OptionType.STRING, "type", "Action type (explore, train, battle, rest, donate)", true);
+        return Commands.slash(
+                        "rpg-action", "Perform an action with your character (3 charges, refresh every 12h)")
+                .addOption(
+                        OptionType.STRING, "type", "Action type (explore, train, battle, rest, donate)", true);
     }
 
     @Override
@@ -65,17 +71,13 @@ public class RPGActionCommand implements CommandHandler {
         Guild guild = event.getGuild();
 
         if (guild == null) {
-            event.reply("❌ This command can only be used in a server.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ This command can only be used in a server.").setEphemeral(true).queue();
             return;
         }
 
         Member member = event.getMember();
         if (member == null) {
-            event.reply("❌ Unable to get member information.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ Unable to get member information.").setEphemeral(true).queue();
             return;
         }
 
@@ -85,9 +87,21 @@ public class RPGActionCommand implements CommandHandler {
         // Get guild config
         RPGConfig config = characterService.getConfig(guildId);
 
+        // Require setup before RPG commands work
+        if (config.getRpgChannelId() == null) {
+            event
+                    .reply(
+                            "❌ RPG is not set up for this server. An administrator must run `/admin-rpg-setup` first.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
         // Check role requirement
         if (config != null && !AdminUtils.canUserPlay(member, config.isAllowNoRoleUsers())) {
-            event.reply("❌ Users without roles cannot play RPG games in this server. Contact an administrator.")
+            event
+                    .reply(
+                            "❌ Users without roles cannot play RPG games in this server. Contact an administrator.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -96,7 +110,8 @@ public class RPGActionCommand implements CommandHandler {
         // Check if user has a character
         RPGCharacter character = characterService.getCharacter(userId);
         if (character == null) {
-            event.reply("❌ You don't have a character yet! Use `/rpg-register` to create one.")
+            event
+                    .reply("❌ You don't have a character yet! Use `/rpg-register` to create one.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -104,7 +119,8 @@ public class RPGActionCommand implements CommandHandler {
 
         // Check if RPG is enabled
         if (!config.isEnabled()) {
-            event.reply("❌ The RPG system is currently disabled in this server.")
+            event
+                    .reply("❌ The RPG system is currently disabled in this server.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -113,10 +129,10 @@ public class RPGActionCommand implements CommandHandler {
         // Check if in correct channel (if specified)
         if (config.getRpgChannelId() != null) {
             if (!event.getChannel().getId().equals(config.getRpgChannelId())) {
-                event.reply(String.format(
-                        "❌ RPG commands must be used in <#%s>",
-                        config.getRpgChannelId()
-                )).setEphemeral(true).queue();
+                event
+                        .reply(String.format("❌ RPG commands must be used in <#%s>", config.getRpgChannelId()))
+                        .setEphemeral(true)
+                        .queue();
                 return;
             }
         }
@@ -124,25 +140,31 @@ public class RPGActionCommand implements CommandHandler {
         // Check death/recovery status
         character.checkRecovery(); // Auto-update recovery status
         if (character.isDead()) {
-            event.reply("💀 **You are dead!** A Priest can resurrect you with `/rpg-resurrect`.")
+            event
+                    .reply("💀 **You are dead!** A Priest can resurrect you with `/rpg-resurrect`.")
                     .setEphemeral(true)
                     .queue();
             return;
         }
 
         if (character.isRecovering()) {
-            long secondsRemaining = character.getRecoverUntil().getEpochSecond() - java.time.Instant.now().getEpochSecond();
+            long secondsRemaining =
+                    character.getRecoverUntil().getEpochSecond() - java.time.Instant.now().getEpochSecond();
             Duration duration = Duration.ofSeconds(Math.max(0, secondsRemaining));
             long hours = duration.toHours();
             long minutes = duration.toMinutesPart();
 
-            event.reply(String.format("""
+            event
+                    .reply(
+                            String.format(
+                                    """
                             ⛔ **You are in Recovery**
-                            
+
                             Recovery time remaining: **%dh %dm**
-                            
+
                             You cannot take actions during recovery. A Priest can resurrect you to start recovery.
-                            """, hours, minutes))
+                                            """,
+                                    hours, minutes))
                     .setEphemeral(true)
                     .queue();
             return;
@@ -172,20 +194,25 @@ public class RPGActionCommand implements CommandHandler {
             long hours = duration.toHours();
             long minutes = duration.toMinutesPart();
 
-            event.reply(String.format("""
+            event
+                    .reply(
+                            String.format(
+                                    """
                             ⏳ **No Action Charges Available**
-                            
+
                             Charges remaining: **%d/%d**
                             Required: **%d** (due to penalties)
                             Next charge refresh in: **%dh %dm**
-                            
+
                             Use this time to check `/rpg-profile` or `/rpg-leaderboard`
-                            """,
-                    character.getActionCharges(),
-                    character.getMaxActionCharges(),
-                    requiredCharges,
-                    hours, minutes
-            )).setEphemeral(true).queue();
+                                            """,
+                                    character.getActionCharges(),
+                                    character.getMaxActionCharges(),
+                                    requiredCharges,
+                                    hours,
+                                    minutes))
+                    .setEphemeral(true)
+                    .queue();
             return;
         }
 
@@ -213,7 +240,9 @@ public class RPGActionCommand implements CommandHandler {
 
         // Validate action
         if (!actionService.hasAction(actionType)) {
-            event.reply("❌ Invalid action! Choose from: **explore**, **train**, **battle**, **rest**, or **donate**")
+            event
+                    .reply(
+                            "❌ Invalid action! Choose from: **explore**, **train**, **battle**, **rest**, or **donate**")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -221,14 +250,17 @@ public class RPGActionCommand implements CommandHandler {
 
         // Track cursed world participation (Cursewalker and Bound to Death titles)
         var activeCurses = worldCurseService.getActiveCurses(config.getGuildId());
-        boolean hasMinor = activeCurses.stream().anyMatch(c -> c.getType() == WorldCurse.CurseType.MINOR);
-        boolean hasMajor = activeCurses.stream().anyMatch(c -> c.getType() == WorldCurse.CurseType.MAJOR);
+        boolean hasMinor =
+                activeCurses.stream().anyMatch(c -> c.getType() == WorldCurse.CurseType.MINOR);
+        boolean hasMajor =
+                activeCurses.stream().anyMatch(c -> c.getType() == WorldCurse.CurseType.MAJOR);
         if (hasMinor && hasMajor) {
             character.setActedDuringBothCurses(true);
         }
         // Bound to Death: Necromancer active during March of the Dead
-        if (activeCurses.contains(WorldCurse.MAJOR_MARCH_OF_THE_DEAD) &&
-                character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.NECROMANCER) {
+        if (activeCurses.contains(WorldCurse.MAJOR_MARCH_OF_THE_DEAD)
+                && character.getCharacterClass()
+                == com.tatumgames.mikros.games.rpg.model.CharacterClass.NECROMANCER) {
             character.addStoryFlag("Bound to Death"); // Track via story flag for now
         }
 
@@ -239,12 +271,12 @@ public class RPGActionCommand implements CommandHandler {
 
             // Build result embed
             EmbedBuilder embed = new EmbedBuilder();
-            embed.setTitle(String.format(
-                    "%s %s - %s",
-                    action.getActionEmoji(),
-                    capitalize(actionType),
-                    outcome.success() ? "Action Complete!" : "Action Failed"
-            ));
+            embed.setTitle(
+                    String.format(
+                            "%s %s - %s",
+                            action.getActionEmoji(),
+                            capitalize(actionType),
+                            outcome.success() ? "Action Complete!" : "Action Failed"));
 
             embed.setColor(outcome.success() ? Color.GREEN : Color.ORANGE);
 
@@ -256,9 +288,8 @@ public class RPGActionCommand implements CommandHandler {
             results.append(String.format("✨ **+%d XP**", outcome.xpGained()));
 
             if (outcome.statIncreased() != null) {
-                results.append(String.format("\n💪 **+%d %s**",
-                        outcome.statAmount(),
-                        outcome.statIncreased()));
+                results.append(
+                        String.format("\n💪 **+%d %s**", outcome.statAmount(), outcome.statIncreased()));
             }
 
             if (outcome.damageTaken() > 0) {
@@ -271,7 +302,8 @@ public class RPGActionCommand implements CommandHandler {
 
             // Display concise kill count for battle victories
             if (actionType.equals("battle") && outcome.success()) {
-                results.append(String.format("\n💀 Enemies Defeated: %d", character.getEnemiesKilled()));
+                results.append(
+                        String.format("\n💀 History of Defeated Enemies: %d", character.getEnemiesKilled()));
             }
 
             if (character.isDead()) {
@@ -280,8 +312,7 @@ public class RPGActionCommand implements CommandHandler {
 
             if (outcome.leveledUp()) {
                 int newLevel = character.getLevel();
-                results.append(String.format("\n\n🎉 **LEVEL UP!** You are now Level %d!",
-                        newLevel));
+                results.append(String.format("\n\n🎉 **LEVEL UP!** You are now Level %d!", newLevel));
 
                 // Check for first-to level achievements
                 checkLevelAchievements(guildId, userId, newLevel);
@@ -293,16 +324,16 @@ public class RPGActionCommand implements CommandHandler {
             if (!outcome.itemDrops().isEmpty() || !outcome.catalystDrops().isEmpty()) {
                 StringBuilder loot = new StringBuilder();
                 for (com.tatumgames.mikros.games.rpg.model.ItemDrop drop : outcome.itemDrops()) {
-                    loot.append(String.format("%s %s ×%d\n",
-                            drop.essence().getEmoji(),
-                            drop.essence().getDisplayName(),
-                            drop.count()));
+                    loot.append(
+                            String.format(
+                                    "%s %s ×%d\n",
+                                    drop.essence().getEmoji(), drop.essence().getDisplayName(), drop.count()));
                 }
                 for (com.tatumgames.mikros.games.rpg.model.CatalystDrop drop : outcome.catalystDrops()) {
-                    loot.append(String.format("%s %s ×%d\n",
-                            drop.catalyst().getEmoji(),
-                            drop.catalyst().getDisplayName(),
-                            drop.count()));
+                    loot.append(
+                            String.format(
+                                    "%s %s ×%d\n",
+                                    drop.catalyst().getEmoji(), drop.catalyst().getDisplayName(), drop.count()));
                 }
                 embed.addField("💎 Loot Found", loot.toString().trim(), false);
             }
@@ -311,34 +342,35 @@ public class RPGActionCommand implements CommandHandler {
             embed.addField(
                     "Character Status",
                     String.format(
-                            "**Level %d** • %d/%d XP\n" +
-                                    "❤️ HP: %d/%d",
+                            "**Level %d** • %d/%d XP\n" + "❤️ HP: %d/%d",
                             character.getLevel(),
                             character.getXp(),
                             character.getXpToNextLevel(),
                             character.getStats().getCurrentHp(),
-                            character.getStats().getMaxHp()
-                    ),
-                    false
-            );
+                            character.getStats().getMaxHp()),
+                    false);
 
-            embed.setFooter(String.format(
-                    "Action Charges: %d/%d • Next refresh in %d hours",
-                    character.getActionCharges(),
-                    character.getMaxActionCharges(),
-                    refreshHours
-            ));
+            embed.setFooter(
+                    String.format(
+                            "Action Charges: %d/%d • Next refresh in %d hours",
+                            character.getActionCharges(), character.getMaxActionCharges(), refreshHours));
             embed.setTimestamp(Instant.now());
 
             // Success messages are public, failure messages are private
             event.replyEmbeds(embed.build()).setEphemeral(!outcome.success()).queue();
 
-            logger.info("User {} performed action {} with character {} - XP: +{}, Level: {}",
-                    userId, actionType, character.getName(), outcome.xpGained(), character.getLevel());
+            logger.info(
+                    "User {} performed action {} with character {} - XP: +{}, Level: {}",
+                    userId,
+                    actionType,
+                    character.getName(),
+                    outcome.xpGained(),
+                    character.getLevel());
 
         } catch (Exception e) {
             logger.error("Error executing action {} for user {}", actionType, userId, e);
-            event.reply("❌ An error occurred while performing the action. Please try again.")
+            event
+                    .reply("❌ An error occurred while performing the action. Please try again.")
                     .setEphemeral(true)
                     .queue();
         }
@@ -372,8 +404,12 @@ public class RPGActionCommand implements CommandHandler {
         if (achievementType != null) {
             boolean claimed = achievementService.checkAndClaimFirstTo(guildId, achievementType, userId);
             if (claimed) {
-                logger.info("User {} claimed first-to achievement {} at level {} in guild {}",
-                        userId, achievementType, level, guildId);
+                logger.info(
+                        "User {} claimed first-to achievement {} at level {} in guild {}",
+                        userId,
+                        achievementType,
+                        level,
+                        guildId);
                 // TODO: Announce achievement (will be handled by AchievementAnnouncementService)
             }
         }
@@ -384,4 +420,3 @@ public class RPGActionCommand implements CommandHandler {
         return "rpg-action";
     }
 }
-

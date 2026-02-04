@@ -4,8 +4,8 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * Represents a super boss in the RPG system.
- * World-tier threats with massive HP and special mechanics.
+ * Represents a super boss in the RPG system. World-tier threats with massive HP and special
+ * mechanics.
  */
 public class SuperBoss {
     private final String bossId;
@@ -33,23 +33,38 @@ public class SuperBoss {
      * @param attack          attack power
      * @param specialMechanic description of special mechanic
      */
-    public SuperBoss(String bossId, String name, BossType type, int level, int maxHp, int attack, String specialMechanic) {
+    public SuperBoss(
+            String bossId,
+            String name,
+            BossType type,
+            int level,
+            int maxHp,
+            int attack,
+            String specialMechanic) {
         this(bossId, name, type, level, maxHp, attack, specialMechanic, false);
     }
 
     /**
      * Creates a new SuperBoss with class harmony mechanic flag.
      *
-     * @param bossId          unique boss identifier
-     * @param name            boss name
-     * @param type            boss type
-     * @param level           super boss level
-     * @param maxHp           maximum HP (50,000 × level)
-     * @param attack          attack power
-     * @param specialMechanic description of special mechanic
+     * @param bossId                  unique boss identifier
+     * @param name                    boss name
+     * @param type                    boss type
+     * @param level                   super boss level
+     * @param maxHp                   maximum HP (50,000 × level)
+     * @param attack                  attack power
+     * @param specialMechanic         description of special mechanic
      * @param hasClassHarmonyMechanic whether this boss uses the class harmony system
      */
-    public SuperBoss(String bossId, String name, BossType type, int level, int maxHp, int attack, String specialMechanic, boolean hasClassHarmonyMechanic) {
+    public SuperBoss(
+            String bossId,
+            String name,
+            BossType type,
+            int level,
+            int maxHp,
+            int attack,
+            String specialMechanic,
+            boolean hasClassHarmonyMechanic) {
         this.bossId = Objects.requireNonNull(bossId);
         this.name = Objects.requireNonNull(name);
         this.type = Objects.requireNonNull(type);
@@ -163,4 +178,3 @@ public class SuperBoss {
         this.attack = attack;
     }
 }
-

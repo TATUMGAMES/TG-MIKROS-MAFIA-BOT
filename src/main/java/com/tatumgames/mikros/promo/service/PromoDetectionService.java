@@ -13,15 +13,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 /**
- * Service for detecting promotional triggers in messages.
- * Uses regex patterns to identify launch-related phrases.
- * <p>
- * TODO: Future Features
- * - Integrate Google Generative AI API for NLP message classification
- * - More sophisticated pattern matching
- * - Context-aware detection
- * - Sentiment analysis
- * - Multi-language support
+ * Service for detecting promotional triggers in messages. Uses regex patterns to identify
+ * launch-related phrases.
+ *
+ * <p>TODO: Future Features - Integrate Google Generative AI API for NLP message classification -
+ * More sophisticated pattern matching - Context-aware detection - Sentiment analysis -
+ * Multi-language support
  */
 public class PromoDetectionService {
     private static final Logger logger = LoggerFactory.getLogger(PromoDetectionService.class);
@@ -29,16 +26,25 @@ public class PromoDetectionService {
     // Launch-related trigger patterns (case-insensitive)
     private static final Pattern[] TRIGGER_PATTERNS = {
             // Game launch patterns
-            Pattern.compile("(?i)\\b(we'?re|we are|i'?m|i am)\\s+(launching|releasing|publishing)\\s+(our|my|a|the)\\s+(game|title|project)"),
-            Pattern.compile("(?i)\\b(launch|release|publish|go live|going live)\\s+(on|in|at|this|next|tomorrow|today)"),
-            Pattern.compile("(?i)\\b(steam|epic|itch|gog)\\s+(page|store|listing)\\s+(is|will be|goes)\\s+(live|up|available)"),
-            Pattern.compile("(?i)\\b(kickstarter|indiegogo|patreon)\\s+(is|ends|ending|closes)\\s+(in|on|at)"),
-            Pattern.compile("(?i)\\b(need|looking for|want|seeking)\\s+(help|assistance|support)\\s+(promoting|marketing|advertising|with promotion)"),
-            Pattern.compile("(?i)\\b(game|title|project)\\s+(launch|release|launches|releases)\\s+(on|in|at|this|next)"),
+            Pattern.compile(
+                    "(?i)\\b(we'?re|we are|i'?m|i am)\\s+(launching|releasing|publishing)\\s+(our|my|a|the)\\s+(game|title|project)"),
+            Pattern.compile(
+                    "(?i)\\b(launch|release|publish|go live|going live)\\s+(on|in|at|this|next|tomorrow|today)"),
+            Pattern.compile(
+                    "(?i)\\b(steam|epic|itch|gog)\\s+(page|store|listing)\\s+(is|will be|goes)\\s+(live|up|available)"),
+            Pattern.compile(
+                    "(?i)\\b(kickstarter|indiegogo|patreon)\\s+(is|ends|ending|closes)\\s+(in|on|at)"),
+            Pattern.compile(
+                    "(?i)\\b(need|looking for|want|seeking)\\s+(help|assistance|support)\\s+(promoting|marketing|advertising|with promotion)"),
+            Pattern.compile(
+                    "(?i)\\b(game|title|project)\\s+(launch|release|launches|releases)\\s+(on|in|at|this|next)"),
             Pattern.compile("(?i)\\b(coming|releasing|launching)\\s+(soon|this|next|tomorrow|today)"),
-            Pattern.compile("(?i)\\b(beta|alpha|early access|demo)\\s+(is|starts|begins|goes)\\s+(live|up|available)"),
-            Pattern.compile("(?i)\\b(pre-?order|preorder|pre-?purchase)\\s+(is|starts|begins|now)\\s+(available|open|live)"),
-            Pattern.compile("(?i)\\b(trailer|announcement|reveal)\\s+(drops|releases|is|goes)\\s+(live|up|out)")
+            Pattern.compile(
+                    "(?i)\\b(beta|alpha|early access|demo)\\s+(is|starts|begins|goes)\\s+(live|up|available)"),
+            Pattern.compile(
+                    "(?i)\\b(pre-?order|preorder|pre-?purchase)\\s+(is|starts|begins|now)\\s+(available|open|live)"),
+            Pattern.compile(
+                    "(?i)\\b(trailer|announcement|reveal)\\s+(drops|releases|is|goes)\\s+(live|up|out)")
     };
 
     // Pattern descriptions for logging
@@ -71,7 +77,8 @@ public class PromoDetectionService {
         this.guildConfigs = new ConcurrentHashMap<>();
         this.userCooldowns = new ConcurrentHashMap<>();
         this.recentTriggers = new ConcurrentHashMap<>();
-        logger.info("PromoDetectionService initialized with {} trigger patterns", TRIGGER_PATTERNS.length);
+        logger.info(
+                "PromoDetectionService initialized with {} trigger patterns", TRIGGER_PATTERNS.length);
     }
 
     /**
@@ -136,10 +143,16 @@ public class PromoDetectionService {
      * @param detectedPattern the detected pattern
      * @return the promo trigger
      */
-    public PromoTrigger createTrigger(String userId, String username, String guildId,
-                                      String channelId, String messageContent, String detectedPattern) {
-        PromoTrigger trigger = new PromoTrigger(userId, username, guildId, channelId,
-                messageContent, detectedPattern, Instant.now());
+    public PromoTrigger createTrigger(
+            String userId,
+            String username,
+            String guildId,
+            String channelId,
+            String messageContent,
+            String detectedPattern) {
+        PromoTrigger trigger =
+                new PromoTrigger(
+                        userId, username, guildId, channelId, messageContent, detectedPattern, Instant.now());
 
         // Track recent triggers for duplicate prevention
         recentTriggers.computeIfAbsent(userId, k -> new ArrayList<>()).add(trigger);
@@ -154,8 +167,7 @@ public class PromoDetectionService {
     }
 
     /**
-     * Gets the promotional configuration for a guild.
-     * Creates default config if none exists.
+     * Gets the promotional configuration for a guild. Creates default config if none exists.
      *
      * @param guildId the guild ID
      * @return the promo config

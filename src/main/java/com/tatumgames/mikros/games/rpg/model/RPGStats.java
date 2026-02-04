@@ -1,8 +1,7 @@
 package com.tatumgames.mikros.games.rpg.model;
 
 /**
- * Represents the stats for an RPG character.
- * Stats grow with leveling and affect action outcomes.
+ * Represents the stats for an RPG character. Stats grow with leveling and affect action outcomes.
  */
 public class RPGStats {
     private int maxHp;
@@ -46,9 +45,8 @@ public class RPGStats {
     }
 
     /**
-     * Applies stat growth when leveling up.
-     * Level up: +5 HP, +1 to all stats (as per TASKS_23.md).
-     * HP restoration: Restores 75% of new max HP to preserve battle tension.
+     * Applies stat growth when leveling up. Level up: +5 HP, +1 to all stats (as per TASKS_23.md). HP
+     * restoration: Restores 75% of new max HP to preserve battle tension.
      *
      * @param characterClass the character's class
      */
@@ -128,7 +126,8 @@ public class RPGStats {
      * @param activeCurses list of active world curses
      * @return effective max HP (cannot go below 1)
      */
-    public int getEffectiveMaxHp(java.util.List<com.tatumgames.mikros.games.rpg.curse.WorldCurse> activeCurses) {
+    public int getEffectiveMaxHp(
+            java.util.List<com.tatumgames.mikros.games.rpg.curse.WorldCurse> activeCurses) {
         return getEffectiveMaxHp(activeCurses, false);
     }
 
@@ -139,11 +138,15 @@ public class RPGStats {
      * @param hasFrostbite whether the character has frostbite (-5% max HP)
      * @return effective max HP (cannot go below 1)
      */
-    public int getEffectiveMaxHp(java.util.List<com.tatumgames.mikros.games.rpg.curse.WorldCurse> activeCurses, boolean hasFrostbite) {
+    public int getEffectiveMaxHp(
+            java.util.List<com.tatumgames.mikros.games.rpg.curse.WorldCurse> activeCurses,
+            boolean hasFrostbite) {
         int effectiveMaxHp = maxHp;
 
         // Apply Curse of Frailty (-10% HP)
-        if (activeCurses != null && activeCurses.contains(com.tatumgames.mikros.games.rpg.curse.WorldCurse.MINOR_CURSE_OF_FRAILTY)) {
+        if (activeCurses != null
+                && activeCurses.contains(
+                com.tatumgames.mikros.games.rpg.curse.WorldCurse.MINOR_CURSE_OF_FRAILTY)) {
             effectiveMaxHp = (int) (effectiveMaxHp * 0.90);
         }
 
@@ -247,8 +250,8 @@ public class RPGStats {
     }
 
     /**
-     * Gets the effective stat value after applying temporary debuffs.
-     * Checks the character's temporary stat debuff fields and applies the reduction.
+     * Gets the effective stat value after applying temporary debuffs. Checks the character's
+     * temporary stat debuff fields and applies the reduction.
      *
      * @param statName  the stat name (STR, AGI, INT, LUCK)
      * @param character the character to check for debuffs
@@ -274,6 +277,5 @@ public class RPGStats {
         }
 
         return baseStat;
-    }
+  }
 }
-

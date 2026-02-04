@@ -1,6 +1,6 @@
 package com.tatumgames.mikros.honeypot.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.handler.CommandHandler;
 import com.tatumgames.mikros.models.ActionType;
 import com.tatumgames.mikros.models.ModerationAction;
 import com.tatumgames.mikros.services.ModerationLogService;
@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.slf4j.Logger;
@@ -25,7 +26,8 @@ import java.util.stream.Collectors;
 @SuppressWarnings("ClassCanBeRecord")
 public class ListBansCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(ListBansCommand.class);
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm");
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm");
     private final ModerationLogService moderationLogService;
 
     /**
@@ -39,9 +41,9 @@ public class ListBansCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("list_bans", "Display recent bans and reasons")
+        return Commands.slash("list-bans", "Display recent bans and reasons")
                 .setGuildOnly(true)
-                .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS));
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS));
     }
 
     @Override
@@ -49,11 +51,8 @@ public class ListBansCommand implements CommandHandler {
         Member member = event.getMember();
         Guild guild = event.getGuild();
 
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.MODERATE_MEMBERS)) {
-            event.reply("❌ You don't have permission to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.MODERATE_MEMBERS)) {
+            event.reply("❌ You don't have permission to use this command.").setEphemeral(true).queue();
             return;
         }
 
@@ -62,43 +61,47 @@ public class ListBansCommand implements CommandHandler {
 
         // Get all bans from moderation log
         List<ModerationAction> allActions = moderationLogService.getAllActions(guildId);
-        List<ModerationAction> bans = allActions.stream()
-                .filter(action -> action.actionType() == ActionType.BAN)
-                .sorted((a, b) -> b.timestamp().compareTo(a.timestamp())) // Most recent first
-                .limit(20) // Show last 20 bans
-                .collect(Collectors.toList());
+        List<ModerationAction> bans =
+                allActions.stream()
+                        .filter(action -> action.actionType() == ActionType.BAN)
+                        .sorted((a, b) -> b.timestamp().compareTo(a.timestamp())) // Most recent first
+                        .limit(20) // Show last 20 bans
+                        .collect(Collectors.toList());
 
         if (bans.isEmpty()) {
-            event.reply("📋 **Recent Bans**\n\nNo bans found in moderation log.")
+            event
+                    .reply("📋 **Recent Bans**\n\nNo bans found in moderation log.")
                     .setEphemeral(true)
                     .queue();
             return;
         }
 
         // Build embed
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("📋 Recent Bans")
-                .setColor(0x5865F2) // Discord blurple color
-                .setDescription(String.format("Showing last %d ban(s):", bans.size()));
+        EmbedBuilder embed =
+                new EmbedBuilder()
+                        .setTitle("📋 Recent Bans")
+                        .setColor(0x5865F2) // Discord blurple color
+                        .setDescription(String.format("Showing last %d ban(s):", bans.size()));
 
         StringBuilder bansList = new StringBuilder();
         for (int i = 0; i < bans.size(); i++) {
             ModerationAction ban = bans.get(i);
             String timestamp = ban.timestamp().atZone(ZoneId.systemDefault()).format(DATE_FORMATTER);
-            bansList.append(String.format("""
+            bansList.append(
+                    String.format(
+                            """
                             %d. **%s** (`%s`)
                                Reason: %s
                                Moderator: %s
                                Time: %s
-                            
-                            """,
-                    i + 1,
-                    ban.targetUsername(),
-                    ban.targetUserId(),
-                    ban.reason(),
-                    ban.moderatorUsername(),
-                    timestamp
-            ));
+                                    
+                                    """,
+                            i + 1,
+                            ban.targetUsername(),
+                            ban.targetUserId(),
+                            ban.reason(),
+                            ban.moderatorUsername(),
+                            timestamp));
         }
 
         embed.setDescription(bansList.toString());
@@ -111,16 +114,12 @@ public class ListBansCommand implements CommandHandler {
             for (int i = 0; i < bans.size(); i++) {
                 ModerationAction ban = bans.get(i);
                 String timestamp = ban.timestamp().atZone(ZoneId.systemDefault()).format(DATE_FORMATTER);
-                bansList.append(String.format(
-                        "%d. **%s** - %s (%s)\n",
-                        i + 1,
-                        ban.targetUsername(),
-                        ban.reason(),
-                        timestamp
-                ));
+                bansList.append(
+                        String.format(
+                                "%d. **%s** - %s (%s)\n", i + 1, ban.targetUsername(), ban.reason(), timestamp));
             }
             embed.setDescription(bansList.toString());
-            embed.setFooter("Showing first 10 bans. Use /history for more details.", null);
+            embed.setFooter("Use /admin-history user:@user for full moderation history.", null);
         }
 
         event.replyEmbeds(embed.build()).setEphemeral(true).queue();
@@ -129,7 +128,6 @@ public class ListBansCommand implements CommandHandler {
 
     @Override
     public String getCommandName() {
-        return "list_bans";
+        return "list-bans";
     }
 }
-

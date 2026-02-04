@@ -2,6 +2,8 @@ package com.tatumgames.mikros.games.rpg.service;
 
 import com.tatumgames.mikros.games.rpg.achievements.Title;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.List;
  * Service for managing title definitions and unlock validation.
  */
 public class TitleService {
+    private static final Logger logger = LoggerFactory.getLogger(TitleService.class);
 
     /**
      * Checks which titles a character has newly unlocked.
@@ -24,7 +27,8 @@ public class TitleService {
         for (Title title : Title.values()) {
             if (title.getType() == Title.TitleType.PROGRESS) {
                 if (character.getLevel() >= title.getRequiredLevel()) {
-                    // Check if character already has this title (we'll check this later when we add title storage)
+                    // Check if character already has this title (we'll check this later when we add title
+                    // storage)
                     // For now, we'll return all eligible titles
                     newlyUnlocked.add(title);
                 }
@@ -73,7 +77,8 @@ public class TitleService {
         if ("UNBOUND".equals(character.getPhilosophicalPath()) && !hasTitle(character, Title.UNBOUND)) {
             newlyUnlocked.add(Title.UNBOUND);
         }
-        if (character.hasWorldFlag("STONE_WOLF_MARKED") && !hasTitle(character, Title.STONE_WOLF_CHOSEN)) {
+        if (character.hasWorldFlag("STONE_WOLF_MARKED")
+                && !hasTitle(character, Title.STONE_WOLF_CHOSEN)) {
             newlyUnlocked.add(Title.STONE_WOLF_CHOSEN);
         }
         // Icewalker, Rune-Seer, Fortune's Favorite are awarded based on stat interaction successes
@@ -138,14 +143,16 @@ public class TitleService {
             available.add(Title.CURSEWALKER);
         }
         // Lightbearer (Priest: 10 resurrections during cursed worlds)
-        if (character.getCursedResurrections() >= 10 &&
-                character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.PRIEST) {
+        if (character.getCursedResurrections() >= 10
+                && character.getCharacterClass()
+                == com.tatumgames.mikros.games.rpg.model.CharacterClass.PRIEST) {
             available.add(Title.LIGHTBEARER);
         }
         // Bound to Death (Necromancer: Active during March of the Dead)
         // Checked via story flag "Bound to Death" when March of the Dead is active
-        if (character.getStoryFlags().contains("Bound to Death") &&
-                character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.NECROMANCER) {
+        if (character.getStoryFlags().contains("Bound to Death")
+                && character.getCharacterClass()
+                == com.tatumgames.mikros.games.rpg.model.CharacterClass.NECROMANCER) {
             available.add(Title.BOUND_TO_DEATH);
         }
 
@@ -172,7 +179,7 @@ public class TitleService {
                     available.add(currentTitle);
                 }
             } catch (IllegalArgumentException e) {
-                // Title not found in enum, skip
+                logger.debug("Title not found in enum, skipping: {}", character.getTitle());
             }
         }
 
@@ -202,6 +209,7 @@ public class TitleService {
             Title t = Title.valueOf(title.toUpperCase().replace(" ", "_"));
             return t.getBonus();
         } catch (IllegalArgumentException e) {
+            logger.debug("Title not found for bonus lookup: {}", title);
             return 0.0;
         }
     }
@@ -218,8 +226,7 @@ public class TitleService {
         if (currentTitle == null) {
             return false;
         }
-        return currentTitle.equalsIgnoreCase(title.getDisplayName()) ||
-                currentTitle.equalsIgnoreCase(title.name());
+        return currentTitle.equalsIgnoreCase(title.getDisplayName())
+                || currentTitle.equalsIgnoreCase(title.name());
     }
 }
-

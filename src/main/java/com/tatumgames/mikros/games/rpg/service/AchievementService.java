@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Service for tracking first-to achievements per server.
- * Achievements can only be claimed once per server (guild).
+ * Service for tracking first-to achievements per server. Achievements can only be claimed once per
+ * server (guild).
  */
 public class AchievementService {
     // Map: guildId -> (AchievementType -> userId)
@@ -28,7 +28,8 @@ public class AchievementService {
      * @return true if the achievement was successfully claimed (first time), false if already claimed
      */
     public boolean checkAndClaimFirstTo(String guildId, AchievementType type, String userId) {
-        Map<AchievementType, String> guildAchievements = achievementClaims.computeIfAbsent(guildId, k -> new ConcurrentHashMap<>());
+        Map<AchievementType, String> guildAchievements =
+                achievementClaims.computeIfAbsent(guildId, k -> new ConcurrentHashMap<>());
 
         // Check if already claimed
         if (guildAchievements.containsKey(type)) {
@@ -84,4 +85,3 @@ public class AchievementService {
         return new HashMap<>(guildAchievements);
     }
 }
-

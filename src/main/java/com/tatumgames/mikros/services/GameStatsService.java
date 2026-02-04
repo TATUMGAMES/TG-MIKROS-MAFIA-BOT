@@ -14,8 +14,8 @@ public interface GameStatsService {
 
     /**
      * Gets trending game genres (fastest-growing by player engagement).
-     * <p>
-     * TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/trending-genres
+     *
+     * <p>TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/trending-genres
      *
      * @param limit the maximum number of genres to return
      * @return list of trending genre statistics
@@ -24,8 +24,8 @@ public interface GameStatsService {
 
     /**
      * Gets trending content genres (e.g., action, story, co-op).
-     * <p>
-     * TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/trending-content-genres
+     *
+     * <p>TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/trending-content-genres
      *
      * @param limit the maximum number of content genres to return
      * @return list of trending content genre statistics
@@ -34,8 +34,8 @@ public interface GameStatsService {
 
     /**
      * Gets trending in-game content (specific levels, bosses, characters, etc.).
-     * <p>
-     * TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/trending-content
+     *
+     * <p>TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/trending-content
      *
      * @param limit the maximum number of content items to return
      * @return list of trending content statistics
@@ -44,8 +44,8 @@ public interface GameStatsService {
 
     /**
      * Gets trending gameplay types (casual, competitive, hyper-casual).
-     * <p>
-     * TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/trending-gameplay-types
+     *
+     * <p>TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/trending-gameplay-types
      *
      * @param limit the maximum number of gameplay types to return
      * @return list of trending gameplay type statistics
@@ -54,8 +54,8 @@ public interface GameStatsService {
 
     /**
      * Gets most popular game genres overall.
-     * <p>
-     * TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/popular-genres
+     *
+     * <p>TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/popular-genres
      *
      * @param limit the maximum number of genres to return
      * @return list of popular genre statistics
@@ -64,8 +64,8 @@ public interface GameStatsService {
 
     /**
      * Gets most popular content genres.
-     * <p>
-     * TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/popular-content-genres
+     *
+     * <p>TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/popular-content-genres
      *
      * @param limit the maximum number of content genres to return
      * @return list of popular content genre statistics
@@ -74,8 +74,8 @@ public interface GameStatsService {
 
     /**
      * Gets most popular in-game content.
-     * <p>
-     * TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/popular-content
+     *
+     * <p>TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/popular-content
      *
      * @param limit the maximum number of content items to return
      * @return list of popular content statistics
@@ -84,8 +84,8 @@ public interface GameStatsService {
 
     /**
      * Gets most popular gameplay types.
-     * <p>
-     * TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/popular-gameplay-types
+     *
+     * <p>TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/popular-gameplay-types
      *
      * @param limit the maximum number of gameplay types to return
      * @return list of popular gameplay type statistics
@@ -94,8 +94,8 @@ public interface GameStatsService {
 
     /**
      * Gets total number of apps using MIKROS Analytics.
-     * <p>
-     * TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/total-apps
+     *
+     * <p>TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/total-apps
      *
      * @return total number of apps
      */
@@ -103,8 +103,8 @@ public interface GameStatsService {
 
     /**
      * Gets total number of contributors (devs, testers, players) in MIKROS ecosystem.
-     * <p>
-     * TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/total-contributors
+     *
+     * <p>TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/total-contributors
      *
      * @return total number of contributors
      */
@@ -112,8 +112,8 @@ public interface GameStatsService {
 
     /**
      * Gets total unique user profiles tracked across MIKROS-enabled games.
-     * <p>
-     * TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/total-users
+     *
+     * <p>TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/total-users
      *
      * @return total number of unique users
      */
@@ -121,8 +121,8 @@ public interface GameStatsService {
 
     /**
      * Gets average gameplay time per app.
-     * <p>
-     * TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/avg-gameplay-time
+     *
+     * <p>TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/avg-gameplay-time
      *
      * @param genre optional genre filter
      * @return average gameplay time in hours
@@ -131,8 +131,8 @@ public interface GameStatsService {
 
     /**
      * Gets average session length across all games or by genre.
-     * <p>
-     * TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/avg-session-time
+     *
+     * <p>TODO: Integrate with MIKROS Analytics API - GET /api/gamestats/avg-session-time
      *
      * @param genre optional genre filter
      * @return average session time in minutes
@@ -142,7 +142,7 @@ public interface GameStatsService {
     /**
      * Sets up MIKROS Ecosystem for a guild.
      *
-     * @param guildId   the guild ID
+     * @param guildId the guild ID
      * @param channelId the channel ID for ecosystem commands
      */
     void setupEcosystem(String guildId, String channelId);
@@ -170,4 +170,3 @@ public interface GameStatsService {
      */
     String getEcosystemChannel(String guildId);
 }
-

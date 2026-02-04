@@ -7,8 +7,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for BiomeEnemies. Uses getAllEnemies() to verify data integrity
- * and that getRandomEnemy() returns valid enemies from the correct biome.
+ * Unit tests for BiomeEnemies. Uses getAllEnemies() to verify data integrity and that
+ * getRandomEnemy() returns valid enemies from the correct biome.
  */
 class BiomeEnemiesTest {
 
@@ -17,8 +17,7 @@ class BiomeEnemiesTest {
         for (BiomeType biome : BiomeType.values()) {
             List<String> enemies = BiomeEnemies.getAllEnemies(biome);
             assertNotNull(enemies, "Enemies list should not be null for " + biome);
-            assertFalse(enemies.isEmpty(),
-                    "Biome " + biome + " should have at least one enemy");
+            assertFalse(enemies.isEmpty(), "Biome " + biome + " should have at least one enemy");
         }
     }
 
@@ -32,8 +31,7 @@ class BiomeEnemiesTest {
         assertEquals(first.size(), second.size(), "Both calls should return same size");
         // Modify the first list; second call should be unaffected (different instance)
         first.clear();
-        assertFalse(second.isEmpty(),
-                "Modifying returned list should not affect subsequent call");
+        assertFalse(second.isEmpty(), "Modifying returned list should not affect subsequent call");
     }
 
     @Test
@@ -42,8 +40,8 @@ class BiomeEnemiesTest {
             List<String> enemies = BiomeEnemies.getAllEnemies(biome);
             for (String name : enemies) {
                 assertNotNull(name, "Enemy name should not be null in " + biome);
-                assertFalse(name.isBlank(),
-                        "Enemy name should not be blank in " + biome + ": '" + name + "'");
+                assertFalse(
+                        name.isBlank(), "Enemy name should not be blank in " + biome + ": '" + name + "'");
             }
         }
     }
@@ -56,8 +54,13 @@ class BiomeEnemiesTest {
             for (int i = 0; i < 50; i++) {
                 String result = BiomeEnemies.getRandomEnemy(biome);
                 assertNotNull(result, "getRandomEnemy should not return null");
-                assertTrue(validEnemies.contains(result),
-                        "getRandomEnemy(" + biome + ") returned '" + result + "' which is not in getAllEnemies");
+                assertTrue(
+                        validEnemies.contains(result),
+                        "getRandomEnemy("
+                                + biome
+                                + ") returned '"
+                                + result
+                                + "' which is not in getAllEnemies");
             }
         }
     }
@@ -66,8 +69,7 @@ class BiomeEnemiesTest {
     void allBiomeTypesHaveEnemies() {
         for (BiomeType biome : BiomeType.values()) {
             int size = BiomeEnemies.getAllEnemies(biome).size();
-            assertTrue(size >= 1,
-                    "Biome " + biome + " should have at least one enemy, got " + size);
+            assertTrue(size >= 1, "Biome " + biome + " should have at least one enemy, got " + size);
         }
     }
 }

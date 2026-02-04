@@ -16,8 +16,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * In-memory implementation of GamePromotionService.
- * Stores configuration in memory (expandable to database).
+ * In-memory implementation of GamePromotionService. Stores configuration in memory (expandable to
+ * database).
  */
 public class InMemoryGamePromotionService implements GamePromotionService {
     private static final Logger logger = LoggerFactory.getLogger(InMemoryGamePromotionService.class);
@@ -100,8 +100,7 @@ public class InMemoryGamePromotionService implements GamePromotionService {
     }
 
     /**
-     * Loads apps from stub JSON file.
-     * TODO: Replace with real API call to /getAllApps when available.
+     * Loads apps from stub JSON file. TODO: Replace with real API call to /getAllApps when available.
      *
      * @return list of app promotions
      */
@@ -111,8 +110,8 @@ public class InMemoryGamePromotionService implements GamePromotionService {
         }
 
         try {
-            InputStream inputStream = getClass().getClassLoader()
-                    .getResourceAsStream("stubs/getAllApps.json");
+            InputStream inputStream =
+                    getClass().getClassLoader().getResourceAsStream("stubs/getAllApps.json");
 
             if (inputStream == null) {
                 logger.error("Could not find stub JSON file: stubs/getAllApps.json");
@@ -148,8 +147,8 @@ public class InMemoryGamePromotionService implements GamePromotionService {
     }
 
     /**
-     * Creates a composite key for tracking promotion steps.
-     * Format: "appId:campaignId" when campaignId is provided, "appId" when null.
+     * Creates a composite key for tracking promotion steps. Format: "appId:campaignId" when
+     * campaignId is provided, "appId" when null.
      *
      * @param appId      the app ID
      * @param campaignId the campaign ID (can be null)
@@ -186,7 +185,8 @@ public class InMemoryGamePromotionService implements GamePromotionService {
     }
 
     @Override
-    public void recordPromotionStep(String guildId, String appId, String campaignId, int step, Instant postTime) {
+    public void recordPromotionStep(
+            String guildId, String appId, String campaignId, int step, Instant postTime) {
         if (guildId == null || guildId.isBlank()) {
             throw new IllegalArgumentException("guildId cannot be null or blank");
         }
@@ -201,11 +201,17 @@ public class InMemoryGamePromotionService implements GamePromotionService {
         }
 
         String key = createCompositeKey(appId, campaignId);
-        promotionSteps.computeIfAbsent(guildId, k -> new ConcurrentHashMap<>())
+        promotionSteps
+                .computeIfAbsent(guildId, k -> new ConcurrentHashMap<>())
                 .put(key, new PromotionStepRecord(step, postTime));
 
-        logger.debug("Recorded promotion step {} for app {} (campaign: {}) in guild {} at {}",
-                step, appId, campaignId != null ? campaignId : "none", guildId, postTime);
+        logger.debug(
+                "Recorded promotion step {} for app {} (campaign: {}) in guild {} at {}",
+                step,
+                appId,
+                campaignId != null ? campaignId : "none",
+                guildId,
+                postTime);
     }
 
     @Override
@@ -248,9 +254,7 @@ public class InMemoryGamePromotionService implements GamePromotionService {
         Map<String, Object> stats = new HashMap<>();
         stats.put("guilds_with_channel_configured", promotionChannels.size());
         stats.put("guilds_with_custom_verbosity", promotionVerbosity.size());
-        stats.put("total_promoted_apps", promotionSteps.values().stream()
-                .mapToInt(Map::size)
-                .sum());
+        stats.put("total_promoted_apps", promotionSteps.values().stream().mapToInt(Map::size).sum());
         return stats;
     }
 
@@ -258,8 +262,8 @@ public class InMemoryGamePromotionService implements GamePromotionService {
      * Record of promotion step and last post time for an app.
      */
     private static class PromotionStepRecord {
-        int lastStep;           // 1-4, or 0 if never posted
-        Instant lastPostTime;   // When last step was posted
+        int lastStep; // 1-4, or 0 if never posted
+        Instant lastPostTime; // When last step was posted
 
         PromotionStepRecord(int lastStep, Instant lastPostTime) {
             this.lastStep = lastStep;
@@ -267,4 +271,3 @@ public class InMemoryGamePromotionService implements GamePromotionService {
         }
     }
 }
-

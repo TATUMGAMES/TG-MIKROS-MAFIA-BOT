@@ -9,8 +9,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * In-memory implementation of NilfheimEventService.
- * Tracks active events and last event times per guild.
+ * In-memory implementation of NilfheimEventService. Tracks active events and last event times per
+ * guild.
  */
 public class InMemoryNilfheimEventService implements NilfheimEventService {
     private static final Logger logger = LoggerFactory.getLogger(InMemoryNilfheimEventService.class);
@@ -47,7 +47,11 @@ public class InMemoryNilfheimEventService implements NilfheimEventService {
     @Override
     public void setActiveEvent(String guildId, NilfheimEventType eventType, Instant expiresAt) {
         activeEvents.put(guildId, new ActiveEvent(eventType, expiresAt));
-        logger.info("Set active event {} for guild {} (expires at {})", eventType.getDisplayName(), guildId, expiresAt);
+        logger.info(
+                "Set active event {} for guild {} (expires at {})",
+                eventType.getDisplayName(),
+                guildId,
+                expiresAt);
     }
 
     @Override
@@ -87,4 +91,3 @@ public class InMemoryNilfheimEventService implements NilfheimEventService {
         }
     }
 }
-

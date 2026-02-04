@@ -4,8 +4,7 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * Represents a normal boss in the RPG system.
- * Community-wide boss battles with shared HP pool.
+ * Represents a normal boss in the RPG system. Community-wide boss battles with shared HP pool.
  */
 public class Boss {
     private final String bossId;
@@ -38,15 +37,22 @@ public class Boss {
     /**
      * Creates a new Boss with class harmony mechanic flag.
      *
-     * @param bossId unique boss identifier
-     * @param name   boss name
-     * @param type   boss type (affects class bonuses)
-     * @param level  boss level
-     * @param maxHp  maximum HP (10,000 × level)
-     * @param attack attack power
+     * @param bossId                  unique boss identifier
+     * @param name                    boss name
+     * @param type                    boss type (affects class bonuses)
+     * @param level                   boss level
+     * @param maxHp                   maximum HP (10,000 × level)
+     * @param attack                  attack power
      * @param hasClassHarmonyMechanic whether this boss uses the class harmony system
      */
-    public Boss(String bossId, String name, BossType type, int level, int maxHp, int attack, boolean hasClassHarmonyMechanic) {
+    public Boss(
+            String bossId,
+            String name,
+            BossType type,
+            int level,
+            int maxHp,
+            int attack,
+            boolean hasClassHarmonyMechanic) {
         this.bossId = Objects.requireNonNull(bossId);
         this.name = Objects.requireNonNull(name);
         this.type = Objects.requireNonNull(type);
@@ -155,4 +161,3 @@ public class Boss {
         this.attack = attack;
     }
 }
-

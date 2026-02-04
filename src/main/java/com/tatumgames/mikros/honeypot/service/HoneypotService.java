@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Service for managing honeypot channels and configurations.
- * Handles creation, deletion, and configuration of honeypot channels.
+ * Service for managing honeypot channels and configurations. Handles creation, deletion, and
+ * configuration of honeypot channels.
  */
 public class HoneypotService {
     private static final Logger logger = LoggerFactory.getLogger(HoneypotService.class);
@@ -53,23 +53,28 @@ public class HoneypotService {
         if (config.getChannelId() != null) {
             TextChannel existing = guild.getTextChannelById(config.getChannelId());
             if (existing != null) {
-                logger.info("Honeypot channel already exists for guild {}: {}", guild.getId(), existing.getName());
+                logger.info(
+                        "Honeypot channel already exists for guild {}: {}", guild.getId(), existing.getName());
                 return existing;
             }
         }
 
         // Create new honeypot channel
         try {
-            TextChannel channel = guild.createTextChannel(channelName)
-                    .setTopic("⚠️ DO NOT POST HERE - This is a honeypot channel. Posting here will result in an automatic ban.")
-                    .setNSFW(false)
-                    .complete();
+            TextChannel channel =
+                    guild
+                            .createTextChannel(channelName)
+                            .setTopic(
+                                    "⚠️ DO NOT POST HERE - This is a honeypot channel. Posting here will result in an automatic ban.")
+                            .setNSFW(false)
+                            .complete();
 
             config.setChannelId(channel.getId());
             logger.info("Created honeypot channel {} for guild {}", channel.getName(), guild.getId());
             return channel;
         } catch (Exception e) {
-            logger.error("Failed to create honeypot channel for guild {}: {}", guild.getId(), e.getMessage(), e);
+            logger.error(
+                    "Failed to create honeypot channel for guild {}: {}", guild.getId(), e.getMessage(), e);
             return null;
         }
     }
@@ -88,12 +93,22 @@ public class HoneypotService {
             TextChannel channel = guild.getTextChannelById(config.getChannelId());
             if (channel != null) {
                 try {
-                    channel.delete().queue(
-                            success -> logger.info("Deleted honeypot channel {} for guild {}", channel.getName(), guild.getId()),
-                            error -> logger.error("Failed to delete honeypot channel for guild {}: {}", guild.getId(), error.getMessage())
-                    );
+                    channel
+                            .delete()
+                            .queue(
+                                    success ->
+                                            logger.info(
+                                                    "Deleted honeypot channel {} for guild {}",
+                                                    channel.getName(),
+                                                    guild.getId()),
+                                    error ->
+                                            logger.error(
+                                                    "Failed to delete honeypot channel for guild {}: {}",
+                                                    guild.getId(),
+                                                    error.getMessage()));
                 } catch (Exception e) {
-                    logger.error("Error deleting honeypot channel for guild {}: {}", guild.getId(), e.getMessage(), e);
+                    logger.error(
+                            "Error deleting honeypot channel for guild {}: {}", guild.getId(), e.getMessage(), e);
                 }
             }
             config.setChannelId(null);
@@ -117,8 +132,3 @@ public class HoneypotService {
         return channelId.equals(config.getChannelId());
     }
 }
-
-
-
-
-

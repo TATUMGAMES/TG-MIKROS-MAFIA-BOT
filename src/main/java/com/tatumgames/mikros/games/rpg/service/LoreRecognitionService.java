@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Set;
 
 /**
- * Service for checking character milestones and awarding story flags.
- * Provides narrative recognition for significant achievements.
+ * Service for checking character milestones and awarding story flags. Provides narrative
+ * recognition for significant achievements.
  */
 public class LoreRecognitionService {
     private static final Logger logger = LoggerFactory.getLogger(LoreRecognitionService.class);
@@ -44,8 +44,8 @@ public class LoreRecognitionService {
     }
 
     /**
-     * Checks all milestones for a character and awards story flags if conditions are met.
-     * Only awards flags if story flag slot is available (max 2).
+     * Checks all milestones for a character and awards story flags if conditions are met. Only awards
+     * flags if story flag slot is available (max 2).
      *
      * @param character the character to check
      */
@@ -54,8 +54,8 @@ public class LoreRecognitionService {
     }
 
     /**
-     * Checks all milestones for a character and awards story flags if conditions are met.
-     * Only awards flags if story flag slot is available (max 2).
+     * Checks all milestones for a character and awards story flags if conditions are met. Only awards
+     * flags if story flag slot is available (max 2).
      *
      * @param character the character to check
      * @param guildId   the guild ID (optional, needed for secret boss spawning)
@@ -139,7 +139,11 @@ public class LoreRecognitionService {
             boolean hasAstralInsight = infusionsCrafted.contains(InfusionType.ASTRAL_INSIGHT);
             boolean hasVoidPrecision = infusionsCrafted.contains(InfusionType.VOID_PRECISION);
 
-            if (hasFrostClarity && hasGaleFortune && hasEmberEndurance && hasAstralInsight && hasVoidPrecision) {
+            if (hasFrostClarity
+                    && hasGaleFortune
+                    && hasEmberEndurance
+                    && hasAstralInsight
+                    && hasVoidPrecision) {
                 String flag = "Elemental master";
                 if (!character.getStoryFlags().contains(flag) && character.getStoryFlags().size() < 2) {
                     character.addStoryFlag(flag);
@@ -244,12 +248,13 @@ public class LoreRecognitionService {
     }
 
     /**
-     * Oathbreaker Path Choice: At level 10-12, Oathbreakers must choose Embrace or Purge.
-     * This is a permanent choice that affects corruption cap and bonuses.
+     * Oathbreaker Path Choice: At level 10-12, Oathbreakers must choose Embrace or Purge. This is a
+     * permanent choice that affects corruption cap and bonuses.
      */
     private void checkOathbreakerPathChoice(RPGCharacter character) {
         // Only for Oathbreakers who haven't chosen a path yet
-        if (character.getCharacterClass() != CharacterClass.OATHBREAKER || character.getOathbreakerPath() != null) {
+        if (character.getCharacterClass() != CharacterClass.OATHBREAKER
+                || character.getOathbreakerPath() != null) {
             return;
         }
 
@@ -268,14 +273,20 @@ public class LoreRecognitionService {
                     // High corruption -> Embrace
                     chosenPath = "EMBRACE";
                     character.setOathbreakerPath(chosenPath);
-                    logger.info("Oathbreaker {} chose path: {} at level {} - Narrative: The Broken Oath Calls - fully embraced",
-                            character.getName(), chosenPath, level);
+                    logger.info(
+                            "Oathbreaker {} chose path: {} at level {} - Narrative: The Broken Oath Calls - fully embraced",
+                            character.getName(),
+                            chosenPath,
+                            level);
                 } else {
                     // Low corruption -> Purge
                     chosenPath = "PURGE";
                     character.setOathbreakerPath(chosenPath);
-                    logger.info("Oathbreaker {} chose path: {} at level {} - Narrative: Seeking Redemption - purge path chosen",
-                            character.getName(), chosenPath, level);
+                    logger.info(
+                            "Oathbreaker {} chose path: {} at level {} - Narrative: Seeking Redemption - purge path chosen",
+                            character.getName(),
+                            chosenPath,
+                            level);
                 }
 
                 // Note: Path choice is permanent and affects future gameplay
@@ -284,11 +295,11 @@ public class LoreRecognitionService {
     }
 
     /**
-     * Checks for secret boss spawn milestones and triggers secret boss spawns.
-     * Secret bosses spawn based on level milestones, boss kill milestones, story flags, and first-time achievements.
+     * Checks for secret boss spawn milestones and triggers secret boss spawns. Secret bosses spawn
+     * based on level milestones, boss kill milestones, story flags, and first-time achievements.
      *
      * @param character the character to check
-     * @param guildId   the guild ID where the character is active
+     * @param guildId the guild ID where the character is active
      */
     private void checkSecretBossMilestones(RPGCharacter character, String guildId) {
         if (bossService == null) {
@@ -301,9 +312,12 @@ public class LoreRecognitionService {
             String milestoneKey = "level_" + level;
             if (!character.getSecretBossMilestones().contains(milestoneKey)) {
                 int bossLevel = Math.max(1, level / 2);
-                Boss boss = bossService.checkAndSpawnSecretBoss(guildId, character.getDiscordId(), milestoneKey, bossLevel);
+                Boss boss =
+                        bossService.checkAndSpawnSecretBoss(
+                                guildId, character.getDiscordId(), milestoneKey, bossLevel);
                 if (boss != null) {
-                    logger.info("Secret boss spawned for {} at level milestone {}", character.getName(), level);
+                    logger.info(
+                            "Secret boss spawned for {} at level milestone {}", character.getName(), level);
                 }
             }
         }
@@ -314,9 +328,14 @@ public class LoreRecognitionService {
             String milestoneKey = "boss_kills_" + totalBossKills;
             if (!character.getSecretBossMilestones().contains(milestoneKey)) {
                 int bossLevel = (totalBossKills / 10) + 1;
-                Boss boss = bossService.checkAndSpawnSecretBoss(guildId, character.getDiscordId(), milestoneKey, bossLevel);
+                Boss boss =
+                        bossService.checkAndSpawnSecretBoss(
+                                guildId, character.getDiscordId(), milestoneKey, bossLevel);
                 if (boss != null) {
-                    logger.info("Secret boss spawned for {} at boss kill milestone {}", character.getName(), totalBossKills);
+                    logger.info(
+                            "Secret boss spawned for {} at boss kill milestone {}",
+                            character.getName(),
+                            totalBossKills);
                 }
             }
         }
@@ -326,9 +345,13 @@ public class LoreRecognitionService {
             String milestoneKey = "story_flag_frostborne";
             if (!character.getSecretBossMilestones().contains(milestoneKey)) {
                 int bossLevel = Math.max(1, level / 2);
-                Boss boss = bossService.checkAndSpawnSecretBoss(guildId, character.getDiscordId(), milestoneKey, bossLevel);
+                Boss boss =
+                        bossService.checkAndSpawnSecretBoss(
+                                guildId, character.getDiscordId(), milestoneKey, bossLevel);
                 if (boss != null) {
-                    logger.info("Secret boss spawned for {} for story flag: Frostborne's chosen", character.getName());
+                    logger.info(
+                            "Secret boss spawned for {} for story flag: Frostborne's chosen",
+                            character.getName());
                 }
             }
         }
@@ -337,9 +360,13 @@ public class LoreRecognitionService {
             String milestoneKey = "story_flag_shattering";
             if (!character.getSecretBossMilestones().contains(milestoneKey)) {
                 int bossLevel = Math.max(1, level / 2);
-                Boss boss = bossService.checkAndSpawnSecretBoss(guildId, character.getDiscordId(), milestoneKey, bossLevel);
+                Boss boss =
+                        bossService.checkAndSpawnSecretBoss(
+                                guildId, character.getDiscordId(), milestoneKey, bossLevel);
                 if (boss != null) {
-                    logger.info("Secret boss spawned for {} for story flag: Echo of the Shattering", character.getName());
+                    logger.info(
+                            "Secret boss spawned for {} for story flag: Echo of the Shattering",
+                            character.getName());
                 }
             }
         }
@@ -348,9 +375,12 @@ public class LoreRecognitionService {
             String milestoneKey = "story_flag_elemental";
             if (!character.getSecretBossMilestones().contains(milestoneKey)) {
                 int bossLevel = Math.max(1, level / 2);
-                Boss boss = bossService.checkAndSpawnSecretBoss(guildId, character.getDiscordId(), milestoneKey, bossLevel);
+                Boss boss =
+                        bossService.checkAndSpawnSecretBoss(
+                                guildId, character.getDiscordId(), milestoneKey, bossLevel);
                 if (boss != null) {
-                    logger.info("Secret boss spawned for {} for story flag: Elemental master", character.getName());
+                    logger.info(
+                            "Secret boss spawned for {} for story flag: Elemental master", character.getName());
                 }
             }
         }
@@ -360,7 +390,9 @@ public class LoreRecognitionService {
             String milestoneKey = "first_boss_kill";
             if (!character.getSecretBossMilestones().contains(milestoneKey)) {
                 int bossLevel = level;
-                Boss boss = bossService.checkAndSpawnSecretBoss(guildId, character.getDiscordId(), milestoneKey, bossLevel);
+                Boss boss =
+                        bossService.checkAndSpawnSecretBoss(
+                                guildId, character.getDiscordId(), milestoneKey, bossLevel);
                 if (boss != null) {
                     logger.info("Secret boss spawned for {} for first boss kill", character.getName());
                 }
@@ -371,7 +403,9 @@ public class LoreRecognitionService {
             String milestoneKey = "first_super_boss_kill";
             if (!character.getSecretBossMilestones().contains(milestoneKey)) {
                 int bossLevel = level;
-                Boss boss = bossService.checkAndSpawnSecretBoss(guildId, character.getDiscordId(), milestoneKey, bossLevel);
+                Boss boss =
+                        bossService.checkAndSpawnSecretBoss(
+                                guildId, character.getDiscordId(), milestoneKey, bossLevel);
                 if (boss != null) {
                     logger.info("Secret boss spawned for {} for first super boss kill", character.getName());
                 }
@@ -382,12 +416,14 @@ public class LoreRecognitionService {
             String milestoneKey = "first_death_resurrection";
             if (!character.getSecretBossMilestones().contains(milestoneKey)) {
                 int bossLevel = level;
-                Boss boss = bossService.checkAndSpawnSecretBoss(guildId, character.getDiscordId(), milestoneKey, bossLevel);
+                Boss boss =
+                        bossService.checkAndSpawnSecretBoss(
+                                guildId, character.getDiscordId(), milestoneKey, bossLevel);
                 if (boss != null) {
-                    logger.info("Secret boss spawned for {} for first death and resurrection", character.getName());
+                    logger.info(
+                            "Secret boss spawned for {} for first death and resurrection", character.getName());
                 }
             }
         }
     }
 }
-

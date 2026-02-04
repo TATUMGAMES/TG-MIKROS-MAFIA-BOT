@@ -8,4 +8,3 @@ public enum CraftingResult {
     INSUFFICIENT_MATERIALS,
     STAT_CAPPED
 }
-

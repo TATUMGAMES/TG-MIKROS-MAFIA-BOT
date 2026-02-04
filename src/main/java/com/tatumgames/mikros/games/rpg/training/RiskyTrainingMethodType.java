@@ -1,8 +1,8 @@
 package com.tatumgames.mikros.games.rpg.training;
 
 /**
- * Enum representing different types of risky training methods.
- * Risky methods offer high rewards but come with significant risks.
+ * Enum representing different types of risky training methods. Risky methods offer high rewards but
+ * come with significant risks.
  */
 public enum RiskyTrainingMethodType {
     // Moderate Risk/Reward
@@ -21,8 +21,13 @@ public enum RiskyTrainingMethodType {
     private final double minHpLossPercent; // Minimum HP loss percentage
     private final double maxHpLossPercent; // Maximum HP loss percentage
 
-    RiskyTrainingMethodType(String emoji, String displayName, double xpMultiplier,
-                            double statBonusMultiplier, double minHpLossPercent, double maxHpLossPercent) {
+    RiskyTrainingMethodType(
+            String emoji,
+            String displayName,
+            double xpMultiplier,
+            double statBonusMultiplier,
+            double minHpLossPercent,
+            double maxHpLossPercent) {
         this.emoji = emoji;
         this.displayName = displayName;
         this.xpMultiplier = xpMultiplier;

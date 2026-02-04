@@ -3,14 +3,13 @@ package com.tatumgames.mikros.games.rpg.exploration;
 import com.tatumgames.mikros.games.rpg.model.CharacterClass;
 
 /**
- * Enum representing Stonebound Divinities - ancient gods of Nilfheim bound into stone.
- * Each deity offers a blessing with a corresponding curse.
+ * Enum representing Stonebound Divinities - ancient gods of Nilfheim bound into stone. Each deity
+ * offers a blessing with a corresponding curse.
  */
 public enum DeityType {
     /**
-     * Vaelgor, The Stone Wolf - Strength-focused deity.
-     * Blessing: +15% STR effectiveness
-     * Curse: -5% INT effectiveness
+     * Vaelgor, The Stone Wolf - Strength-focused deity. Blessing: +15% STR effectiveness Curse: -5%
+     * INT effectiveness
      */
     VAELGOR_STONE_WOLF(
             "Vaelgor, The Stone Wolf",
@@ -21,13 +20,11 @@ public enum DeityType {
             -0.05, // -5% INT effectiveness
             "STONE_WOLF_MARKED",
             CharacterClass.WARRIOR,
-            CharacterClass.KNIGHT
-    ),
+            CharacterClass.KNIGHT),
 
     /**
-     * Ilyra, The Frostwind - Agility-focused deity.
-     * Blessing: +15% AGI effectiveness
-     * Curse: -5% STR effectiveness
+     * Ilyra, The Frostwind - Agility-focused deity. Blessing: +15% AGI effectiveness Curse: -5% STR
+     * effectiveness
      */
     ILYRA_FROSTWIND(
             "Ilyra, The Frostwind",
@@ -38,13 +35,11 @@ public enum DeityType {
             -0.05, // -5% STR effectiveness
             "FROSTWIND_MARKED",
             CharacterClass.ROGUE,
-            null
-    ),
+            null),
 
     /**
-     * Nereth, The Hollow Mind - Intelligence-focused deity.
-     * Blessing: +15% INT effectiveness
-     * Curse: -5% AGI effectiveness
+     * Nereth, The Hollow Mind - Intelligence-focused deity. Blessing: +15% INT effectiveness Curse:
+     * -5% AGI effectiveness
      */
     NERETH_HOLLOW_MIND(
             "Nereth, The Hollow Mind",
@@ -56,8 +51,7 @@ public enum DeityType {
             "HOLLOW_MIND_MARKED",
             CharacterClass.MAGE,
             CharacterClass.NECROMANCER,
-            CharacterClass.PRIEST
-    );
+            CharacterClass.PRIEST);
 
     private final String displayName;
     private final String description;
@@ -68,9 +62,15 @@ public enum DeityType {
     private final String worldFlag;
     private final CharacterClass[] preferredClasses;
 
-    DeityType(String displayName, String description, String blessingStat, String curseStat,
-              double blessingModifier, double curseModifier, String worldFlag,
-              CharacterClass... preferredClasses) {
+    DeityType(
+            String displayName,
+            String description,
+            String blessingStat,
+            String curseStat,
+            double blessingModifier,
+            double curseModifier,
+            String worldFlag,
+            CharacterClass... preferredClasses) {
         this.displayName = displayName;
         this.description = description;
         this.blessingStat = blessingStat;

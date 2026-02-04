@@ -1,4 +1,4 @@
-package com.tatumgames.mikros.botdetection.util;
+package com.tatumgames.mikros.botdetection.utils;
 
 import com.tatumgames.mikros.botdetection.model.SuspiciousDomainList;
 
@@ -12,16 +12,12 @@ import java.util.regex.Pattern;
  */
 public class LinkDetectionUtil {
     // Pattern to match URLs: http://, https://, or discord.gg
-    private static final Pattern URL_PATTERN = Pattern.compile(
-            "(?i)(https?://[^\\s]+|discord\\.gg/[^\\s]+)",
-            Pattern.CASE_INSENSITIVE
-    );
+    private static final Pattern URL_PATTERN =
+            Pattern.compile("(?i)(https?://[^\\s]+|discord\\.gg/[^\\s]+)", Pattern.CASE_INSENSITIVE);
 
     // Pattern to extract domain from URL
-    private static final Pattern DOMAIN_PATTERN = Pattern.compile(
-            "(?i)(?:https?://)?(?:www\\.)?([^/\\s:]+)",
-            Pattern.CASE_INSENSITIVE
-    );
+    private static final Pattern DOMAIN_PATTERN =
+            Pattern.compile("(?i)(?:https?://)?(?:www\\.)?([^/\\s:]+)", Pattern.CASE_INSENSITIVE);
 
     /**
      * Checks if a message contains any links.
@@ -99,4 +95,3 @@ public class LinkDetectionUtil {
         return SuspiciousDomainList.getInstance().isSuspiciousTld(domain);
     }
 }
-

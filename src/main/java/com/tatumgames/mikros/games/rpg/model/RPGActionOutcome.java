@@ -4,28 +4,37 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents the outcome of an RPG action.
- * Used to generate Discord message responses.
+ * Represents the outcome of an RPG action. Used to generate Discord message responses.
  */
-public record RPGActionOutcome(String narrative, int xpGained, boolean leveledUp, String statIncreased, int statAmount,
-                               int damageTaken, int hpRestored, boolean success,
-                               List<ItemDrop> itemDrops, List<CatalystDrop> catalystDrops,
-                               boolean isElite, List<String> eliteTraits, boolean withdrewFromElite) {
+public record RPGActionOutcome(
+        String narrative,
+        int xpGained,
+        boolean leveledUp,
+        String statIncreased,
+        int statAmount,
+        int damageTaken,
+        int hpRestored,
+        boolean success,
+        List<ItemDrop> itemDrops,
+        List<CatalystDrop> catalystDrops,
+        boolean isElite,
+        List<String> eliteTraits,
+        boolean withdrewFromElite) {
     /**
      * Creates an RPG action outcome.
      *
-     * @param narrative         the story/narrative text
-     * @param xpGained          experience points gained
-     * @param leveledUp         whether the character leveled up
-     * @param statIncreased     name of stat increased (or null)
-     * @param statAmount        amount stat was increased
-     * @param damageTaken       damage taken during action
-     * @param hpRestored        HP restored during action (e.g., from rest)
-     * @param success           whether the action was successful
-     * @param itemDrops         list of essence drops
-     * @param catalystDrops     list of catalyst drops
-     * @param isElite           whether this was an elite enemy encounter
-     * @param eliteTraits       list of elite trait names (null if not elite)
+     * @param narrative the story/narrative text
+     * @param xpGained experience points gained
+     * @param leveledUp whether the character leveled up
+     * @param statIncreased name of stat increased (or null)
+     * @param statAmount amount stat was increased
+     * @param damageTaken damage taken during action
+     * @param hpRestored HP restored during action (e.g., from rest)
+     * @param success whether the action was successful
+     * @param itemDrops list of essence drops
+     * @param catalystDrops list of catalyst drops
+     * @param isElite whether this was an elite enemy encounter
+     * @param eliteTraits list of elite trait names (null if not elite)
      * @param withdrewFromElite whether the player withdrew from an elite encounter
      */
     public RPGActionOutcome {
@@ -124,12 +133,22 @@ public record RPGActionOutcome(String narrative, int xpGained, boolean leveledUp
         }
 
         public RPGActionOutcome build() {
-            return new RPGActionOutcome(narrative, xpGained, leveledUp,
-                    statIncreased, statAmount, damageTaken, hpRestored, success,
-                    itemDrops, catalystDrops, isElite, eliteTraits, withdrewFromElite);
+            return new RPGActionOutcome(
+                    narrative,
+                    xpGained,
+                    leveledUp,
+                    statIncreased,
+                    statAmount,
+                    damageTaken,
+                    hpRestored,
+                    success,
+                    itemDrops,
+                    catalystDrops,
+                    isElite,
+                    eliteTraits,
+                    withdrewFromElite);
         }
     }
 
     // Getters
 }
-

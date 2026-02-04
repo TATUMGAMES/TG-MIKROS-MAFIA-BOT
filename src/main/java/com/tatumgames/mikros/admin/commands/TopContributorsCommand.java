@@ -1,7 +1,7 @@
 package com.tatumgames.mikros.admin.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.config.ModerationConfig;
+import com.tatumgames.mikros.handler.CommandHandler;
 import com.tatumgames.mikros.models.UserActivity;
 import com.tatumgames.mikros.services.ActivityTrackingService;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -21,9 +21,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * Command handler for the /top-contributors command.
- * Displays a leaderboard of the most active users.
- * Admin-only command.
+ * Command handler for the /top-contributors command. Displays a leaderboard of the most active
+ * users. Admin-only command.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class TopContributorsCommand implements CommandHandler {
@@ -42,7 +41,8 @@ public class TopContributorsCommand implements CommandHandler {
     @Override
     public CommandData getCommandData() {
         return Commands.slash("top-contributors", "View the most active users in the server")
-                .addOption(OptionType.INTEGER, "limit", "Number of users to show (default: 10, max: 25)", false)
+                .addOption(
+                        OptionType.INTEGER, "limit", "Number of users to show (default: 10, max: 25)", false)
                 .setGuildOnly(true);
     }
 
@@ -59,14 +59,13 @@ public class TopContributorsCommand implements CommandHandler {
 
         // Get limit option
         OptionMapping limitOption = event.getOption("limit");
-        int limit = (limitOption != null)
-                ? Math.min(limitOption.getAsInt(), 25)
-                : ModerationConfig.TOP_CONTRIBUTORS_COUNT;
+        int limit =
+                (limitOption != null)
+                        ? Math.min(limitOption.getAsInt(), 25)
+                        : ModerationConfig.TOP_CONTRIBUTORS_COUNT;
 
         if (limit < 1) {
-            event.reply("❌ Limit must be at least 1.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ Limit must be at least 1.").setEphemeral(true).queue();
             return;
         }
 
@@ -74,7 +73,8 @@ public class TopContributorsCommand implements CommandHandler {
         List<UserActivity> topContributors = activityTrackingService.getTopContributors(guildId, limit);
 
         if (topContributors.isEmpty()) {
-            event.reply("📊 No activity data available yet. Start chatting to appear on the leaderboard!")
+            event
+                    .reply("📊 No activity data available yet. Start chatting to appear on the leaderboard!")
                     .queue();
             return;
         }
@@ -90,25 +90,25 @@ public class TopContributorsCommand implements CommandHandler {
         for (int i = 0; i < topContributors.size(); i++) {
             UserActivity activity = topContributors.get(i);
             String medal = getMedal(i);
-            String lastActive = DateTimeFormatter.ofPattern("MMM dd")
-                    .format(Instant.ofEpochMilli(activity.lastActiveTimestamp())
-                            .atZone(ZoneId.systemDefault()));
+            String lastActive =
+                    DateTimeFormatter.ofPattern("MMM dd")
+                            .format(
+                                    Instant.ofEpochMilli(activity.lastActiveTimestamp())
+                                            .atZone(ZoneId.systemDefault()));
 
-            leaderboard.append(String.format("""
+            leaderboard.append(
+                    String.format(
+                            """
                             %s **#%d** - <@%s>
                                    💬 **%,d messages** | Last active: %s
-                            
-                            """,
-                    medal,
-                    i + 1,
-                    activity.userId(),
-                    activity.messageCount(),
-                    lastActive
-            ));
+                                    
+                                    """,
+                            medal, i + 1, activity.userId(), activity.messageCount(), lastActive));
         }
 
         embed.addField("Rankings", leaderboard.toString(), false);
-        embed.addField("ℹ️ Note",
+        embed.addField(
+                "ℹ️ Note",
                 "Activity is tracked from when the bot joined. Historical messages are not counted.",
                 false);
         embed.setTimestamp(Instant.now());

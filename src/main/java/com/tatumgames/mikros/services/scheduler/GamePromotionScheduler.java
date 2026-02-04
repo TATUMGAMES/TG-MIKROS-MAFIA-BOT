@@ -28,10 +28,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * Scheduler service for posting app promotions at configured intervals.
- * Uses 4-step promotion story format while respecting campaign dates and avoiding spam.
- * Checks every 60 minutes and posts promotions based on guild verbosity settings.
- * Implements dynamic cooldown and game rotation to handle multiple apps gracefully.
+ * Scheduler service for posting app promotions at configured intervals. Uses 4-step promotion story
+ * format while respecting campaign dates and avoiding spam. Checks every 60 minutes and posts
+ * promotions based on guild verbosity settings. Implements dynamic cooldown and game rotation to
+ * handle multiple apps gracefully.
  */
 public class GamePromotionScheduler {
     private static final Logger logger = LoggerFactory.getLogger(GamePromotionScheduler.class);
@@ -52,6 +52,7 @@ public class GamePromotionScheduler {
     private final Map<String, GameRotationState> rotationStates = new ConcurrentHashMap<>();
     // Track last check time per guild for verbosity enforcement
     private final Map<String, Instant> lastCheckTimes = new ConcurrentHashMap<>();
+    private volatile boolean started = false;
     private JDA jda;
 
     /**
@@ -63,36 +64,59 @@ public class GamePromotionScheduler {
         this.gamePromotionService = gamePromotionService;
         this.stepManager = new PromotionStepManager();
         this.messageTemplates = new PromotionMessageTemplates();
-        this.scheduler = Executors.newScheduledThreadPool(1, r -> {
-            Thread t = new Thread(r, "game-promotion-scheduler");
-            t.setDaemon(true);
-            return t;
-        });
+        this.scheduler =
+                Executors.newScheduledThreadPool(
+                        1,
+                        r -> {
+                            Thread t = new Thread(r, "game-promotion-scheduler");
+                            t.setDaemon(true);
+                            return t;
+                        });
         this.random = new Random();
         logger.info("GamePromotionScheduler initialized");
     }
 
     /**
-     * Starts the promotion scheduler.
-     * Checks at intervals based on guild verbosity settings (LOW: 24h, MEDIUM: 12h, HIGH: 6h).
-     * Default check interval is 60 minutes to ensure all verbosity levels are respected.
+     * Starts the promotion scheduler if not already started. Idempotent: safe to call multiple times.
+     *
+     * @param jda the JDA instance
+     */
+    public void startIfNeeded(JDA jda) {
+        start(jda);
+    }
+
+    /**
+     * Starts the promotion scheduler. Checks at intervals based on guild verbosity settings (LOW:
+     * 24h, MEDIUM: 12h, HIGH: 6h). Default check interval is 60 minutes to ensure all verbosity
+     * levels are respected.
      *
      * @param jda the JDA instance
      */
     public void start(JDA jda) {
+        synchronized (this) {
+            if (started) {
+                return;
+            }
+            started = true;
+        }
         this.jda = jda;
 
         // Run check every 60 minutes (ensures we catch all verbosity levels)
         // Actual posting respects verbosity settings per guild
-        scheduler.scheduleAtFixedRate(() -> {
-            try {
-                checkAndPostPromotions();
-            } catch (Exception e) {
-                logger.error("Error in promotion scheduler", e);
-            }
-        }, 0, 60, TimeUnit.MINUTES);
+        scheduler.scheduleAtFixedRate(
+                () -> {
+                    try {
+                        checkAndPostPromotions();
+                    } catch (Exception e) {
+                        logger.error("Error in promotion scheduler", e);
+                    }
+                },
+                0,
+                60,
+                TimeUnit.MINUTES);
 
-        logger.info("Game promotion scheduler started (checks every 60 minutes, respects verbosity per guild)");
+        logger.info(
+                "Game promotion scheduler started (checks every 60 minutes, respects verbosity per guild)");
     }
 
     /**
@@ -116,8 +140,8 @@ public class GamePromotionScheduler {
     }
 
     /**
-     * Gets the promotion channel for a guild, or null if not found or not configured.
-     * Logs appropriate warnings when channel is configured but not found.
+     * Gets the promotion channel for a guild, or null if not found or not configured. Logs
+     * appropriate warnings when channel is configured but not found.
      *
      * @param guild the guild
      * @return the message channel, or null if not found/configured
@@ -125,7 +149,7 @@ public class GamePromotionScheduler {
     private MessageChannel getPromotionChannel(Guild guild) {
         String guildId = guild.getId();
         String channelId = gamePromotionService.getPromotionChannel(guildId);
-        
+
         if (channelId == null) {
             return null;
         }
@@ -135,7 +159,10 @@ public class GamePromotionScheduler {
         NewsChannel newsChannel = guild.getNewsChannelById(channelId);
 
         if (textChannel == null && newsChannel == null) {
-            logger.warn("Configured promotion channel {} not found in guild {} (tried TextChannel and NewsChannel)", channelId, guildId);
+            logger.warn(
+                    "Configured promotion channel {} not found in guild {} (tried TextChannel and NewsChannel)",
+                    channelId,
+                    guildId);
             return null;
         }
 
@@ -159,15 +186,15 @@ public class GamePromotionScheduler {
     }
 
     /**
-     * Manually triggers promotion check for a specific guild.
-     * Used by the /force-promotion-check command.
+     * Manually triggers promotion check for a specific guild. Used by the /force-promotion-check
+     * command.
      *
      * @param guild the guild
      * @return number of promotions posted
      */
     public int forceCheckGuild(Guild guild) {
         String guildId = guild.getId();
-        
+
         // Check if channel is configured (for info logging)
         String channelId = gamePromotionService.getPromotionChannel(guildId);
         if (channelId == null) {
@@ -185,8 +212,8 @@ public class GamePromotionScheduler {
     }
 
     /**
-     * Posts promotions to a channel using the 4-step story format.
-     * Respects guild verbosity settings, dynamic cooldown, and game rotation.
+     * Posts promotions to a channel using the 4-step story format. Respects guild verbosity settings,
+     * dynamic cooldown, and game rotation.
      *
      * @param guild   the guild
      * @param channel the channel to post in
@@ -203,8 +230,11 @@ public class GamePromotionScheduler {
         if (lastCheckTime != null) {
             long hoursSinceLastCheck = ChronoUnit.HOURS.between(lastCheckTime, now);
             if (hoursSinceLastCheck < verbosity.getHoursInterval()) {
-                logger.debug("Guild {} verbosity check: {} hours since last check, need {} hours",
-                        guildId, hoursSinceLastCheck, verbosity.getHoursInterval());
+                logger.debug(
+                        "Guild {} verbosity check: {} hours since last check, need {} hours",
+                        guildId,
+                        hoursSinceLastCheck,
+                        verbosity.getHoursInterval());
                 return 0;
             }
         }
@@ -221,10 +251,11 @@ public class GamePromotionScheduler {
         }
 
         // Filter to only active campaigns within campaign window
-        List<AppPromotion> activeApps = allApps.stream()
-                .filter(app -> isWithinCampaignWindow(app, now))
-                .filter(AppPromotion::isCampaignActive)
-                .collect(Collectors.toList());
+        List<AppPromotion> activeApps =
+                allApps.stream()
+                        .filter(app -> isWithinCampaignWindow(app, now))
+                        .filter(AppPromotion::isCampaignActive)
+                        .collect(Collectors.toList());
 
         if (activeApps.isEmpty()) {
             logger.debug("No active campaigns within window for guild {}", guildId);
@@ -239,12 +270,14 @@ public class GamePromotionScheduler {
         AppPromotion firstApp = activeApps.get(0);
         if (firstApp.getCampaign() != null) {
             String firstAppCampaignId = firstApp.getCampaign().getCampaignId();
-            int lastStepForFirstApp = gamePromotionService.getLastPromotionStep(guildId, firstApp.getAppId(), firstAppCampaignId);
+            int lastStepForFirstApp =
+                    gamePromotionService.getLastPromotionStep(
+                            guildId, firstApp.getAppId(), firstAppCampaignId);
 
             // Get dynamic multi-game step position
-            int multiGameStepPosition = stepManager.getMultiGameStepPosition(
-                    firstApp.getCampaign().getStartDate(),
-                    firstApp.getCampaign().getEndDate());
+            int multiGameStepPosition =
+                    stepManager.getMultiGameStepPosition(
+                            firstApp.getCampaign().getStartDate(), firstApp.getCampaign().getEndDate());
 
             if (stepManager.shouldPostStep3(
                     activeApps,
@@ -258,11 +291,14 @@ public class GamePromotionScheduler {
 
                     // Record multi-game step for all apps at the calculated position
                     for (AppPromotion app : activeApps) {
-                        String campaignId = app.getCampaign() != null ? app.getCampaign().getCampaignId() : null;
-                        gamePromotionService.recordPromotionStep(guildId, app.getAppId(), campaignId, multiGameStepPosition, now);
+                        String campaignId =
+                                app.getCampaign() != null ? app.getCampaign().getCampaignId() : null;
+                        gamePromotionService.recordPromotionStep(
+                                guildId, app.getAppId(), campaignId, multiGameStepPosition, now);
                     }
 
-                    logger.info("Posted multi-game promotion (step {}) in guild {}", multiGameStepPosition, guildId);
+                    logger.info(
+                            "Posted multi-game promotion (step {}) in guild {}", multiGameStepPosition, guildId);
                     return 1;
 
                 } catch (Exception e) {
@@ -282,9 +318,12 @@ public class GamePromotionScheduler {
             return 0;
         }
 
-        String nextAppCampaignId = nextApp.getCampaign() != null ? nextApp.getCampaign().getCampaignId() : null;
-        int lastStep = gamePromotionService.getLastPromotionStep(guildId, nextApp.getAppId(), nextAppCampaignId);
-        Instant lastPostTime = gamePromotionService.getLastAppPostTime(guildId, nextApp.getAppId(), nextAppCampaignId);
+        String nextAppCampaignId =
+                nextApp.getCampaign() != null ? nextApp.getCampaign().getCampaignId() : null;
+        int lastStep =
+                gamePromotionService.getLastPromotionStep(guildId, nextApp.getAppId(), nextAppCampaignId);
+        Instant lastPostTime =
+                gamePromotionService.getLastAppPostTime(guildId, nextApp.getAppId(), nextAppCampaignId);
         int nextStep = stepManager.determineNextStep(nextApp, lastStep, lastPostTime, activeApps, now);
 
         if (nextStep == 0) {
@@ -294,9 +333,9 @@ public class GamePromotionScheduler {
 
         // Skip multi-game step if it's the calculated position (already handled earlier)
         if (nextApp.getCampaign() != null) {
-            int multiGameStepPosition = stepManager.getMultiGameStepPosition(
-                    nextApp.getCampaign().getStartDate(),
-                    nextApp.getCampaign().getEndDate());
+            int multiGameStepPosition =
+                    stepManager.getMultiGameStepPosition(
+                            nextApp.getCampaign().getStartDate(), nextApp.getCampaign().getEndDate());
             if (nextStep == multiGameStepPosition) {
                 return 0; // Multi-game step handled separately
             }
@@ -304,10 +343,11 @@ public class GamePromotionScheduler {
 
         try {
             postAppPromotion(channel, nextApp, nextStep, activeApps);
-            gamePromotionService.recordPromotionStep(guildId, nextApp.getAppId(), nextAppCampaignId, nextStep, now);
+            gamePromotionService.recordPromotionStep(
+                    guildId, nextApp.getAppId(), nextAppCampaignId, nextStep, now);
 
-            logger.info("Posted promotion step {} for app {} in guild {}",
-                    nextStep, nextApp.getAppId(), guildId);
+            logger.info(
+                    "Posted promotion step {} for app {} in guild {}", nextStep, nextApp.getAppId(), guildId);
             return 1;
 
         } catch (Exception e) {
@@ -325,25 +365,26 @@ public class GamePromotionScheduler {
     }
 
     /**
-     * Calculates dynamic cooldown based on number of active games.
-     * Scales from min (few games) to max (many games) with randomization.
+     * Calculates dynamic cooldown based on number of active games. Scales from min (few games) to max
+     * (many games) with randomization.
      *
      * @param activeGameCount the number of active games
      * @return cooldown in minutes
      */
     private long calculateDynamicCooldown(int activeGameCount) {
         // Base interval calculation
-        double baseInterval = MIN_INTERVAL_MINUTES +
-                ((MAX_INTERVAL_MINUTES - MIN_INTERVAL_MINUTES) *
-                        (activeGameCount / (double) MAX_GAMES_THRESHOLD));
+        double baseInterval =
+                MIN_INTERVAL_MINUTES
+                        + ((MAX_INTERVAL_MINUTES - MIN_INTERVAL_MINUTES)
+                        * (activeGameCount / (double) MAX_GAMES_THRESHOLD));
 
         // Clamp to min/max
-        baseInterval = Math.max(MIN_INTERVAL_MINUTES,
-                Math.min(MAX_INTERVAL_MINUTES, baseInterval));
+        baseInterval = Math.max(MIN_INTERVAL_MINUTES, Math.min(MAX_INTERVAL_MINUTES, baseInterval));
 
         // Add randomization (±20%)
-        double randomFactor = RANDOMIZATION_FACTOR_MIN +
-                (random.nextDouble() * (RANDOMIZATION_FACTOR_MAX - RANDOMIZATION_FACTOR_MIN));
+        double randomFactor =
+                RANDOMIZATION_FACTOR_MIN
+                        + (random.nextDouble() * (RANDOMIZATION_FACTOR_MAX - RANDOMIZATION_FACTOR_MIN));
         long actualInterval = (long) (baseInterval * randomFactor);
 
         logger.debug("Calculated cooldown for {} games: {} minutes", activeGameCount, actualInterval);
@@ -380,13 +421,16 @@ public class GamePromotionScheduler {
      * @return the next app to promote, or null if cooldown not expired
      */
     private AppPromotion getNextGameToPromote(String guildId, List<AppPromotion> activeApps) {
-        GameRotationState state = rotationStates.computeIfAbsent(guildId, k -> {
-            GameRotationState newState = new GameRotationState();
-            newState.gameQueue = new LinkedList<>();
-            newState.lastPromotionTime = null;
-            newState.currentCooldownMinutes = MIN_INTERVAL_MINUTES;
-            return newState;
-        });
+        GameRotationState state =
+                rotationStates.computeIfAbsent(
+                        guildId,
+                        k -> {
+                            GameRotationState newState = new GameRotationState();
+                            newState.gameQueue = new LinkedList<>();
+                            newState.lastPromotionTime = null;
+                            newState.currentCooldownMinutes = MIN_INTERVAL_MINUTES;
+                            return newState;
+                        });
 
         // Rebuild queue if empty or apps changed
         if (state.gameQueue.isEmpty() || hasAppsChanged(state, activeApps)) {
@@ -397,8 +441,11 @@ public class GamePromotionScheduler {
         if (state.lastPromotionTime != null) {
             long minutesSinceLast = ChronoUnit.MINUTES.between(state.lastPromotionTime, Instant.now());
             if (minutesSinceLast < state.currentCooldownMinutes) {
-                logger.debug("Guild {} cooldown: {} minutes since last, need {} minutes",
-                        guildId, minutesSinceLast, state.currentCooldownMinutes);
+                logger.debug(
+                        "Guild {} cooldown: {} minutes since last, need {} minutes",
+                        guildId,
+                        minutesSinceLast,
+                        state.currentCooldownMinutes);
                 return null; // Not time yet
             }
         }
@@ -418,18 +465,19 @@ public class GamePromotionScheduler {
         final String finalAppId = nextAppId;
 
         // Find app and update state
-        AppPromotion app = activeApps.stream()
-                .filter(a -> a.getAppId().equals(finalAppId))
-                .findFirst()
-                .orElse(null);
+        AppPromotion app =
+                activeApps.stream().filter(a -> a.getAppId().equals(finalAppId)).findFirst().orElse(null);
 
         if (app != null) {
             state.lastPromotionTime = Instant.now();
             state.currentCooldownMinutes = calculateDynamicCooldown(activeApps.size());
             // Re-add to end of queue for rotation
             state.gameQueue.offer(finalAppId);
-            logger.debug("Selected app {} for promotion in guild {} (cooldown: {} minutes)",
-                    app.getAppId(), guildId, state.currentCooldownMinutes);
+            logger.debug(
+                    "Selected app {} for promotion in guild {} (cooldown: {} minutes)",
+                    app.getAppId(),
+                    guildId,
+                    state.currentCooldownMinutes);
         }
 
         return app;
@@ -443,9 +491,8 @@ public class GamePromotionScheduler {
      */
     private void rebuildQueue(GameRotationState state, List<AppPromotion> activeApps) {
         state.gameQueue.clear();
-        List<String> appIds = activeApps.stream()
-                .map(AppPromotion::getAppId)
-                .collect(Collectors.toList());
+        List<String> appIds =
+                activeApps.stream().map(AppPromotion::getAppId).collect(Collectors.toList());
         Collections.shuffle(appIds, random);
         state.gameQueue.addAll(appIds);
         logger.debug("Rebuilt rotation queue with {} apps", appIds.size());
@@ -463,10 +510,7 @@ public class GamePromotionScheduler {
             return true;
         }
 
-        List<String> currentAppIds = activeApps.stream()
-                .map(AppPromotion::getAppId)
-                .sorted()
-                .toList();
+        List<String> currentAppIds = activeApps.stream().map(AppPromotion::getAppId).sorted().toList();
 
         List<String> queueAppIds = new java.util.ArrayList<>(state.gameQueue);
         Collections.sort(queueAppIds);
@@ -482,7 +526,8 @@ public class GamePromotionScheduler {
      * @param step    the promotion step number
      * @param allApps all active apps (for context)
      */
-    private void postAppPromotion(MessageChannel channel, AppPromotion app, int step, List<AppPromotion> allApps) {
+    private void postAppPromotion(
+            MessageChannel channel, AppPromotion app, int step, List<AppPromotion> allApps) {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("🎮 " + app.getAppName());
         embed.setColor(Color.CYAN);
@@ -490,20 +535,23 @@ public class GamePromotionScheduler {
         // Determine step type and get appropriate template
         PromotionStepManager.StepType stepType = PromotionStepManager.StepType.INTRODUCTION;
         if (app.getCampaign() != null) {
-            int totalSteps = stepManager.calculateStepCount(
-                    app.getCampaign().getStartDate(),
-                    app.getCampaign().getEndDate());
-            int multiGameStepPosition = stepManager.getMultiGameStepPosition(
-                    app.getCampaign().getStartDate(),
-                    app.getCampaign().getEndDate());
+            int totalSteps =
+                    stepManager.calculateStepCount(
+                            app.getCampaign().getStartDate(), app.getCampaign().getEndDate());
+            int multiGameStepPosition =
+                    stepManager.getMultiGameStepPosition(
+                            app.getCampaign().getStartDate(), app.getCampaign().getEndDate());
             boolean isMultiGameStep = (step == multiGameStepPosition);
             stepType = stepManager.getStepType(step, totalSteps, isMultiGameStep);
         }
 
         // Create campaign key for template tracking
-        String campaignKey = app.getAppId() + ":" +
-                (app.getCampaign() != null && app.getCampaign().getCampaignId() != null
-                        ? app.getCampaign().getCampaignId() : "none");
+        String campaignKey =
+                app.getAppId()
+                        + ":"
+                        + (app.getCampaign() != null && app.getCampaign().getCampaignId() != null
+                        ? app.getCampaign().getCampaignId()
+                        : "none");
 
         // Get message template for this step type
         String template = messageTemplates.getTemplate(stepType, campaignKey);
@@ -521,23 +569,24 @@ public class GamePromotionScheduler {
 
             if (prioritizedCTAs.hasAnyCTAs()) {
                 // Primary CTAs section
-                List<CTAPrioritySelector.CTALink> primaryCTAs =
-                        prioritizedCTAs.getPrimaryCTAs();
+                List<CTAPrioritySelector.CTALink> primaryCTAs = prioritizedCTAs.getPrimaryCTAs();
 
                 if (!primaryCTAs.isEmpty()) {
                     String primaryHeader = messageTemplates.getIntentDrivenCtaHeader(ctas);
 
                     // Join primary CTAs with " | "
-                    String primarySection = primaryHeader + "\n" + primaryCTAs.stream()
-                            .map(CTAPrioritySelector.CTALink::toMarkdown)
-                            .collect(Collectors.joining(" | "));
+                    String primarySection =
+                            primaryHeader
+                                    + "\n"
+                                    + primaryCTAs.stream()
+                                    .map(CTAPrioritySelector.CTALink::toMarkdown)
+                                    .collect(Collectors.joining(" | "));
 
                     embed.addField("🎯 Play Now", primarySection, false);
                 }
 
                 // Optional secondary CTA section (30-40% chance)
-                CTAPrioritySelector.CTALink secondaryCTA =
-                        prioritizedCTAs.getSecondaryCTA();
+                CTAPrioritySelector.CTALink secondaryCTA = prioritizedCTAs.getSecondaryCTA();
 
                 if (secondaryCTA != null) {
                     embed.addField("👀 Learn More", secondaryCTA.toMarkdown(), false);
@@ -547,16 +596,17 @@ public class GamePromotionScheduler {
 
         // Optionally add social media links (~30% chance)
         if (app.getCampaign() != null && app.getCampaign().getEffectiveSocialMedia() != null) {
-            String socialLink = messageTemplates.getRandomSocialMediaLink(app.getCampaign().getEffectiveSocialMedia());
+            String socialLink =
+                    messageTemplates.getRandomSocialMediaLink(app.getCampaign().getEffectiveSocialMedia());
             if (socialLink != null) {
                 embed.addField("📱 Follow Us", socialLink, false);
             }
         }
 
         // Add image if available
-        if (app.getCampaign() != null &&
-                app.getCampaign().getImages() != null &&
-                !app.getCampaign().getImages().isEmpty()) {
+        if (app.getCampaign() != null
+                && app.getCampaign().getImages() != null
+                && !app.getCampaign().getImages().isEmpty()) {
             String imageUrl = app.getCampaign().getImages().get(0).getAppLogo();
             if (imageUrl != null && !imageUrl.isBlank() && !imageUrl.contains("...")) {
                 embed.setImage(imageUrl);
@@ -573,10 +623,13 @@ public class GamePromotionScheduler {
         }
         embed.setTimestamp(Instant.now());
 
-        channel.sendMessageEmbeds(embed.build()).queue(
-                success -> logger.debug("Successfully posted promotion step {} for app {}", step, app.getAppId()),
-                error -> logger.error("Failed to send promotion message", error)
-        );
+        channel
+                .sendMessageEmbeds(embed.build())
+                .queue(
+                        success ->
+                                logger.debug(
+                                        "Successfully posted promotion step {} for app {}", step, app.getAppId()),
+                        error -> logger.error("Failed to send promotion message", error));
     }
 
     /**
@@ -605,8 +658,7 @@ public class GamePromotionScheduler {
                 PromotionMessageTemplates.PrioritizedCTAs prioritizedCTAs =
                         messageTemplates.getPrioritizedCTAs(app, false); // No secondary for multi-game
 
-                List<CTAPrioritySelector.CTALink> primaryCTAs =
-                        prioritizedCTAs.getPrimaryCTAs();
+                List<CTAPrioritySelector.CTALink> primaryCTAs = prioritizedCTAs.getPrimaryCTAs();
 
                 if (!primaryCTAs.isEmpty()) {
                     // Use first primary CTA
@@ -618,10 +670,12 @@ public class GamePromotionScheduler {
         }
 
         // Add social media links if available (from first app)
-        if (!apps.isEmpty() && apps.get(0).getCampaign() != null &&
-                apps.get(0).getCampaign().getEffectiveSocialMedia() != null) {
-            String socialLink = messageTemplates.getRandomSocialMediaLink(
-                    apps.get(0).getCampaign().getEffectiveSocialMedia());
+        if (!apps.isEmpty()
+                && apps.get(0).getCampaign() != null
+                && apps.get(0).getCampaign().getEffectiveSocialMedia() != null) {
+            String socialLink =
+                    messageTemplates.getRandomSocialMediaLink(
+                            apps.get(0).getCampaign().getEffectiveSocialMedia());
             if (socialLink != null) {
                 embed.addField("📱 Follow Us", socialLink, false);
             }
@@ -631,10 +685,11 @@ public class GamePromotionScheduler {
         embed.setFooter(messageTemplates.getRandomMikrosFooter());
         embed.setTimestamp(Instant.now());
 
-        channel.sendMessageEmbeds(embed.build()).queue(
-                success -> logger.debug("Successfully posted multi-game promotion"),
-                error -> logger.error("Failed to send multi-game promotion message", error)
-        );
+        channel
+                .sendMessageEmbeds(embed.build())
+                .queue(
+                        success -> logger.debug("Successfully posted multi-game promotion"),
+                        error -> logger.error("Failed to send multi-game promotion message", error));
     }
 
     /**
@@ -651,8 +706,8 @@ public class GamePromotionScheduler {
      * Rotation state for a guild.
      */
     private static class GameRotationState {
-        Queue<String> gameQueue;  // Queue of appIds to promote
+        Queue<String> gameQueue; // Queue of appIds to promote
         Instant lastPromotionTime;
         long currentCooldownMinutes;
-    }
+  }
 }

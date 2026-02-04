@@ -3,8 +3,8 @@ package com.tatumgames.mikros.games.rpg.blessing;
 import java.time.Instant;
 
 /**
- * Represents an active blessing granted to a guild during boss battles.
- * Blessings provide temporary stat boosts that only apply during boss battles.
+ * Represents an active blessing granted to a guild during boss battles. Blessings provide temporary
+ * stat boosts that only apply during boss battles.
  */
 public class Blessing {
     private final BlessingType type;
@@ -25,8 +25,12 @@ public class Blessing {
      * @param agiMultiplier agility multiplier
      * @param intMultiplier intelligence multiplier
      */
-    public Blessing(BlessingType type, String narrative,
-                    double strMultiplier, double agiMultiplier, double intMultiplier) {
+    public Blessing(
+            BlessingType type,
+            String narrative,
+            double strMultiplier,
+            double agiMultiplier,
+            double intMultiplier) {
         this.type = type;
         this.narrative = narrative;
         this.grantedAt = Instant.now();
@@ -60,8 +64,8 @@ public class Blessing {
     }
 
     /**
-     * Gets a formatted description of the blessing effects for display.
-     * Only shows stat multipliers that are actually used in boss damage calculation.
+     * Gets a formatted description of the blessing effects for display. Only shows stat multipliers
+     * that are actually used in boss damage calculation.
      *
      * @return formatted string describing all effects
      */

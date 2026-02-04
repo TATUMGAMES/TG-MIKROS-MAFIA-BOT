@@ -13,12 +13,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * In-memory implementation of ModerationLogService.
- * Stores moderation actions in memory using a concurrent hash map.
- * <p>
- * Note: This implementation does not persist data across restarts.
- * Future versions will integrate with a database.
- * Storage is unbounded (no eviction); memory scales with guilds and moderation history until persistence or a cap is added.
+ * In-memory implementation of ModerationLogService. Stores moderation actions in memory using a
+ * concurrent hash map.
+ *
+ * <p>Note: This implementation does not persist data across restarts. Future versions will
+ * integrate with a database. Storage is unbounded (no eviction); memory scales with guilds and
+ * moderation history until persistence or a cap is added.
  */
 public class InMemoryModerationLogService implements ModerationLogService {
     private static final Logger logger = LoggerFactory.getLogger(InMemoryModerationLogService.class);
@@ -70,7 +70,8 @@ public class InMemoryModerationLogService implements ModerationLogService {
     }
 
     @Override
-    public List<ModerationAction> getUserHistoryByType(String userId, String guildId, ActionType actionType) {
+    public List<ModerationAction> getUserHistoryByType(
+            String userId, String guildId, ActionType actionType) {
         if (actionType == null) {
             throw new IllegalArgumentException("actionType cannot be null");
         }
@@ -116,4 +117,3 @@ public class InMemoryModerationLogService implements ModerationLogService {
         return guildId + ":" + userId;
     }
 }
-

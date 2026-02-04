@@ -1,8 +1,7 @@
 package com.tatumgames.mikros.games.rpg.achievements;
 
 /**
- * Enum defining first-to achievement types.
- * These achievements can only be claimed once per server.
+ * Enum defining first-to achievement types. These achievements can only be claimed once per server.
  */
 public enum AchievementType {
     FIRST_TO_LEVEL_20,
@@ -22,4 +21,3 @@ public enum AchievementType {
     FIRST_OATHBREAKER_MAX_CORRUPTION_BOSS, // Defeat super boss at max corruption
     FIRST_OATHBREAKER_3_BACKLASHES // Trigger 3 backlash events and survive
 }
-

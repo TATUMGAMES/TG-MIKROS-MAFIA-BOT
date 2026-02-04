@@ -1,9 +1,9 @@
 package com.tatumgames.mikros.games.rpg.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
@@ -22,8 +22,8 @@ import java.time.format.DateTimeFormatter;
 import static java.time.ZoneId.systemDefault;
 
 /**
- * Command handler for /rpg-stats.
- * Displays detailed RPG statistics including kill counts and character progress.
+ * Command handler for /rpg-stats. Displays detailed RPG statistics including kill counts and
+ * character progress.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class RPGStatsCommand implements CommandHandler {
@@ -41,7 +41,9 @@ public class RPGStatsCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("rpg-stats", "View detailed RPG statistics including kill counts and character progress")
+        return Commands.slash(
+                        "rpg-stats",
+                        "View detailed RPG statistics including kill counts and character progress")
                 .addOption(OptionType.USER, "user", "View another user's stats (optional)", false);
     }
 
@@ -50,9 +52,7 @@ public class RPGStatsCommand implements CommandHandler {
         Guild guild = event.getGuild();
 
         if (guild == null) {
-            event.reply("❌ This command can only be used in a server.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ This command can only be used in a server.").setEphemeral(true).queue();
             return;
         }
 
@@ -64,9 +64,10 @@ public class RPGStatsCommand implements CommandHandler {
         RPGCharacter character = characterService.getCharacter(targetUserId);
 
         if (character == null) {
-            String message = targetUserId.equals(event.getUser().getId())
-                    ? "❌ You don't have a character yet! Use `/rpg-register` to create one."
-                    : "❌ That user doesn't have a character yet.";
+            String message =
+                    targetUserId.equals(event.getUser().getId())
+                            ? "❌ You don't have a character yet! Use `/rpg-register` to create one."
+                            : "❌ That user doesn't have a character yet.";
 
             event.reply(message).setEphemeral(true).queue();
             return;
@@ -75,13 +76,26 @@ public class RPGStatsCommand implements CommandHandler {
         // Get guild config and check channel
         RPGConfig config = characterService.getConfig(guild.getId());
 
+        // Require setup before RPG commands work
+        if (config.getRpgChannelId() == null) {
+            event
+                    .reply(
+                            "❌ RPG is not set up for this server. An administrator must run `/admin-rpg-setup` first.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
         // Check if in correct channel (if specified)
         if (config != null && config.getRpgChannelId() != null) {
             if (!event.getChannel().getId().equals(config.getRpgChannelId())) {
-                event.reply(String.format(
-                        "Please use `/rpg-stats` in <#%s>. RPG commands are restricted to the assigned channel.",
-                        config.getRpgChannelId()
-                )).setEphemeral(true).queue();
+                event
+                        .reply(
+                                String.format(
+                                        "Please use `/rpg-stats` in <#%s>. RPG commands are restricted to the assigned channel.",
+                                        config.getRpgChannelId()))
+                        .setEphemeral(true)
+                        .queue();
                 return;
             }
         }
@@ -95,8 +109,9 @@ public class RPGStatsCommand implements CommandHandler {
         // Combat Statistics
         embed.addField(
                 "⚔️ Combat Statistics",
-                String.format("""
-                                💀 Enemies Defeated: **%d**
+                String.format(
+                        """
+                                💀 History of Defeated Enemies: **%d**
                                 🐲 Bosses Defeated: **%d**
                                 👹 Super Bosses Defeated: **%d**
                                 🔮 Secret Bosses Defeated: **%d**""",
@@ -104,14 +119,14 @@ public class RPGStatsCommand implements CommandHandler {
                         character.getBossesKilled(),
                         character.getSuperBossesKilled(),
                         character.getSecretBossesKilled()),
-                false
-        );
+                false);
 
         // Character Progress
         double xpPercent = (double) character.getXp() / character.getXpToNextLevel() * 100;
         embed.addField(
                 "📈 Character Progress",
-                String.format("""
+                String.format(
+                        """
                                 Level: **%d**
                                 XP: **%d** / %d (%.1f%%)
                                 XP to Next Level: **%d**""",
@@ -120,8 +135,7 @@ public class RPGStatsCommand implements CommandHandler {
                         character.getXpToNextLevel(),
                         xpPercent,
                         character.getXpToNextLevel() - character.getXp()),
-                false
-        );
+                false);
 
         // Current Status
         String status;
@@ -135,7 +149,8 @@ public class RPGStatsCommand implements CommandHandler {
 
         embed.addField(
                 "❤️ Current Status",
-                String.format("""
+                String.format(
+                        """
                                 HP: **%d** / %d
                                 Action Charges: **%d** / %d
                                 Status: **%s**""",
@@ -144,13 +159,13 @@ public class RPGStatsCommand implements CommandHandler {
                         character.getActionCharges(),
                         character.getMaxActionCharges(),
                         status),
-                false
-        );
+                false);
 
         // Stats
         embed.addField(
                 "📊 Stats",
-                String.format("""
+                String.format(
+                        """
                                 ⚔️ STR: **%d**
                                 🏃 AGI: **%d**
                                 🧠 INT: **%d**
@@ -159,11 +174,11 @@ public class RPGStatsCommand implements CommandHandler {
                         character.getStats().getAgility(),
                         character.getStats().getIntelligence(),
                         character.getStats().getLuck()),
-                true
-        );
+                true);
 
         // Footer
-        embed.setFooter(String.format("Character created %s", formatTimestamp(character.getCreatedAt())));
+        embed.setFooter(
+                String.format("Character created %s", formatTimestamp(character.getCreatedAt())));
         embed.setTimestamp(character.getCreatedAt());
 
         event.replyEmbeds(embed.build()).queue();
@@ -196,8 +211,7 @@ public class RPGStatsCommand implements CommandHandler {
      * @return formatted timestamp string
      */
     private String formatTimestamp(Instant instant) {
-        return DateTimeFormatter.ofPattern("MMM dd, yyyy")
-                .format(instant.atZone(systemDefault()));
+        return DateTimeFormatter.ofPattern("MMM dd, yyyy").format(instant.atZone(systemDefault()));
     }
 
     @Override
@@ -205,4 +219,3 @@ public class RPGStatsCommand implements CommandHandler {
         return "rpg-stats";
     }
 }
-

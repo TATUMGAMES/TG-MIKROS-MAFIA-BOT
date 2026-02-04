@@ -75,18 +75,22 @@ public class DonateAction implements CharacterAction {
         Collection<RPGCharacter> allCharacters = characterService.getAllCharacters();
 
         // Filter eligible recipients
-        List<RPGCharacter> eligible = allCharacters.stream()
-                .filter(c -> !c.getDiscordId().equals(donor.getDiscordId())) // Not the donor
-                .filter(this::isActive) // Active within last 24 hours
-                .filter(c -> canReceiveDonation(c, donor)) // Haven't received donation this cycle
-                .filter(c -> !c.isDead() && !c.isRecovering()) // Not dead or recovering
-                .sorted(Comparator.comparingInt(RPGCharacter::getActionCharges)) // Sort by charge count (ascending)
-                .collect(Collectors.toList());
+        List<RPGCharacter> eligible =
+                allCharacters.stream()
+                        .filter(c -> !c.getDiscordId().equals(donor.getDiscordId())) // Not the donor
+                        .filter(this::isActive) // Active within last 24 hours
+                        .filter(c -> canReceiveDonation(c, donor)) // Haven't received donation this cycle
+                        .filter(c -> !c.isDead() && !c.isRecovering()) // Not dead or recovering
+                        .sorted(
+                                Comparator.comparingInt(
+                                        RPGCharacter::getActionCharges)) // Sort by charge count (ascending)
+                        .collect(Collectors.toList());
 
         // If no eligible recipients, don't consume charge
         if (eligible.isEmpty()) {
             return RPGActionOutcome.builder()
-                    .narrative("You look around, but everyone seems well-rested. Your generosity will have to wait.")
+                    .narrative(
+                            "You look around, but everyone seems well-rested. Your generosity will have to wait.")
                     .xpGained(0)
                     .leveledUp(false)
                     .hpRestored(0)
@@ -113,10 +117,10 @@ public class DonateAction implements CharacterAction {
         // Track action type for achievements
         donor.recordActionType("donate");
 
-        String narrative = String.format(
-                "You share your energy with a fellow adventurer. **%s** feels reinvigorated!",
-                recipient.getName()
-        );
+        String narrative =
+                String.format(
+                        "You share your energy with a fellow adventurer. **%s** feels reinvigorated!",
+                        recipient.getName());
 
         return RPGActionOutcome.builder()
                 .narrative(narrative)
@@ -138,10 +142,8 @@ public class DonateAction implements CharacterAction {
             return false;
         }
 
-        long hoursSinceAction = Duration.between(
-                character.getLastActionTime(),
-                Instant.now()
-        ).toHours();
+        long hoursSinceAction =
+                Duration.between(character.getLastActionTime(), Instant.now()).toHours();
 
         return hoursSinceAction <= ACTIVE_THRESHOLD_HOURS;
     }
@@ -171,4 +173,3 @@ public class DonateAction implements CharacterAction {
         return !lastDonation.isAfter(donorRefresh);
     }
 }
-

@@ -262,7 +262,7 @@ The bot detection system automatically reports detected bots to the reputation s
 - **Automatic Reporting:** When a bot is detected, the system automatically creates a `BehaviorReport` with `BehaviorCategory.SPAMMER`
 - **Reporter:** Reports are attributed to "Bot Detection System" (system-generated)
 - **Notes:** Include detection reason and details (e.g., "Auto-detected: ACCOUNT_TOO_NEW - Account age: 5 days, posted link")
-- **Visibility:** Reports appear in `/history` command and affect reputation scores visible in `/lookup`
+- **Visibility:** Reports appear in `/admin-history` command and affect reputation scores visible in `/lookup`
 - **No Positive Reports:** Only negative reports are made for bots (no positive behavior tracking)
 
 **Detection Methods That Trigger Reports:**

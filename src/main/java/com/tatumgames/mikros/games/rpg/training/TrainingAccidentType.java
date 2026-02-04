@@ -1,8 +1,8 @@
 package com.tatumgames.mikros.games.rpg.training;
 
 /**
- * Enum representing different types of training accidents.
- * Accidents are categorized into tiers based on severity.
+ * Enum representing different types of training accidents. Accidents are categorized into tiers
+ * based on severity.
  */
 public enum TrainingAccidentType {
     // Tier 1: Minor Accidents (Most Common - 70% of accidents)
@@ -42,6 +42,6 @@ public enum TrainingAccidentType {
     public enum TrainingAccidentTier {
         TIER_1, // Minor Accidents
         TIER_2, // Moderate Accidents
-        TIER_3  // Severe Accidents
+        TIER_3 // Severe Accidents
     }
 }

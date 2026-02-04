@@ -1,10 +1,10 @@
 package com.tatumgames.mikros.models;
 
 /**
- * Enum representing behavior categories with weighted values.
- * Used for reputation score calculations and moderation actions.
- * <p>
- * Negative weights represent poor behavior, positive weights represent good behavior.
+ * Enum representing behavior categories with weighted values. Used for reputation score
+ * calculations and moderation actions.
+ *
+ * <p>Negative weights represent poor behavior, positive weights represent good behavior.
  */
 public enum BehaviorCategory {
     // NEGATIVE BEHAVIOR
@@ -46,7 +46,8 @@ public enum BehaviorCategory {
     /**
      * NSFW content in non-NSFW space.
      */
-    NSFW_IN_NON_NSFW_SPACE(-5, "NSFW in Non-NSFW Space", "Posting NSFW content in inappropriate channels"),
+    NSFW_IN_NON_NSFW_SPACE(
+            -5, "NSFW in Non-NSFW Space", "Posting NSFW content in inappropriate channels"),
 
     // POSITIVE BEHAVIOR
     /**
@@ -111,10 +112,7 @@ public enum BehaviorCategory {
      */
     public static BehaviorCategory[] getPositiveBehaviors() {
         return new BehaviorCategory[]{
-                ACTIVE_PARTICIPATE,
-                GOOD_HELPER,
-                POSITIVE_INFLUENCER,
-                FRIENDLY_GREETER
+                ACTIVE_PARTICIPATE, GOOD_HELPER, POSITIVE_INFLUENCER, FRIENDLY_GREETER
         };
     }
 
@@ -163,4 +161,3 @@ public enum BehaviorCategory {
         return weight > 0;
     }
 }
-

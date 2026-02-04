@@ -74,7 +74,7 @@ In your Discord server, try:
 
 ```
 /warn @user reason:Testing the warn system
-/history @user
+/admin-history user:@user
 ```
 
 ## Troubleshooting
@@ -130,12 +130,12 @@ src/main/java/com/tatumgames/mikros/
 
 ## Available Commands
 
-| Command    | Permission       | Description      |
-|------------|------------------|------------------|
-| `/warn`    | Moderate Members | Warn a user      |
-| `/kick`    | Kick Members     | Kick a user      |
-| `/ban`     | Ban Members      | Ban a user       |
-| `/history` | Moderate Members | View mod history |
+| Command          | Permission       | Description      |
+|------------------|------------------|------------------|
+| `/warn`          | Moderate Members | Warn a user      |
+| `/kick`          | Kick Members     | Kick a user      |
+| `/ban`           | Ban Members      | Ban a user       |
+| `/admin-history` | Moderate Members | View mod history |
 
 ## Next Steps
 

@@ -12,8 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Service for managing RPG actions.
- * Handles action execution and validation.
+ * Service for managing RPG actions. Handles action execution and validation.
  */
 public class ActionService {
     private static final Logger logger = LoggerFactory.getLogger(ActionService.class);
@@ -30,17 +29,39 @@ public class ActionService {
      * @param loreRecognitionService the lore recognition service (needed for milestone checks)
      * @param bossService            the boss service (optional, for elite enemy system)
      */
-    public ActionService(CharacterService characterService, WorldCurseService worldCurseService, AuraService auraService, com.tatumgames.mikros.games.rpg.service.NilfheimEventService nilfheimEventService, com.tatumgames.mikros.games.rpg.service.LoreRecognitionService loreRecognitionService, com.tatumgames.mikros.games.rpg.service.BossService bossService) {
+    public ActionService(
+            CharacterService characterService,
+            WorldCurseService worldCurseService,
+            AuraService auraService,
+            com.tatumgames.mikros.games.rpg.service.NilfheimEventService nilfheimEventService,
+            com.tatumgames.mikros.games.rpg.service.LoreRecognitionService loreRecognitionService,
+            com.tatumgames.mikros.games.rpg.service.BossService bossService) {
         this.actions = new HashMap<>();
 
         // Create new services for world encounters and stat interactions
-        com.tatumgames.mikros.games.rpg.service.WorldEncounterService worldEncounterService = new com.tatumgames.mikros.games.rpg.service.WorldEncounterService();
-        com.tatumgames.mikros.games.rpg.service.StatInteractionService statInteractionService = new com.tatumgames.mikros.games.rpg.service.StatInteractionService();
+        com.tatumgames.mikros.games.rpg.service.WorldEncounterService worldEncounterService =
+                new com.tatumgames.mikros.games.rpg.service.WorldEncounterService();
+        com.tatumgames.mikros.games.rpg.service.StatInteractionService statInteractionService =
+                new com.tatumgames.mikros.games.rpg.service.StatInteractionService();
 
         // Register available actions
-        registerAction(new ExploreAction(worldCurseService, auraService, nilfheimEventService, loreRecognitionService, worldEncounterService, statInteractionService));
-        registerAction(new TrainAction(nilfheimEventService, loreRecognitionService, worldCurseService));
-        registerAction(new BattleAction(worldCurseService, auraService, nilfheimEventService, loreRecognitionService, bossService));
+        registerAction(
+                new ExploreAction(
+                        worldCurseService,
+                        auraService,
+                        nilfheimEventService,
+                        loreRecognitionService,
+                        worldEncounterService,
+                        statInteractionService));
+        registerAction(
+                new TrainAction(nilfheimEventService, loreRecognitionService, worldCurseService));
+        registerAction(
+                new BattleAction(
+                        worldCurseService,
+                        auraService,
+                        nilfheimEventService,
+                        loreRecognitionService,
+                        bossService));
         registerAction(new RestAction());
         registerAction(new DonateAction(characterService));
 
@@ -50,8 +71,19 @@ public class ActionService {
     /**
      * Creates a new ActionService without BossService (backward compatibility).
      */
-    public ActionService(CharacterService characterService, WorldCurseService worldCurseService, AuraService auraService, com.tatumgames.mikros.games.rpg.service.NilfheimEventService nilfheimEventService, com.tatumgames.mikros.games.rpg.service.LoreRecognitionService loreRecognitionService) {
-        this(characterService, worldCurseService, auraService, nilfheimEventService, loreRecognitionService, null);
+    public ActionService(
+            CharacterService characterService,
+            WorldCurseService worldCurseService,
+            AuraService auraService,
+            com.tatumgames.mikros.games.rpg.service.NilfheimEventService nilfheimEventService,
+            com.tatumgames.mikros.games.rpg.service.LoreRecognitionService loreRecognitionService) {
+        this(
+                characterService,
+                worldCurseService,
+                auraService,
+                nilfheimEventService,
+                loreRecognitionService,
+                null);
     }
 
     /**
@@ -73,15 +105,19 @@ public class ActionService {
      * @return the action outcome
      * @throws IllegalArgumentException if action doesn't exist
      */
-    public RPGActionOutcome executeAction(String actionName, RPGCharacter character, RPGConfig config) {
+    public RPGActionOutcome executeAction(
+            String actionName, RPGCharacter character, RPGConfig config) {
         CharacterAction action = actions.get(actionName.toLowerCase());
 
         if (action == null) {
             throw new IllegalArgumentException("Unknown action: " + actionName);
         }
 
-        logger.info("Executing action {} for character {} (Level {})",
-                actionName, character.getName(), character.getLevel());
+        logger.info(
+                "Executing action {} for character {} (Level {})",
+                actionName,
+                character.getName(),
+                character.getLevel());
 
         return action.execute(character, config);
     }
@@ -112,7 +148,6 @@ public class ActionService {
      * @return true if the action exists
      */
     public boolean hasAction(String actionName) {
-        return actions.containsKey(actionName.toLowerCase());
-    }
+    return actions.containsKey(actionName.toLowerCase());
+  }
 }
-

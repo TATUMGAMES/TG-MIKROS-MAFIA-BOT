@@ -54,9 +54,7 @@ public interface ModerationLogService {
     List<ModerationAction> getAllActions(String guildId);
 
     /**
-     * Clears all moderation history.
-     * Note: This is primarily for testing purposes.
+     * Clears all moderation history. Note: This is primarily for testing purposes.
      */
     void clearAllHistory();
 }
-

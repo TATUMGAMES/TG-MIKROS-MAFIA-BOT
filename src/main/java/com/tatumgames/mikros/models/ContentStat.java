@@ -3,7 +3,8 @@ package com.tatumgames.mikros.models;
 /**
  * Represents statistics for in-game content or content types.
  */
-public record ContentStat(String contentName, String contentType, double growthPercentage, long usageCount, int rank) {
+public record ContentStat(
+        String contentName, String contentType, double growthPercentage, long usageCount, int rank) {
     /**
      * Creates a new ContentStat.
      *
@@ -16,4 +17,3 @@ public record ContentStat(String contentName, String contentType, double growthP
     public ContentStat {
     }
 }
-

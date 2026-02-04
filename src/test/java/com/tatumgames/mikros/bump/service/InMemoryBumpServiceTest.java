@@ -41,15 +41,13 @@ class InMemoryBumpServiceTest {
   @Test
   @DisplayName("Should throw when setBumpChannel with null guildId")
   void shouldThrowForSetBumpChannelNullGuildId() {
-    assertThrows(
-        IllegalArgumentException.class, () -> service.setBumpChannel(null, CHANNEL_ID));
+      assertThrows(IllegalArgumentException.class, () -> service.setBumpChannel(null, CHANNEL_ID));
   }
 
   @Test
   @DisplayName("Should throw when setBumpChannel with blank guildId")
   void shouldThrowForSetBumpChannelBlankGuildId() {
-    assertThrows(
-        IllegalArgumentException.class, () -> service.setBumpChannel("  ", CHANNEL_ID));
+      assertThrows(IllegalArgumentException.class, () -> service.setBumpChannel("  ", CHANNEL_ID));
   }
 
   @Test
@@ -84,9 +82,7 @@ class InMemoryBumpServiceTest {
   void shouldThrowForSetEnabledBotsNullGuildId() {
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            service.setEnabledBots(
-                null, EnumSet.of(BumpConfig.BumpBot.DISBOARD)));
+            () -> service.setEnabledBots(null, EnumSet.of(BumpConfig.BumpBot.DISBOARD)));
   }
 
   @Test
@@ -111,10 +107,8 @@ class InMemoryBumpServiceTest {
   @Test
   @DisplayName("Should throw when setBumpInterval with invalid hours")
   void shouldThrowForInvalidInterval() {
-    assertThrows(
-        IllegalArgumentException.class, () -> service.setBumpInterval(GUILD_ID, 0));
-    assertThrows(
-        IllegalArgumentException.class, () -> service.setBumpInterval(GUILD_ID, 25));
+      assertThrows(IllegalArgumentException.class, () -> service.setBumpInterval(GUILD_ID, 0));
+      assertThrows(IllegalArgumentException.class, () -> service.setBumpInterval(GUILD_ID, 25));
   }
 
   @Test
@@ -138,9 +132,7 @@ class InMemoryBumpServiceTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> service.recordBumpTime(null, BumpConfig.BumpBot.DISBOARD, now));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> service.recordBumpTime(GUILD_ID, null, now));
+      assertThrows(IllegalArgumentException.class, () -> service.recordBumpTime(GUILD_ID, null, now));
     assertThrows(
         IllegalArgumentException.class,
         () -> service.recordBumpTime(GUILD_ID, BumpConfig.BumpBot.DISBOARD, null));
@@ -170,24 +162,20 @@ class InMemoryBumpServiceTest {
     Instant now = Instant.now();
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            service.recordSuccessfulBump(null, BumpConfig.BumpBot.DISBOARD, "u", now));
+            () -> service.recordSuccessfulBump(null, BumpConfig.BumpBot.DISBOARD, "u", now));
     assertThrows(
         IllegalArgumentException.class,
         () -> service.recordSuccessfulBump(GUILD_ID, null, "u", now));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            service.recordSuccessfulBump(
-                GUILD_ID, BumpConfig.BumpBot.DISBOARD, "u", null));
+            () -> service.recordSuccessfulBump(GUILD_ID, BumpConfig.BumpBot.DISBOARD, "u", null));
   }
 
   @Test
   @DisplayName("Should clear guild data and remove config and history")
   void shouldClearGuildData() {
     service.setBumpChannel(GUILD_ID, CHANNEL_ID);
-    service.recordSuccessfulBump(
-        GUILD_ID, BumpConfig.BumpBot.DISBOARD, "user1", Instant.now());
+      service.recordSuccessfulBump(GUILD_ID, BumpConfig.BumpBot.DISBOARD, "user1", Instant.now());
 
     service.clearGuildData(GUILD_ID);
 
@@ -233,13 +221,10 @@ class InMemoryBumpServiceTest {
   @Test
   @DisplayName("Should return same stats from getBumpStats overload with time range")
   void shouldReturnStatsFromOverloadWithTimeRange() {
-    service.recordSuccessfulBump(
-        GUILD_ID, BumpConfig.BumpBot.DISBOARD, "u1", Instant.now());
+      service.recordSuccessfulBump(GUILD_ID, BumpConfig.BumpBot.DISBOARD, "u1", Instant.now());
 
     BumpStats noArg = service.getBumpStats(GUILD_ID);
-    BumpStats withRange =
-        service.getBumpStats(
-            GUILD_ID, Instant.EPOCH, Instant.now());
+      BumpStats withRange = service.getBumpStats(GUILD_ID, Instant.EPOCH, Instant.now());
 
     assertNotNull(withRange);
     assertEquals(noArg.getGuildId(), withRange.getGuildId());

@@ -72,14 +72,13 @@ public interface BumpService {
      * Gets the last bump time for a bot in a guild.
      *
      * @param guildId the guild ID
-     * @param bot     the bot
+     * @param bot the bot
      * @return the last bump time, or null if never bumped
      */
     Instant getLastBumpTime(String guildId, BumpConfig.BumpBot bot);
 
     /**
-     * Gets the bump configuration for a guild.
-     * Creates a default config if none exists.
+     * Gets the bump configuration for a guild. Creates a default config if none exists.
      *
      * @param guildId the guild ID
      * @return the bump config
@@ -114,11 +113,10 @@ public interface BumpService {
     /**
      * Gets bump statistics for a specific time period.
      *
-     * @param guildId   the guild ID
+     * @param guildId the guild ID
      * @param startTime start of time period
-     * @param endTime   end of time period
+     * @param endTime end of time period
      * @return bump statistics for the period
      */
     BumpStats getBumpStats(String guildId, Instant startTime, Instant endTime);
 }
-

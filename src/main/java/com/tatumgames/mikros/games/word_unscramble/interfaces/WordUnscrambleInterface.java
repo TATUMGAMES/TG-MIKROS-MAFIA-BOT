@@ -5,8 +5,8 @@ import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleSession;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleType;
 
 /**
- * Interface for Word Unscramble game implementation.
- * Defines the contract for Word Unscramble game behavior.
+ * Interface for Word Unscramble game implementation. Defines the contract for Word Unscramble game
+ * behavior.
  */
 public interface WordUnscrambleInterface {
 
@@ -34,7 +34,8 @@ public interface WordUnscrambleInterface {
      * @param input    the player's input/answer
      * @return the game result for this attempt
      */
-    WordUnscrambleResult handleAttempt(WordUnscrambleSession session, String userId, String username, String input);
+    WordUnscrambleResult handleAttempt(
+            WordUnscrambleSession session, String userId, String username, String input);
 
     /**
      * Generates the announcement message for the game.
@@ -51,5 +52,3 @@ public interface WordUnscrambleInterface {
      */
     void resetSession(WordUnscrambleSession session);
 }
-
-

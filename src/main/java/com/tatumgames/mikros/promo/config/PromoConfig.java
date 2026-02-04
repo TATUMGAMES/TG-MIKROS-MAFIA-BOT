@@ -2,12 +2,9 @@ package com.tatumgames.mikros.promo.config;
 
 /**
  * Configuration for promotional detection per guild.
- * <p>
- * TODO: Future Features
- * - Custom trigger phrases per server
- * - Channel whitelist/blacklist
- * - Role-based targeting
- * - A/B testing for prompt messages
+ *
+ * <p>TODO: Future Features - Custom trigger phrases per server - Channel whitelist/blacklist -
+ * Role-based targeting - A/B testing for prompt messages
  */
 public class PromoConfig {
     private final String guildId;
@@ -38,8 +35,8 @@ public class PromoConfig {
      * @param sendDm        whether to send DM prompts
      * @param sendInChannel whether to send channel prompts
      */
-    public PromoConfig(String guildId, boolean enabled, int cooldownDays,
-                       boolean sendDm, boolean sendInChannel) {
+    public PromoConfig(
+            String guildId, boolean enabled, int cooldownDays, boolean sendDm, boolean sendInChannel) {
         this.guildId = guildId;
         this.enabled = enabled;
         this.cooldownDays = cooldownDays;
@@ -85,8 +82,3 @@ public class PromoConfig {
         this.sendInChannel = sendInChannel;
     }
 }
-
-
-
-
-

@@ -7,12 +7,9 @@ import java.util.Set;
 
 /**
  * Configuration for Word Unscramble game in a guild.
- * <p>
- * TODO: Server Persistence
- * - Add database persistence for guild configurations
- * - Store cumulative leaderboard data
- * - Add custom word lists per guild
- * - Add difficulty level settings
+ *
+ * <p>TODO: Server Persistence - Add database persistence for guild configurations - Store
+ * cumulative leaderboard data - Add custom word lists per guild - Add difficulty level settings
  */
 public class WordUnscrambleConfig {
     private final String guildId;
@@ -30,7 +27,11 @@ public class WordUnscrambleConfig {
      * @param enabledGames  the set of enabled game types
      * @param resetTime     the daily reset time (UTC)
      */
-    public WordUnscrambleConfig(String guildId, String gameChannelId, Set<WordUnscrambleType> enabledGames, LocalTime resetTime) {
+    public WordUnscrambleConfig(
+            String guildId,
+            String gameChannelId,
+            Set<WordUnscrambleType> enabledGames,
+            LocalTime resetTime) {
         this.guildId = Objects.requireNonNull(guildId);
         this.gameChannelId = Objects.requireNonNull(gameChannelId);
         this.enabledGames = new HashSet<>(enabledGames);
@@ -105,5 +106,3 @@ public class WordUnscrambleConfig {
         this.allowNoRoleUsers = allowNoRoleUsers;
     }
 }
-
-

@@ -1,10 +1,10 @@
 package com.tatumgames.mikros.games.word_unscramble.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleConfig;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscramblePlayerStats;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -19,8 +19,8 @@ import java.time.Duration;
 import java.time.Instant;
 
 /**
- * Command handler for /scramble-profile.
- * Displays individual player statistics for Word Unscramble game.
+ * Command handler for /scramble-profile. Displays individual player statistics for Word Unscramble
+ * game.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class ScrambleProfileCommand implements CommandHandler {
@@ -46,31 +46,25 @@ public class ScrambleProfileCommand implements CommandHandler {
     public void handle(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) {
-            event.reply("❌ This command can only be used in a server.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ This command can only be used in a server.").setEphemeral(true).queue();
             return;
         }
 
         Member member = event.getMember();
         if (member == null) {
-            event.reply("❌ Unable to get member information.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ Unable to get member information.").setEphemeral(true).queue();
             return;
         }
 
         String guildId = guild.getId();
         String userId = event.getUser().getId();
 
-        // Check if games are configured
+        // Require setup before Word Unscramble commands work
         WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
-        if (config == null) {
-            event.reply("""
-                            ❌ Word Unscramble game is not set up yet!
-                            
-                            An administrator can set it up with `/admin-scramble-setup`
-                            """)
+        if (config == null || config.getGameChannelId() == null) {
+            event
+                    .reply(
+                            "❌ Word Unscramble is not set up for this server. An administrator must run `/admin-scramble-setup` first.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -78,7 +72,9 @@ public class ScrambleProfileCommand implements CommandHandler {
 
         // Check role requirement
         if (!AdminUtils.canUserPlay(member, config.isAllowNoRoleUsers())) {
-            event.reply("❌ Users without roles cannot play Word Unscramble games in this server. Contact an administrator.")
+            event
+                    .reply(
+                            "❌ Users without roles cannot play Word Unscramble games in this server. Contact an administrator.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -136,4 +132,3 @@ public class ScrambleProfileCommand implements CommandHandler {
         return "scramble-profile";
     }
 }
-
