@@ -48,12 +48,17 @@ public class AutoEscalationService {
             return null;
         }
 
-        int warningCount = moderationLogService.getUserHistoryByType(userId, guildId, ActionType.WARN).size();
+        int warningCount =
+                moderationLogService.getUserHistoryByType(userId, guildId, ActionType.WARN).size();
         int threshold = getEscalationThreshold(guildId);
 
         if (warningCount >= threshold) {
-            logger.info("User {} in guild {} has {} warnings, auto-escalation triggered (threshold: {})",
-                    userId, guildId, warningCount, threshold);
+            logger.info(
+                    "User {} in guild {} has {} warnings, auto-escalation triggered (threshold: {})",
+                    userId,
+                    guildId,
+                    warningCount,
+                    threshold);
             return ActionType.KICK;
         }
 
@@ -78,23 +83,32 @@ public class AutoEscalationService {
         if (escalationAction == ActionType.KICK) {
             // Check if bot can kick the member
             if (botMember.canInteract(member)) {
-                String reason = String.format(
-                        "Auto-escalation: User reached %d warnings threshold",
-                        getEscalationThreshold(guild.getId())
-                );
+                String reason =
+                        String.format(
+                                "Auto-escalation: User reached %d warnings threshold",
+                                getEscalationThreshold(guild.getId()));
 
-                guild.kick(member)
+                guild
+                        .kick(member)
                         .reason(reason)
                         .queue(
-                                success -> logger.info("Auto-escalated user {} in guild {}: kicked",
-                                        member.getId(), guild.getId()),
-                                error -> logger.error("Failed to auto-escalate user {} in guild {}: {}",
-                                        member.getId(), guild.getId(), error.getMessage())
-                        );
+                                success ->
+                                        logger.info(
+                                                "Auto-escalated user {} in guild {}: kicked",
+                                                member.getId(),
+                                                guild.getId()),
+                                error ->
+                                        logger.error(
+                                                "Failed to auto-escalate user {} in guild {}: {}",
+                                                member.getId(),
+                                                guild.getId(),
+                                                error.getMessage()));
                 return true;
             } else {
-                logger.warn("Cannot auto-escalate user {} in guild {}: role hierarchy prevents kick",
-                        member.getId(), guild.getId());
+                logger.warn(
+                        "Cannot auto-escalate user {} in guild {}: role hierarchy prevents kick",
+                        member.getId(),
+                        guild.getId());
             }
         }
 
@@ -119,7 +133,8 @@ public class AutoEscalationService {
      * @return true if enabled, false otherwise
      */
     public boolean isEscalationEnabled(String guildId) {
-        return guildEscalationEnabled.getOrDefault(guildId, ModerationConfig.AUTO_ESCALATION_ENABLED_DEFAULT);
+        return guildEscalationEnabled.getOrDefault(
+                guildId, ModerationConfig.AUTO_ESCALATION_ENABLED_DEFAULT);
     }
 
     /**
@@ -143,7 +158,7 @@ public class AutoEscalationService {
      * @return the warning threshold
      */
     public int getEscalationThreshold(String guildId) {
-        return guildEscalationThresholds.getOrDefault(guildId, ModerationConfig.AUTO_ESCALATION_WARNING_THRESHOLD);
+        return guildEscalationThresholds.getOrDefault(
+                guildId, ModerationConfig.AUTO_ESCALATION_WARNING_THRESHOLD);
     }
 }
-

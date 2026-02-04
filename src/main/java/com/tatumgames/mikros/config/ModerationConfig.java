@@ -30,9 +30,7 @@ public class ModerationConfig {
      */
     public static final int MONTHLY_REPORT_DAY = 1;
 
-    /**
-     * Hour of day to send monthly reports (0-23, in server timezone).
-     */
+    /** Hour of day to send monthly reports (0-23, in server timezone). */
     public static final int MONTHLY_REPORT_HOUR = 9;
 
     /**
@@ -42,6 +40,5 @@ public class ModerationConfig {
 
     private ModerationConfig() {
         // Private constructor to prevent instantiation
-    }
+  }
 }
-

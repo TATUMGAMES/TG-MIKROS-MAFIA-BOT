@@ -71,4 +71,3 @@ public class GetUserScoreDetailRequest {
         this.discordUsernames = discordUsernames;
     }
 }
-

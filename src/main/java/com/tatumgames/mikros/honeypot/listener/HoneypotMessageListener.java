@@ -35,9 +35,10 @@ public class HoneypotMessageListener extends ListenerAdapter {
      * @param moderationLogService   the moderation log service
      * @param messageDeletionService the message deletion service
      */
-    public HoneypotMessageListener(HoneypotService honeypotService,
-                                   ModerationLogService moderationLogService,
-                                   MessageDeletionService messageDeletionService) {
+    public HoneypotMessageListener(
+            HoneypotService honeypotService,
+            ModerationLogService moderationLogService,
+            MessageDeletionService messageDeletionService) {
         this.honeypotService = honeypotService;
         this.moderationLogService = moderationLogService;
         this.messageDeletionService = messageDeletionService;
@@ -70,20 +71,23 @@ public class HoneypotMessageListener extends ListenerAdapter {
 
         User user = event.getAuthor();
 
-        logger.warn("Honeypot triggered by user {} in guild {} (channel: {})",
-                user.getId(), guildId, channelId);
+        logger.warn(
+                "Honeypot triggered by user {} in guild {} (channel: {})",
+                user.getId(),
+                guildId,
+                channelId);
 
         // Log the action
-        ModerationAction action = new ModerationAction(
-                user.getId(),
-                user.getName(),
-                event.getJDA().getSelfUser().getId(),
-                event.getJDA().getSelfUser().getName(),
-                ActionType.BAN,
-                "Honeypot trigger - Posted in honeypot channel",
-                Instant.now(),
-                guildId
-        );
+        ModerationAction action =
+                new ModerationAction(
+                        user.getId(),
+                        user.getName(),
+                        event.getJDA().getSelfUser().getId(),
+                        event.getJDA().getSelfUser().getName(),
+                        ActionType.BAN,
+                        "Honeypot trigger - Posted in honeypot channel",
+                        Instant.now(),
+                        guildId);
         moderationLogService.logAction(action);
 
         // Send alert to admin channel if configured
@@ -92,7 +96,9 @@ public class HoneypotMessageListener extends ListenerAdapter {
         // Handle based on silent mode
         if (config.isSilentMode()) {
             // Silent mode: just log, don't ban
-            logger.info("Silent mode enabled - logging honeypot trigger for user {} without banning", user.getId());
+            logger.info(
+                    "Silent mode enabled - logging honeypot trigger for user {} without banning",
+                    user.getId());
             return;
         }
 
@@ -100,29 +106,45 @@ public class HoneypotMessageListener extends ListenerAdapter {
         final int deleteDays = config.getDeleteDays() < 0 ? 7 : config.getDeleteDays();
 
         // Ban the user
-        event.getGuild().ban(user, deleteDays, java.util.concurrent.TimeUnit.DAYS)
+        event
+                .getGuild()
+                .ban(user, deleteDays, java.util.concurrent.TimeUnit.DAYS)
                 .reason("Honeypot trigger - Posted in honeypot channel")
                 .queue(
                         success -> {
-                            logger.info("Auto-banned user {} for honeypot trigger in guild {}", user.getId(), guildId);
+                            logger.info(
+                                    "Auto-banned user {} for honeypot trigger in guild {}", user.getId(), guildId);
 
                             // Delete all messages from the user
                             final int finalDeleteDays = deleteDays;
                             if (finalDeleteDays > 0) {
-                                messageDeletionService.deleteAllUserMessages(event.getGuild(), user, finalDeleteDays)
-                                        .thenAccept(count -> {
-                                            logger.info("Deleted {} messages from user {} after honeypot ban", count, user.getId());
-                                        })
-                                        .exceptionally(error -> {
-                                            logger.error("Error deleting messages from user {}: {}", user.getId(), error.getMessage(), error);
-                                            return null;
-                                        });
+                                messageDeletionService
+                                        .deleteAllUserMessages(event.getGuild(), user, finalDeleteDays)
+                                        .thenAccept(
+                                                count -> {
+                                                    logger.info(
+                                                            "Deleted {} messages from user {} after honeypot ban",
+                                                            count,
+                                                            user.getId());
+                                                })
+                                        .exceptionally(
+                                                error -> {
+                                                    logger.error(
+                                                            "Error deleting messages from user {}: {}",
+                                                            user.getId(),
+                                                            error.getMessage(),
+                                                            error);
+                                                    return null;
+                                                });
                             }
                         },
                         error -> {
-                            logger.error("Failed to ban user {} for honeypot trigger: {}", user.getId(), error.getMessage(), error);
-                        }
-                );
+                            logger.error(
+                                    "Failed to ban user {} for honeypot trigger: {}",
+                                    user.getId(),
+                                    error.getMessage(),
+                                    error);
+                        });
     }
 
     /**
@@ -139,29 +161,33 @@ public class HoneypotMessageListener extends ListenerAdapter {
 
         TextChannel alertChannel = event.getGuild().getTextChannelById(config.getAlertChannelId());
         if (alertChannel == null) {
-            logger.warn("Alert channel {} not found for guild {}", config.getAlertChannelId(), event.getGuild().getId());
+            logger.warn(
+                    "Alert channel {} not found for guild {}",
+                    config.getAlertChannelId(),
+                    event.getGuild().getId());
             return;
         }
 
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("⚠️ Honeypot Trigger")
-                .setColor(Color.RED)
-                .setDescription(String.format(
-                        "User **%s** (`%s`) posted in honeypot channel **%s**",
-                        user.getName(),
-                        user.getId(),
-                        event.getChannel().getName()
-                ))
-                .addField("Action", config.isSilentMode() ? "Logged (Silent Mode)" : "Banned + Messages Deleted", false)
-                .addField("Delete Days", String.valueOf(config.getDeleteDays()), true)
-                .setTimestamp(Instant.now())
-                .setFooter("Honeypot System", null);
+        EmbedBuilder embed =
+                new EmbedBuilder()
+                        .setTitle("⚠️ Honeypot Trigger")
+                        .setColor(Color.RED)
+                        .setDescription(
+                                String.format(
+                                        "User **%s** (`%s`) posted in honeypot channel **%s**",
+                                        user.getName(), user.getId(), event.getChannel().getName()))
+                        .addField(
+                                "Action",
+                                config.isSilentMode() ? "Logged (Silent Mode)" : "Banned + Messages Deleted",
+                                false)
+                        .addField("Delete Days", String.valueOf(config.getDeleteDays()), true)
+                        .setTimestamp(Instant.now())
+                        .setFooter("Honeypot System", null);
 
-        alertChannel.sendMessageEmbeds(embed.build())
+        alertChannel
+                .sendMessageEmbeds(embed.build())
                 .queue(
                         success -> logger.debug("Sent honeypot alert to channel {}", alertChannel.getName()),
-                        error -> logger.error("Failed to send honeypot alert: {}", error.getMessage(), error)
-                );
+                        error -> logger.error("Failed to send honeypot alert: {}", error.getMessage(), error));
     }
 }
-

@@ -1,8 +1,8 @@
 package com.tatumgames.mikros.games.rpg.blessing;
 
 /**
- * Enum representing the tier/type of blessing.
- * Blessings are granted based on consecutive boss failures.
+ * Enum representing the tier/type of blessing. Blessings are granted based on consecutive boss
+ * failures.
  */
 public enum BlessingType {
     /**

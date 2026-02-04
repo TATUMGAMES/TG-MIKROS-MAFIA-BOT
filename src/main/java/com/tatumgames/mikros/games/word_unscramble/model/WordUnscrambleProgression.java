@@ -3,8 +3,8 @@ package com.tatumgames.mikros.games.word_unscramble.model;
 import java.util.Objects;
 
 /**
- * Tracks community-wide progression for Word Unscramble game per server.
- * Level N requires (10 × N) correctly solved words.
+ * Tracks community-wide progression for Word Unscramble game per server. Level N requires (10 × N)
+ * correctly solved words.
  */
 public class WordUnscrambleProgression {
     private final String guildId;
@@ -39,8 +39,7 @@ public class WordUnscrambleProgression {
     }
 
     /**
-     * Calculates XP required for a level.
-     * Level N requires (10 × N) solves.
+     * Calculates XP required for a level. Level N requires (10 × N) solves.
      *
      * @param level the level
      * @return the XP required
@@ -137,5 +136,3 @@ public class WordUnscrambleProgression {
         return xpRequired - xp;
     }
 }
-
-

@@ -6,21 +6,28 @@ import java.util.Objects;
 /**
  * Represents a game promotion from the MIKROS Marketing API.
  */
-public record GamePromotion(int gameId, String gameName, String description, String promotionUrl,
-                            String promotionMessage, String imageUrl, Instant campaignStartDate,
-                            Instant campaignEndDate, int frequencyDays) {
+public record GamePromotion(
+        int gameId,
+        String gameName,
+        String description,
+        String promotionUrl,
+        String promotionMessage,
+        String imageUrl,
+        Instant campaignStartDate,
+        Instant campaignEndDate,
+        int frequencyDays) {
     /**
      * Creates a new GamePromotion.
      *
-     * @param gameId            the unique game ID
-     * @param gameName          the game title
-     * @param description       short marketing summary
-     * @param promotionUrl      Steam or MIKROS marketing link
-     * @param promotionMessage  optional pre-written message
-     * @param imageUrl          optional cover art URL
+     * @param gameId the unique game ID
+     * @param gameName the game title
+     * @param description short marketing summary
+     * @param promotionUrl Steam or MIKROS marketing link
+     * @param promotionMessage optional pre-written message
+     * @param imageUrl optional cover art URL
      * @param campaignStartDate UTC datetime - campaign start date
-     * @param campaignEndDate   UTC datetime - campaign end date
-     * @param frequencyDays     how often to post (every X days, provided by backend)
+     * @param campaignEndDate UTC datetime - campaign end date
+     * @param frequencyDays how often to post (every X days, provided by backend)
      */
     public GamePromotion(
             int gameId,
@@ -31,16 +38,17 @@ public record GamePromotion(int gameId, String gameName, String description, Str
             String imageUrl,
             Instant campaignStartDate,
             Instant campaignEndDate,
-            int frequencyDays
-    ) {
+            int frequencyDays) {
         this.gameId = gameId;
         this.gameName = Objects.requireNonNull(gameName, "gameName cannot be null");
         this.description = Objects.requireNonNull(description, "description cannot be null");
         this.promotionUrl = Objects.requireNonNull(promotionUrl, "promotionUrl cannot be null");
         this.promotionMessage = promotionMessage; // Can be null
         this.imageUrl = imageUrl; // Can be null
-        this.campaignStartDate = Objects.requireNonNull(campaignStartDate, "campaignStartDate cannot be null");
-        this.campaignEndDate = Objects.requireNonNull(campaignEndDate, "campaignEndDate cannot be null");
+        this.campaignStartDate =
+                Objects.requireNonNull(campaignStartDate, "campaignStartDate cannot be null");
+        this.campaignEndDate =
+                Objects.requireNonNull(campaignEndDate, "campaignEndDate cannot be null");
         this.frequencyDays = frequencyDays;
     }
 
@@ -135,8 +143,8 @@ public record GamePromotion(int gameId, String gameName, String description, Str
     }
 
     /**
-     * Checks if this promotion is within its active campaign period.
-     * Returns true if current time is after campaign start and before campaign end.
+     * Checks if this promotion is within its active campaign period. Returns true if current time is
+     * after campaign start and before campaign end.
      *
      * @return true if within campaign period, false otherwise
      */
@@ -162,8 +170,6 @@ public record GamePromotion(int gameId, String gameName, String description, Str
     public String toString() {
         return String.format(
                 "GamePromotion{gameId=%d, gameName='%s', campaignStartDate=%s, campaignEndDate=%s, frequencyDays=%d}",
-                gameId, gameName, campaignStartDate, campaignEndDate, frequencyDays
-        );
+                gameId, gameName, campaignStartDate, campaignEndDate, frequencyDays);
     }
 }
-

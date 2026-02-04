@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Service for managing blessings granted during boss battles.
- * Blessings provide temporary stat boosts when players fail to defeat bosses repeatedly.
+ * Service for managing blessings granted during boss battles. Blessings provide temporary stat
+ * boosts when players fail to defeat bosses repeatedly.
  */
 public class BlessingService {
     private static final Logger logger = LoggerFactory.getLogger(BlessingService.class);
@@ -44,8 +44,12 @@ public class BlessingService {
         if (existing != null) {
             // Only upgrade if new tier is higher
             if (type.ordinal() > existing.getType().ordinal()) {
-                logger.info("Upgrading blessing from {} to {} for guild {} ({} failures)",
-                        existing.getType().getDisplayName(), type.getDisplayName(), guildId, consecutiveFailures);
+                logger.info(
+                        "Upgrading blessing from {} to {} for guild {} ({} failures)",
+                        existing.getType().getDisplayName(),
+                        type.getDisplayName(),
+                        guildId,
+                        consecutiveFailures);
             } else {
                 // Already have equal or higher tier blessing
                 return existing;
@@ -58,8 +62,11 @@ public class BlessingService {
         Blessing blessing = createBlessingForTier(type);
         activeBlessings.put(guildId, blessing);
 
-        logger.info("Granted {} to guild {} after {} consecutive failures",
-                type.getDisplayName(), guildId, consecutiveFailures);
+        logger.info(
+                "Granted {} to guild {} after {} consecutive failures",
+                type.getDisplayName(),
+                guildId,
+                consecutiveFailures);
 
         return blessing;
     }
@@ -82,13 +89,14 @@ public class BlessingService {
     public void clearBlessing(String guildId) {
         Blessing removed = activeBlessings.remove(guildId);
         if (removed != null) {
-            logger.info("Cleared {} for guild {} (boss defeated)", removed.getType().getDisplayName(), guildId);
+            logger.info(
+                    "Cleared {} for guild {} (boss defeated)", removed.getType().getDisplayName(), guildId);
         }
     }
 
     /**
-     * Gets blessing effects for a specific character class.
-     * Blessings are class-specific, so this method returns the appropriate effects.
+     * Gets blessing effects for a specific character class. Blessings are class-specific, so this
+     * method returns the appropriate effects.
      *
      * @param guildId        the guild ID
      * @param characterClass the character class
@@ -116,8 +124,8 @@ public class BlessingService {
     }
 
     /**
-     * Creates a class-specific blessing based on tier and class.
-     * Only includes stat multipliers that are actually used in boss damage calculation.
+     * Creates a class-specific blessing based on tier and class. Only includes stat multipliers that
+     * are actually used in boss damage calculation.
      *
      * @param type           the blessing type/tier
      * @param characterClass the character class
@@ -130,11 +138,12 @@ public class BlessingService {
         double baseIntMultiplier = 1.0;
 
         // Tier scaling: Minor = base, Major = +50%, Legendary = +100%
-        double tierMultiplier = switch (type) {
-            case MINOR -> 1.0;
-            case MAJOR -> 1.5;
-            case LEGENDARY -> 2.0;
-        };
+        double tierMultiplier =
+                switch (type) {
+                    case MINOR -> 1.0;
+                    case MAJOR -> 1.5;
+                    case LEGENDARY -> 2.0;
+                };
 
         // Class-specific base effects (Minor tier values)
         // Only stat multipliers are relevant for boss battles

@@ -7,8 +7,7 @@ import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import java.util.Random;
 
 /**
- * Rest action - player rests to fully restore HP.
- * Consumes 1 action charge.
+ * Rest action - player rests to fully restore HP. Consumes 1 action charge.
  */
 public class RestAction implements CharacterAction {
     private static final Random random = new Random();
@@ -89,14 +88,16 @@ public class RestAction implements CharacterAction {
         }
 
         // Oathbreaker: Corruption decay on rest
-        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+        if (character.getCharacterClass()
+                == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
             int corruptionBefore = character.getCorruption();
             if (corruptionBefore > 0) {
                 character.removeCorruption(1);
                 if (corruptionBefore >= 10) {
                     narrative += " The broken oath's weight lessens with rest. Some corruption fades away.";
                 } else if (corruptionBefore >= 5) {
-                    narrative += " Rest helps you resist the corruption's pull. You feel slightly more in control.";
+                    narrative +=
+                            " Rest helps you resist the corruption's pull. You feel slightly more in control.";
                 }
             }
         }
@@ -122,4 +123,3 @@ public class RestAction implements CharacterAction {
                 .build();
     }
 }
-

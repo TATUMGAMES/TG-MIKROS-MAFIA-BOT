@@ -23,8 +23,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Service for generating and scheduling monthly moderation reports.
- * <p>
- * TODO: Upgrade with database persistence or cron-style configuration
+ *
+ * <p>TODO: Upgrade with database persistence or cron-style configuration
  */
 public class MonthlyReportService {
     private static final Logger logger = LoggerFactory.getLogger(MonthlyReportService.class);
@@ -42,8 +42,8 @@ public class MonthlyReportService {
      * @param moderationLogService    the moderation log service
      * @param activityTrackingService the activity tracking service
      */
-    public MonthlyReportService(ModerationLogService moderationLogService,
-                                ActivityTrackingService activityTrackingService) {
+    public MonthlyReportService(
+            ModerationLogService moderationLogService, ActivityTrackingService activityTrackingService) {
         this.moderationLogService = moderationLogService;
         this.activityTrackingService = activityTrackingService;
         this.scheduler = Executors.newScheduledThreadPool(1);
@@ -52,20 +52,23 @@ public class MonthlyReportService {
     }
 
     /**
-     * Starts the monthly report scheduler.
-     * Checks every hour if it's time to send reports.
+     * Starts the monthly report scheduler. Checks every hour if it's time to send reports.
      *
      * @param jda the JDA instance
      */
     public void startScheduler(JDA jda) {
         // Check every hour if we need to send reports
-        scheduler.scheduleAtFixedRate(() -> {
-            try {
-                checkAndSendReports(jda);
-            } catch (Exception e) {
-                logger.error("Error in monthly report scheduler", e);
-            }
-        }, 0, 1, TimeUnit.HOURS);
+        scheduler.scheduleAtFixedRate(
+                () -> {
+                    try {
+                        checkAndSendReports(jda);
+                    } catch (Exception e) {
+                        logger.error("Error in monthly report scheduler", e);
+                    }
+                },
+                0,
+                1,
+                TimeUnit.HOURS);
 
         logger.info("Monthly report scheduler started");
     }
@@ -77,8 +80,8 @@ public class MonthlyReportService {
         LocalDateTime now = LocalDateTime.now();
 
         // Check if it's the configured day and hour
-        if (now.getDayOfMonth() == ModerationConfig.MONTHLY_REPORT_DAY &&
-                now.getHour() == ModerationConfig.MONTHLY_REPORT_HOUR) {
+        if (now.getDayOfMonth() == ModerationConfig.MONTHLY_REPORT_DAY
+                && now.getHour() == ModerationConfig.MONTHLY_REPORT_HOUR) {
 
             logger.info("Sending monthly reports...");
 
@@ -122,11 +125,11 @@ public class MonthlyReportService {
         EmbedBuilder embed = generateReportEmbed(guild);
 
         // Send report
-        reportChannel.sendMessageEmbeds(embed.build())
+        reportChannel
+                .sendMessageEmbeds(embed.build())
                 .queue(
                         success -> logger.info("Monthly report sent for guild {}", guildId),
-                        error -> logger.error("Failed to send monthly report for guild {}", guildId, error)
-                );
+                        error -> logger.error("Failed to send monthly report for guild {}", guildId, error));
     }
 
     /**
@@ -151,17 +154,19 @@ public class MonthlyReportService {
 
             if (!actions.isEmpty()) {
                 userActions.put(userId, actions);
-                totalWarnings += (int) actions.stream().filter(a -> a.actionType() == ActionType.WARN).count();
+                totalWarnings +=
+                        (int) actions.stream().filter(a -> a.actionType() == ActionType.WARN).count();
                 totalKicks += (int) actions.stream().filter(a -> a.actionType() == ActionType.KICK).count();
                 totalBans += (int) actions.stream().filter(a -> a.actionType() == ActionType.BAN).count();
             }
         }
 
         // Get top offenders
-        List<Map.Entry<String, List<ModerationAction>>> topOffenders = userActions.entrySet().stream()
-                .sorted((e1, e2) -> Integer.compare(e2.getValue().size(), e1.getValue().size()))
-                .limit(5)
-                .toList();
+        List<Map.Entry<String, List<ModerationAction>>> topOffenders =
+                userActions.entrySet().stream()
+                        .sorted((e1, e2) -> Integer.compare(e2.getValue().size(), e1.getValue().size()))
+                        .limit(5)
+                        .toList();
 
         // Get activity stats
         int totalMessages = activityTrackingService.getTotalMessageCount(guildId);
@@ -170,11 +175,10 @@ public class MonthlyReportService {
         // Build embed
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("📊 Monthly Moderation Report");
-        embed.setDescription(String.format(
-                "Monthly report for **%s**\n%s",
-                guild.getName(),
-                LocalDateTime.now().getMonth().toString()
-        ));
+        embed.setDescription(
+                String.format(
+                        "Monthly report for **%s**\n%s",
+                        guild.getName(), LocalDateTime.now().getMonth().toString()));
         embed.setColor(Color.BLUE);
         embed.setThumbnail(guild.getIconUrl());
 
@@ -193,18 +197,17 @@ public class MonthlyReportService {
             StringBuilder offendersText = new StringBuilder();
             int rank = 1;
             for (Map.Entry<String, List<ModerationAction>> entry : topOffenders) {
-                offendersText.append(String.format(
-                        "%d. <@%s> - %d action(s)\n",
-                        rank++,
-                        entry.getKey(),
-                        entry.getValue().size()
-                ));
+                offendersText.append(
+                        String.format(
+                                "%d. <@%s> - %d action(s)\n", rank++, entry.getKey(), entry.getValue().size()));
             }
             embed.addField("🔻 Top Offenders", offendersText.toString(), false);
         }
 
-        embed.addField("ℹ️ Next Report",
-                String.format("Next report will be sent on the 1st of next month at %02d:00",
+        embed.addField(
+                "ℹ️ Next Report",
+                String.format(
+                        "Next report will be sent on the 1st of next month at %02d:00",
                         ModerationConfig.MONTHLY_REPORT_HOUR),
                 false);
 
@@ -233,4 +236,3 @@ public class MonthlyReportService {
         logger.info("Monthly report scheduler stopped");
     }
 }
-

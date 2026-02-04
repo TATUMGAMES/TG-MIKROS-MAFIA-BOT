@@ -10,15 +10,13 @@ import java.util.List;
 
 /**
  * Manages dynamic promotion steps based on campaign duration.
- * <p>
- * Calculates step count based on campaign duration:
- * - 1 month (≤30 days): 3 steps
- * - 2 months (31-60 days): 6 steps
- * - 3 months (61-90 days): 9 steps
- * - 4+ months: 3 + (3 × months), capped at 15 steps
- * <p>
- * Steps are distributed evenly from 0% to 90% of campaign duration,
- * with story progression: Introduction → Deep Dive → Reminder → Multi-Game → Final Chance
+ *
+ * <p>Calculates step count based on campaign duration: - 1 month (≤30 days): 3 steps - 2 months
+ * (31-60 days): 6 steps - 3 months (61-90 days): 9 steps - 4+ months: 3 + (3 × months), capped at
+ * 15 steps
+ *
+ * <p>Steps are distributed evenly from 0% to 90% of campaign duration, with story progression:
+ * Introduction → Deep Dive → Reminder → Multi-Game → Final Chance
  */
 public class PromotionStepManager {
     private static final Logger logger = LoggerFactory.getLogger(PromotionStepManager.class);
@@ -30,8 +28,8 @@ public class PromotionStepManager {
     private static final int MAX_STEP_COUNT = 15;
 
     /**
-     * Determines which promotion step should be posted next for an app.
-     * Supports variable step counts based on campaign duration.
+     * Determines which promotion step should be posted next for an app. Supports variable step counts
+     * based on campaign duration.
      *
      * @param app           the app promotion
      * @param lastStep      the last step posted (0 if never posted)
@@ -40,8 +38,12 @@ public class PromotionStepManager {
      * @param now           current time
      * @return the step to post (1 to totalSteps), or 0 if none should be posted yet
      */
-    public int determineNextStep(AppPromotion app, int lastStep, Instant lastPostTime,
-                                 List<AppPromotion> allActiveApps, Instant now) {
+    public int determineNextStep(
+            AppPromotion app,
+            int lastStep,
+            Instant lastPostTime,
+            List<AppPromotion> allActiveApps,
+            Instant now) {
         if (app.getCampaign() == null) {
             logger.debug("App {} has no campaign", app.getAppId());
             return 0;
@@ -52,8 +54,12 @@ public class PromotionStepManager {
 
         // Check if campaign is active
         if (now.isBefore(campaignStart) || now.isAfter(campaignEnd)) {
-            logger.debug("App {} campaign not active (start: {}, end: {}, now: {})",
-                    app.getAppId(), campaignStart, campaignEnd, now);
+            logger.debug(
+                    "App {} campaign not active (start: {}, end: {}, now: {})",
+                    app.getAppId(),
+                    campaignStart,
+                    campaignEnd,
+                    now);
             return 0;
         }
 
@@ -61,8 +67,11 @@ public class PromotionStepManager {
         if (lastPostTime != null) {
             Instant nextAllowedTime = lastPostTime.plus(MIN_INTERVAL_HOURS, ChronoUnit.HOURS);
             if (now.isBefore(nextAllowedTime)) {
-                logger.debug("App {} too soon to post again (last: {}, next allowed: {})",
-                        app.getAppId(), lastPostTime, nextAllowedTime);
+                logger.debug(
+                        "App {} too soon to post again (last: {}, next allowed: {})",
+                        app.getAppId(),
+                        lastPostTime,
+                        nextAllowedTime);
                 return 0;
             }
         }
@@ -72,9 +81,8 @@ public class PromotionStepManager {
 
         // Calculate multi-game step position
         int multiGameStepPosition = calculateMultiGameStepPosition(totalSteps);
-        boolean hasMultipleApps = allActiveApps.stream()
-                .filter(AppPromotion::isCampaignActive)
-                .count() >= 2;
+        boolean hasMultipleApps =
+                allActiveApps.stream().filter(AppPromotion::isCampaignActive).count() >= 2;
 
         // Check each step in sequence to see if it's ready to post
         for (int step = 1; step <= totalSteps; step++) {
@@ -90,7 +98,8 @@ public class PromotionStepManager {
             }
 
             // Calculate target time for this step
-            Instant stepTargetTime = calculateStepTargetTime(campaignStart, campaignEnd, step, totalSteps);
+            Instant stepTargetTime =
+                    calculateStepTargetTime(campaignStart, campaignEnd, step, totalSteps);
 
             // Check if it's time to post this step
             if (now.isAfter(stepTargetTime) || now.equals(stepTargetTime)) {
@@ -127,8 +136,8 @@ public class PromotionStepManager {
     }
 
     /**
-     * Calculates the number of promotion steps based on campaign duration.
-     * Formula: 3 steps for 1 month, +3 steps per additional month.
+     * Calculates the number of promotion steps based on campaign duration. Formula: 3 steps for 1
+     * month, +3 steps per additional month.
      *
      * @param campaignStartDate campaign start date
      * @param campaignEndDate   campaign end date
@@ -147,15 +156,18 @@ public class PromotionStepManager {
         // Ensure minimum of 3 and maximum cap
         stepCount = Math.max(3, Math.min(stepCount, MAX_STEP_COUNT));
 
-        logger.debug("Calculated step count: {} steps for {} days ({} months)",
-                stepCount, campaignDurationDays, String.format("%.1f", months));
+        logger.debug(
+                "Calculated step count: {} steps for {} days ({} months)",
+                stepCount,
+                campaignDurationDays,
+                String.format("%.1f", months));
 
         return stepCount;
     }
 
     /**
-     * Calculates when a promotion step should be posted.
-     * Distributes steps evenly from 0% to 90% of campaign duration.
+     * Calculates when a promotion step should be posted. Distributes steps evenly from 0% to 90% of
+     * campaign duration.
      *
      * @param campaignStartDate campaign start date
      * @param campaignEndDate   campaign end date
@@ -163,11 +175,13 @@ public class PromotionStepManager {
      * @param totalSteps        total number of steps for this campaign
      * @return the target time for this step
      */
-    public Instant calculateStepTargetTime(Instant campaignStartDate, Instant campaignEndDate, int step, int totalSteps) {
+    public Instant calculateStepTargetTime(
+            Instant campaignStartDate, Instant campaignEndDate, int step, int totalSteps) {
         long campaignDurationHours = ChronoUnit.HOURS.between(campaignStartDate, campaignEndDate);
 
         if (step < 1 || step > totalSteps) {
-            throw new IllegalArgumentException("Step " + step + " is out of range (1-" + totalSteps + ")");
+            throw new IllegalArgumentException(
+                    "Step " + step + " is out of range (1-" + totalSteps + ")");
         }
 
         // Step 1: Always at 0% (campaign start)
@@ -195,7 +209,8 @@ public class PromotionStepManager {
      * @deprecated Use calculateStepTargetTime(Instant, Instant, int, int) instead
      */
     @Deprecated
-    public Instant calculateStepTargetTime(Instant campaignStartDate, Instant campaignEndDate, int step) {
+    public Instant calculateStepTargetTime(
+            Instant campaignStartDate, Instant campaignEndDate, int step) {
         return calculateStepTargetTime(campaignStartDate, campaignEndDate, step, 4);
     }
 
@@ -209,7 +224,8 @@ public class PromotionStepManager {
      */
     public StepType getStepType(int step, int totalSteps, boolean isMultiGameStep) {
         if (step < 1 || step > totalSteps) {
-            throw new IllegalArgumentException("Step " + step + " is out of range (1-" + totalSteps + ")");
+            throw new IllegalArgumentException(
+                    "Step " + step + " is out of range (1-" + totalSteps + ")");
         }
 
         // Step 1: Always introduction
@@ -237,8 +253,8 @@ public class PromotionStepManager {
     }
 
     /**
-     * Calculates the position (as step number) where multi-game promotion should appear.
-     * Returns 50% position for campaigns ≥2 months, closest to 66% for 1-month campaigns.
+     * Calculates the position (as step number) where multi-game promotion should appear. Returns 50%
+     * position for campaigns ≥2 months, closest to 66% for 1-month campaigns.
      *
      * @param totalSteps total number of steps
      * @return the step number where multi-game should appear, or 0 if not applicable
@@ -263,8 +279,8 @@ public class PromotionStepManager {
     }
 
     /**
-     * Determines if multi-game promotion should be posted.
-     * Uses dynamic step position based on campaign duration.
+     * Determines if multi-game promotion should be posted. Uses dynamic step position based on
+     * campaign duration.
      *
      * @param allActiveApps     all apps currently in campaign
      * @param lastStepForApps   the last step posted for apps (check first app as representative)
@@ -273,8 +289,12 @@ public class PromotionStepManager {
      * @param now               current time
      * @return true if multi-game step should be posted
      */
-    public boolean shouldPostStep3(List<AppPromotion> allActiveApps, int lastStepForApps,
-                                   Instant campaignStartDate, Instant campaignEndDate, Instant now) {
+    public boolean shouldPostStep3(
+            List<AppPromotion> allActiveApps,
+            int lastStepForApps,
+            Instant campaignStartDate,
+            Instant campaignEndDate,
+            Instant now) {
         // Need at least 2 apps for multi-game step
         if (allActiveApps.size() < 2) {
             return false;
@@ -299,8 +319,9 @@ public class PromotionStepManager {
         }
 
         // Check if it's time for multi-game step
-        Instant multiGameTime = calculateStepTargetTime(campaignStartDate, campaignEndDate,
-                multiGameStepPosition, totalSteps);
+        Instant multiGameTime =
+                calculateStepTargetTime(
+                        campaignStartDate, campaignEndDate, multiGameStepPosition, totalSteps);
         return now.isAfter(multiGameTime) || now.equals(multiGameTime);
     }
 
@@ -320,11 +341,10 @@ public class PromotionStepManager {
      * Step type enum for determining message content and templates.
      */
     public enum StepType {
-        INTRODUCTION,  // Step 1: Introduction at campaign start
-        DEEP_DIVE,     // Steps with long description (even steps: 2, 4, 6...)
-        REMINDER,      // Steps with short description (odd steps: 3, 5, 7...)
-        MULTI_GAME,    // Special step for multi-game promotion
-        FINAL_CHANCE   // Final step at 90%
+        INTRODUCTION, // Step 1: Introduction at campaign start
+        DEEP_DIVE, // Steps with long description (even steps: 2, 4, 6...)
+        REMINDER, // Steps with short description (odd steps: 3, 5, 7...)
+        MULTI_GAME, // Special step for multi-game promotion
+        FINAL_CHANCE // Final step at 90%
     }
 }
-

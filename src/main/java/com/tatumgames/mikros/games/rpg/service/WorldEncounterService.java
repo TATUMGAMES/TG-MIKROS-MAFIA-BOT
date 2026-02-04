@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Service for handling irrevocable world encounters during exploration.
- * These are ultra-rare encounters (≤1% chance) that present permanent choices.
+ * Service for handling irrevocable world encounters during exploration. These are ultra-rare
+ * encounters (≤1% chance) that present permanent choices.
  */
 public class WorldEncounterService {
     private static final Logger logger = LoggerFactory.getLogger(WorldEncounterService.class);
@@ -96,8 +96,8 @@ public class WorldEncounterService {
     };
 
     /**
-     * Rolls for an irrevocable world encounter.
-     * Only triggers if character is Level 5+ and hasn't exceeded the limit (3 per encounter type).
+     * Rolls for an irrevocable world encounter. Only triggers if character is Level 5+ and hasn't
+     * exceeded the limit (3 per encounter type).
      *
      * @param character the character exploring
      * @return encounter type or null if no encounter
@@ -120,9 +120,9 @@ public class WorldEncounterService {
                 int count = character.getWorldEncounterCount(type.name());
                 if (count == 0) {
                     // First time - check if they've made any irrevocable choices
-                    if (character.getDeityBlessing() != null ||
-                            character.getRelicChoice() != null ||
-                            character.getPhilosophicalPath() != null) {
+                    if (character.getDeityBlessing() != null
+                            || character.getRelicChoice() != null
+                            || character.getPhilosophicalPath() != null) {
                         continue; // Skip if they've already made irrevocable choices
                     }
                 }
@@ -154,8 +154,12 @@ public class WorldEncounterService {
      * @param songReduction Song of Nilfheim curse reduction (0.98-0.99)
      * @return the action outcome
      */
-    public RPGActionOutcome handleEncounter(WorldEncounterType encounterType, RPGCharacter character,
-                                            RPGConfig config, List<WorldCurse> activeCurses, double songReduction) {
+    public RPGActionOutcome handleEncounter(
+            WorldEncounterType encounterType,
+            RPGCharacter character,
+            RPGConfig config,
+            List<WorldCurse> activeCurses,
+            double songReduction) {
         // Increment count for this encounter type
         character.incrementWorldEncounterCount(encounterType.name());
 
@@ -170,10 +174,14 @@ public class WorldEncounterService {
     /**
      * Handles Stonebound Divinity encounter - deity blessing choice.
      */
-    private RPGActionOutcome handleStoneboundDivinity(RPGCharacter character, RPGConfig config,
-                                                      List<WorldCurse> activeCurses, double songReduction) {
+    private RPGActionOutcome handleStoneboundDivinity(
+            RPGCharacter character,
+            RPGConfig config,
+            List<WorldCurse> activeCurses,
+            double songReduction) {
         // Oathbreaker: Special handling - deity may refuse or offer choice
-        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+        if (character.getCharacterClass()
+                == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
             // 30% chance deity refuses to bless
             if (random.nextDouble() < 0.30) {
                 DeityType[] deities = DeityType.values();
@@ -239,8 +247,12 @@ public class WorldEncounterService {
     /**
      * Handles a deity blessing choice.
      */
-    public RPGActionOutcome handleDeityBlessing(DeityType deity, RPGCharacter character, RPGConfig config,
-                                                List<WorldCurse> activeCurses, double songReduction) {
+    public RPGActionOutcome handleDeityBlessing(
+            DeityType deity,
+            RPGCharacter character,
+            RPGConfig config,
+            List<WorldCurse> activeCurses,
+            double songReduction) {
         // Apply deity blessing
         character.setDeityBlessing(deity.name());
         character.addWorldFlag(deity.getWorldFlag());
@@ -256,34 +268,37 @@ public class WorldEncounterService {
         int xpGained = (int) ((baseXp * 1.5) * config.getXpMultiplier());
 
         // Select discovery narrative based on deity
-        String discoveryNarrative = switch (deity) {
-            case VAELGOR_STONE_WOLF -> VAELGOR_DISCOVERY[random.nextInt(VAELGOR_DISCOVERY.length)];
-            case ILYRA_FROSTWIND -> ILYRA_DISCOVERY[random.nextInt(ILYRA_DISCOVERY.length)];
-            case NERETH_HOLLOW_MIND -> NERETH_DISCOVERY[random.nextInt(NERETH_DISCOVERY.length)];
-        };
+        String discoveryNarrative =
+                switch (deity) {
+                    case VAELGOR_STONE_WOLF -> VAELGOR_DISCOVERY[random.nextInt(VAELGOR_DISCOVERY.length)];
+                    case ILYRA_FROSTWIND -> ILYRA_DISCOVERY[random.nextInt(ILYRA_DISCOVERY.length)];
+                    case NERETH_HOLLOW_MIND -> NERETH_DISCOVERY[random.nextInt(NERETH_DISCOVERY.length)];
+                };
 
         // Oathbreaker: Special narrative for deity acceptance
         String oathbreakerFlavor = "";
-        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+        if (character.getCharacterClass()
+                == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
             oathbreakerFlavor = getOathbreakerDeityAcceptanceNarrative(deity);
         }
 
-        String narrative = String.format(
-                "🏛️ **%s**\n\n%s\n\n" +
-                        "You feel the deity's power flow through you. Ancient runes glow brighter, marking you as chosen.\n\n" +
-                        "**Blessing:** +%.0f%% %s effectiveness\n" +
-                        "**Curse:** %.0f%% %s effectiveness\n\n" +
-                        "The mark is permanent. Your path is set.%s",
-                deity.getDisplayName(),
-                discoveryNarrative,
-                deity.getBlessingModifier() * 100,
-                deity.getBlessingStat(),
-                deity.getCurseModifier() * 100,
-                deity.getCurseStat(),
-                oathbreakerFlavor
-        );
+        String narrative =
+                String.format(
+                        "🏛️ **%s**\n\n%s\n\n"
+                                + "You feel the deity's power flow through you. Ancient runes glow brighter, marking you as chosen.\n\n"
+                                + "**Blessing:** +%.0f%% %s effectiveness\n"
+                                + "**Curse:** %.0f%% %s effectiveness\n\n"
+                                + "The mark is permanent. Your path is set.%s",
+                        deity.getDisplayName(),
+                        discoveryNarrative,
+                        deity.getBlessingModifier() * 100,
+                        deity.getBlessingStat(),
+                        deity.getCurseModifier() * 100,
+                        deity.getCurseStat(),
+                        oathbreakerFlavor);
 
-        logger.info("Character {} received deity blessing: {}", character.getName(), deity.getDisplayName());
+        logger.info(
+                "Character {} received deity blessing: {}", character.getName(), deity.getDisplayName());
 
         return RPGActionOutcome.builder()
                 .narrative(narrative)
@@ -296,8 +311,11 @@ public class WorldEncounterService {
     /**
      * Handles Disguised God Test encounter.
      */
-    private RPGActionOutcome handleDisguisedGodTest(RPGCharacter character, RPGConfig config,
-                                                    List<WorldCurse> activeCurses, double songReduction) {
+    private RPGActionOutcome handleDisguisedGodTest(
+            RPGCharacter character,
+            RPGConfig config,
+            List<WorldCurse> activeCurses,
+            double songReduction) {
         // Determine which stat test based on character's highest stat
         int str = character.getStats().getStrength();
         int agi = character.getStats().getAgility();
@@ -325,46 +343,46 @@ public class WorldEncounterService {
         int xpGained = (int) ((baseXp * 1.3) * config.getXpMultiplier());
 
         // Select random appearance narrative
-        String appearanceNarrative = DISGUISED_GOD_APPEARANCE[random.nextInt(DISGUISED_GOD_APPEARANCE.length)];
+        String appearanceNarrative =
+                DISGUISED_GOD_APPEARANCE[random.nextInt(DISGUISED_GOD_APPEARANCE.length)];
 
         String narrative;
         String worldFlag;
         double modifier = 0.0;
 
         if (success) {
-            narrative = String.format(
-                    "👤 **A Weary Traveler**\n\n" +
-                            "%s\n\n" +
-                            "You offer %s. The traveler's eyes flash with something ancient.\n\n" +
-                            "**Later, you dream of frost cracking under iron claws. You have been seen.**\n\n" +
-                            "**Blessing:** +10%% %s effectiveness\n\n" +
-                            "The test is passed. You are marked.",
-                    appearanceNarrative,
-                    testType,
-                    statName
-            );
+            narrative =
+                    String.format(
+                            "👤 **A Weary Traveler**\n\n"
+                                    + "%s\n\n"
+                                    + "You offer %s. The traveler's eyes flash with something ancient.\n\n"
+                                    + "**Later, you dream of frost cracking under iron claws. You have been seen.**\n\n"
+                                    + "**Blessing:** +10%% %s effectiveness\n\n"
+                                    + "The test is passed. You are marked.",
+                            appearanceNarrative, testType, statName);
             worldFlag = statName + "_TEST_PASSED";
             modifier = 0.10;
             character.addStatModifier(statName + "_EFFECTIVENESS", 1.0 + modifier);
         } else {
-            narrative = String.format(
-                    "👤 **A Weary Traveler**\n\n" +
-                            "%s\n\n" +
-                            "You offer %s, but your %s is not enough. The traveler nods respectfully and moves on.\n\n" +
-                            "**Later, you dream of frost cracking under iron claws. You have been seen.**\n\n" +
-                            "You are marked, but the blessing is lesser.",
-                    appearanceNarrative,
-                    testType,
-                    statName
-            );
+            narrative =
+                    String.format(
+                            "👤 **A Weary Traveler**\n\n"
+                                    + "%s\n\n"
+                                    + "You offer %s, but your %s is not enough. The traveler nods respectfully and moves on.\n\n"
+                                    + "**Later, you dream of frost cracking under iron claws. You have been seen.**\n\n"
+                                    + "You are marked, but the blessing is lesser.",
+                            appearanceNarrative, testType, statName);
             worldFlag = statName + "_TEST_ATTEMPTED";
         }
 
         character.addWorldFlag(worldFlag);
         character.setPhilosophicalPath("GODMARKED");
 
-        logger.info("Character {} encountered disguised god test: {} (success: {})",
-                character.getName(), statName, success);
+        logger.info(
+                "Character {} encountered disguised god test: {} (success: {})",
+                character.getName(),
+                statName,
+                success);
 
         return RPGActionOutcome.builder()
                 .narrative(narrative)
@@ -377,8 +395,11 @@ public class WorldEncounterService {
     /**
      * Handles Oath of Null encounter - anti-god path.
      */
-    private RPGActionOutcome handleOathOfNull(RPGCharacter character, RPGConfig config,
-                                              List<WorldCurse> activeCurses, double songReduction) {
+    private RPGActionOutcome handleOathOfNull(
+            RPGCharacter character,
+            RPGConfig config,
+            List<WorldCurse> activeCurses,
+            double songReduction) {
         character.setPhilosophicalPath("UNBOUND");
         character.addWorldFlag("OATH_OF_NULL");
 
@@ -389,16 +410,18 @@ public class WorldEncounterService {
         int xpGained = (int) ((baseXp * 1.2) * config.getXpMultiplier());
 
         // Select random discovery narrative
-        String discoveryNarrative = OATH_OF_NULL_DISCOVERY[random.nextInt(OATH_OF_NULL_DISCOVERY.length)];
+        String discoveryNarrative =
+                OATH_OF_NULL_DISCOVERY[random.nextInt(OATH_OF_NULL_DISCOVERY.length)];
 
         String narrative =
-                "⚖️ **The Oath of Null**\n\n" +
-                        discoveryNarrative + "\n\n" +
-                        "You refuse the path of the gods. You choose freedom.\n\n" +
-                        "**Blessing:** +5%% resistance to world curses\n" +
-                        "**Title:** Unbound\n\n" +
-                        "You are immune to future god-marked debuffs. Certain gods will not assist you, but others secretly respect your choice.\n\n" +
-                        "The oath is permanent. You walk your own path.";
+                "⚖️ **The Oath of Null**\n\n"
+                        + discoveryNarrative
+                        + "\n\n"
+                        + "You refuse the path of the gods. You choose freedom.\n\n"
+                        + "**Blessing:** +5%% resistance to world curses\n"
+                        + "**Title:** Unbound\n\n"
+                        + "You are immune to future god-marked debuffs. Certain gods will not assist you, but others secretly respect your choice.\n\n"
+                        + "The oath is permanent. You walk your own path.";
 
         character.setTitle("Unbound");
 
@@ -415,8 +438,11 @@ public class WorldEncounterService {
     /**
      * Handles Blood Relic encounter.
      */
-    private RPGActionOutcome handleBloodRelic(RPGCharacter character, RPGConfig config,
-                                              List<WorldCurse> activeCurses, double songReduction) {
+    private RPGActionOutcome handleBloodRelic(
+            RPGCharacter character,
+            RPGConfig config,
+            List<WorldCurse> activeCurses,
+            double songReduction) {
         // Select a relic
         RelicType[] relics = RelicType.values();
         RelicType selectedRelic = relics[random.nextInt(relics.length)];
@@ -427,8 +453,12 @@ public class WorldEncounterService {
     /**
      * Handles a relic choice.
      */
-    public RPGActionOutcome handleRelicChoice(RelicType relic, RPGCharacter character, RPGConfig config,
-                                              List<WorldCurse> activeCurses, double songReduction) {
+    public RPGActionOutcome handleRelicChoice(
+            RelicType relic,
+            RPGCharacter character,
+            RPGConfig config,
+            List<WorldCurse> activeCurses,
+            double songReduction) {
         character.setRelicChoice(relic.name());
         character.addWorldFlag(relic.getWorldFlag());
 
@@ -444,25 +474,26 @@ public class WorldEncounterService {
         int xpGained = (int) ((baseXp * 1.4) * config.getXpMultiplier());
 
         // Select discovery narrative based on relic
-        String discoveryNarrative = switch (relic) {
-            case BLOOD_FORGED_BLADE -> BLOOD_BLADE_DISCOVERY[random.nextInt(BLOOD_BLADE_DISCOVERY.length)];
-            case FROZEN_CROWN -> FROZEN_CROWN_DISCOVERY[random.nextInt(FROZEN_CROWN_DISCOVERY.length)];
-            case SOUL_ANCHOR -> SOUL_ANCHOR_DISCOVERY[random.nextInt(SOUL_ANCHOR_DISCOVERY.length)];
-        };
+        String discoveryNarrative =
+                switch (relic) {
+                    case BLOOD_FORGED_BLADE -> BLOOD_BLADE_DISCOVERY[random.nextInt(BLOOD_BLADE_DISCOVERY.length)];
+                    case FROZEN_CROWN -> FROZEN_CROWN_DISCOVERY[random.nextInt(FROZEN_CROWN_DISCOVERY.length)];
+                    case SOUL_ANCHOR -> SOUL_ANCHOR_DISCOVERY[random.nextInt(SOUL_ANCHOR_DISCOVERY.length)];
+                };
 
-        String narrative = String.format(
-                "⚔️ **%s**\n\n%s\n\n" +
-                        "You take the relic. Power flows through you, but at a cost.\n\n" +
-                        "**Power:** +%.0f%% %s\n" +
-                        "**Cost:** %.0f%% %s\n\n" +
-                        "The relic is bound to you. The change is permanent.",
-                relic.getDisplayName(),
-                discoveryNarrative,
-                relic.getPositiveModifier() * 100,
-                relic.getPositiveStat(),
-                Math.abs(relic.getNegativeModifier()) * 100,
-                relic.getNegativeStat()
-        );
+        String narrative =
+                String.format(
+                        "⚔️ **%s**\n\n%s\n\n"
+                                + "You take the relic. Power flows through you, but at a cost.\n\n"
+                                + "**Power:** +%.0f%% %s\n"
+                                + "**Cost:** %.0f%% %s\n\n"
+                                + "The relic is bound to you. The change is permanent.",
+                        relic.getDisplayName(),
+                        discoveryNarrative,
+                        relic.getPositiveModifier() * 100,
+                        relic.getPositiveStat(),
+                        Math.abs(relic.getNegativeModifier()) * 100,
+                        relic.getNegativeStat());
 
         logger.info("Character {} took relic: {}", character.getName(), relic.getDisplayName());
 
@@ -480,27 +511,24 @@ public class WorldEncounterService {
     private String getOathbreakerDeityRefusalNarrative(DeityType deity) {
         return switch (deity) {
             case VAELGOR_STONE_WOLF -> String.format(
-                    "🏛️ **%s**\n\n" +
-                            "The Stone Wolf's statue turns its head. Ancient runes dim. 'The broken oath marks you,' a voice rumbles. " +
-                            "The deity recognizes your broken oath and turns away. No blessing is offered to one who has broken their word.\n\n" +
-                            "You feel the weight of the refusal, but also a strange sense of freedom.",
-                    deity.getDisplayName()
-            );
+                    "🏛️ **%s**\n\n"
+                            + "The Stone Wolf's statue turns its head. Ancient runes dim. 'The broken oath marks you,' a voice rumbles. "
+                            + "The deity recognizes your broken oath and turns away. No blessing is offered to one who has broken their word.\n\n"
+                            + "You feel the weight of the refusal, but also a strange sense of freedom.",
+                    deity.getDisplayName());
             case ILYRA_FROSTWIND -> String.format(
-                    "🏛️ **%s**\n\n" +
-                            "The Frostwind's statue shivers. Ice forms around its base. 'Your broken oath echoes in the wind,' whispers Ilyra. " +
-                            "The deity recognizes your broken oath and turns away, though there's a hint of... admiration? in the refusal.\n\n" +
-                            "The broken oath makes you unworthy, yet the refusal feels less harsh than expected.",
-                    deity.getDisplayName()
-            );
+                    "🏛️ **%s**\n\n"
+                            + "The Frostwind's statue shivers. Ice forms around its base. 'Your broken oath echoes in the wind,' whispers Ilyra. "
+                            + "The deity recognizes your broken oath and turns away, though there's a hint of... admiration? in the refusal.\n\n"
+                            + "The broken oath makes you unworthy, yet the refusal feels less harsh than expected.",
+                    deity.getDisplayName());
             case NERETH_HOLLOW_MIND -> String.format(
-                    "🏛️ **%s**\n\n" +
-                            "The Hollow Mind's featureless face seems to gaze deeper. 'The broken oath... interesting,' Nereth's voice echoes. " +
-                            "The deity recognizes your broken oath. There's a moment of consideration, then refusal. " +
-                            "Yet you sense curiosity rather than condemnation.\n\n" +
-                            "The broken oath makes you an anomaly, and anomalies are... intriguing.",
-                    deity.getDisplayName()
-            );
+                    "🏛️ **%s**\n\n"
+                            + "The Hollow Mind's featureless face seems to gaze deeper. 'The broken oath... interesting,' Nereth's voice echoes. "
+                            + "The deity recognizes your broken oath. There's a moment of consideration, then refusal. "
+                            + "Yet you sense curiosity rather than condemnation.\n\n"
+                            + "The broken oath makes you an anomaly, and anomalies are... intriguing.",
+                    deity.getDisplayName());
         };
     }
 
@@ -509,26 +537,23 @@ public class WorldEncounterService {
      */
     private String getOathbreakerRefusalChoiceNarrative() {
         String[] refusalNarratives = {
-                "You stand before the deity's statue, feeling the weight of the broken oath. You refuse the blessing. " +
-                        "The broken oath grows stronger, and you gain corruption. Some paths are meant to be walked alone.",
-
-                "The deity offers power, but you remember the oath you broke. You refuse. " +
-                        "The broken oath resonates with your choice, increasing your corruption. " +
-                        "You walk a path of your own making, unbound by divine will.",
-
-                "You look into the deity's eyes and see judgment. You refuse the blessing. " +
-                        "The broken oath answers your defiance, granting corruption. " +
-                        "You are contested—neither blessed nor cursed, but something else entirely.",
-
-                "The deity's power calls to you, but the broken oath whispers louder. You refuse. " +
-                        "Corruption flows through you as the broken oath strengthens. " +
-                        "You choose to remain unbound, even if it means walking alone.",
-
-                "You feel the deity's blessing would bind you further. You refuse. " +
-                        "The broken oath recognizes your choice and grants corruption. " +
-                        "You are unfinished business in Nilfheim, and you will remain so."
+                "You stand before the deity's statue, feeling the weight of the broken oath. You refuse the blessing. "
+                        + "The broken oath grows stronger, and you gain corruption. Some paths are meant to be walked alone.",
+                "The deity offers power, but you remember the oath you broke. You refuse. "
+                        + "The broken oath resonates with your choice, increasing your corruption. "
+                        + "You walk a path of your own making, unbound by divine will.",
+                "You look into the deity's eyes and see judgment. You refuse the blessing. "
+                        + "The broken oath answers your defiance, granting corruption. "
+                        + "You are contested—neither blessed nor cursed, but something else entirely.",
+                "The deity's power calls to you, but the broken oath whispers louder. You refuse. "
+                        + "Corruption flows through you as the broken oath strengthens. "
+                        + "You choose to remain unbound, even if it means walking alone.",
+                "You feel the deity's blessing would bind you further. You refuse. "
+                        + "The broken oath recognizes your choice and grants corruption. "
+                        + "You are unfinished business in Nilfheim, and you will remain so."
         };
-        return "🏛️ **Divine Encounter**\n\n" + refusalNarratives[random.nextInt(refusalNarratives.length)];
+        return "🏛️ **Divine Encounter**\n\n"
+                + refusalNarratives[random.nextInt(refusalNarratives.length)];
     }
 
     /**
@@ -537,14 +562,14 @@ public class WorldEncounterService {
     private String getOathbreakerDeityAcceptanceNarrative(DeityType deity) {
         return switch (deity) {
             case VAELGOR_STONE_WOLF ->
-                    "\n\n⚔️💀 *The Stone Wolf tests you harshly, sensing the broken oath. The blessing comes, but it feels... conditional. " +
-                            "The deity watches closely, as if waiting for you to break this oath too.*";
+                    "\n\n⚔️💀 *The Stone Wolf tests you harshly, sensing the broken oath. The blessing comes, but it feels... conditional. "
+                            + "The deity watches closely, as if waiting for you to break this oath too.*";
             case ILYRA_FROSTWIND ->
-                    "\n\n⚔️💀 *The Frostwind admires your defiance, offering a different path. The blessing flows, but with understanding. " +
-                            "Ilyra recognizes the broken oath and offers power anyway, perhaps seeing something others do not.*";
+                    "\n\n⚔️💀 *The Frostwind admires your defiance, offering a different path. The blessing flows, but with understanding. "
+                            + "Ilyra recognizes the broken oath and offers power anyway, perhaps seeing something others do not.*";
             case NERETH_HOLLOW_MIND ->
-                    "\n\n⚔️💀 *The Hollow Mind is intrigued by your broken oath. The blessing comes with curiosity. " +
-                            "Nereth sees the broken oath not as failure, but as... data. Interesting data.*";
+                    "\n\n⚔️💀 *The Hollow Mind is intrigued by your broken oath. The blessing comes with curiosity. "
+                            + "Nereth sees the broken oath not as failure, but as... data. Interesting data.*";
         };
     }
 }

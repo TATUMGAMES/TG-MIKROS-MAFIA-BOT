@@ -1,8 +1,7 @@
 package com.tatumgames.mikros.models;
 
 /**
- * Enum representing promotion frequency levels.
- * Controls how often game promotions are posted.
+ * Enum representing promotion frequency levels. Controls how often game promotions are posted.
  */
 public enum PromotionVerbosity {
     /**
@@ -50,6 +49,5 @@ public enum PromotionVerbosity {
      */
     public int getHoursInterval() {
         return hoursInterval;
-    }
+  }
 }
-

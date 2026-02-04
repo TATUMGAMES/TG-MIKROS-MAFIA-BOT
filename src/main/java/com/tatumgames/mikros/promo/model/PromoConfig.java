@@ -4,12 +4,9 @@ import java.time.Duration;
 
 /**
  * Configuration for smart promotional detection per guild.
- * <p>
- * TODO: Future Features
- * - Custom trigger phrases per server
- * - Different cooldowns per campaign type
- * - Integration with CRM systems (Hubspot, etc.)
- * - A/B testing for different promo messages
+ *
+ * <p>TODO: Future Features - Custom trigger phrases per server - Different cooldowns per campaign
+ * type - Integration with CRM systems (Hubspot, etc.) - A/B testing for different promo messages
  */
 public class PromoConfig {
     private final String guildId;
@@ -37,7 +34,8 @@ public class PromoConfig {
      * @param userCooldown   cooldown between prompts per user
      * @param promoChannelId optional channel restriction
      */
-    public PromoConfig(String guildId, boolean enabled, Duration userCooldown, String promoChannelId) {
+    public PromoConfig(
+            String guildId, boolean enabled, Duration userCooldown, String promoChannelId) {
         this.guildId = guildId;
         this.enabled = enabled;
         this.userCooldown = userCooldown;
@@ -72,7 +70,3 @@ public class PromoConfig {
         this.promoChannelId = promoChannelId;
     }
 }
-
-
-
-

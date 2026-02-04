@@ -4,11 +4,18 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * Represents a behavior report for reputation score tracking.
- * Used when reporting positive or negative user behavior.
+ * Represents a behavior report for reputation score tracking. Used when reporting positive or
+ * negative user behavior.
  */
-public record BehaviorReport(String targetUserId, String targetUsername, String reporterId, String reporterUsername,
-                             BehaviorCategory behaviorCategory, String notes, Instant timestamp, String guildId) {
+public record BehaviorReport(
+        String targetUserId,
+        String targetUsername,
+        String reporterId,
+        String reporterUsername,
+        BehaviorCategory behaviorCategory,
+        String notes,
+        Instant timestamp,
+        String guildId) {
     /**
      * Creates a new BehaviorReport.
      *
@@ -29,13 +36,14 @@ public record BehaviorReport(String targetUserId, String targetUsername, String 
             BehaviorCategory behaviorCategory,
             String notes,
             Instant timestamp,
-            String guildId
-    ) {
+            String guildId) {
         this.targetUserId = Objects.requireNonNull(targetUserId, "targetUserId cannot be null");
         this.targetUsername = Objects.requireNonNull(targetUsername, "targetUsername cannot be null");
         this.reporterId = Objects.requireNonNull(reporterId, "reporterId cannot be null");
-        this.reporterUsername = Objects.requireNonNull(reporterUsername, "reporterUsername cannot be null");
-        this.behaviorCategory = Objects.requireNonNull(behaviorCategory, "behaviorCategory cannot be null");
+        this.reporterUsername =
+                Objects.requireNonNull(reporterUsername, "reporterUsername cannot be null");
+        this.behaviorCategory =
+                Objects.requireNonNull(behaviorCategory, "behaviorCategory cannot be null");
         this.notes = notes != null ? notes : "";
         this.timestamp = Objects.requireNonNull(timestamp, "timestamp cannot be null");
         this.guildId = Objects.requireNonNull(guildId, "guildId cannot be null");
@@ -126,11 +134,11 @@ public record BehaviorReport(String targetUserId, String targetUsername, String 
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BehaviorReport that = (BehaviorReport) o;
-        return Objects.equals(targetUserId, that.targetUserId) &&
-                Objects.equals(reporterId, that.reporterId) &&
-                behaviorCategory == that.behaviorCategory &&
-                Objects.equals(timestamp, that.timestamp) &&
-                Objects.equals(guildId, that.guildId);
+        return Objects.equals(targetUserId, that.targetUserId)
+                && Objects.equals(reporterId, that.reporterId)
+                && behaviorCategory == that.behaviorCategory
+                && Objects.equals(timestamp, that.timestamp)
+                && Objects.equals(guildId, that.guildId);
     }
 
     @Override
@@ -142,10 +150,14 @@ public record BehaviorReport(String targetUserId, String targetUsername, String 
     public String toString() {
         return String.format(
                 "BehaviorReport{category=%s (weight=%d), target=%s (%s), reporter=%s (%s), notes='%s', timestamp=%s, guild=%s}",
-                behaviorCategory.getLabel(), behaviorCategory.getWeight(),
-                targetUsername, targetUserId, reporterUsername, reporterId,
-                notes, timestamp, guildId
-        );
+                behaviorCategory.getLabel(),
+                behaviorCategory.getWeight(),
+                targetUsername,
+                targetUserId,
+                reporterUsername,
+                reporterId,
+                notes,
+                timestamp,
+                guildId);
     }
 }
-

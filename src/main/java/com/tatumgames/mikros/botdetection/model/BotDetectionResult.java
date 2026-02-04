@@ -10,8 +10,7 @@ public record BotDetectionResult(
         DetectionReason detectionReason,
         Confidence confidence,
         BotDetectionConfig.AutoAction recommendedAction,
-        String details
-) {
+        String details) {
     /**
      * Creates a result indicating no bot was detected.
      */
@@ -39,4 +38,3 @@ public record BotDetectionResult(
         HIGH
     }
 }
-

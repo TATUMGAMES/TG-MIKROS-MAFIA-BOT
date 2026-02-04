@@ -27,7 +27,8 @@ public class WordUnscrambleSession {
      * @param startTime     when the session started
      * @param correctAnswer the correct answer for this session (if applicable)
      */
-    public WordUnscrambleSession(String guildId, WordUnscrambleType gameType, Instant startTime, String correctAnswer) {
+    public WordUnscrambleSession(
+            String guildId, WordUnscrambleType gameType, Instant startTime, String correctAnswer) {
         this(guildId, gameType, startTime, correctAnswer, 1);
     }
 
@@ -40,7 +41,12 @@ public class WordUnscrambleSession {
      * @param correctAnswer the correct answer for this session (if applicable)
      * @param level         the current level
      */
-    public WordUnscrambleSession(String guildId, WordUnscrambleType gameType, Instant startTime, String correctAnswer, int level) {
+    public WordUnscrambleSession(
+            String guildId,
+            WordUnscrambleType gameType,
+            Instant startTime,
+            String correctAnswer,
+            int level) {
         this.guildId = Objects.requireNonNull(guildId);
         this.gameType = Objects.requireNonNull(gameType);
         this.startTime = Objects.requireNonNull(startTime);
@@ -120,10 +126,7 @@ public class WordUnscrambleSession {
      * @return the winning result, or null if none
      */
     public WordUnscrambleResult getWinner() {
-        return results.stream()
-                .filter(WordUnscrambleResult::isCorrect)
-                .findFirst()
-                .orElse(null);
+        return results.stream().filter(WordUnscrambleResult::isCorrect).findFirst().orElse(null);
     }
 
     /**
@@ -132,11 +135,6 @@ public class WordUnscrambleSession {
      * @return the top scoring result, or null if none
      */
     public WordUnscrambleResult getTopScorer() {
-        return results.stream()
-                .max((r1, r2) -> Integer.compare(r1.score(), r2.score()))
-                .orElse(null);
+        return results.stream().max((r1, r2) -> Integer.compare(r1.score(), r2.score())).orElse(null);
     }
 }
-
-
-

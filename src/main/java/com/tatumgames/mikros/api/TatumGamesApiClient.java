@@ -14,8 +14,8 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Centralized HTTP client for all Tatum Games API endpoints.
- * Handles authentication, error handling, retries, and rate limiting.
+ * Centralized HTTP client for all Tatum Games API endpoints. Handles authentication, error
+ * handling, retries, and rate limiting.
  */
 public class TatumGamesApiClient {
     private static final Logger logger = LoggerFactory.getLogger(TatumGamesApiClient.class);
@@ -36,16 +36,14 @@ public class TatumGamesApiClient {
      * @param apiKey     the API key for authentication (can be null/empty for mock mode)
      */
     public TatumGamesApiClient(String apiBaseUrl, String apiKey) {
-        this.apiBaseUrl = apiBaseUrl != null && !apiBaseUrl.isBlank()
-                ? apiBaseUrl
-                : "https://api.tatumgames.com";
+        this.apiBaseUrl =
+                apiBaseUrl != null && !apiBaseUrl.isBlank() ? apiBaseUrl : "https://api.tatumgames.com";
         this.apiKey = apiKey;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
 
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(DEFAULT_TIMEOUT_SECONDS))
-                .build();
+        this.httpClient =
+                HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(DEFAULT_TIMEOUT_SECONDS)).build();
 
         if (apiKey == null || apiKey.isBlank()) {
             logger.warn("API key not configured - API client will operate in mock mode");
@@ -64,10 +62,11 @@ public class TatumGamesApiClient {
      * @throws ApiException if the request fails after retries
      */
     public <T> T get(String endpoint, Class<T> responseClass) throws ApiException {
-        return executeWithRetry(() -> {
-            HttpRequest request = buildRequest("GET", endpoint, null);
-            return executeRequest(request, responseClass);
-        });
+        return executeWithRetry(
+                () -> {
+                    HttpRequest request = buildRequest("GET", endpoint, null);
+                    return executeRequest(request, responseClass);
+                });
     }
 
     /**
@@ -80,16 +79,18 @@ public class TatumGamesApiClient {
      * @return the parsed response, or null if request failed
      * @throws ApiException if the request fails after retries
      */
-    public <T> T post(String endpoint, Object requestBody, Class<T> responseClass) throws ApiException {
-        return executeWithRetry(() -> {
-            HttpRequest request = buildRequest("POST", endpoint, requestBody);
-            return executeRequest(request, responseClass);
-        });
+    public <T> T post(String endpoint, Object requestBody, Class<T> responseClass)
+            throws ApiException {
+        return executeWithRetry(
+                () -> {
+                    HttpRequest request = buildRequest("POST", endpoint, requestBody);
+                    return executeRequest(request, responseClass);
+                });
     }
 
     /**
-     * Performs a POST request to a custom base URL with X-Apikey header.
-     * Used for APIs that require X-Apikey header instead of Authorization: Bearer.
+     * Performs a POST request to a custom base URL with X-Apikey header. Used for APIs that require
+     * X-Apikey header instead of Authorization: Bearer.
      *
      * @param baseUrl       the base URL for the API (can be different from default)
      * @param endpoint      the endpoint path
@@ -100,17 +101,20 @@ public class TatumGamesApiClient {
      * @return the parsed response, or null if request failed
      * @throws ApiException if the request fails after retries
      */
-    public <T> T postWithApiKey(String baseUrl, String endpoint, Object requestBody,
-                                String apiKey, Class<T> responseClass) throws ApiException {
-        return executeWithRetry(() -> {
-            HttpRequest request = buildRequestWithApiKey("POST", baseUrl, endpoint, requestBody, apiKey);
-            return executeRequest(request, responseClass);
-        });
+    public <T> T postWithApiKey(
+            String baseUrl, String endpoint, Object requestBody, String apiKey, Class<T> responseClass)
+            throws ApiException {
+        return executeWithRetry(
+                () -> {
+                    HttpRequest request =
+                            buildRequestWithApiKey("POST", baseUrl, endpoint, requestBody, apiKey);
+                    return executeRequest(request, responseClass);
+                });
     }
 
     /**
-     * Performs a GET request to a custom base URL with X-Apikey header.
-     * Used for APIs that require X-Apikey header instead of Authorization: Bearer.
+     * Performs a GET request to a custom base URL with X-Apikey header. Used for APIs that require
+     * X-Apikey header instead of Authorization: Bearer.
      *
      * @param baseUrl       the base URL for the API (can be different from default)
      * @param endpoint      the endpoint path
@@ -120,11 +124,13 @@ public class TatumGamesApiClient {
      * @return the parsed response, or null if request failed
      * @throws ApiException if the request fails after retries
      */
-    public <T> T getWithApiKey(String baseUrl, String endpoint, String apiKey, Class<T> responseClass) throws ApiException {
-        return executeWithRetry(() -> {
-            HttpRequest request = buildRequestWithApiKey("GET", baseUrl, endpoint, null, apiKey);
-            return executeRequest(request, responseClass);
-        });
+    public <T> T getWithApiKey(String baseUrl, String endpoint, String apiKey, Class<T> responseClass)
+            throws ApiException {
+        return executeWithRetry(
+                () -> {
+                    HttpRequest request = buildRequestWithApiKey("GET", baseUrl, endpoint, null, apiKey);
+                    return executeRequest(request, responseClass);
+                });
     }
 
     /**
@@ -136,12 +142,14 @@ public class TatumGamesApiClient {
      * @return the HTTP request
      * @throws ApiException if request body serialization fails
      */
-    private HttpRequest buildRequest(String method, String endpoint, Object body) throws ApiException {
+    private HttpRequest buildRequest(String method, String endpoint, Object body)
+            throws ApiException {
         String url = apiBaseUrl + endpoint;
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .timeout(Duration.ofSeconds(DEFAULT_TIMEOUT_SECONDS))
-                .header("Content-Type", "application/json");
+        HttpRequest.Builder builder =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .timeout(Duration.ofSeconds(DEFAULT_TIMEOUT_SECONDS))
+                        .header("Content-Type", "application/json");
 
         // Add authentication if API key is configured
         if (apiKey != null && !apiKey.isBlank()) {
@@ -175,13 +183,15 @@ public class TatumGamesApiClient {
      * @return the HTTP request
      * @throws ApiException if request body serialization fails
      */
-    private HttpRequest buildRequestWithApiKey(String method, String baseUrl, String endpoint,
-                                               Object body, String apiKey) throws ApiException {
+    private HttpRequest buildRequestWithApiKey(
+            String method, String baseUrl, String endpoint, Object body, String apiKey)
+            throws ApiException {
         String url = baseUrl + endpoint;
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .timeout(Duration.ofSeconds(DEFAULT_TIMEOUT_SECONDS))
-                .header("Content-Type", "application/json");
+        HttpRequest.Builder builder =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .timeout(Duration.ofSeconds(DEFAULT_TIMEOUT_SECONDS))
+                        .header("Content-Type", "application/json");
 
         // Add X-Apikey header if provided
         if (apiKey != null && !apiKey.isBlank()) {
@@ -207,15 +217,16 @@ public class TatumGamesApiClient {
     /**
      * Executes an HTTP request and parses the response.
      *
-     * @param request       the HTTP request
+     * @param request the HTTP request
      * @param responseClass the expected response class
-     * @param <T>           the response type
+     * @param <T> the response type
      * @return the parsed response
      * @throws ApiException if the request fails
      */
     private <T> T executeRequest(HttpRequest request, Class<T> responseClass) throws ApiException {
         try {
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response =
+                    httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             // Handle rate limiting
             if (response.statusCode() == 429) {
@@ -238,7 +249,8 @@ public class TatumGamesApiClient {
             // Handle client errors (don't retry)
             if (response.statusCode() >= 400) {
                 logger.error("Client error {}: {}", response.statusCode(), response.body());
-                throw new ApiException("Client error: " + response.statusCode() + " - " + response.body(),
+                throw new ApiException(
+                        "Client error: " + response.statusCode() + " - " + response.body(),
                         response.statusCode());
             }
 
@@ -258,7 +270,8 @@ public class TatumGamesApiClient {
                 }
             }
 
-            throw new ApiException("Unexpected status code: " + response.statusCode(), response.statusCode());
+            throw new ApiException(
+                    "Unexpected status code: " + response.statusCode(), response.statusCode());
 
         } catch (IOException e) {
             logger.error("IO error during API request", e);
@@ -279,7 +292,7 @@ public class TatumGamesApiClient {
      * Executes a request with retry logic and exponential backoff.
      *
      * @param requestSupplier the request supplier
-     * @param <T>             the response type
+     * @param <T> the response type
      * @return the response
      * @throws ApiException if all retries fail
      */
@@ -306,8 +319,12 @@ public class TatumGamesApiClient {
 
                 // Calculate exponential backoff delay
                 long delayMs = INITIAL_RETRY_DELAY_MS * (long) Math.pow(2, attempt - 1);
-                logger.debug("Request failed (attempt {}/{}), retrying in {}ms: {}",
-                        attempt, MAX_RETRIES, delayMs, e.getMessage());
+                logger.debug(
+                        "Request failed (attempt {}/{}), retrying in {}ms: {}",
+                        attempt,
+                        MAX_RETRIES,
+                        delayMs,
+                        e.getMessage());
 
                 try {
                     TimeUnit.MILLISECONDS.sleep(delayMs);
@@ -319,7 +336,8 @@ public class TatumGamesApiClient {
         }
 
         logger.error("Request failed after {} attempts", MAX_RETRIES);
-        // lastException is guaranteed to be non-null here since we only reach this point if all attempts failed
+        // lastException is guaranteed to be non-null here since we only reach this point if all
+        // attempts failed
         // (if any attempt succeeded, we would have returned earlier)
         throw lastException;
     }
@@ -374,6 +392,6 @@ public class TatumGamesApiClient {
 
         public int getStatusCode() {
             return statusCode;
-        }
     }
+  }
 }

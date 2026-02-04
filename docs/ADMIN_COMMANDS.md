@@ -193,7 +193,7 @@ server moderation, configuration, and management.
 **Reputation Integration:**
 
 - Detected bots are automatically reported using `BehaviorCategory.SPAMMER`
-- Reports appear in `/history` command
+- Reports appear in `/admin-history` command
 - Reputation scores visible in `/lookup` command
 - Bot prevention count displayed in `/server-stats`
 

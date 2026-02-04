@@ -5,15 +5,17 @@ import java.util.Objects;
 
 /**
  * Represents a lead submission from a user requesting promotional help.
- * <p>
- * TODO: Future Features
- * - Submit to lead-capture API endpoint
- * - Integration with CRM systems (Hubspot, etc.)
- * - Track conversion rates
- * - Email validation
+ *
+ * <p>TODO: Future Features - Submit to lead-capture API endpoint - Integration with CRM systems
+ * (Hubspot, etc.) - Track conversion rates - Email validation
  */
-public record LeadSubmission(String discordId, String username, String serverId, String campaignInterest, String email,
-                             Instant timestamp) {
+public record LeadSubmission(
+        String discordId,
+        String username,
+        String serverId,
+        String campaignInterest,
+        String email,
+        Instant timestamp) {
     /**
      * Creates a new lead submission.
      *
@@ -24,8 +26,13 @@ public record LeadSubmission(String discordId, String username, String serverId,
      * @param email            optional email address
      * @param timestamp        when the submission was made
      */
-    public LeadSubmission(String discordId, String username, String serverId,
-                          String campaignInterest, String email, Instant timestamp) {
+    public LeadSubmission(
+            String discordId,
+            String username,
+            String serverId,
+            String campaignInterest,
+            String email,
+            Instant timestamp) {
         this.discordId = Objects.requireNonNull(discordId);
         this.username = Objects.requireNonNull(username);
         this.serverId = Objects.requireNonNull(serverId);
@@ -34,8 +41,3 @@ public record LeadSubmission(String discordId, String username, String serverId,
         this.timestamp = Objects.requireNonNull(timestamp);
     }
 }
-
-
-
-
-

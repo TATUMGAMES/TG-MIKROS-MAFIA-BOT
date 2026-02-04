@@ -2,10 +2,9 @@ package com.tatumgames.mikros.admin.config;
 
 /**
  * Configuration for MIKROS Ecosystem analytics per guild.
- * <p>
- * TODO: Server Persistence
- * - Store configuration in database
- * - Add additional settings (refresh intervals, display preferences)
+ *
+ * <p>TODO: Server Persistence - Store configuration in database - Add additional settings (refresh
+ * intervals, display preferences)
  */
 public class MikrosEcosystemConfig {
     private final String guildId;
@@ -58,4 +57,3 @@ public class MikrosEcosystemConfig {
         this.channelId = channelId;
     }
 }
-

@@ -1,8 +1,8 @@
 package com.tatumgames.mikros.games.rpg.exploration;
 
 /**
- * Enum representing types of irrevocable world encounters.
- * These are ultra-rare encounters (≤1% chance) that present permanent choices.
+ * Enum representing types of irrevocable world encounters. These are ultra-rare encounters (≤1%
+ * chance) that present permanent choices.
  */
 public enum WorldEncounterType {
     /**

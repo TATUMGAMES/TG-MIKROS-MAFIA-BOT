@@ -1,13 +1,13 @@
 package com.tatumgames.mikros.games.rpg.exploration;
 
 /**
- * Enum representing Blood Relics - powerful artifacts forged from failed gods or dead titans.
- * Each relic grants power at a cost.
+ * Enum representing Blood Relics - powerful artifacts forged from failed gods or dead titans. Each
+ * relic grants power at a cost.
  */
 public enum RelicType {
     /**
-     * Blood-Forged Blade - Increases boss damage but reduces max HP.
-     * Effect: +10% boss damage, -5% max HP
+     * Blood-Forged Blade - Increases boss damage but reduces max HP. Effect: +10% boss damage, -5%
+     * max HP
      */
     BLOOD_FORGED_BLADE(
             "Blood-Forged Blade",
@@ -16,12 +16,11 @@ public enum RelicType {
             0.10, // +10% boss damage
             -0.05, // -5% max HP
             "BOSS_DAMAGE",
-            "MAX_HP"
-    ),
+            "MAX_HP"),
 
     /**
-     * Frozen Crown - Increases AGI defense but slows charge refresh.
-     * Effect: +10% AGI defense, charge refresh +2 hours slower
+     * Frozen Crown - Increases AGI defense but slows charge refresh. Effect: +10% AGI defense, charge
+     * refresh +2 hours slower
      */
     FROZEN_CROWN(
             "Frozen Crown",
@@ -30,12 +29,11 @@ public enum RelicType {
             0.10, // +10% AGI defense
             -0.0, // Charge refresh penalty (handled separately)
             "AGI_DEFENSE",
-            "CHARGE_REFRESH"
-    ),
+            "CHARGE_REFRESH"),
 
     /**
-     * Soul Anchor - Increases curse resistance but reduces XP gain.
-     * Effect: +15% curse resistance, -10% XP gain
+     * Soul Anchor - Increases curse resistance but reduces XP gain. Effect: +15% curse resistance,
+     * -10% XP gain
      */
     SOUL_ANCHOR(
             "Soul Anchor",
@@ -44,8 +42,7 @@ public enum RelicType {
             0.15, // +15% curse resistance
             -0.10, // -10% XP gain
             "CURSE_RESISTANCE",
-            "XP_GAIN"
-    );
+            "XP_GAIN");
 
     private final String displayName;
     private final String description;
@@ -55,9 +52,14 @@ public enum RelicType {
     private final String positiveStat;
     private final String negativeStat;
 
-    RelicType(String displayName, String description, String worldFlag,
-              double positiveModifier, double negativeModifier,
-              String positiveStat, String negativeStat) {
+    RelicType(
+            String displayName,
+            String description,
+            String worldFlag,
+            double positiveModifier,
+            double negativeModifier,
+            String positiveStat,
+            String negativeStat) {
         this.displayName = displayName;
         this.description = description;
         this.worldFlag = worldFlag;

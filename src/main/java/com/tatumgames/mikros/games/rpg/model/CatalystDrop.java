@@ -10,4 +10,3 @@ public record CatalystDrop(CatalystType catalyst, int count) {
         }
     }
 }
-

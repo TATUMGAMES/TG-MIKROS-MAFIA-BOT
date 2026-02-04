@@ -111,7 +111,8 @@ class InMemoryModerationLogServiceTest {
     @Test
     @DisplayName("Should throw exception for null action type filter")
     void shouldThrowExceptionForNullActionType() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(
+                IllegalArgumentException.class,
                 () -> service.getUserHistoryByType(USER_ID, GUILD_ID, null));
     }
 
@@ -186,23 +187,17 @@ class InMemoryModerationLogServiceTest {
     @Test
     @DisplayName("Should throw exception for null or blank userId")
     void shouldThrowExceptionForInvalidUserId() {
-        assertThrows(IllegalArgumentException.class,
-                () -> service.getUserHistory(null, GUILD_ID));
-        assertThrows(IllegalArgumentException.class,
-                () -> service.getUserHistory("", GUILD_ID));
-        assertThrows(IllegalArgumentException.class,
-                () -> service.getUserHistory("   ", GUILD_ID));
+        assertThrows(IllegalArgumentException.class, () -> service.getUserHistory(null, GUILD_ID));
+        assertThrows(IllegalArgumentException.class, () -> service.getUserHistory("", GUILD_ID));
+        assertThrows(IllegalArgumentException.class, () -> service.getUserHistory("   ", GUILD_ID));
     }
 
     @Test
     @DisplayName("Should throw exception for null or blank guildId")
     void shouldThrowExceptionForInvalidGuildId() {
-        assertThrows(IllegalArgumentException.class,
-                () -> service.getUserHistory(USER_ID, null));
-        assertThrows(IllegalArgumentException.class,
-                () -> service.getUserHistory(USER_ID, ""));
-        assertThrows(IllegalArgumentException.class,
-                () -> service.getUserHistory(USER_ID, "   "));
+        assertThrows(IllegalArgumentException.class, () -> service.getUserHistory(USER_ID, null));
+        assertThrows(IllegalArgumentException.class, () -> service.getUserHistory(USER_ID, ""));
+        assertThrows(IllegalArgumentException.class, () -> service.getUserHistory(USER_ID, "   "));
     }
 
     @Test
@@ -214,15 +209,15 @@ class InMemoryModerationLogServiceTest {
 
         for (int i = 0; i < threadCount; i++) {
             final int threadId = i;
-            threads[i] = new Thread(() -> {
+            threads[i] =
+                    new Thread(
+                            () -> {
                 for (int j = 0; j < actionsPerThread; j++) {
-                    service.logAction(createModerationActionWithUser(
-                            ActionType.WARN,
-                            "Warning from thread " + threadId,
-                            "user" + threadId
-                    ));
+                    service.logAction(
+                            createModerationActionWithUser(
+                                    ActionType.WARN, "Warning from thread " + threadId, "user" + threadId));
                 }
-            });
+                            });
             threads[i].start();
         }
 
@@ -252,14 +247,14 @@ class InMemoryModerationLogServiceTest {
                 actionType,
                 reason,
                 Instant.now(),
-                GUILD_ID
-        );
+                GUILD_ID);
     }
 
     /**
      * Helper method to create a test moderation action with specific guild.
      */
-    private ModerationAction createModerationActionWithGuild(ActionType actionType, String reason, String guildId) {
+    private ModerationAction createModerationActionWithGuild(
+            ActionType actionType, String reason, String guildId) {
         return new ModerationAction(
                 USER_ID,
                 "TestUser",
@@ -268,14 +263,14 @@ class InMemoryModerationLogServiceTest {
                 actionType,
                 reason,
                 Instant.now(),
-                guildId
-        );
+                guildId);
     }
 
     /**
      * Helper method to create a test moderation action with specific user.
      */
-    private ModerationAction createModerationActionWithUser(ActionType actionType, String reason, String userId) {
+    private ModerationAction createModerationActionWithUser(
+            ActionType actionType, String reason, String userId) {
         return new ModerationAction(
                 userId,
                 "TestUser",
@@ -284,8 +279,6 @@ class InMemoryModerationLogServiceTest {
                 actionType,
                 reason,
                 Instant.now(),
-                GUILD_ID
-        );
+                GUILD_ID);
     }
 }
-

@@ -14,20 +14,18 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Scheduler for Word Unscramble game resets.
- * Resets games every 4 hours for all configured guilds.
- * <p>
- * TODO: Reward System Integration
- * - Award MIKROS discounts to winners
- * - Grant special Discord roles to champions
- * - Implement streak tracking for consecutive wins
- * - Add monthly leaderboard for cumulative winners
+ * Scheduler for Word Unscramble game resets. Resets games every 4 hours for all configured guilds.
+ *
+ * <p>TODO: Reward System Integration - Award MIKROS discounts to winners - Grant special Discord
+ * roles to champions - Implement streak tracking for consecutive wins - Add monthly leaderboard for
+ * cumulative winners
  */
 public class WordUnscrambleResetScheduler {
     private static final Logger logger = LoggerFactory.getLogger(WordUnscrambleResetScheduler.class);
 
     private final WordUnscrambleService wordUnscrambleService;
     private final ScheduledExecutorService scheduler;
+    private volatile boolean started = false;
     private JDA jda;
 
     /**
@@ -42,22 +40,40 @@ public class WordUnscrambleResetScheduler {
     }
 
     /**
-     * Starts the reset scheduler.
-     * Resets games every 4 hours for all configured guilds.
+     * Starts the reset scheduler if not already started. Idempotent: safe to call multiple times.
+     *
+     * @param jda the JDA instance
+     */
+    public void startIfNeeded(JDA jda) {
+        start(jda);
+    }
+
+    /**
+     * Starts the reset scheduler. Resets games every 4 hours for all configured guilds.
      *
      * @param jda the JDA instance
      */
     public void start(JDA jda) {
+        synchronized (this) {
+            if (started) {
+                return;
+            }
+            started = true;
+        }
         this.jda = jda;
 
         // Reset games every 4 hours
-        scheduler.scheduleAtFixedRate(() -> {
-            try {
-                checkAndResetGames();
-            } catch (Exception e) {
-                logger.error("Error in Word Unscramble reset scheduler", e);
-            }
-        }, 0, 4, TimeUnit.HOURS);
+        scheduler.scheduleAtFixedRate(
+                () -> {
+                    try {
+                        checkAndResetGames();
+                    } catch (Exception e) {
+                        logger.error("Error in Word Unscramble reset scheduler", e);
+                    }
+                },
+                0,
+                4,
+                TimeUnit.HOURS);
 
         logger.info("Word Unscramble reset scheduler started (4-hour resets)");
     }
@@ -108,12 +124,14 @@ public class WordUnscrambleResetScheduler {
         // Get the game channel
         TextChannel channel = guild.getTextChannelById(config.getGameChannelId());
         if (channel == null) {
-            logger.warn("Word Unscramble channel {} not found in guild {}", config.getGameChannelId(), guildId);
+            logger.warn(
+                    "Word Unscramble channel {} not found in guild {}", config.getGameChannelId(), guildId);
             return;
         }
 
         // Get current progression level before reset (for level-up detection)
-        com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleProgression progression = wordUnscrambleService.getProgression(guildId);
+        com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleProgression progression =
+                wordUnscrambleService.getProgression(guildId);
         int previousLevel = progression != null ? progression.getLevel() : 1;
 
         // Announce winner of previous game (if any)
@@ -148,24 +166,25 @@ public class WordUnscrambleResetScheduler {
 
         WordUnscrambleResult winner = session.getWinner();
         if (winner != null) {
-            announcement = String.format("""
+            announcement =
+                    String.format(
+                            """
                             %s **%s Winner**
-                            
+
                             🏆 **%s** solved it first!
-                            
-                            Congratulations!
-                            """,
-                    session.getGameType().getEmoji(),
-                    session.getGameType().getDisplayName(),
-                    winner.username()
-            );
+                                    
+                                    Congratulations!
+                                    """,
+                            session.getGameType().getEmoji(),
+                            session.getGameType().getDisplayName(),
+                            winner.username());
         } else {
-            announcement = String.format(
-                    "%s **%s Ended**\n\nNo one solved it this round!\nAnswer was: **%s**",
-                    session.getGameType().getEmoji(),
-                    session.getGameType().getDisplayName(),
-                    session.getCorrectAnswer() != null ? session.getCorrectAnswer() : "N/A"
-            );
+            announcement =
+                    String.format(
+                            "%s **%s Ended**\n\nNo one solved it this round!\nAnswer was: **%s**",
+                            session.getGameType().getEmoji(),
+                            session.getGameType().getDisplayName(),
+                            session.getCorrectAnswer() != null ? session.getCorrectAnswer() : "N/A");
         }
 
         channel.sendMessage(announcement).queue();
@@ -186,15 +205,16 @@ public class WordUnscrambleResetScheduler {
      * Announces a level-up for Word Unscramble.
      */
     private void announceLevelUp(TextChannel channel, int level) {
-        String announcement = String.format("""
+        String announcement =
+                String.format(
+                        """
                         🎉 **Your community leveled up!** 🎉
-                        
+
                         Welcome to **Level %d** — expect more challenging words!
-                        
-                        Keep solving to reach the next level! 🚀
-                        """,
-                level
-        );
+                                
+                                Keep solving to reach the next level! 🚀
+                                """,
+                        level);
         channel.sendMessage(announcement).queue();
     }
 
@@ -206,6 +226,3 @@ public class WordUnscrambleResetScheduler {
         logger.info("Word Unscramble reset scheduler stopped");
     }
 }
-
-
-

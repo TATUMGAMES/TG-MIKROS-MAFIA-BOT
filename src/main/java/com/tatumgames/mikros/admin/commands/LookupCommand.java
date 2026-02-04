@@ -1,7 +1,7 @@
 package com.tatumgames.mikros.admin.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.config.ConfigLoader;
+import com.tatumgames.mikros.handler.CommandHandler;
 import com.tatumgames.mikros.models.api.GetUserScoreDetailResponse;
 import com.tatumgames.mikros.models.api.TrackPlayerRatingRequest;
 import com.tatumgames.mikros.services.ReputationService;
@@ -28,14 +28,14 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Command handler for the /lookup command.
- * Allows admins to lookup user reputation scores by username.
- * Admin-only command.
+ * Command handler for the /lookup command. Allows admins to lookup user reputation scores by
+ * username. Admin-only command.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class LookupCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(LookupCommand.class);
-    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final ReputationService reputationService;
     private final ConfigLoader configLoader;
 
@@ -53,7 +53,11 @@ public class LookupCommand implements CommandHandler {
     @Override
     public CommandData getCommandData() {
         return Commands.slash("lookup", "Lookup user reputation scores by username (Admin only)")
-                .addOption(OptionType.STRING, "usernames", "Comma or space-separated list of usernames to lookup", true)
+                .addOption(
+                        OptionType.STRING,
+                        "usernames",
+                        "Comma or space-separated list of usernames to lookup",
+                        true)
                 .setGuildOnly(true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS));
     }
@@ -63,27 +67,23 @@ public class LookupCommand implements CommandHandler {
         // Check if user has permission
         Member member = event.getMember();
         Guild guild = event.getGuild();
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.MODERATE_MEMBERS)) {
-            event.reply("❌ You don't have permission to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.MODERATE_MEMBERS)) {
+            event.reply("❌ You don't have permission to use this command.").setEphemeral(true).queue();
             return;
         }
 
         // Get usernames from command option
         String usernamesInput = event.getOption("usernames", OptionMapping::getAsString);
         if (usernamesInput == null || usernamesInput.isBlank()) {
-            event.reply("❌ Please provide at least one username to lookup.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ Please provide at least one username to lookup.").setEphemeral(true).queue();
             return;
         }
 
         // Parse usernames (support both comma and space separation)
         List<String> usernames = parseUsernames(usernamesInput);
         if (usernames.isEmpty()) {
-            event.reply("❌ No valid usernames found. Please provide comma or space-separated usernames.")
+            event
+                    .reply("❌ No valid usernames found. Please provide comma or space-separated usernames.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -93,7 +93,8 @@ public class LookupCommand implements CommandHandler {
         GetUserScoreDetailResponse response = reputationService.getUserScoreDetail(usernames);
 
         if (response == null || response.getData() == null) {
-            event.reply("❌ Failed to retrieve user score details. Please try again later.")
+            event
+                    .reply("❌ Failed to retrieve user score details. Please try again later.")
                     .setEphemeral(true)
                     .queue();
             logger.error("Failed to get user score details for usernames: {}", usernames);
@@ -110,29 +111,26 @@ public class LookupCommand implements CommandHandler {
         List<GetUserScoreDetailResponse.UserScore> scores = response.getData();
 
         if (scores.isEmpty()) {
-            embed.addField("⚠️ No Results",
-                    "No users found with the provided usernames:\n" +
-                            String.join(", ", usernames),
+            embed.addField(
+                    "⚠️ No Results",
+                    "No users found with the provided usernames:\n" + String.join(", ", usernames),
                     false);
         } else {
             // Add field for each user found
             for (GetUserScoreDetailResponse.UserScore score : scores) {
-                String fieldValue = String.format(
-                        "**Username:** `%s`\n**Reputation Score:** `%s`\n",
-                        score.getUsername(),
-                        score.getReputationScore()
-                );
+                String fieldValue =
+                        String.format(
+                                "**Username:** `%s`\n**Reputation Score:** `%s`\n",
+                                score.getUsername(), score.getReputationScore());
                 embed.addField("👤 " + score.getUsername(), fieldValue, false);
             }
 
             // Check for usernames not found
-            List<String> foundUsernames = scores.stream()
-                    .map(GetUserScoreDetailResponse.UserScore::getUsername)
-                    .toList();
+            List<String> foundUsernames =
+                    scores.stream().map(GetUserScoreDetailResponse.UserScore::getUsername).toList();
 
-            List<String> notFound = usernames.stream()
-                    .filter(username -> !foundUsernames.contains(username))
-                    .toList();
+            List<String> notFound =
+                    usernames.stream().filter(username -> !foundUsernames.contains(username)).toList();
 
             // Auto-create reputation entries for not-found users
             if (!notFound.isEmpty()) {
@@ -151,11 +149,13 @@ public class LookupCommand implements CommandHandler {
                         // Set sender (admin who executed /lookup)
                         TrackPlayerRatingRequest.Sender sender = new TrackPlayerRatingRequest.Sender();
                         sender.setDiscordUserId(adminUser.getId());
-                        sender.setDiscordUsername(adminMember != null ? adminMember.getEffectiveName() : adminUser.getName());
+                        sender.setDiscordUsername(
+                                adminMember != null ? adminMember.getEffectiveName() : adminUser.getName());
                         request.setSender(sender);
 
                         // Set participant (the not-found username)
-                        TrackPlayerRatingRequest.Participant participant = new TrackPlayerRatingRequest.Participant();
+                        TrackPlayerRatingRequest.Participant participant =
+                                new TrackPlayerRatingRequest.Participant();
                         participant.setDiscordUsername(username);
                         // Try to find Discord user ID if possible (for now, just use username)
                         participant.setDiscordUserId(""); // Backend will handle this
@@ -166,8 +166,10 @@ public class LookupCommand implements CommandHandler {
                         boolean success = reputationService.trackPlayerRating(request);
                         if (success) {
                             createdUsernames.add(username);
-                            logger.info("Auto-created reputation entry for username: {} by admin: {}",
-                                    username, adminUser.getId());
+                            logger.info(
+                                    "Auto-created reputation entry for username: {} by admin: {}",
+                                    username,
+                                    adminUser.getId());
                         } else {
                             logger.warn("Failed to auto-create reputation entry for username: {}", username);
                         }
@@ -180,23 +182,27 @@ public class LookupCommand implements CommandHandler {
                 if (!createdUsernames.isEmpty()) {
                     StringBuilder createdField = new StringBuilder();
                     for (String createdUsername : createdUsernames) {
-                        createdField.append("**").append(createdUsername).append("** - Reputation Score: `10`\n");
+                        createdField
+                                .append("**")
+                                .append(createdUsername)
+                                .append("** - Reputation Score: `10`\n");
                     }
-                    embed.addField("✅ Auto-Created",
-                            "The following users were automatically created with initial reputation score of 10:\n" +
-                                    createdField,
+                    embed.addField(
+                            "✅ Auto-Created",
+                            "The following users were automatically created with initial reputation score of 10:\n"
+                                    + createdField,
                             false);
                 }
 
                 // Show remaining not-found users (if any failed to create)
-                List<String> stillNotFound = notFound.stream()
-                        .filter(username -> !createdUsernames.contains(username))
-                        .toList();
+                List<String> stillNotFound =
+                        notFound.stream().filter(username -> !createdUsernames.contains(username)).toList();
 
                 if (!stillNotFound.isEmpty()) {
-                    embed.addField("⚠️ Not Found",
-                            "The following usernames were not found and could not be created:\n" +
-                                    String.join(", ", stillNotFound),
+                    embed.addField(
+                            "⚠️ Not Found",
+                            "The following usernames were not found and could not be created:\n"
+                                    + String.join(", ", stillNotFound),
                             false);
                 }
             }
@@ -205,8 +211,11 @@ public class LookupCommand implements CommandHandler {
 
         event.replyEmbeds(embed.build()).setEphemeral(true).queue();
 
-        logger.info("User score lookup performed by {} for usernames: {} in guild {}",
-                member.getId(), usernames, guild.getId());
+        logger.info(
+                "User score lookup performed by {} for usernames: {} in guild {}",
+                member.getId(),
+                usernames,
+                guild.getId());
     }
 
     /**
@@ -222,17 +231,11 @@ public class LookupCommand implements CommandHandler {
 
         // Try comma separation first
         if (input.contains(",")) {
-            return Arrays.stream(input.split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isBlank())
-                    .toList();
+            return Arrays.stream(input.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
         }
 
         // Otherwise, use space separation
-        return Arrays.stream(input.split("\\s+"))
-                .map(String::trim)
-                .filter(s -> !s.isBlank())
-                .toList();
+        return Arrays.stream(input.split("\\s+")).map(String::trim).filter(s -> !s.isBlank()).toList();
     }
 
     @Override

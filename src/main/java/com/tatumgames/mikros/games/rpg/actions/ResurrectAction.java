@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Resurrect action - Priest-only free action to revive dead players.
- * Does not consume action charges.
+ * Resurrect action - Priest-only free action to revive dead players. Does not consume action
+ * charges.
  */
 public class ResurrectAction implements CharacterAction {
     private static final Random random = new Random();
@@ -52,7 +52,8 @@ public class ResurrectAction implements CharacterAction {
      * @param worldCurseService      the world curse service for applying curse effects
      * @param loreRecognitionService the lore recognition service for milestone checks
      */
-    public ResurrectAction(WorldCurseService worldCurseService, LoreRecognitionService loreRecognitionService) {
+    public ResurrectAction(
+            WorldCurseService worldCurseService, LoreRecognitionService loreRecognitionService) {
         this.worldCurseService = worldCurseService;
         this.loreRecognitionService = loreRecognitionService;
     }
@@ -76,7 +77,8 @@ public class ResurrectAction implements CharacterAction {
     public RPGActionOutcome execute(RPGCharacter character, RPGConfig config) {
         // This action requires a target, so it should be handled differently
         // For now, return a generic outcome - the command handler will provide the target
-        throw new UnsupportedOperationException("ResurrectAction requires a target character. Use ResurrectAction.executeWithTarget() instead.");
+        throw new UnsupportedOperationException(
+                "ResurrectAction requires a target character. Use ResurrectAction.executeWithTarget() instead.");
     }
 
     /**
@@ -87,7 +89,8 @@ public class ResurrectAction implements CharacterAction {
      * @param config the guild's RPG configuration
      * @return the outcome of the resurrection
      */
-    public RPGActionOutcome executeWithTarget(RPGCharacter priest, RPGCharacter target, RPGConfig config) {
+    public RPGActionOutcome executeWithTarget(
+            RPGCharacter priest, RPGCharacter target, RPGConfig config) {
         // Check if priest is actually a Priest
         if (priest.getCharacterClass() != CharacterClass.PRIEST) {
             throw new IllegalArgumentException("Only Priests can perform resurrection!");
@@ -112,9 +115,10 @@ public class ResurrectAction implements CharacterAction {
             target.resurrect(recoveryHours);
 
             // Get base resurrection message
-            String baseNarrative = RESURRECTION_MESSAGES[random.nextInt(RESURRECTION_MESSAGES.length)]
-                    .replace("{priest}", priest.getName())
-                    .replace("{target}", target.getName());
+            String baseNarrative =
+                    RESURRECTION_MESSAGES[random.nextInt(RESURRECTION_MESSAGES.length)]
+                            .replace("{priest}", priest.getName())
+                            .replace("{target}", target.getName());
 
             // Add deity/relic-specific flavor text
             String deityFlavor = "";
@@ -136,9 +140,11 @@ public class ResurrectAction implements CharacterAction {
                 int corruptionBefore = target.getCorruption();
                 if (corruptionBefore >= 2) {
                     target.removeCorruption(2);
-                    oathbreakerFlavor = "\n\n⚔️💀 *The Priest's holy magic conflicts with your broken oath, purging some corruption. The broken oath makes resurrection... complicated.*";
+                    oathbreakerFlavor =
+                            "\n\n⚔️💀 *The Priest's holy magic conflicts with your broken oath, purging some corruption. The broken oath makes resurrection... complicated.*";
                 } else {
-                    oathbreakerFlavor = "\n\n⚔️💀 *The broken oath makes resurrection complicated. Holy magic and broken oaths do not mix easily.*";
+                    oathbreakerFlavor =
+                            "\n\n⚔️💀 *The broken oath makes resurrection complicated. Holy magic and broken oaths do not mix easily.*";
                 }
             }
 
@@ -172,9 +178,10 @@ public class ResurrectAction implements CharacterAction {
             success = true;
         } else {
             // Target is alive - give blessing instead
-            narrative = BLESSING_MESSAGES[random.nextInt(BLESSING_MESSAGES.length)]
-                    .replace("{priest}", priest.getName())
-                    .replace("{target}", target.getName());
+            narrative =
+                    BLESSING_MESSAGES[random.nextInt(BLESSING_MESSAGES.length)]
+                            .replace("{priest}", priest.getName())
+                            .replace("{target}", target.getName());
 
             // Small XP bonus for blessing (doubled during Fading Hope)
             xpGained = 2;
@@ -199,4 +206,3 @@ public class ResurrectAction implements CharacterAction {
                 .build();
     }
 }
-

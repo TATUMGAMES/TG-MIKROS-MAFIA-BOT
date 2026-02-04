@@ -4,7 +4,7 @@ import com.tatumgames.mikros.botdetection.config.BotDetectionConfig;
 import com.tatumgames.mikros.botdetection.model.BotDetectionResult;
 import com.tatumgames.mikros.botdetection.model.SuspiciousDomainList;
 import com.tatumgames.mikros.botdetection.tracker.MessagePatternTracker;
-import com.tatumgames.mikros.botdetection.util.LinkDetectionUtil;
+import com.tatumgames.mikros.botdetection.utils.LinkDetectionUtil;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -94,48 +94,48 @@ public class BotDetectionService {
         }
 
         // 1. Check account age + link
-        if (isAccountTooNew(user, config.getAccountAgeThresholdDays()) &&
-                LinkDetectionUtil.containsLink(messageContent)) {
-            String details = String.format("Account age: %d days, posted link",
-                    getAccountAgeDays(user));
+        if (isAccountTooNew(user, config.getAccountAgeThresholdDays())
+                && LinkDetectionUtil.containsLink(messageContent)) {
+            String details = String.format("Account age: %d days, posted link", getAccountAgeDays(user));
             return new BotDetectionResult(
                     true,
                     BotDetectionResult.DetectionReason.ACCOUNT_TOO_NEW,
                     BotDetectionResult.Confidence.HIGH,
                     config.getAutoAction(),
-                    details
-            );
+                    details);
         }
 
         // 2. Check join + immediate link
-        if (member != null && isJoinAndLink(member, messageContent, config.getJoinAndLinkTimeWindowSeconds())) {
-            String details = String.format("Joined %d seconds ago, posted link",
-                    getSecondsSinceJoin(member));
+        if (member != null
+                && isJoinAndLink(member, messageContent, config.getJoinAndLinkTimeWindowSeconds())) {
+            String details =
+                    String.format("Joined %d seconds ago, posted link", getSecondsSinceJoin(member));
             return new BotDetectionResult(
                     true,
                     BotDetectionResult.DetectionReason.JOIN_AND_LINK,
                     BotDetectionResult.Confidence.HIGH,
                     config.getAutoAction(),
-                    details
-            );
+                    details);
         }
 
         // 3. Check multi-channel spam
         String contentHash = hashContent(messageContent);
         patternTracker.recordMessage(userId, channelId, messageContent);
-        if (patternTracker.isMultiChannelSpam(userId, contentHash,
+        if (patternTracker.isMultiChannelSpam(
+                userId,
+                contentHash,
                 config.getMultiChannelSpamThreshold(),
                 config.getMultiChannelTimeWindowSeconds())) {
-            String details = String.format("Same message posted in %d+ channels within %d seconds",
-                    config.getMultiChannelSpamThreshold(),
-                    config.getMultiChannelTimeWindowSeconds());
+            String details =
+                    String.format(
+                            "Same message posted in %d+ channels within %d seconds",
+                            config.getMultiChannelSpamThreshold(), config.getMultiChannelTimeWindowSeconds());
             return new BotDetectionResult(
                     true,
                     BotDetectionResult.DetectionReason.MULTI_CHANNEL_SPAM,
                     BotDetectionResult.Confidence.HIGH,
                     config.getAutoAction(),
-                    details
-            );
+                    details);
         }
 
         // 4. Check suspicious domains
@@ -149,8 +149,7 @@ public class BotDetectionService {
                             BotDetectionResult.DetectionReason.URL_SHORTENER,
                             BotDetectionResult.Confidence.MEDIUM,
                             config.getAutoAction(),
-                            "URL shortener detected: " + domain
-                    );
+                            "URL shortener detected: " + domain);
                 }
                 if (domainList.isSuspicious(domain)) {
                     int riskScore = domainList.getDomainRiskScore(domain);
@@ -159,8 +158,7 @@ public class BotDetectionService {
                             BotDetectionResult.DetectionReason.SUSPICIOUS_DOMAIN,
                             BotDetectionResult.Confidence.MEDIUM,
                             config.getAutoAction(),
-                            String.format("Suspicious domain: %s (risk: %d)", domain, riskScore)
-                    );
+                            String.format("Suspicious domain: %s (risk: %d)", domain, riskScore));
                 }
             }
         }
@@ -200,10 +198,8 @@ public class BotDetectionService {
     public boolean isJoinAndLink(Member member, String messageContent, int timeWindowSeconds) {
         // Note: member.getTimeJoined() is guaranteed to be non-null by JDA API
 
-        long secondsSinceJoin = ChronoUnit.SECONDS.between(
-                member.getTimeJoined().toInstant(),
-                Instant.now()
-        );
+        long secondsSinceJoin =
+                ChronoUnit.SECONDS.between(member.getTimeJoined().toInstant(), Instant.now());
 
         return secondsSinceJoin < timeWindowSeconds && LinkDetectionUtil.containsLink(messageContent);
     }
@@ -215,8 +211,10 @@ public class BotDetectionService {
      */
     public void recordBotPrevention(String guildId) {
         botPreventionCounts.merge(guildId, 1, Integer::sum);
-        logger.info("Recorded bot prevention for guild {} (total: {})",
-                guildId, botPreventionCounts.get(guildId));
+        logger.info(
+                "Recorded bot prevention for guild {} (total: {})",
+                guildId,
+                botPreventionCounts.get(guildId));
     }
 
     /**
@@ -318,4 +316,3 @@ public class BotDetectionService {
         logger.info("Removed suspicious domain: {}", domain);
     }
 }
-

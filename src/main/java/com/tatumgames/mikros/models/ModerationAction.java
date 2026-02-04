@@ -6,19 +6,26 @@ import java.util.Objects;
 /**
  * Represents a moderation action taken against a user.
  */
-public record ModerationAction(String targetUserId, String targetUsername, String moderatorId, String moderatorUsername,
-                               ActionType actionType, String reason, Instant timestamp, String guildId) {
+public record ModerationAction(
+        String targetUserId,
+        String targetUsername,
+        String moderatorId,
+        String moderatorUsername,
+        ActionType actionType,
+        String reason,
+        Instant timestamp,
+        String guildId) {
     /**
      * Creates a new ModerationAction.
      *
-     * @param targetUserId      the ID of the user who was moderated
-     * @param targetUsername    the username of the user who was moderated
-     * @param moderatorId       the ID of the moderator who performed the action
+     * @param targetUserId the ID of the user who was moderated
+     * @param targetUsername the username of the user who was moderated
+     * @param moderatorId the ID of the moderator who performed the action
      * @param moderatorUsername the username of the moderator
-     * @param actionType        the type of moderation action
-     * @param reason            the reason for the action
-     * @param timestamp         when the action occurred
-     * @param guildId           the ID of the guild where the action occurred
+     * @param actionType the type of moderation action
+     * @param reason the reason for the action
+     * @param timestamp when the action occurred
+     * @param guildId the ID of the guild where the action occurred
      */
     public ModerationAction(
             String targetUserId,
@@ -28,12 +35,12 @@ public record ModerationAction(String targetUserId, String targetUsername, Strin
             ActionType actionType,
             String reason,
             Instant timestamp,
-            String guildId
-    ) {
+            String guildId) {
         this.targetUserId = Objects.requireNonNull(targetUserId, "targetUserId cannot be null");
         this.targetUsername = Objects.requireNonNull(targetUsername, "targetUsername cannot be null");
         this.moderatorId = Objects.requireNonNull(moderatorId, "moderatorId cannot be null");
-        this.moderatorUsername = Objects.requireNonNull(moderatorUsername, "moderatorUsername cannot be null");
+        this.moderatorUsername =
+                Objects.requireNonNull(moderatorUsername, "moderatorUsername cannot be null");
         this.actionType = Objects.requireNonNull(actionType, "actionType cannot be null");
         this.reason = Objects.requireNonNull(reason, "reason cannot be null");
         this.timestamp = Objects.requireNonNull(timestamp, "timestamp cannot be null");
@@ -125,11 +132,11 @@ public record ModerationAction(String targetUserId, String targetUsername, Strin
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ModerationAction that = (ModerationAction) o;
-        return Objects.equals(targetUserId, that.targetUserId) &&
-                Objects.equals(moderatorId, that.moderatorId) &&
-                actionType == that.actionType &&
-                Objects.equals(timestamp, that.timestamp) &&
-                Objects.equals(guildId, that.guildId);
+        return Objects.equals(targetUserId, that.targetUserId)
+                && Objects.equals(moderatorId, that.moderatorId)
+                && actionType == that.actionType
+                && Objects.equals(timestamp, that.timestamp)
+                && Objects.equals(guildId, that.guildId);
     }
 
     @Override
@@ -141,8 +148,13 @@ public record ModerationAction(String targetUserId, String targetUsername, Strin
     public String toString() {
         return String.format(
                 "ModerationAction{type=%s, target=%s (%s), moderator=%s (%s), reason='%s', timestamp=%s, guild=%s}",
-                actionType, targetUsername, targetUserId, moderatorUsername, moderatorId, reason, timestamp, guildId
-        );
+                actionType,
+                targetUsername,
+                targetUserId,
+                moderatorUsername,
+                moderatorId,
+                reason,
+                timestamp,
+                guildId);
     }
 }
-

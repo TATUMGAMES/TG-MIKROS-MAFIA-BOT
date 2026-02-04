@@ -14,9 +14,6 @@ public enum ActionType {
      */
     KICK,
 
-    /**
-     * Ban action - permanently removes a user from the server.
-     */
-    BAN
+    /** Ban action - permanently removes a user from the server. */
+  BAN
 }
-

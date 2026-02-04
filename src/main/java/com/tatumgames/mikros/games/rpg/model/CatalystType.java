@@ -1,8 +1,8 @@
 package com.tatumgames.mikros.games.rpg.model;
 
 /**
- * Enum representing catalyst types used in crafting.
- * Catalysts are rarer than essences and required for crafting.
+ * Enum representing catalyst types used in crafting. Catalysts are rarer than essences and required
+ * for crafting.
  */
 public enum CatalystType {
     ANCIENT_VIAL("Ancient Vial", "⚗️"),
@@ -26,4 +26,3 @@ public enum CatalystType {
         return emoji;
     }
 }
-

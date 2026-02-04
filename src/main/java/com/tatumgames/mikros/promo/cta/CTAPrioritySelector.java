@@ -7,16 +7,15 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Handles CTA selection based on priority tiers for conversion optimization.
- * Prioritizes download/install links over social links.
+ * Handles CTA selection based on priority tiers for conversion optimization. Prioritizes
+ * download/install links over social links.
  */
 public class CTAPrioritySelector {
     private static final Random random = new Random();
 
     /**
-     * Selects primary CTAs (Tier 1) based on priority rules.
-     * For mobile games with both Google Play and App Store, returns both.
-     * Otherwise returns the highest priority single CTA.
+     * Selects primary CTAs (Tier 1) based on priority rules. For mobile games with both Google Play
+     * and App Store, returns both. Otherwise returns the highest priority single CTA.
      *
      * @param ctas the CTAs object
      * @return list of primary CTA links (empty if none available)
@@ -83,10 +82,8 @@ public class CTAPrioritySelector {
     }
 
     /**
-     * Selects an optional secondary CTA (Tier 2) if allowed.
-     * Only returns a CTA if:
-     * - No Tier 1 CTAs exist, OR
-     * - allowSecondary is true and random chance (30-40%) passes
+     * Selects an optional secondary CTA (Tier 2) if allowed. Only returns a CTA if: - No Tier 1 CTAs
+     * exist, OR - allowSecondary is true and random chance (30-40%) passes
      *
      * @param ctas           the CTAs object
      * @param allowSecondary whether secondary CTAs are allowed
@@ -148,13 +145,14 @@ public class CTAPrioritySelector {
         if (ctas == null) {
             return false;
         }
-        return isValidUrl(ctas.getGoogleStore()) ||
-                isValidUrl(ctas.getAppleStore()) ||
-                isValidUrl(ctas.getSteamStore()) ||
-                isValidUrl(ctas.getSamsungStore()) ||
-                isValidUrl(ctas.getAmazonStore()) ||
-                isValidUrl(ctas.getItchStore()) ||
-                (!isValidUrl(ctas.getWebsite()) && isValidUrl(ctas.getOther())); // Special case: other as Tier 1
+        return isValidUrl(ctas.getGoogleStore())
+                || isValidUrl(ctas.getAppleStore())
+                || isValidUrl(ctas.getSteamStore())
+                || isValidUrl(ctas.getSamsungStore())
+                || isValidUrl(ctas.getAmazonStore())
+                || isValidUrl(ctas.getItchStore())
+                || (!isValidUrl(ctas.getWebsite())
+                && isValidUrl(ctas.getOther())); // Special case: other as Tier 1
     }
 
     /**
@@ -189,7 +187,9 @@ public class CTAPrioritySelector {
             return "⭐ Wishlist on Steam";
         }
 
-        if (displayName.contains("samsung") || displayName.contains("amazon") || displayName.contains("itch")) {
+        if (displayName.contains("samsung")
+                || displayName.contains("amazon")
+                || displayName.contains("itch")) {
             return "🎮 Available Now";
         }
 

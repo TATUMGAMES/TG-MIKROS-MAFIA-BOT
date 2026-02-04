@@ -23,9 +23,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Scheduler for automatic server bumping.
- * Checks every 15 minutes and executes bumps when intervals are met.
- * Respects external bot rate limits and handles errors gracefully.
+ * Scheduler for automatic server bumping. Checks every 15 minutes and executes bumps when intervals
+ * are met. Respects external bot rate limits and handles errors gracefully.
  */
 public class BumpScheduler {
     private static final Logger logger = LoggerFactory.getLogger(BumpScheduler.class);
@@ -34,14 +33,16 @@ public class BumpScheduler {
 
     // External bot rate limits (conservative estimates)
     private static final long DISBOARD_MIN_COOLDOWN_HOURS = 2; // Disboard requires 2h between bumps
-    private static final long DISURL_MIN_COOLDOWN_HOURS = 1;   // Disurl typically 1h
+    private static final long DISURL_MIN_COOLDOWN_HOURS = 1; // Disurl typically 1h
 
     // Bot user IDs (these are well-known bot IDs)
     private static final long DISBOARD_BOT_ID = 302050872383242240L; // Disboard bot ID
-    private static final long DISURL_BOT_ID = 823495039178932224L;   // Disurl bot ID (approximate, may need verification)
+    private static final long DISURL_BOT_ID =
+            823495039178932224L; // Disurl bot ID (approximate, may need verification)
 
     private final BumpService bumpService;
     private final ScheduledExecutorService scheduler;
+    private volatile boolean started = false;
     private JDA jda;
 
     /**
@@ -51,12 +52,23 @@ public class BumpScheduler {
      */
     public BumpScheduler(BumpService bumpService) {
         this.bumpService = bumpService;
-        this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "bump-scheduler");
-            t.setDaemon(true);
-            return t;
-        });
+        this.scheduler =
+                Executors.newSingleThreadScheduledExecutor(
+                        r -> {
+                            Thread t = new Thread(r, "bump-scheduler");
+                            t.setDaemon(true);
+                            return t;
+                        });
         logger.info("BumpScheduler initialized");
+    }
+
+    /**
+     * Starts the bump scheduler if not already started. Idempotent: safe to call multiple times.
+     *
+     * @param jda the JDA instance
+     */
+    public void startIfNeeded(JDA jda) {
+        start(jda);
     }
 
     /**
@@ -65,17 +77,27 @@ public class BumpScheduler {
      * @param jda the JDA instance
      */
     public void start(JDA jda) {
+        synchronized (this) {
+            if (started) {
+                return;
+            }
+            started = true;
+        }
         this.jda = jda;
 
         // Run check every 15 minutes
-        scheduler.scheduleAtFixedRate(() -> {
-            try {
-                logger.debug("Bump scheduler check triggered");
-                checkAndExecuteBumps();
-            } catch (Exception e) {
-                logger.error("Error in bump scheduler", e);
-            }
-        }, 0, CHECK_INTERVAL_MINUTES, TimeUnit.MINUTES);
+        scheduler.scheduleAtFixedRate(
+                () -> {
+                    try {
+                        logger.debug("Bump scheduler check triggered");
+                        checkAndExecuteBumps();
+                    } catch (Exception e) {
+                        logger.error("Error in bump scheduler", e);
+                    }
+                },
+                0,
+                CHECK_INTERVAL_MINUTES,
+                TimeUnit.MINUTES);
 
         logger.info("Bump scheduler started (checks every {} minutes)", CHECK_INTERVAL_MINUTES);
     }
@@ -151,12 +173,27 @@ public class BumpScheduler {
             }
         }
 
-        // Send reminder based on number of bots that need bumping
+        // Send reminder only when at least one bot needs bumping
         if (botsToBump.isEmpty()) {
-            // No bots need bumping
             return;
-        } else if (botsToBump.size() == 1) {
-            // Single bot needs bumping - send single bot message
+        }
+
+        // When both bots are enabled, always send combined message listing both (one shared reminder)
+        if (enabledBots.size() >= 2) {
+            try {
+                sendCombinedBumpReminder(channel, enabledBots);
+                for (BumpConfig.BumpBot bot : botsToBump) {
+                    bumpService.recordBumpTime(guildId, bot, now);
+                }
+                logger.info(
+                        "Executed combined bump reminder for enabled bots {} in guild {}",
+                        enabledBots.stream().map(BumpConfig.BumpBot::getDisplayName).toList(),
+                        guildId);
+            } catch (Exception e) {
+                logger.error("Error executing combined bump reminder in guild {}", guildId, e);
+            }
+        } else {
+            // Single bot enabled - send single bot message
             BumpConfig.BumpBot bot = botsToBump.iterator().next();
             try {
                 sendBumpCommand(channel, bot);
@@ -164,18 +201,6 @@ public class BumpScheduler {
                 logger.info("Executed bump for bot {} in guild {}", bot.getDisplayName(), guildId);
             } catch (Exception e) {
                 logger.error("Error executing bump for bot {} in guild {}", bot, guildId, e);
-            }
-        } else {
-            // Multiple bots need bumping - send combined message
-            try {
-                sendCombinedBumpReminder(channel, botsToBump);
-                // Record bump time for all bots
-                for (BumpConfig.BumpBot bot : botsToBump) {
-                    bumpService.recordBumpTime(guildId, bot, now);
-                }
-                logger.info("Executed combined bump reminder for {} bots in guild {}", botsToBump.size(), guildId);
-            } catch (Exception e) {
-                logger.error("Error executing combined bump reminder in guild {}", guildId, e);
             }
         }
     }
@@ -190,11 +215,12 @@ public class BumpScheduler {
      * @param now           the current time
      * @return true if bump should be executed
      */
-    private boolean shouldBump(Guild guild, BumpConfig.BumpBot bot, BumpConfig config,
-                               int intervalHours, Instant now) {
+    private boolean shouldBump(
+            Guild guild, BumpConfig.BumpBot bot, BumpConfig config, int intervalHours, Instant now) {
         // Check if bot is present in the server
         if (!isBotPresent(guild, bot)) {
-            logger.debug("Bot {} not present in guild {}, skipping bump", bot.getDisplayName(), guild.getId());
+            logger.debug(
+                    "Bot {} not present in guild {}, skipping bump", bot.getDisplayName(), guild.getId());
             return false;
         }
 
@@ -210,16 +236,24 @@ public class BumpScheduler {
         long hoursSinceLastBump = timeSinceLastBump.toHours();
 
         if (hoursSinceLastBump < intervalHours) {
-            logger.debug("Interval not met for bot {} in guild {} ({}h < {}h)",
-                    bot.getDisplayName(), guild.getId(), hoursSinceLastBump, intervalHours);
+            logger.debug(
+                    "Interval not met for bot {} in guild {} ({}h < {}h)",
+                    bot.getDisplayName(),
+                    guild.getId(),
+                    hoursSinceLastBump,
+                    intervalHours);
             return false;
         }
 
         // Check external bot rate limits
         long minCooldownHours = getMinCooldownHours(bot);
         if (hoursSinceLastBump < minCooldownHours) {
-            logger.debug("Rate limit not met for bot {} in guild {} ({}h < {}h min cooldown)",
-                    bot.getDisplayName(), guild.getId(), hoursSinceLastBump, minCooldownHours);
+            logger.debug(
+                    "Rate limit not met for bot {} in guild {} ({}h < {}h min cooldown)",
+                    bot.getDisplayName(),
+                    guild.getId(),
+                    hoursSinceLastBump,
+                    minCooldownHours);
             return false;
         }
 
@@ -227,8 +261,8 @@ public class BumpScheduler {
     }
 
     /**
-     * Checks if a bot is present in the guild.
-     * Uses an API call to verify actual membership (not just cache).
+     * Checks if a bot is present in the guild. Uses an API call to verify actual membership (not just
+     * cache).
      *
      * @param guild the guild
      * @param bot   the bot to check
@@ -248,8 +282,11 @@ public class BumpScheduler {
             return botMember != null;
         } catch (Exception e) {
             // If API call fails (e.g., bot not in server, network error), assume not present
-            logger.debug("Could not retrieve bot {} from guild {}: {}",
-                    bot.getDisplayName(), guild.getId(), e.getMessage());
+            logger.debug(
+                    "Could not retrieve bot {} from guild {}: {}",
+                    bot.getDisplayName(),
+                    guild.getId(),
+                    e.getMessage());
             return false;
         }
     }
@@ -287,26 +324,32 @@ public class BumpScheduler {
      * @param bots    the set of bots to bump
      */
     private void sendCombinedBumpReminder(TextChannel channel, EnumSet<BumpConfig.BumpBot> bots) {
-        // Build bot names list
-        String botNames = bots.stream()
-                .map(BumpConfig.BumpBot::getDisplayName)
-                .reduce((a, b) -> a + " and " + b)
-                .orElse("");
+        // Build instruction text: list each bot with its command (e.g. /bump for Disboard, /bump disurl
+        // for Disurl)
+        String instructions =
+                bots.stream()
+                        .map(bot -> String.format("**%s**: `%s`", bot.getDisplayName(), bot.getCommand()))
+                        .reduce((a, b) -> a + "\n" + b)
+                        .orElse("");
+        String botNames =
+                bots.stream()
+                        .map(BumpConfig.BumpBot::getDisplayName)
+                        .reduce((a, b) -> a + " and " + b)
+                        .orElse("");
 
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("⏰ Time to Bump the Server!");
-        embed.setDescription(String.format(
-                "Please run /bump to bump the server on **%s**.\n\n" +
-                        "This helps keep the server visible on server listing sites! 🚀",
-                botNames
-        ));
+        embed.setDescription(
+                String.format(
+                        "Please bump the server on **%s**:\n%s\n\n"
+                                + "This helps keep the server visible on server listing sites! 🚀",
+                        botNames, instructions));
         embed.setColor(Color.CYAN);
         embed.setFooter("Click the buttons below for quick actions");
         embed.setTimestamp(Instant.now());
 
         // Create buttons for each bot
-        MessageCreateBuilder messageBuilder = new MessageCreateBuilder()
-                .setEmbeds(embed.build());
+        MessageCreateBuilder messageBuilder = new MessageCreateBuilder().setEmbeds(embed.build());
 
         // Add button rows for each bot (Discord allows up to 5 buttons per row, 5 rows max)
         int buttonCount = 0;
@@ -315,37 +358,44 @@ public class BumpScheduler {
                 break;
             }
 
-            Button copyCommandButton = Button.secondary(
-                    "bump_copy_" + bot.name().toLowerCase(),
-                    "📋 Copy " + bot.getDisplayName()
-            ).withEmoji(Emoji.fromUnicode("📋"));
+            Button copyCommandButton =
+                    Button.secondary(
+                                    "bump_copy_" + bot.name().toLowerCase(), "📋 Copy " + bot.getDisplayName())
+                            .withEmoji(Emoji.fromUnicode("📋"));
 
-            Button instructionsButton = Button.link(
-                    bot == BumpConfig.BumpBot.DISBOARD
-                            ? "https://disboard.org/help"
-                            : "https://disurl.com/help",
-                    "📖 " + bot.getDisplayName() + " Help"
-            ).withEmoji(Emoji.fromUnicode("📖"));
+            Button instructionsButton =
+                    Button.link(
+                                    bot == BumpConfig.BumpBot.DISBOARD
+                                            ? "https://disboard.org/help"
+                                            : "https://disurl.com/help",
+                                    "📖 " + bot.getDisplayName() + " Help")
+                            .withEmoji(Emoji.fromUnicode("📖"));
 
-            Button botMentionButton = Button.secondary(
-                    "bump_mention_" + bot.name().toLowerCase(),
-                    "👤 Mention " + bot.getDisplayName()
-            ).withEmoji(Emoji.fromUnicode("👤"));
+            Button botMentionButton =
+                    Button.secondary(
+                                    "bump_mention_" + bot.name().toLowerCase(), "👤 Mention " + bot.getDisplayName())
+                            .withEmoji(Emoji.fromUnicode("👤"));
 
             messageBuilder.addActionRow(copyCommandButton, instructionsButton, botMentionButton);
             buttonCount += 3;
         }
 
-        channel.sendMessage(messageBuilder.build()).queue(
-                success -> logger.info("Sent combined bump reminder for {} in channel {}", botNames, channel.getId()),
-                error -> logger.warn("Failed to send combined bump reminder to channel {}: {}",
-                        channel.getId(), error.getMessage())
-        );
+        channel
+                .sendMessage(messageBuilder.build())
+                .queue(
+                        success ->
+                                logger.info(
+                                        "Sent combined bump reminder for {} in channel {}", botNames, channel.getId()),
+                        error ->
+                                logger.warn(
+                                        "Failed to send combined bump reminder to channel {}: {}",
+                                        channel.getId(),
+                                        error.getMessage()));
     }
 
     /**
-     * Sends a bump reminder with interactive buttons to a specific bot in a channel.
-     * Discord bots cannot invoke slash commands of other bots, so we send a reminder with buttons.
+     * Sends a bump reminder with interactive buttons to a specific bot in a channel. Discord bots
+     * cannot invoke slash commands of other bots, so we send a reminder with buttons.
      *
      * @param channel the channel to send in
      * @param bot     the bot to bump
@@ -356,44 +406,52 @@ public class BumpScheduler {
 
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("⏰ Time to Bump the Server!");
-        embed.setDescription(String.format(
-                "Please run %s to bump the server on **%s**.\n\n" +
-                        "This helps keep the server visible on server listing sites! 🚀",
-                bot.getCommand(),
-                bot.getDisplayName()
-        ));
+        embed.setDescription(
+                String.format(
+                        "Please run %s to bump the server on **%s**.\n\n"
+                                + "This helps keep the server visible on server listing sites! 🚀",
+                        bot.getCommand(), bot.getDisplayName()));
         embed.setColor(Color.CYAN);
         embed.setFooter("Click the buttons below for quick actions");
         embed.setTimestamp(Instant.now());
 
         // Create buttons
-        Button copyCommandButton = Button.secondary(
-                "bump_copy_" + bot.name().toLowerCase(),
-                "📋 Copy Command"
-        ).withEmoji(Emoji.fromUnicode("📋"));
+        Button copyCommandButton =
+                Button.secondary("bump_copy_" + bot.name().toLowerCase(), "📋 Copy Command")
+                        .withEmoji(Emoji.fromUnicode("📋"));
 
-        Button instructionsButton = Button.link(
-                bot == BumpConfig.BumpBot.DISBOARD
-                        ? "https://disboard.org/help"
-                        : "https://disurl.com/help",
-                "📖 Instructions"
-        ).withEmoji(Emoji.fromUnicode("📖"));
+        Button instructionsButton =
+                Button.link(
+                                bot == BumpConfig.BumpBot.DISBOARD
+                                        ? "https://disboard.org/help"
+                                        : "https://disurl.com/help",
+                                "📖 Instructions")
+                        .withEmoji(Emoji.fromUnicode("📖"));
 
-        Button botMentionButton = Button.secondary(
-                "bump_mention_" + bot.name().toLowerCase(),
-                "👤 Mention " + bot.getDisplayName()
-        ).withEmoji(Emoji.fromUnicode("👤"));
+        Button botMentionButton =
+                Button.secondary(
+                                "bump_mention_" + bot.name().toLowerCase(), "👤 Mention " + bot.getDisplayName())
+                        .withEmoji(Emoji.fromUnicode("👤"));
 
-        MessageCreateData message = new MessageCreateBuilder()
-                .setEmbeds(embed.build())
-                .setActionRow(copyCommandButton, instructionsButton, botMentionButton)
-                .build();
+        MessageCreateData message =
+                new MessageCreateBuilder()
+                        .setEmbeds(embed.build())
+                        .setActionRow(copyCommandButton, instructionsButton, botMentionButton)
+                        .build();
 
-        channel.sendMessage(message).queue(
-                success -> logger.info("Sent bump reminder for {} in channel {}", bot.getDisplayName(), channel.getId()),
-                error -> logger.warn("Failed to send bump reminder {} to channel {}: {}",
-                        bot.getDisplayName(), channel.getId(), error.getMessage())
-        );
+        channel
+                .sendMessage(message)
+                .queue(
+                        success ->
+                                logger.info(
+                                        "Sent bump reminder for {} in channel {}",
+                                        bot.getDisplayName(),
+                                        channel.getId()),
+                        error ->
+                                logger.warn(
+                                        "Failed to send bump reminder {} to channel {}: {}",
+                                        bot.getDisplayName(),
+                                        channel.getId(),
+                                        error.getMessage()));
     }
 }
-

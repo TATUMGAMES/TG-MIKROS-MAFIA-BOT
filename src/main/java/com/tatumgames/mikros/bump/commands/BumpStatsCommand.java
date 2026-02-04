@@ -1,14 +1,15 @@
 package com.tatumgames.mikros.bump.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.bump.model.BumpConfig;
 import com.tatumgames.mikros.bump.model.BumpStats;
 import com.tatumgames.mikros.bump.service.BumpService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.slf4j.Logger;
@@ -21,13 +22,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 /**
- * Command to view server bump statistics.
- * Admin-only command.
+ * Command to view server bump statistics. Admin-only command.
  */
 public class BumpStatsCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(BumpStatsCommand.class);
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("MMM d, yyyy 'at' h:mm a")
-            .withZone(ZoneId.systemDefault());
+    private static final DateTimeFormatter DATE_FORMAT =
+            DateTimeFormatter.ofPattern("MMM d, yyyy 'at' h:mm a").withZone(ZoneId.systemDefault());
 
     private final BumpService bumpService;
 
@@ -37,9 +37,10 @@ public class BumpStatsCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("admin-bump-stats", "View server bump statistics and history (admin only)")
+        return Commands.slash(
+                        "admin-bump-stats", "View server bump statistics and history (admin only)")
                 .setGuildOnly(true)
-                .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
 
     @Override
@@ -48,11 +49,8 @@ public class BumpStatsCommand implements CommandHandler {
         Member member = event.getMember();
         Guild guild = event.getGuild();
 
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ You must be an administrator to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("❌ You must be an administrator to use this command.").setEphemeral(true).queue();
             return;
         }
 
@@ -64,17 +62,12 @@ public class BumpStatsCommand implements CommandHandler {
         embed.setColor(Color.CYAN);
 
         // Overall stats
-        embed.addField("📈 Overall Statistics",
+        embed.addField(
+                "📈 Overall Statistics",
                 String.format(
-                        "**Total Bumps:** %d\n" +
-                                "**This Month:** %d\n" +
-                                "**This Week:** %d",
-                        stats.getTotalBumps(),
-                        stats.getBumpsThisMonth(),
-                        stats.getBumpsThisWeek()
-                ),
-                false
-        );
+                        "**Total Bumps:** %d\n" + "**This Month:** %d\n" + "**This Week:** %d",
+                        stats.getTotalBumps(), stats.getBumpsThisMonth(), stats.getBumpsThisWeek()),
+                false);
 
         // Per-bot stats
         StringBuilder botStats = new StringBuilder();
@@ -102,9 +95,9 @@ public class BumpStatsCommand implements CommandHandler {
             int count = 0;
             for (BumpStats.BumpRecord bump : stats.getRecentBumps()) {
                 if (count >= 5) break; // Show last 5
-                recent.append(String.format("• %s - %s\n",
-                        bump.getBot().getDisplayName(),
-                        DATE_FORMAT.format(bump.getTime())));
+                recent.append(
+                        String.format(
+                                "• %s - %s\n", bump.getBot().getDisplayName(), DATE_FORMAT.format(bump.getTime())));
                 count++;
             }
             embed.addField("🕐 Recent Bumps", recent.toString(), false);
@@ -113,11 +106,14 @@ public class BumpStatsCommand implements CommandHandler {
         embed.setFooter("Keep your server visible by bumping regularly!");
         embed.setTimestamp(Instant.now());
 
-        event.replyEmbeds(embed.build()).setEphemeral(true).queue(
-                success -> logger.debug("Sent bump stats to user {} in guild {}",
-                        event.getUser().getId(), guildId),
-                error -> logger.error("Failed to send bump stats", error)
-        );
+        event
+                .replyEmbeds(embed.build())
+                .setEphemeral(true)
+                .queue(
+                        success ->
+                                logger.debug(
+                                        "Sent bump stats to user {} in guild {}", event.getUser().getId(), guildId),
+                        error -> logger.error("Failed to send bump stats", error));
     }
 
     @Override
@@ -125,4 +121,3 @@ public class BumpStatsCommand implements CommandHandler {
         return "admin-bump-stats";
     }
 }
-

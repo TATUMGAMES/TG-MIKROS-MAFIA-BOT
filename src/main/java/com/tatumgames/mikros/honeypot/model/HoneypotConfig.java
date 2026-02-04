@@ -1,8 +1,8 @@
 package com.tatumgames.mikros.honeypot.model;
 
 /**
- * Configuration for honeypot system per guild.
- * Stores settings like channel name, enabled status, and alert channel.
+ * Configuration for honeypot system per guild. Stores settings like channel name, enabled status,
+ * and alert channel.
  */
 public class HoneypotConfig {
     private final String guildId;
@@ -80,8 +80,3 @@ public class HoneypotConfig {
         this.deleteDays = deleteDays;
     }
 }
-
-
-
-
-

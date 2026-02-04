@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Represents an app promotion from the /getAllApps API endpoint.
- * Matches the structure returned by the Tatum Games API.
+ * Represents an app promotion from the /getAllApps API endpoint. Matches the structure returned by
+ * the Tatum Games API.
  */
 @JsonDeserialize(builder = AppPromotion.Builder.class)
 public class AppPromotion {
@@ -266,30 +266,38 @@ public class AppPromotion {
         }
 
         /**
-         * Gets the effective CTAs to use - tracking CTAs if enabled and date valid, otherwise regular CTAs.
+         * Gets the effective CTAs to use - tracking CTAs if enabled and date valid, otherwise regular
+         * CTAs.
          *
          * @return CTAs object to use
          */
         public CTAs getEffectiveCTAs() {
             Instant now = Instant.now();
-            if (tracking != null && tracking.isEnabled() &&
-                    startDate != null && endDate != null &&
-                    !now.isBefore(startDate) && !now.isAfter(endDate)) {
+            if (tracking != null
+                    && tracking.isEnabled()
+                    && startDate != null
+                    && endDate != null
+                    && !now.isBefore(startDate)
+                    && !now.isAfter(endDate)) {
                 return tracking.getCtas() != null ? tracking.getCtas() : ctas;
             }
             return ctas;
         }
 
         /**
-         * Gets the effective social media to use - tracking social media if enabled and date valid, otherwise regular social media.
+         * Gets the effective social media to use - tracking social media if enabled and date valid,
+         * otherwise regular social media.
          *
          * @return SocialMedia object to use
          */
         public SocialMedia getEffectiveSocialMedia() {
             Instant now = Instant.now();
-            if (tracking != null && tracking.isEnabled() &&
-                    startDate != null && endDate != null &&
-                    !now.isBefore(startDate) && !now.isAfter(endDate)) {
+            if (tracking != null
+                    && tracking.isEnabled()
+                    && startDate != null
+                    && endDate != null
+                    && !now.isBefore(startDate)
+                    && !now.isAfter(endDate)) {
                 return tracking.getSocialMedia() != null ? tracking.getSocialMedia() : socialMedia;
             }
             return socialMedia;
@@ -774,4 +782,3 @@ public class AppPromotion {
         }
     }
 }
-

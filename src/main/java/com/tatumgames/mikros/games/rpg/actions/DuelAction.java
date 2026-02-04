@@ -8,9 +8,8 @@ import com.tatumgames.mikros.games.rpg.model.RPGStats;
 import java.util.Random;
 
 /**
- * Duel action - player vs player combat.
- * No charge cost, rate limited to 3 per 24 hours.
- * No HP damage, no XP rewards - just win/loss tracking.
+ * Duel action - player vs player combat. No charge cost, rate limited to 3 per 24 hours. No HP
+ * damage, no XP rewards - just win/loss tracking.
  */
 public class DuelAction {
     private static final Random random = new Random();
@@ -28,7 +27,8 @@ public class DuelAction {
      * @param config     the guild RPG configuration
      * @return the action outcome
      */
-    public RPGActionOutcome executeDuel(RPGCharacter challenger, RPGCharacter target, RPGConfig config) {
+    public RPGActionOutcome executeDuel(
+            RPGCharacter challenger, RPGCharacter target, RPGConfig config) {
         // Calculate player power
         int challengerPower = calculatePower(challenger);
         int targetPower = calculatePower(target);
@@ -78,4 +78,3 @@ public class DuelAction {
         };
     }
 }
-

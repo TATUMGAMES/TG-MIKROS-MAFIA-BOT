@@ -6,14 +6,10 @@ import java.time.Instant;
 import java.util.*;
 
 /**
- * Represents a player's RPG character.
- * One character per Discord user ID.
- * <p>
- * TODO: Future Features
- * - Inventory system for items and equipment
- * - Quest progress tracking
- * - Achievement system
- * - Prestige levels after max level
+ * Represents a player's RPG character. One character per Discord user ID.
+ *
+ * <p>TODO: Future Features - Inventory system for items and equipment - Quest progress tracking -
+ * Achievement system - Prestige levels after max level
  */
 public class RPGCharacter {
     private final String discordId;
@@ -58,7 +54,8 @@ public class RPGCharacter {
 
     // Biome system
     private BiomeType currentBiome; // Player's current biome
-    private int explorationsInCurrentBiome = 0; // Count of explorations in current biome (resets on biome change)
+    private int explorationsInCurrentBiome =
+            0; // Count of explorations in current biome (resets on biome change)
     private BiomeType startingBiome; // Biome assigned on registration
 
     // Achievement system
@@ -85,13 +82,16 @@ public class RPGCharacter {
     // Cursed world tracking (for failure-based titles)
     private int cursedBossFights = 0; // Participated in boss fights while curses were active
     private int cursedResurrections = 0; // Resurrections performed during cursed worlds (Priest)
-    private boolean actedDuringBothCurses = false; // Acted during both Minor + Major curse simultaneously
+    private boolean actedDuringBothCurses =
+            false; // Acted during both Minor + Major curse simultaneously
 
     // Exploration event temporary debuffs
     private boolean hasFrostbite = false; // Frostbite reduces max HP by 5%, removed by rest
-    private int darkRelicActionsRemaining = 0; // Dark Relic: +5% XP for next 3 actions, +10% damage taken
+    private int darkRelicActionsRemaining =
+            0; // Dark Relic: +5% XP for next 3 actions, +10% damage taken
     private double darkRelicXpBonus = 0.0; // XP bonus multiplier (0.05 = +5%)
-    private double darkRelicDamagePenalty = 0.0; // Damage penalty multiplier (0.10 = +10% damage taken)
+    private double darkRelicDamagePenalty =
+            0.0; // Damage penalty multiplier (0.10 = +10% damage taken)
 
     // Elite enemy system tracking
     private Instant temporaryCurseExpiresAt = null; // Temporary curse expiration (12h)
@@ -103,7 +103,8 @@ public class RPGCharacter {
     private String temporaryStatDebuffStat = null; // Which stat has temporary debuff (null if none)
     private int temporaryStatDebuffActionsRemaining = 0; // Actions remaining for stat debuff
     private int temporaryStatDebuffAmount = 0; // Amount of stat reduction
-    private boolean loseChargeOnNextAction = false; // Flag for losing charge on next action (not refresh)
+    private boolean loseChargeOnNextAction =
+            false; // Flag for losing charge on next action (not refresh)
     private boolean nextActionCostsDouble = false; // Flag for next action costing 2 charges
     private int cursedDiscoveryActionsRemaining = 0; // Cursed Discovery: -5% XP for next 5 actions
     private double cursedDiscoveryXpPenalty = 0.0; // XP penalty multiplier (0.05 = -5%)
@@ -117,20 +118,26 @@ public class RPGCharacter {
     private boolean hasRefusedDeity = false; // Track deity refusal
 
     // Lore recognition tracking
-    private int timesResurrectedOthers = 0; // Times Priest resurrected others (for The Rescuer recognition)
-    private java.util.Set<com.tatumgames.mikros.games.rpg.model.InfusionType> infusionsCrafted; // Set of infusion types crafted (for Master of Elements recognition)
-    private Set<String> secretBossMilestones = new HashSet<>(); // Track which milestones have triggered secret boss spawns
+    private int timesResurrectedOthers =
+            0; // Times Priest resurrected others (for The Rescuer recognition)
+    private java.util.Set<com.tatumgames.mikros.games.rpg.model.InfusionType>
+            infusionsCrafted; // Set of infusion types crafted (for Master of Elements recognition)
+    private Set<String> secretBossMilestones =
+            new HashSet<>(); // Track which milestones have triggered secret boss spawns
 
     // Irrevocable World Encounters tracking
     private String deityBlessing; // Which deity blessed them (enum name or null)
     private String relicChoice; // Which relic they took (enum name or null)
     private String philosophicalPath; // "UNBOUND", "GODMARKED", or null
     private java.util.Set<String> worldFlags; // Permanent world flags (separate from story flags)
-    private java.util.Map<String, Double> statModifiers; // Permanent multiplicative stat modifiers (e.g., "STR_EFFECTIVENESS" -> 1.15)
+    private java.util.Map<String, Double>
+            statModifiers; // Permanent multiplicative stat modifiers (e.g., "STR_EFFECTIVENESS" -> 1.15)
 
     // Encounter/Interaction count tracking (max 3 per type)
-    private java.util.Map<String, Integer> worldEncounterCounts; // Map: encounter type name -> count (max 3)
-    private java.util.Map<String, Integer> statInteractionCounts; // Map: interaction type name -> count (max 3)
+    private java.util.Map<String, Integer>
+            worldEncounterCounts; // Map: encounter type name -> count (max 3)
+    private java.util.Map<String, Integer>
+            statInteractionCounts; // Map: interaction type name -> count (max 3)
 
     /**
      * Creates a new RPG character.
@@ -271,7 +278,9 @@ public class RPGCharacter {
      * @param loreRecognitionService optional service for checking milestones (can be null)
      * @return true if the character leveled up
      */
-    public boolean addXp(int amount, com.tatumgames.mikros.games.rpg.service.LoreRecognitionService loreRecognitionService) {
+    public boolean addXp(
+            int amount,
+            com.tatumgames.mikros.games.rpg.service.LoreRecognitionService loreRecognitionService) {
         this.xp += amount;
 
         boolean leveledUp = false;
@@ -288,7 +297,8 @@ public class RPGCharacter {
      *
      * @param loreRecognitionService optional service for checking milestones (can be null)
      */
-    private void levelUp(com.tatumgames.mikros.games.rpg.service.LoreRecognitionService loreRecognitionService) {
+    private void levelUp(
+            com.tatumgames.mikros.games.rpg.service.LoreRecognitionService loreRecognitionService) {
         int oldMaxCharges = getMaxActionCharges();
 
         this.level++;
@@ -310,8 +320,7 @@ public class RPGCharacter {
     }
 
     /**
-     * Calculates XP required for next level.
-     * Uses exponential growth formula.
+     * Calculates XP required for next level. Uses exponential growth formula.
      *
      * @param currentLevel the current level
      * @return XP required for next level
@@ -322,9 +331,8 @@ public class RPGCharacter {
     }
 
     /**
-     * Calculates the maximum action charges based on character level.
-     * Uses Fibonacci sequence thresholds: 3, 5, 8, 13, 21, 34, 55
-     * Max level is 55, so maximum charges is 10.
+     * Calculates the maximum action charges based on character level. Uses Fibonacci sequence
+     * thresholds: 3, 5, 8, 13, 21, 34, 55 Max level is 55, so maximum charges is 10.
      *
      * @return maximum charges for current level (3-10)
      */
@@ -368,10 +376,14 @@ public class RPGCharacter {
      * @param refreshHours the charge refresh period in hours (default: 12)
      * @param activeCurses list of active world curses (for Frozen Time curse)
      */
-    public void refreshCharges(int refreshHours, java.util.List<com.tatumgames.mikros.games.rpg.curse.WorldCurse> activeCurses) {
+    public void refreshCharges(
+            int refreshHours,
+            java.util.List<com.tatumgames.mikros.games.rpg.curse.WorldCurse> activeCurses) {
         // Apply Frozen Time curse (+2 hours to refresh timer)
         int effectiveRefreshHours = refreshHours;
-        if (activeCurses != null && activeCurses.contains(com.tatumgames.mikros.games.rpg.curse.WorldCurse.MAJOR_FROZEN_TIME)) {
+        if (activeCurses != null
+                && activeCurses.contains(
+                com.tatumgames.mikros.games.rpg.curse.WorldCurse.MAJOR_FROZEN_TIME)) {
             effectiveRefreshHours = refreshHours + 2;
         }
 
@@ -447,8 +459,7 @@ public class RPGCharacter {
     }
 
     /**
-     * Records that an action was performed.
-     * Now uses charge system instead of cooldown.
+     * Records that an action was performed. Now uses charge system instead of cooldown.
      */
     public void recordAction() {
         useActionCharge();
@@ -642,8 +653,8 @@ public class RPGCharacter {
     }
 
     /**
-     * Gets a defensive copy of the set of secret boss milestones that have been triggered.
-     * Modifying the returned set does not affect the character's internal state.
+     * Gets a defensive copy of the set of secret boss milestones that have been triggered. Modifying
+     * the returned set does not affect the character's internal state.
      *
      * @return a copy of the milestone keys
      */
@@ -788,10 +799,7 @@ public class RPGCharacter {
         return false;
     }
 
-    /**
-     * Refreshes heroic charges to maximum (5).
-     * Called when a new boss spawns.
-     */
+    /** Refreshes heroic charges to maximum (5). Called when a new boss spawns. */
     public void refreshHeroicCharges() {
         this.heroicCharges = getMaxHeroicCharges();
         // Reset Raise Fallen tracking when new boss spawns
@@ -897,8 +905,8 @@ public class RPGCharacter {
     }
 
     /**
-     * Increments the exploration count in the current biome.
-     * Checks if player should advance to the next biome (at 10 explorations).
+     * Increments the exploration count in the current biome. Checks if player should advance to the
+     * next biome (at 10 explorations).
      *
      * @return true if biome was advanced, false otherwise
      */
@@ -914,10 +922,7 @@ public class RPGCharacter {
         return false;
     }
 
-    /**
-     * Advances the character to the next biome in the cycle.
-     * Resets the exploration counter.
-     */
+    /** Advances the character to the next biome in the cycle. Resets the exploration counter. */
     public void advanceToNextBiome() {
         BiomeType nextBiome = currentBiome.getNext();
         currentBiome = nextBiome;
@@ -1043,8 +1048,8 @@ public class RPGCharacter {
     }
 
     /**
-     * Records an action type for pattern tracking.
-     * Tracks consecutive same actions and increments streak counters when pattern detected.
+     * Records an action type for pattern tracking. Tracks consecutive same actions and increments
+     * streak counters when pattern detected.
      *
      * @param actionType the action type (explore, train, rest, battle)
      */
@@ -1325,9 +1330,7 @@ public class RPGCharacter {
         this.temporaryStatDebuffAmount = 0;
     }
 
-    /**
-     * Decrements temporary stat debuff actions remaining and clears if expired.
-     */
+    /** Decrements temporary stat debuff actions remaining and clears if expired. */
     public void decrementTemporaryStatDebuffActions() {
         if (temporaryStatDebuffActionsRemaining > 0) {
             temporaryStatDebuffActionsRemaining--;
@@ -1337,9 +1340,7 @@ public class RPGCharacter {
         }
     }
 
-    /**
-     * Decrements cursed discovery actions remaining and clears if expired.
-     */
+    /** Decrements cursed discovery actions remaining and clears if expired. */
     public void decrementCursedDiscoveryActions() {
         if (cursedDiscoveryActionsRemaining > 0) {
             cursedDiscoveryActionsRemaining--;
@@ -1467,7 +1468,8 @@ public class RPGCharacter {
     }
 
     public void setWorldFlags(java.util.Set<String> worldFlags) {
-        this.worldFlags = worldFlags != null ? new java.util.HashSet<>(worldFlags) : new java.util.HashSet<>();
+        this.worldFlags =
+                worldFlags != null ? new java.util.HashSet<>(worldFlags) : new java.util.HashSet<>();
     }
 
     public void addWorldFlag(String flag) {
@@ -1483,7 +1485,8 @@ public class RPGCharacter {
     }
 
     public void setStatModifiers(java.util.Map<String, Double> statModifiers) {
-        this.statModifiers = statModifiers != null ? new java.util.HashMap<>(statModifiers) : new java.util.HashMap<>();
+        this.statModifiers =
+                statModifiers != null ? new java.util.HashMap<>(statModifiers) : new java.util.HashMap<>();
     }
 
     public void addStatModifier(String key, Double value) {
@@ -1501,7 +1504,8 @@ public class RPGCharacter {
     }
 
     public void setWorldEncounterCounts(java.util.Map<String, Integer> counts) {
-        this.worldEncounterCounts = counts != null ? new java.util.HashMap<>(counts) : new java.util.HashMap<>();
+        this.worldEncounterCounts =
+                counts != null ? new java.util.HashMap<>(counts) : new java.util.HashMap<>();
     }
 
     public int getWorldEncounterCount(String encounterType) {
@@ -1522,7 +1526,8 @@ public class RPGCharacter {
     }
 
     public void setStatInteractionCounts(java.util.Map<String, Integer> counts) {
-        this.statInteractionCounts = counts != null ? new java.util.HashMap<>(counts) : new java.util.HashMap<>();
+        this.statInteractionCounts =
+                counts != null ? new java.util.HashMap<>(counts) : new java.util.HashMap<>();
     }
 
     public int getStatInteractionCount(String interactionType) {
@@ -1536,5 +1541,5 @@ public class RPGCharacter {
 
     public boolean canTriggerStatInteraction(String interactionType) {
         return getStatInteractionCount(interactionType) < 3;
-    }
+  }
 }

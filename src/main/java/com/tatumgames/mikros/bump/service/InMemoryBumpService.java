@@ -12,9 +12,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * In-memory implementation of BumpService.
- * Stores configuration in memory (expandable to database).
- * Bump history per guild is unbounded; consider capping (e.g. last N records) or periodic trim for long-running instances.
+ * In-memory implementation of BumpService. Stores configuration in memory (expandable to database).
+ * Bump history per guild is unbounded; consider capping (e.g. last N records) or periodic trim for
+ * long-running instances.
  */
 public class InMemoryBumpService implements BumpService {
     private static final Logger logger = LoggerFactory.getLogger(InMemoryBumpService.class);
@@ -142,7 +142,8 @@ public class InMemoryBumpService implements BumpService {
     }
 
     @Override
-    public void recordSuccessfulBump(String guildId, BumpConfig.BumpBot bot, String userId, Instant time) {
+    public void recordSuccessfulBump(
+            String guildId, BumpConfig.BumpBot bot, String userId, Instant time) {
         if (guildId == null || guildId.isBlank()) {
             throw new IllegalArgumentException("guildId cannot be null or blank");
         }
@@ -154,14 +155,18 @@ public class InMemoryBumpService implements BumpService {
         }
 
         // Record in history
-        List<BumpStats.BumpRecord> history = bumpHistory.computeIfAbsent(guildId, k -> new ArrayList<>());
+        List<BumpStats.BumpRecord> history =
+                bumpHistory.computeIfAbsent(guildId, k -> new ArrayList<>());
         history.add(new BumpStats.BumpRecord(bot, userId, time));
 
         // Also update last bump time (for compatibility)
         recordBumpTime(guildId, bot, time);
 
-        logger.info("Recorded successful bump for {} in guild {} by user {}",
-                bot.getDisplayName(), guildId, userId != null ? userId : "unknown");
+        logger.info(
+                "Recorded successful bump for {} in guild {} by user {}",
+                bot.getDisplayName(),
+                guildId,
+                userId != null ? userId : "unknown");
     }
 
     @Override
@@ -181,13 +186,11 @@ public class InMemoryBumpService implements BumpService {
         Instant monthAgo = Instant.now().minus(30, ChronoUnit.DAYS);
         Instant weekAgo = Instant.now().minus(7, ChronoUnit.DAYS);
 
-        int bumpsThisMonth = (int) allBumps.stream()
-                .filter(bump -> !bump.getTime().isBefore(monthAgo))
-                .count();
+        int bumpsThisMonth =
+                (int) allBumps.stream().filter(bump -> !bump.getTime().isBefore(monthAgo)).count();
 
-        int bumpsThisWeek = (int) allBumps.stream()
-                .filter(bump -> !bump.getTime().isBefore(weekAgo))
-                .count();
+        int bumpsThisWeek =
+                (int) allBumps.stream().filter(bump -> !bump.getTime().isBefore(weekAgo)).count();
 
         // Count per bot
         Map<BumpConfig.BumpBot, Integer> bumpsPerBot = new HashMap<>();
@@ -208,13 +211,13 @@ public class InMemoryBumpService implements BumpService {
         }
 
         // Get recent bumps (last 10)
-        List<BumpStats.BumpRecord> recentBumps = allBumps.stream()
-                .sorted((a, b) -> b.getTime().compareTo(a.getTime()))
-                .limit(10)
-                .collect(Collectors.toList());
+        List<BumpStats.BumpRecord> recentBumps =
+                allBumps.stream()
+                        .sorted((a, b) -> b.getTime().compareTo(a.getTime()))
+                        .limit(10)
+                        .collect(Collectors.toList());
 
-        return new BumpStats(guildId, totalBumps, bumpsThisMonth, bumpsThisWeek,
-                bumpsPerBot, lastBumpTime, recentBumps);
+        return new BumpStats(
+                guildId, totalBumps, bumpsThisMonth, bumpsThisWeek, bumpsPerBot, lastBumpTime, recentBumps);
     }
 }
-

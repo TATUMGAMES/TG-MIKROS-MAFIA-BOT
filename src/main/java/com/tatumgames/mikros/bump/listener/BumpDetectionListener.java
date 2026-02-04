@@ -13,8 +13,8 @@ import java.time.Instant;
 import java.util.regex.Pattern;
 
 /**
- * Listens for successful bump messages from Disboard and Disurl bots.
- * Tracks bump history and statistics.
+ * Listens for successful bump messages from Disboard and Disurl bots. Tracks bump history and
+ * statistics.
  */
 public class BumpDetectionListener extends ListenerAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BumpDetectionListener.class);
@@ -24,15 +24,15 @@ public class BumpDetectionListener extends ListenerAdapter {
     private static final long DISURL_BOT_ID = 823495039178932224L;
 
     // Patterns to detect successful bump messages
-    private static final Pattern DISBOARD_SUCCESS_PATTERN = Pattern.compile(
-            "(?i)(bump done|successfully bumped|bumped your server|check it out on disboard)",
-            Pattern.CASE_INSENSITIVE
-    );
+    private static final Pattern DISBOARD_SUCCESS_PATTERN =
+            Pattern.compile(
+                    "(?i)(bump done|successfully bumped|bumped your server|check it out on disboard)",
+                    Pattern.CASE_INSENSITIVE);
 
-    private static final Pattern DISURL_SUCCESS_PATTERN = Pattern.compile(
-            "(?i)(bump done|successfully bumped|bumped your server|check it out on disurl)",
-            Pattern.CASE_INSENSITIVE
-    );
+    private static final Pattern DISURL_SUCCESS_PATTERN =
+            Pattern.compile(
+                    "(?i)(bump done|successfully bumped|bumped your server|check it out on disurl)",
+                    Pattern.CASE_INSENSITIVE);
 
     private final BumpService bumpService;
 
@@ -76,7 +76,8 @@ public class BumpDetectionListener extends ListenerAdapter {
     /**
      * Handles a successful bump detection.
      */
-    private void handleSuccessfulBump(MessageReceivedEvent event, String guildId, BumpConfig.BumpBot bot) {
+    private void handleSuccessfulBump(
+            MessageReceivedEvent event, String guildId, BumpConfig.BumpBot bot) {
         try {
             // Try to find who triggered the bump by checking recent messages
             // (The user who ran /bump would have sent a message just before this)
@@ -87,18 +88,24 @@ public class BumpDetectionListener extends ListenerAdapter {
             // Record the bump
             bumpService.recordSuccessfulBump(guildId, bot, userId, now);
 
-            logger.info("Detected successful bump for {} in guild {} by user {}",
-                    bot.getDisplayName(), guildId, userId != null ? userId : "unknown");
+            logger.info(
+                    "Detected successful bump for {} in guild {} by user {}",
+                    bot.getDisplayName(),
+                    guildId,
+                    userId != null ? userId : "unknown");
 
         } catch (Exception e) {
-            logger.error("Error handling successful bump detection for {} in guild {}",
-                    bot.getDisplayName(), guildId, e);
+            logger.error(
+                    "Error handling successful bump detection for {} in guild {}",
+                    bot.getDisplayName(),
+                    guildId,
+                    e);
         }
     }
 
     /**
-     * Attempts to find the user who triggered the bump by checking recent messages.
-     * This is a best-effort approach since we can't directly detect slash command invocations.
+     * Attempts to find the user who triggered the bump by checking recent messages. This is a
+     * best-effort approach since we can't directly detect slash command invocations.
      */
     private String findBumpUser(MessageReceivedEvent event) {
         try {
@@ -119,4 +126,3 @@ public class BumpDetectionListener extends ListenerAdapter {
         return null; // Unknown user
     }
 }
-

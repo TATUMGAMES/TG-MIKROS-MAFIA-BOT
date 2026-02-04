@@ -46,4 +46,3 @@ public enum SuggestionSeverity {
         return description;
     }
 }
-

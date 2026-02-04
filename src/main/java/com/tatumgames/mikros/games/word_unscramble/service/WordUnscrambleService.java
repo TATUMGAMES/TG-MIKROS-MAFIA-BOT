@@ -12,14 +12,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * Service for managing Word Unscramble game across guilds.
- * Handles game configuration, sessions, and state management.
- * Tracks Word Unscramble progression (levels, XP) per server.
- * <p>
- * TODO: Future Features
- * - Reward System: MIKROS discounts or Discord roles for winners
- * - Server Persistence: Store settings in database per server
- * - Custom word lists per guild
+ * Service for managing Word Unscramble game across guilds. Handles game configuration, sessions,
+ * and state management. Tracks Word Unscramble progression (levels, XP) per server.
+ *
+ * <p>TODO: Future Features - Reward System: MIKROS discounts or Discord roles for winners - Server
+ * Persistence: Store settings in database per server - Custom word lists per guild
  */
 public class WordUnscrambleService {
     private static final Logger logger = LoggerFactory.getLogger(WordUnscrambleService.class);
@@ -51,11 +48,17 @@ public class WordUnscrambleService {
      * @param enabledGames the set of enabled game types
      * @param resetTime    the daily reset time
      */
-    public void setupGames(String guildId, String channelId, Set<WordUnscrambleType> enabledGames, LocalTime resetTime) {
-        WordUnscrambleConfig config = new WordUnscrambleConfig(guildId, channelId, enabledGames, resetTime);
+    public void setupGames(
+            String guildId, String channelId, Set<WordUnscrambleType> enabledGames, LocalTime resetTime) {
+        WordUnscrambleConfig config =
+                new WordUnscrambleConfig(guildId, channelId, enabledGames, resetTime);
         guildConfigs.put(guildId, config);
-        logger.info("Word Unscramble setup complete for guild {}: channel={}, games={}, resetTime={}",
-                guildId, channelId, enabledGames, resetTime);
+        logger.info(
+                "Word Unscramble setup complete for guild {}: channel={}, games={}, resetTime={}",
+                guildId,
+                channelId,
+                enabledGames,
+                resetTime);
     }
 
     /**
@@ -94,8 +97,8 @@ public class WordUnscrambleService {
     }
 
     /**
-     * Cleans up used-word tracker entries older than the reuse period (60 days) to prevent memory growth.
-     * Does not affect leaderboards, stats, or sessions.
+     * Cleans up used-word tracker entries older than the reuse period (60 days) to prevent memory
+     * growth. Does not affect leaderboards, stats, or sessions.
      *
      * @param guildId the guild ID (null to clean all guilds)
      */
@@ -127,7 +130,8 @@ public class WordUnscrambleService {
 
         WordUnscrambleProgression progression = getOrCreateProgression(guildId);
         int level = progression.getLevel();
-        WordUnscrambleSession session = ((WordUnscrambleGame) game).startNewSession(guildId, level, usedWordTracker);
+        WordUnscrambleSession session =
+                ((WordUnscrambleGame) game).startNewSession(guildId, level, usedWordTracker);
 
         // Record word usage for levels 1-5
         if (level >= 1 && level <= 5) {
@@ -181,7 +185,8 @@ public class WordUnscrambleService {
      * @param input    the player's input
      * @return the game result
      */
-    public WordUnscrambleResult handleAttempt(String guildId, String userId, String username, String input) {
+    public WordUnscrambleResult handleAttempt(
+            String guildId, String userId, String username, String input) {
         WordUnscrambleSession session = activeSessions.get(guildId);
         if (session == null || !session.isActive()) {
             return null;
@@ -195,14 +200,16 @@ public class WordUnscrambleService {
 
             if (result.isCorrect()) {
                 // Calculate time in seconds
-                long timeSeconds = result.timestamp().getEpochSecond() - session.getStartTime().getEpochSecond();
+                long timeSeconds =
+                        result.timestamp().getEpochSecond() - session.getStartTime().getEpochSecond();
 
                 // Calculate accuracy BEFORE recording this solve
                 // Accuracy = (wordsSolved / totalAttempts) * 100
                 // But we need to account for this solve, so: (wordsSolved / (totalAttempts + 1)) * 100
                 double accuracy = 100.0;
                 if (stats.getTotalAttempts() > 0) {
-                    accuracy = ((double) stats.getTotalWordsSolved() / (stats.getTotalAttempts() + 1)) * 100.0;
+                    accuracy =
+                            ((double) stats.getTotalWordsSolved() / (stats.getTotalAttempts() + 1)) * 100.0;
                 }
 
                 // Apply accuracy factor to score (minimum 0.1 to prevent zero scores)
@@ -216,15 +223,15 @@ public class WordUnscrambleService {
                 int finalScore = accuracyAdjustedScore + volumeBonus;
 
                 // Create new result with final score
-                WordUnscrambleResult finalResult = new WordUnscrambleResult(
-                        result.userId(),
-                        result.username(),
-                        result.answer(),
-                        finalScore,
-                        result.bonus() + volumeBonus,
-                        result.isCorrect(),
-                        result.timestamp()
-                );
+                WordUnscrambleResult finalResult =
+                        new WordUnscrambleResult(
+                                result.userId(),
+                                result.username(),
+                                result.answer(),
+                                finalScore,
+                                result.bonus() + volumeBonus,
+                                result.isCorrect(),
+                                result.timestamp());
 
                 // Record with final score
                 stats.recordCorrectAnswer(finalScore, timeSeconds);
@@ -234,7 +241,10 @@ public class WordUnscrambleService {
                 boolean leveledUp = progression.addXp();
 
                 if (leveledUp) {
-                    logger.info("Word Unscramble level up for guild {}: Level {} reached!", guildId, progression.getLevel());
+                    logger.info(
+                            "Word Unscramble level up for guild {}: Level {} reached!",
+                            guildId,
+                            progression.getLevel());
                 }
 
                 return finalResult;
@@ -317,7 +327,7 @@ public class WordUnscrambleService {
      * Gets player statistics for a user in a guild.
      *
      * @param guildId the guild ID
-     * @param userId  the user ID
+     * @param userId the user ID
      * @return the player statistics, or null if not found
      */
     public WordUnscramblePlayerStats getPlayerStats(String guildId, String userId) {
@@ -326,8 +336,8 @@ public class WordUnscrambleService {
     }
 
     /**
-     * Gets all player statistics for a guild.
-     * Only returns players who have made at least one attempt.
+     * Gets all player statistics for a guild. Only returns players who have made at least one
+     * attempt.
      *
      * @param guildId the guild ID
      * @return list of player statistics, sorted by total points (descending)
@@ -338,20 +348,21 @@ public class WordUnscrambleService {
                 .filter(entry -> entry.getKey().startsWith(prefix))
                 .map(Map.Entry::getValue)
                 .filter(stats -> stats.getTotalAttempts() > 0) // Only players who have attempted
-                .sorted((a, b) -> {
-                    // Sort by total points (descending)
-                    int pointsCompare = Integer.compare(b.getTotalPoints(), a.getTotalPoints());
-                    if (pointsCompare != 0) {
-                        return pointsCompare;
-                    }
-                    // Then by words solved (descending)
-                    int wordsCompare = Integer.compare(b.getTotalWordsSolved(), a.getTotalWordsSolved());
-                    if (wordsCompare != 0) {
-                        return wordsCompare;
-                    }
-                    // Then by highest score (descending)
-                    return Integer.compare(b.getHighestScore(), a.getHighestScore());
-                })
+                .sorted(
+                        (a, b) -> {
+                            // Sort by total points (descending)
+                            int pointsCompare = Integer.compare(b.getTotalPoints(), a.getTotalPoints());
+                            if (pointsCompare != 0) {
+                                return pointsCompare;
+                            }
+                            // Then by words solved (descending)
+                            int wordsCompare = Integer.compare(b.getTotalWordsSolved(), a.getTotalWordsSolved());
+                            if (wordsCompare != 0) {
+                                return wordsCompare;
+                            }
+                            // Then by highest score (descending)
+                            return Integer.compare(b.getHighestScore(), a.getHighestScore());
+                        })
                 .collect(Collectors.toList());
     }
 
@@ -383,7 +394,8 @@ public class WordUnscrambleService {
     private int calculateVolumeBonuses(WordUnscramblePlayerStats stats) {
         int bonus = 0;
 
-        // Check for 10th word milestone (words solved will be incremented after this, so check if next will be 10th)
+        // Check for 10th word milestone (words solved will be incremented after this, so check if next
+        // will be 10th)
         int wordsSolved = stats.getTotalWordsSolved();
         if ((wordsSolved + 1) % 10 == 0) {
             // Every 10th word: +100 to +200 points (randomized)
@@ -413,5 +425,3 @@ public class WordUnscrambleService {
         return wordGame.generateHintForWord(session.getCorrectAnswer(), session.getLevel());
     }
 }
-
-

@@ -12,8 +12,8 @@ import java.nio.file.Paths;
 import java.util.List;
 
 /**
- * Configuration loader for the Discord bot.
- * Reads configuration values from environment variables and .env file.
+ * Configuration loader for the Discord bot. Reads configuration values from environment variables
+ * and .env file.
  */
 public class ConfigLoader {
     private static final Logger logger = LoggerFactory.getLogger(ConfigLoader.class);
@@ -30,6 +30,7 @@ public class ConfigLoader {
     private final String reputationApiUrl;
     private final String tatumTechRecapMonthYear;
     private final String tatumTechRecapVideoUrl;
+
     /**
      * Creates a new ConfigLoader instance and loads configuration.
      *
@@ -39,21 +40,24 @@ public class ConfigLoader {
         // Try to load .env file, but don't fail if it doesn't exist
         Dotenv tempDotenv;
         try {
-            tempDotenv = Dotenv.configure()
-                    .ignoreIfMissing()
-                    .systemProperties()  // Also load into system properties as fallback
-                    .load();
+            tempDotenv =
+                    Dotenv.configure()
+                            .ignoreIfMissing()
+                            .systemProperties() // Also load into system properties as fallback
+                            .load();
         } catch (Exception e) {
             // Check if it's an encoding issue
             if (e.getCause() instanceof java.nio.charset.MalformedInputException) {
-                logger.error("Your .env file has encoding issues (MalformedInputException). " +
-                        "Please save your .env file as UTF-8 without BOM. " +
-                        "You can do this in VS Code: Click encoding in bottom right → 'Save with Encoding' → 'UTF-8'. " +
-                        "Or in IntelliJ: File → File Encoding → 'UTF-8' → 'Remove BOM if any'. " +
-                        "Falling back to system environment variables and manual file reading.");
+                logger.error(
+                        "Your .env file has encoding issues (MalformedInputException). "
+                                + "Please save your .env file as UTF-8 without BOM. "
+                                + "You can do this in VS Code: Click encoding in bottom right → 'Save with Encoding' → 'UTF-8'. "
+                                + "Or in IntelliJ: File → File Encoding → 'UTF-8' → 'Remove BOM if any'. "
+                                + "Falling back to system environment variables and manual file reading.");
             } else {
-                logger.warn("Could not load .env file, will use system environment variables only. " +
-                        "Error: {}", e.getMessage());
+                logger.warn(
+                        "Could not load .env file, will use system environment variables only. " + "Error: {}",
+                        e.getMessage());
             }
             tempDotenv = null;
 
@@ -66,10 +70,10 @@ public class ConfigLoader {
                     // Try multiple encodings in order of likelihood
                     Charset[] encodingsToTry = {
                             StandardCharsets.UTF_8,
-                            Charset.forName("Windows-1252"),  // Common Windows encoding
-                            Charset.forName("ISO-8859-1"),    // Latin-1
+                            Charset.forName("Windows-1252"), // Common Windows encoding
+                            Charset.forName("ISO-8859-1"), // Latin-1
                             StandardCharsets.US_ASCII,
-                            Charset.defaultCharset()          // System default as last resort
+                            Charset.defaultCharset() // System default as last resort
                     };
 
                     List<String> lines = null;
@@ -83,7 +87,10 @@ public class ConfigLoader {
                             break;
                         } catch (Exception encodingException) {
                             // Try next encoding
-                            logger.debug("Failed to read .env with {}: {}", encoding.name(), encodingException.getMessage());
+                            logger.debug(
+                                    "Failed to read .env with {}: {}",
+                                    encoding.name(),
+                                    encodingException.getMessage());
                         }
                     }
 
@@ -111,18 +118,22 @@ public class ConfigLoader {
                             }
                         }
                         if (loadedCount > 0) {
-                            logger.info("Successfully loaded {} variables from .env file using {} encoding",
-                                    loadedCount, successfulEncoding.name());
+                            logger.info(
+                                    "Successfully loaded {} variables from .env file using {} encoding",
+                                    loadedCount,
+                                    successfulEncoding.name());
                         } else {
                             logger.warn("Read .env file but found no valid key-value pairs");
                         }
                     } else {
-                        logger.error("Failed to read .env file with all attempted encodings. " +
-                                "Please save your .env file as UTF-8 without BOM.");
+                        logger.error(
+                                "Failed to read .env file with all attempted encodings. "
+                                        + "Please save your .env file as UTF-8 without BOM.");
                     }
                 }
             } catch (Exception fallbackException) {
-                logger.warn("Manual .env file reading failed completely: {}", fallbackException.getMessage());
+                logger.warn(
+                        "Manual .env file reading failed completely: {}", fallbackException.getMessage());
             }
         }
         this.dotenv = tempDotenv;
@@ -138,9 +149,10 @@ public class ConfigLoader {
 
         // Load API configuration (optional - can be empty for mock mode)
         // Base URL for all MIKROS API endpoints
-        String mikrosBaseUrl = environment == Environment.DEV
-                ? "https://tg-api-new-stage.uc.r.appspot.com"
-                : "https://tg-api-new.uc.r.appspot.com";
+        String mikrosBaseUrl =
+                environment == Environment.DEV
+                        ? "https://tg-api-new-stage.uc.r.appspot.com"
+                        : "https://tg-api-new.uc.r.appspot.com";
         this.mikrosApiKey = getEnv("MIKROS_API_KEY", "");
         this.mikrosApiUrl = getEnv("MIKROS_API_URL", mikrosBaseUrl);
 
@@ -151,11 +163,9 @@ public class ConfigLoader {
         }
 
         // Load reputation API configuration (optional - can be empty for mock mode)
-        // Load dev and prod keys separately
-        this.reputationApiKeyDev = getEnv("REPUTATION_API_KEY_DEV",
-                "e12afd908f7c19a64bca41e6657fae90e001bd55");
-        this.reputationApiKeyProd = getEnv("REPUTATION_API_KEY_PROD",
-                "a37f9c1de42b5089f6c2d8e14bb97f30e5ab47cc");
+        // Load dev and prod keys separately (no hardcoded defaults - use env vars)
+        this.reputationApiKeyDev = getEnv("REPUTATION_API_KEY_DEV", null);
+        this.reputationApiKeyProd = getEnv("REPUTATION_API_KEY_PROD", null);
 
         // Select key based on environment, but allow override with legacy variable
         String legacyKey = getEnv("REPUTATION_API_KEY", "");
@@ -164,29 +174,32 @@ public class ConfigLoader {
             this.reputationApiKey = legacyKey;
             logger.info("Using REPUTATION_API_KEY from legacy environment variable");
         } else {
-            // Use environment-based key
-            this.reputationApiKey = environment == Environment.DEV
-                    ? reputationApiKeyDev
-                    : reputationApiKeyProd;
+            // Use environment-based key (may be null if not configured)
+            String envKey = environment == Environment.DEV ? reputationApiKeyDev : reputationApiKeyProd;
+            this.reputationApiKey = (envKey != null && !envKey.isBlank()) ? envKey : "";
         }
 
         // Reputation API uses the same base URL as MIKROS API, with /mikros/discord path
         // This is kept for backward compatibility but will be constructed from base URL
-        String reputationBaseUrl = environment == Environment.DEV
-                ? "https://tg-api-new-stage.uc.r.appspot.com"
-                : "https://tg-api-new.uc.r.appspot.com";
+        String reputationBaseUrl =
+                environment == Environment.DEV
+                        ? "https://tg-api-new-stage.uc.r.appspot.com"
+                        : "https://tg-api-new.uc.r.appspot.com";
         this.reputationApiUrl = getEnv("REPUTATION_API_URL", reputationBaseUrl + "/mikros/discord");
 
         if (reputationApiKey == null || reputationApiKey.isBlank()) {
             logger.warn("REPUTATION_API_KEY not set - reputation service will use stub responses");
         } else {
-            logger.info("Reputation API configuration loaded - Environment: {} | Using {} API key",
-                    environment.getValue(), environment == Environment.DEV ? "DEV" : "PROD");
+            logger.info(
+                    "Reputation API configuration loaded - Environment: {} | Using {} API key",
+                    environment.getValue(),
+                    environment == Environment.DEV ? "DEV" : "PROD");
         }
 
         // Load Tatum Tech event configuration (optional - has defaults)
         this.tatumTechRecapMonthYear = getEnv("TATUM_TECH_RECAP_MONTH_YEAR", "October 2025");
-        this.tatumTechRecapVideoUrl = getEnv("TATUM_TECH_RECAP_VIDEO_URL", "https://youtu.be/_0JZcW_Eo3E");
+        this.tatumTechRecapVideoUrl =
+                getEnv("TATUM_TECH_RECAP_VIDEO_URL", "https://youtu.be/_0JZcW_Eo3E");
 
         logger.info("Configuration loaded successfully");
     }
@@ -256,8 +269,7 @@ public class ConfigLoader {
     }
 
     /**
-     * Gets the MIKROS Mafia Discord server ID.
-     * Used for leaderboard member status checks.
+     * Gets the MIKROS Mafia Discord server ID. Used for leaderboard member status checks.
      *
      * @return the Mafia server ID, or empty string if not configured
      */
@@ -277,16 +289,16 @@ public class ConfigLoader {
     /**
      * Gets the MIKROS API base URL.
      *
-     * @return the API base URL (defaults to https://api.tatumgames.com)
+     * @return the API base URL (defaults to https://tg-api-new.uc.r.appspot.com for prod or
+     *     https://tg-api-new-stage.uc.r.appspot.com for dev)
      */
     public String getMikrosApiUrl() {
         return mikrosApiUrl;
     }
 
     /**
-     * Gets the MIKROS API base URL based on environment.
-     * Production: https://tg-api-new.uc.r.appspot.com
-     * Development: https://tg-api-new-stage.uc.r.appspot.com
+     * Gets the MIKROS API base URL based on environment. Production:
+     * https://tg-api-new.uc.r.appspot.com Development: https://tg-api-new-stage.uc.r.appspot.com
      *
      * @return the base URL (without trailing slash)
      */
@@ -308,7 +320,7 @@ public class ConfigLoader {
     /**
      * Gets the reputation API base URL.
      *
-     * @return the API base URL (defaults to https://tg-api-new-stage.uc.r.appspot.com/mikros/marketing/discord)
+     * @return the API base URL (defaults to base URL + /mikros/discord)
      */
     public String getReputationApiUrl() {
         return reputationApiUrl;
@@ -354,9 +366,7 @@ public class ConfigLoader {
      * Environment type for the application.
      */
     public enum Environment {
-        /**
-         * Development environment.
-         */
+        /** Development environment. */
         DEV("dev"),
 
         /**
@@ -371,8 +381,8 @@ public class ConfigLoader {
         }
 
         /**
-         * Converts a string to an Environment enum.
-         * Defaults to PROD if value is null, blank, or unrecognized.
+         * Converts a string to an Environment enum. Defaults to PROD if value is null, blank, or
+         * unrecognized.
          *
          * @param value the string value to convert
          * @return the Environment enum, defaults to PROD
@@ -392,6 +402,6 @@ public class ConfigLoader {
          */
         public String getValue() {
             return value;
-        }
     }
+  }
 }

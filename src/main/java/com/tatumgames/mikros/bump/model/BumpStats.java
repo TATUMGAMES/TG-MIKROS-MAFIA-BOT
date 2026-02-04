@@ -16,10 +16,14 @@ public class BumpStats {
     private final Map<BumpConfig.BumpBot, Instant> lastBumpTime;
     private final List<BumpRecord> recentBumps;
 
-    public BumpStats(String guildId, int totalBumps, int bumpsThisMonth, int bumpsThisWeek,
-                     Map<BumpConfig.BumpBot, Integer> bumpsPerBot,
-                     Map<BumpConfig.BumpBot, Instant> lastBumpTime,
-                     List<BumpRecord> recentBumps) {
+    public BumpStats(
+            String guildId,
+            int totalBumps,
+            int bumpsThisMonth,
+            int bumpsThisWeek,
+            Map<BumpConfig.BumpBot, Integer> bumpsPerBot,
+            Map<BumpConfig.BumpBot, Instant> lastBumpTime,
+            List<BumpRecord> recentBumps) {
         this.guildId = guildId;
         this.totalBumps = totalBumps;
         this.bumpsThisMonth = bumpsThisMonth;
@@ -85,4 +89,3 @@ public class BumpStats {
         }
     }
 }
-

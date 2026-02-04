@@ -21,12 +21,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * In-memory implementation of ReputationService.
- * Stores behavior reports and integrates with reputation API endpoints.
+ * In-memory implementation of ReputationService. Stores behavior reports and integrates with
+ * reputation API endpoints.
  */
 public class InMemoryReputationService implements ReputationService {
     private static final Logger logger = LoggerFactory.getLogger(InMemoryReputationService.class);
-    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     // Key format: "guildId:userId" -> List of behavior reports
     private final Map<String, List<BehaviorReport>> reportStore;
@@ -40,20 +41,26 @@ public class InMemoryReputationService implements ReputationService {
      * Creates a new InMemoryReputationService.
      *
      * @param apiClient            the API client for making requests
-     * @param reputationApiBaseUrl the base URL for the reputation API (e.g., https://tg-api-new.uc.r.appspot.com)
+     * @param reputationApiBaseUrl the base URL for the reputation API (e.g.,
+     *                             https://tg-api-new.uc.r.appspot.com)
      * @param reputationApiKey     the reputation API key
      * @param apiKeyType           the API key type (dev or prod)
      */
-    public InMemoryReputationService(TatumGamesApiClient apiClient, String reputationApiBaseUrl,
-                                     String reputationApiKey, String apiKeyType) {
+    public InMemoryReputationService(
+            TatumGamesApiClient apiClient,
+            String reputationApiBaseUrl,
+            String reputationApiKey,
+            String apiKeyType) {
         this.reportStore = new ConcurrentHashMap<>();
         this.objectMapper = new ObjectMapper();
         this.apiClient = apiClient;
         this.reputationApiBaseUrl = reputationApiBaseUrl;
         this.reputationApiKey = reputationApiKey;
         this.apiKeyType = apiKeyType;
-        logger.info("InMemoryReputationService initialized with API key type: {} and base URL: {}",
-                apiKeyType, reputationApiBaseUrl);
+        logger.info(
+                "InMemoryReputationService initialized with API key type: {} and base URL: {}",
+                apiKeyType,
+                reputationApiBaseUrl);
     }
 
     @Override
@@ -126,27 +133,32 @@ public class InMemoryReputationService implements ReputationService {
         }
 
         try {
-            TrackPlayerRatingResponse response = apiClient.postWithApiKey(
-                    reputationApiBaseUrl + "/mikros/discord", // Base URL with path
-                    "/trackUserRating", // Endpoint
-                    request,
-                    reputationApiKey,
-                    TrackPlayerRatingResponse.class
-            );
+            TrackPlayerRatingResponse response =
+                    apiClient.postWithApiKey(
+                            reputationApiBaseUrl + "/mikros/discord", // Base URL with path
+                            "/trackUserRating", // Endpoint
+                            request,
+                            reputationApiKey,
+                            TrackPlayerRatingResponse.class);
 
-            if (response != null && response.getStatus() != null &&
-                    response.getStatus().getStatusCode() == 200) {
+            if (response != null
+                    && response.getStatus() != null
+                    && response.getStatus().getStatusCode() == 200) {
                 logger.info("Successfully tracked player rating via API: {}", request);
                 return true;
             } else {
-                logger.warn("API returned non-200 status: {}",
+                logger.warn(
+                        "API returned non-200 status: {}",
                         response != null ? response.getStatus() : "null response");
                 return false;
             }
 
         } catch (TatumGamesApiClient.ApiException e) {
-            logger.error("Error calling trackUserRating API (status: {}): {}",
-                    e.getStatusCode(), e.getMessage(), e);
+            logger.error(
+                    "Error calling trackUserRating API (status: {}): {}",
+                    e.getStatusCode(),
+                    e.getMessage(),
+                    e);
             return false;
         } catch (Exception e) {
             logger.error("Unexpected error calling trackUserRating API", e);
@@ -161,15 +173,16 @@ public class InMemoryReputationService implements ReputationService {
      */
     private boolean loadStubResponse() {
         try {
-            InputStream inputStream = getClass().getClassLoader()
-                    .getResourceAsStream("stubs/trackPlayerRating.json");
+            InputStream inputStream =
+                    getClass().getClassLoader().getResourceAsStream("stubs/trackPlayerRating.json");
 
             if (inputStream == null) {
                 logger.error("Could not find stub JSON file: stubs/trackPlayerRating.json");
                 return false;
             }
 
-            TrackPlayerRatingResponse response = objectMapper.readValue(inputStream, TrackPlayerRatingResponse.class);
+            TrackPlayerRatingResponse response =
+                    objectMapper.readValue(inputStream, TrackPlayerRatingResponse.class);
 
             if (response.getStatus() != null && response.getStatus().getStatusCode() == 200) {
                 logger.info("Successfully tracked player rating using stub response");
@@ -206,29 +219,35 @@ public class InMemoryReputationService implements ReputationService {
             request.setDiscordUsernames(usernames);
 
             // Make API call
-            GetUserScoreDetailResponse response = apiClient.postWithApiKey(
-                    reputationApiBaseUrl + "/mikros/discord", // Base URL with path
-                    "/getUserScoreDetails", // Endpoint (Note: plural "Details")
-                    request,
-                    reputationApiKey,
-                    GetUserScoreDetailResponse.class
-            );
+            GetUserScoreDetailResponse response =
+                    apiClient.postWithApiKey(
+                            reputationApiBaseUrl + "/mikros/discord", // Base URL with path
+                            "/getUserScoreDetails", // Endpoint (Note: plural "Details")
+                            request,
+                            reputationApiKey,
+                            GetUserScoreDetailResponse.class);
 
-            if (response != null && response.getStatus() != null &&
-                    response.getStatus().getStatusCode() == 200) {
-                logger.info("Successfully retrieved user score details for {} usernames",
+            if (response != null
+                    && response.getStatus() != null
+                    && response.getStatus().getStatusCode() == 200) {
+                logger.info(
+                        "Successfully retrieved user score details for {} usernames",
                         usernames != null ? usernames.size() : 0);
                 return response;
             } else {
-                logger.warn("API returned non-200 status: {}",
+                logger.warn(
+                        "API returned non-200 status: {}",
                         response != null ? response.getStatus() : "null response");
                 // Fall back to stub on non-200 response
                 return loadStubResponse(usernames);
             }
 
         } catch (TatumGamesApiClient.ApiException e) {
-            logger.error("Error calling getUserScoreDetails API (status: {}): {}",
-                    e.getStatusCode(), e.getMessage(), e);
+            logger.error(
+                    "Error calling getUserScoreDetails API (status: {}): {}",
+                    e.getStatusCode(),
+                    e.getMessage(),
+                    e);
             // Fall back to stub on API error
             return loadStubResponse(usernames);
         } catch (Exception e) {
@@ -246,30 +265,33 @@ public class InMemoryReputationService implements ReputationService {
      */
     private GetUserScoreDetailResponse loadStubResponse(List<String> usernames) {
         try {
-            InputStream inputStream = getClass().getClassLoader()
-                    .getResourceAsStream("stubs/getUserScoreDetail.json");
+            InputStream inputStream =
+                    getClass().getClassLoader().getResourceAsStream("stubs/getUserScoreDetail.json");
 
             if (inputStream == null) {
                 logger.error("Could not find stub JSON file: stubs/getUserScoreDetail.json");
                 return null;
             }
 
-            GetUserScoreDetailResponse response = objectMapper.readValue(
-                    inputStream, GetUserScoreDetailResponse.class);
+            GetUserScoreDetailResponse response =
+                    objectMapper.readValue(inputStream, GetUserScoreDetailResponse.class);
 
             // Filter results by requested usernames if provided
             if (usernames != null && !usernames.isEmpty() && response.getData() != null) {
-                List<GetUserScoreDetailResponse.UserScore> filteredScores = response.getData().stream()
-                        .filter(score -> usernames.contains(score.getUsername()))
-                        .collect(Collectors.toList());
+                List<GetUserScoreDetailResponse.UserScore> filteredScores =
+                        response.getData().stream()
+                                .filter(score -> usernames.contains(score.getUsername()))
+                                .collect(Collectors.toList());
 
                 // Create new response with filtered scores
                 GetUserScoreDetailResponse filteredResponse = new GetUserScoreDetailResponse();
                 filteredResponse.setStatus(response.getStatus());
                 filteredResponse.setData(filteredScores);
 
-                logger.info("Found {} matching scores for usernames: {} (from stub)",
-                        filteredScores.size(), usernames);
+                logger.info(
+                        "Found {} matching scores for usernames: {} (from stub)",
+                        filteredScores.size(),
+                        usernames);
                 return filteredResponse;
             }
 

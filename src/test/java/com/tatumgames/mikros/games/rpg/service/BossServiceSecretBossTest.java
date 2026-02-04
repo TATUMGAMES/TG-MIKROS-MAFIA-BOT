@@ -37,8 +37,8 @@ class BossServiceSecretBossTest {
     private BossService bossService;
     private RPGCharacter testCharacter;
 
-    private static void setCharacterLevelAndXp(RPGCharacter character, int level, int xp, int xpToNextLevel)
-            throws Exception {
+    private static void setCharacterLevelAndXp(
+            RPGCharacter character, int level, int xp, int xpToNextLevel) throws Exception {
         Field levelField = RPGCharacter.class.getDeclaredField("level");
         levelField.setAccessible(true);
         levelField.set(character, level);
@@ -53,14 +53,14 @@ class BossServiceSecretBossTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        bossService = new BossService(
-                characterService,
-                auraService,
-                worldCurseService,
-                nilfheimEventService,
-                loreRecognitionService,
-                blessingService
-        );
+        bossService =
+                new BossService(
+                        characterService,
+                        auraService,
+                        worldCurseService,
+                        nilfheimEventService,
+                        loreRecognitionService,
+                        blessingService);
         testCharacter = new RPGCharacter(USER_ID, "TestCharacter", CharacterClass.WARRIOR);
     }
 
@@ -266,10 +266,14 @@ class BossServiceSecretBossTest {
         BossCatalog.BossDefinition definition = BossCatalog.getRandomNormalBoss(5);
         Boss boss = bossService.spawnSecretBoss(GUILD_ID, USER_ID, definition, 5);
 
-        int initialCatalysts = testCharacter.getInventory().getCatalysts().values().stream()
-                .mapToInt(Integer::intValue).sum();
-        int initialEssences = testCharacter.getInventory().getEssences().values().stream()
-                .mapToInt(Integer::intValue).sum();
+        int initialCatalysts =
+                testCharacter.getInventory().getCatalysts().values().stream()
+                        .mapToInt(Integer::intValue)
+                        .sum();
+        int initialEssences =
+                testCharacter.getInventory().getEssences().values().stream()
+                        .mapToInt(Integer::intValue)
+                        .sum();
         int initialXp = testCharacter.getXp();
 
         // Deal enough damage to defeat the boss
@@ -278,10 +282,14 @@ class BossServiceSecretBossTest {
         }
 
         // Verify rewards were granted
-        int finalCatalysts = testCharacter.getInventory().getCatalysts().values().stream()
-                .mapToInt(Integer::intValue).sum();
-        int finalEssences = testCharacter.getInventory().getEssences().values().stream()
-                .mapToInt(Integer::intValue).sum();
+        int finalCatalysts =
+                testCharacter.getInventory().getCatalysts().values().stream()
+                        .mapToInt(Integer::intValue)
+                        .sum();
+        int finalEssences =
+                testCharacter.getInventory().getEssences().values().stream()
+                        .mapToInt(Integer::intValue)
+                        .sum();
         int finalXp = testCharacter.getXp();
 
         assertTrue(finalCatalysts >= initialCatalysts + 1); // At least 1 catalyst guaranteed
@@ -354,16 +362,20 @@ class BossServiceSecretBossTest {
         BossCatalog.BossDefinition definition = BossCatalog.getRandomNormalBoss(5);
         Boss boss = bossService.spawnSecretBoss(GUILD_ID, USER_ID, definition, 5);
 
-        int initialCatalysts = testCharacter.getInventory().getCatalysts().values().stream()
-                .mapToInt(Integer::intValue).sum();
+        int initialCatalysts =
+                testCharacter.getInventory().getCatalysts().values().stream()
+                        .mapToInt(Integer::intValue)
+                        .sum();
 
         // Defeat the boss
         while (!boss.isDefeated()) {
             bossService.attackSecretBoss(GUILD_ID, USER_ID, testCharacter);
         }
 
-        int finalCatalysts = testCharacter.getInventory().getCatalysts().values().stream()
-                .mapToInt(Integer::intValue).sum();
+        int finalCatalysts =
+                testCharacter.getInventory().getCatalysts().values().stream()
+                        .mapToInt(Integer::intValue)
+                        .sum();
 
         // Should have at least 1 more catalyst (guaranteed), possibly 2 if rare catalyst granted
         assertTrue(finalCatalysts >= initialCatalysts + 1);
@@ -379,19 +391,24 @@ class BossServiceSecretBossTest {
         BossCatalog.BossDefinition definition = BossCatalog.getRandomNormalBoss(5);
         Boss boss = bossService.spawnSecretBoss(GUILD_ID, USER_ID, definition, 5);
 
-        int initialEssences = testCharacter.getInventory().getEssences().values().stream()
-                .mapToInt(Integer::intValue).sum();
+        int initialEssences =
+                testCharacter.getInventory().getEssences().values().stream()
+                        .mapToInt(Integer::intValue)
+                        .sum();
 
         // Defeat the boss
         while (!boss.isDefeated()) {
             bossService.attackSecretBoss(GUILD_ID, USER_ID, testCharacter);
         }
 
-        int finalEssences = testCharacter.getInventory().getEssences().values().stream()
-                .mapToInt(Integer::intValue).sum();
+        int finalEssences =
+                testCharacter.getInventory().getEssences().values().stream()
+                        .mapToInt(Integer::intValue)
+                        .sum();
         int essencesGranted = finalEssences - initialEssences;
 
-        assertTrue(essencesGranted >= 2 && essencesGranted <= 4,
+        assertTrue(
+                essencesGranted >= 2 && essencesGranted <= 4,
                 "Essences granted should be between 2 and 4, but was: " + essencesGranted);
     }
 
@@ -442,16 +459,20 @@ class BossServiceSecretBossTest {
             BossCatalog.BossDefinition definition = BossCatalog.getRandomNormalBoss(5);
             Boss boss = bossService.spawnSecretBoss(GUILD_ID, USER_ID + i, definition, 5);
 
-            int initialCatalysts = testChar.getInventory().getCatalysts().values().stream()
-                    .mapToInt(Integer::intValue).sum();
+            int initialCatalysts =
+                    testChar.getInventory().getCatalysts().values().stream()
+                            .mapToInt(Integer::intValue)
+                            .sum();
 
             // Defeat the boss
             while (!boss.isDefeated()) {
                 bossService.attackSecretBoss(GUILD_ID, USER_ID + i, testChar);
             }
 
-            int finalCatalysts = testChar.getInventory().getCatalysts().values().stream()
-                    .mapToInt(Integer::intValue).sum();
+            int finalCatalysts =
+                    testChar.getInventory().getCatalysts().values().stream()
+                            .mapToInt(Integer::intValue)
+                            .sum();
 
             if (finalCatalysts - initialCatalysts >= 2) {
                 rareCatalystCount++;
@@ -460,7 +481,8 @@ class BossServiceSecretBossTest {
 
         // With 100 tests, we should see roughly 10% rare catalysts (allow 5-15% range)
         double rareCatalystRate = (double) rareCatalystCount / totalTests;
-        assertTrue(rareCatalystRate >= 0.05 && rareCatalystRate <= 0.15,
+        assertTrue(
+                rareCatalystRate >= 0.05 && rareCatalystRate <= 0.15,
                 "Rare catalyst rate should be around 10%, but was: " + (rareCatalystRate * 100) + "%");
     }
 }

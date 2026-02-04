@@ -1,8 +1,8 @@
 package com.tatumgames.mikros.games.rpg.training;
 
 /**
- * Enum representing different types of training failures.
- * Failures are categorized into tiers based on severity.
+ * Enum representing different types of training failures. Failures are categorized into tiers based
+ * on severity.
  */
 public enum TrainingFailureType {
     // Tier 1: Minor Failures (Most Common - 70% of failures)
@@ -42,6 +42,6 @@ public enum TrainingFailureType {
     public enum TrainingFailureTier {
         TIER_1, // Minor Failures
         TIER_2, // Moderate Failures
-        TIER_3  // Severe Failures
+        TIER_3 // Severe Failures
     }
 }

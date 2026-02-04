@@ -5,8 +5,7 @@ import com.tatumgames.mikros.games.rpg.model.RPGActionOutcome;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 
 /**
- * Interface for RPG character actions.
- * Allows pluggable action implementations.
+ * Interface for RPG character actions. Allows pluggable action implementations.
  */
 public interface CharacterAction {
 
@@ -40,4 +39,3 @@ public interface CharacterAction {
      */
     RPGActionOutcome execute(RPGCharacter character, RPGConfig config);
 }
-
