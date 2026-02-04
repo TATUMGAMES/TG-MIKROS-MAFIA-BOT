@@ -34,7 +34,8 @@ public class MessagePatternTracker {
         String contentHash = hashContent(content);
         String key = userId + ":" + contentHash;
 
-        messagePatterns.computeIfAbsent(key, k -> new ArrayList<>())
+        messagePatterns
+                .computeIfAbsent(key, k -> new ArrayList<>())
                 .add(new MessageRecord(channelId, Instant.now(), contentHash));
 
         // Cleanup old records periodically (every 100 messages per key)
@@ -53,7 +54,8 @@ public class MessagePatternTracker {
      * @param timeWindowSeconds the time window in seconds
      * @return true if multi-channel spam detected, false otherwise
      */
-    public boolean isMultiChannelSpam(String userId, String contentHash, int threshold, int timeWindowSeconds) {
+    public boolean isMultiChannelSpam(
+            String userId, String contentHash, int threshold, int timeWindowSeconds) {
         if (userId == null || contentHash == null) {
             return false;
         }
@@ -66,11 +68,12 @@ public class MessagePatternTracker {
         }
 
         Instant cutoff = Instant.now().minusSeconds(timeWindowSeconds);
-        List<String> uniqueChannels = records.stream()
-                .filter(r -> r.timestamp().isAfter(cutoff))
-                .map(MessageRecord::channelId)
-                .distinct()
-                .toList();
+        List<String> uniqueChannels =
+                records.stream()
+                        .filter(r -> r.timestamp().isAfter(cutoff))
+                        .map(MessageRecord::channelId)
+                        .distinct()
+                        .toList();
 
         return uniqueChannels.size() >= threshold;
     }
@@ -83,11 +86,14 @@ public class MessagePatternTracker {
     public void cleanupOldRecords(int maxAgeMinutes) {
         Instant cutoff = Instant.now().minusSeconds(maxAgeMinutes * 60L);
 
-        messagePatterns.entrySet().removeIf(entry -> {
-            List<MessageRecord> records = entry.getValue();
-            records.removeIf(r -> r.timestamp().isBefore(cutoff));
-            return records.isEmpty();
-        });
+        messagePatterns
+                .entrySet()
+                .removeIf(
+                        entry -> {
+                            List<MessageRecord> records = entry.getValue();
+                            records.removeIf(r -> r.timestamp().isBefore(cutoff));
+                            return records.isEmpty();
+                        });
     }
 
     /**
@@ -118,10 +124,6 @@ public class MessagePatternTracker {
     /**
      * Record of a message posting.
      */
-    public record MessageRecord(
-            String channelId,
-            Instant timestamp,
-            String contentHash
-    ) {}
+    public record MessageRecord(String channelId, Instant timestamp, String contentHash) {
+    }
 }
-

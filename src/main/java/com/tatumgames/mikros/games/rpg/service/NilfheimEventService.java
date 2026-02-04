@@ -55,4 +55,3 @@ public interface NilfheimEventService {
      */
     void clearGuildData(String guildId);
 }
-

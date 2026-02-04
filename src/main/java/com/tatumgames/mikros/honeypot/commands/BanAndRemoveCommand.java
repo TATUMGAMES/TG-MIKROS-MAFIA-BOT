@@ -1,7 +1,7 @@
 package com.tatumgames.mikros.honeypot.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
+import com.tatumgames.mikros.handler.CommandHandler;
 import com.tatumgames.mikros.models.ActionType;
 import com.tatumgames.mikros.models.ModerationAction;
 import com.tatumgames.mikros.services.MessageDeletionService;
@@ -35,20 +35,26 @@ public class BanAndRemoveCommand implements CommandHandler {
      * @param moderationLogService   the moderation log service
      * @param messageDeletionService the message deletion service
      */
-    public BanAndRemoveCommand(ModerationLogService moderationLogService,
-                               MessageDeletionService messageDeletionService) {
+    public BanAndRemoveCommand(
+            ModerationLogService moderationLogService, MessageDeletionService messageDeletionService) {
         this.moderationLogService = moderationLogService;
         this.messageDeletionService = messageDeletionService;
     }
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("ban_and_remove_all_messages", "Ban a user and delete all their messages")
+        return Commands.slash("ban-and-remove-all-messages", "Ban a user and delete all their messages")
                 .addOption(OptionType.USER, "user", "The user to ban", true)
                 .addOption(OptionType.STRING, "reason", "Reason for the ban", true)
-                .addOption(OptionType.INTEGER, "delete_days", "Days of messages to delete (0-7, or -1 for all)", false)
+                .addOption(
+                        OptionType.INTEGER,
+                        "delete_days",
+                        "Days of messages to delete (0-7, or -1 for all)",
+                        false)
                 .setGuildOnly(true)
-                .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS));
+                .setDefaultPermissions(
+                        net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(
+                                Permission.BAN_MEMBERS));
     }
 
     @Override
@@ -56,11 +62,8 @@ public class BanAndRemoveCommand implements CommandHandler {
         Member member = event.getMember();
         Guild guild = event.getGuild();
 
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.BAN_MEMBERS)) {
-            event.reply("❌ You don't have permission to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.BAN_MEMBERS)) {
+            event.reply("❌ You don't have permission to use this command.").setEphemeral(true).queue();
             return;
         }
 
@@ -77,9 +80,7 @@ public class BanAndRemoveCommand implements CommandHandler {
 
         // Validate delete_days
         if (deleteDays < -1 || deleteDays > 7) {
-            event.reply("❌ Delete days must be between -1 (all) and 7.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ Delete days must be between -1 (all) and 7.").setEphemeral(true).queue();
             return;
         }
 
@@ -91,31 +92,27 @@ public class BanAndRemoveCommand implements CommandHandler {
         // Check role hierarchy
         if (targetMember != null) {
             if (!member.canInteract(targetMember)) {
-                event.reply("❌ You cannot ban this user due to role hierarchy.")
-                        .setEphemeral(true)
-                        .queue();
+                event.reply("❌ You cannot ban this user due to role hierarchy.").setEphemeral(true).queue();
                 return;
             }
 
             if (!guild.getSelfMember().canInteract(targetMember)) {
-                event.reply("❌ I cannot ban this user due to role hierarchy.")
-                        .setEphemeral(true)
-                        .queue();
+                event.reply("❌ I cannot ban this user due to role hierarchy.").setEphemeral(true).queue();
                 return;
             }
         }
 
         // Log the action
-        ModerationAction action = new ModerationAction(
-                targetUser.getId(),
-                targetUser.getEffectiveName(),
-                member.getId(),
-                member.getEffectiveName(),
-                ActionType.BAN,
-                reason,
-                Instant.now(),
-                guild.getId()
-        );
+        ModerationAction action =
+                new ModerationAction(
+                        targetUser.getId(),
+                        targetUser.getEffectiveName(),
+                        member.getId(),
+                        member.getEffectiveName(),
+                        ActionType.BAN,
+                        reason,
+                        Instant.now(),
+                        guild.getId());
         moderationLogService.logAction(action);
 
         // Defer reply
@@ -123,68 +120,91 @@ public class BanAndRemoveCommand implements CommandHandler {
 
         // Ban the user
         int daysToBan = Math.max(deleteDays, 0);
-        guild.ban(targetUser, daysToBan, java.util.concurrent.TimeUnit.DAYS)
+        guild
+                .ban(targetUser, daysToBan, java.util.concurrent.TimeUnit.DAYS)
                 .reason(reason)
                 .queue(
                         success -> {
                             // Determine how many days of messages to delete
                             int daysToDelete = (deleteDays == -1) ? Integer.MAX_VALUE : deleteDays;
 
-                            messageDeletionService.deleteAllUserMessages(guild, targetUser, daysToDelete)
-                                    .thenAccept(count -> {
-                                        String deleteInfo = (deleteDays == -1)
-                                                ? "All messages deleted"
-                                                : String.format("%d day(s) of messages deleted", deleteDays);
+                            messageDeletionService
+                                    .deleteAllUserMessages(guild, targetUser, daysToDelete)
+                                    .thenAccept(
+                                            count -> {
+                                                String deleteInfo =
+                                                        (deleteDays == -1)
+                                                                ? "All messages deleted"
+                                                                : String.format("%d day(s) of messages deleted", deleteDays);
 
-                                        event.getHook().sendMessage(String.format("""
+                                                event
+                                                        .getHook()
+                                                        .sendMessage(
+                                                                String.format(
+                                                                        """
                                                         🔨 **User Banned and Messages Removed**
                                                         User: %s
                                                         Reason: %s
                                                         Moderator: %s
                                                         %s
                                                         Total messages deleted: %d
-                                                        """,
-                                                targetUser.getName(),
-                                                reason,
-                                                member.getAsMention(),
-                                                deleteInfo,
-                                                count
-                                        )).queue();
+                                                                                """,
+                                                                        targetUser.getName(),
+                                                                        reason,
+                                                                        member.getAsMention(),
+                                                                        deleteInfo,
+                                                                        count))
+                                                        .queue();
 
-                                        logger.info("Banned user {} and deleted {} messages in guild {}",
-                                                targetUser.getId(), count, guild.getId());
-                                    })
-                                    .exceptionally(error -> {
-                                        logger.error("Error deleting messages from user {}: {}", targetUser.getId(), error.getMessage(), error);
-                                        event.getHook().sendMessage(String.format("""
+                                                logger.info(
+                                                        "Banned user {} and deleted {} messages in guild {}",
+                                                        targetUser.getId(),
+                                                        count,
+                                                        guild.getId());
+                                            })
+                                    .exceptionally(
+                                            error -> {
+                                                logger.error(
+                                                        "Error deleting messages from user {}: {}",
+                                                        targetUser.getId(),
+                                                        error.getMessage(),
+                                                        error);
+                                                event
+                                                        .getHook()
+                                                        .sendMessage(
+                                                                String.format(
+                                                                        """
                                                         🔨 **User Banned**
                                                         User: %s
                                                         Reason: %s
                                                         ⚠️ Warning: Failed to delete some messages. Check logs for details.
-                                                        """,
-                                                targetUser.getName(),
-                                                reason
-                                        )).queue();
-                                        return null;
-                                    });
+                                                                                """,
+                                                                        targetUser.getName(), reason))
+                                                        .queue();
+                                                return null;
+                                            });
                         },
                         error -> {
-                            event.getHook().sendMessage(String.format("""
+                            event
+                                    .getHook()
+                                    .sendMessage(
+                                            String.format(
+                                                    """
                                             ❌ Failed to ban user
                                             User: %s
                                             Error: %s
-                                            """,
-                                    targetUser.getName(),
-                                    error.getMessage()
-                            )).setEphemeral(true).queue();
+                                                            """,
+                                                    targetUser.getName(), error.getMessage()))
+                                    .setEphemeral(true)
+                                    .queue();
 
-                            logger.error("Failed to ban user {}: {}", targetUser.getId(), error.getMessage(), error);
-                        }
-                );
+                            logger.error(
+                                    "Failed to ban user {}: {}", targetUser.getId(), error.getMessage(), error);
+                        });
     }
 
     @Override
     public String getCommandName() {
-        return "ban_and_remove_all_messages";
+        return "ban-and-remove-all-messages";
     }
 }

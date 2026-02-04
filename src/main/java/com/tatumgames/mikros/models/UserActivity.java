@@ -3,7 +3,8 @@ package com.tatumgames.mikros.models;
 /**
  * Represents user activity statistics.
  */
-public record UserActivity(String userId, String username, int messageCount, long lastActiveTimestamp) {
+public record UserActivity(
+        String userId, String username, int messageCount, long lastActiveTimestamp) {
     /**
      * Creates a new UserActivity.
      *
@@ -15,4 +16,3 @@ public record UserActivity(String userId, String username, int messageCount, lon
     public UserActivity {
     }
 }
-

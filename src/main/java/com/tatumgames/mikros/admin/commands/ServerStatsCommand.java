@@ -1,7 +1,7 @@
 package com.tatumgames.mikros.admin.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.botdetection.service.BotDetectionService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import com.tatumgames.mikros.services.ActivityTrackingService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -18,9 +18,8 @@ import java.time.Instant;
 import java.util.Map;
 
 /**
- * Command handler for the /server-stats command.
- * Displays server activity statistics.
- * Admin-only command.
+ * Command handler for the /server-stats command. Displays server activity statistics. Admin-only
+ * command.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class ServerStatsCommand implements CommandHandler {
@@ -34,8 +33,8 @@ public class ServerStatsCommand implements CommandHandler {
      * @param activityTrackingService the activity tracking service
      * @param botDetectionService     the bot detection service
      */
-    public ServerStatsCommand(ActivityTrackingService activityTrackingService,
-                              BotDetectionService botDetectionService) {
+    public ServerStatsCommand(
+            ActivityTrackingService activityTrackingService, BotDetectionService botDetectionService) {
         this.activityTrackingService = activityTrackingService;
         this.botDetectionService = botDetectionService;
     }
@@ -44,7 +43,9 @@ public class ServerStatsCommand implements CommandHandler {
     public CommandData getCommandData() {
         return Commands.slash("server-stats", "View server activity statistics")
                 .setGuildOnly(true)
-                .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.MODERATE_MEMBERS));
+                .setDefaultPermissions(
+                        net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(
+                                Permission.MODERATE_MEMBERS));
     }
 
     @Override
@@ -53,11 +54,8 @@ public class ServerStatsCommand implements CommandHandler {
         Member member = event.getMember();
         Guild guild = event.getGuild();
 
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.MODERATE_MEMBERS)) {
-            event.reply("❌ You don't have permission to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.MODERATE_MEMBERS)) {
+            event.reply("❌ You don't have permission to use this command.").setEphemeral(true).queue();
             return;
         }
 
@@ -81,8 +79,10 @@ public class ServerStatsCommand implements CommandHandler {
         // Member statistics
         embed.addField("👥 Total Members", String.valueOf(totalMembers), true);
         embed.addField("✅ Active This Month", String.valueOf(activeUsersThisMonth), true);
-        embed.addField("📈 Activity Rate",
-                String.format("%.1f%%", (totalMembers > 0 ? (activeUsersThisMonth * 100.0 / totalMembers) : 0)),
+        embed.addField(
+                "📈 Activity Rate",
+                String.format(
+                        "%.1f%%", (totalMembers > 0 ? (activeUsersThisMonth * 100.0 / totalMembers) : 0)),
                 true);
 
         // Message statistics
@@ -96,17 +96,18 @@ public class ServerStatsCommand implements CommandHandler {
             StringBuilder channelStats = new StringBuilder();
             int rank = 1;
             for (Map.Entry<String, Integer> entry : topChannels.entrySet()) {
-                channelStats.append(String.format("%d. <#%s> - %d messages\n",
-                        rank++, entry.getKey(), entry.getValue()));
+                channelStats.append(
+                        String.format("%d. <#%s> - %d messages\n", rank++, entry.getKey(), entry.getValue()));
             }
             embed.addField("🔥 Most Active Channels", channelStats.toString(), false);
         } else {
             embed.addField("🔥 Most Active Channels", "No activity data available yet", false);
         }
 
-        embed.addField("ℹ️ Note",
-                "Statistics are based on messages sent while the bot was online. " +
-                        "Historical data is not included.",
+        embed.addField(
+                "ℹ️ Note",
+                "Statistics are based on messages sent while the bot was online. "
+                        + "Historical data is not included.",
                 false);
 
         embed.setTimestamp(Instant.now());
@@ -123,4 +124,3 @@ public class ServerStatsCommand implements CommandHandler {
         return "server-stats";
     }
 }
-

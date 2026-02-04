@@ -34,8 +34,8 @@ public class BotDetectionMessageListener extends ListenerAdapter {
      * @param botDetectionService the bot detection service
      * @param reputationService   the reputation service
      */
-    public BotDetectionMessageListener(BotDetectionService botDetectionService,
-                                       ReputationService reputationService) {
+    public BotDetectionMessageListener(
+            BotDetectionService botDetectionService, ReputationService reputationService) {
         this.botDetectionService = botDetectionService;
         this.reputationService = reputationService;
     }
@@ -78,15 +78,19 @@ public class BotDetectionMessageListener extends ListenerAdapter {
         }
 
         // Only take action on HIGH confidence detections (or if configured)
-        if (result.confidence() != BotDetectionResult.Confidence.HIGH &&
-                config.getAutoAction() == BotDetectionConfig.AutoAction.NONE) {
+        if (result.confidence() != BotDetectionResult.Confidence.HIGH
+                && config.getAutoAction() == BotDetectionConfig.AutoAction.NONE) {
             logger.debug("Bot detected with {} confidence, but auto-action is NONE", result.confidence());
             return;
         }
 
         User user = event.getAuthor();
-        logger.warn("Bot detected: user {} in guild {} - Reason: {}, Confidence: {}",
-                user.getId(), guildId, result.detectionReason(), result.confidence());
+        logger.warn(
+                "Bot detected: user {} in guild {} - Reason: {}, Confidence: {}",
+                user.getId(),
+                guildId,
+                result.detectionReason(),
+                result.confidence());
 
         // Take action based on config
         handleBotDetection(event, result, config);
@@ -107,8 +111,8 @@ public class BotDetectionMessageListener extends ListenerAdapter {
      * @param result the detection result
      * @param config the bot detection config
      */
-    private void handleBotDetection(MessageReceivedEvent event, BotDetectionResult result,
-                                    BotDetectionConfig config) {
+    private void handleBotDetection(
+            MessageReceivedEvent event, BotDetectionResult result, BotDetectionConfig config) {
         BotDetectionConfig.AutoAction action = config.getAutoAction();
         if (action == BotDetectionConfig.AutoAction.NONE) {
             return;
@@ -120,45 +124,52 @@ public class BotDetectionMessageListener extends ListenerAdapter {
 
         // Declare member variable before switch to avoid scope issues
         Member member = event.getMember();
-        
+
         switch (action) {
             case NONE:
                 // No action taken
                 break;
             case DELETE:
-                event.getMessage().delete().queue(
-                        success -> logger.info("Deleted bot message from user {} in guild {}", user.getId(), guildId),
-                        error -> logger.warn("Failed to delete bot message: {}", error.getMessage())
-                );
+                event
+                        .getMessage()
+                        .delete()
+                        .queue(
+                                success ->
+                                        logger.info(
+                                                "Deleted bot message from user {} in guild {}", user.getId(), guildId),
+                                error -> logger.warn("Failed to delete bot message: {}", error.getMessage()));
                 // Send warning message
-                channel.sendMessage(String.format(
-                        "⚠️ **%s**, links are restricted for new accounts to prevent spam. " +
-                                "Please wait %d minutes after joining before posting links.",
-                        user.getAsMention(), config.getLinkRestrictionMinutes()
-                )).queue(
-                        msg -> msg.delete().queueAfter(10, java.util.concurrent.TimeUnit.SECONDS),
-                        error -> logger.warn("Failed to send warning message: {}", error.getMessage())
-                );
+                channel
+                        .sendMessage(
+                                String.format(
+                                        "⚠️ **%s**, links are restricted for new accounts to prevent spam. "
+                                                + "Please wait %d minutes after joining before posting links.",
+                                        user.getAsMention(), config.getLinkRestrictionMinutes()))
+                        .queue(
+                                msg -> msg.delete().queueAfter(10, java.util.concurrent.TimeUnit.SECONDS),
+                                error -> logger.warn("Failed to send warning message: {}", error.getMessage()));
                 break;
 
             case WARN:
-                channel.sendMessage(String.format(
-                        "⚠️ **%s**, your message was flagged as potential spam. " +
-                                "Please review our server rules.",
-                        user.getAsMention()
-                )).queue();
+                channel
+                        .sendMessage(
+                                String.format(
+                                        "⚠️ **%s**, your message was flagged as potential spam. "
+                                                + "Please review our server rules.",
+                                        user.getAsMention()))
+                        .queue();
                 break;
 
             case MUTE:
                 if (member != null && event.getGuild().getSelfMember().canInteract(member)) {
                     // Note: Mute requires a timeout role or timeout API
                     // For simplicity, we'll use timeout (1 hour)
-                    member.timeoutFor(1, java.util.concurrent.TimeUnit.HOURS)
+                    member
+                            .timeoutFor(1, java.util.concurrent.TimeUnit.HOURS)
                             .reason("Bot detection: " + result.details())
                             .queue(
                                     success -> logger.info("Muted user {} for bot detection", user.getId()),
-                                    error -> logger.warn("Failed to mute user: {}", error.getMessage())
-                            );
+                                    error -> logger.warn("Failed to mute user: {}", error.getMessage()));
                 }
                 event.getMessage().delete().queue();
                 break;
@@ -166,12 +177,13 @@ public class BotDetectionMessageListener extends ListenerAdapter {
             case KICK:
                 member = event.getMember();
                 if (member != null && event.getGuild().getSelfMember().canInteract(member)) {
-                    event.getGuild().kick(member)
+                    event
+                            .getGuild()
+                            .kick(member)
                             .reason("Bot detection: " + result.details())
                             .queue(
                                     success -> logger.info("Kicked user {} for bot detection", user.getId()),
-                                    error -> logger.warn("Failed to kick user: {}", error.getMessage())
-                            );
+                                    error -> logger.warn("Failed to kick user: {}", error.getMessage()));
                 }
                 event.getMessage().delete().queue();
                 break;
@@ -191,29 +203,27 @@ public class BotDetectionMessageListener extends ListenerAdapter {
         // Check cooldown to prevent spam reporting
         if (botDetectionService.getConfig(guildId).isReportToReputation()) {
             // Create behavior report
-            BehaviorReport report = new BehaviorReport(
-                    user.getId(),
-                    user.getName(),
-                    BOT_DETECTION_SYSTEM_ID,
-                    BOT_DETECTION_SYSTEM_NAME,
-                    BehaviorCategory.SPAMMER,
-                    String.format("Auto-detected: %s - %s",
-                            result.detectionReason(),
-                            result.details()),
-                    Instant.now(),
-                    guildId
-            );
+            BehaviorReport report =
+                    new BehaviorReport(
+                            user.getId(),
+                            user.getName(),
+                            BOT_DETECTION_SYSTEM_ID,
+                            BOT_DETECTION_SYSTEM_NAME,
+                            BehaviorCategory.SPAMMER,
+                            String.format("Auto-detected: %s - %s", result.detectionReason(), result.details()),
+                            Instant.now(),
+                            guildId);
 
             // Record and report
             reputationService.recordBehavior(report);
             boolean apiSuccess = reputationService.reportToExternalAPI(report);
 
             if (apiSuccess) {
-                logger.info("Reported bot to reputation system: user {} in guild {}",
-                        user.getId(), guildId);
+                logger.info(
+                        "Reported bot to reputation system: user {} in guild {}", user.getId(), guildId);
             } else {
-                logger.warn("Failed to report bot to reputation API: user {} in guild {}",
-                        user.getId(), guildId);
+                logger.warn(
+                        "Failed to report bot to reputation API: user {} in guild {}", user.getId(), guildId);
             }
 
             // Record report for cooldown
@@ -221,4 +231,3 @@ public class BotDetectionMessageListener extends ListenerAdapter {
         }
     }
 }
-

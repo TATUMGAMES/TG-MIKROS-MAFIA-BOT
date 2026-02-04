@@ -17,13 +17,15 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Train action - player trains to improve stats and gain XP.
- * Guarantees stat increase along with XP.
+ * Train action - player trains to improve stats and gain XP. Guarantees stat increase along with
+ * XP.
  */
 public class TrainAction implements CharacterAction {
     private static final Random random = new Random();
     private static final String[] STAT_NAMES = {"STR", "AGI", "INT", "LUCK"};
-    private static final String[] STAT_DISPLAY_NAMES = {"Strength", "Agility", "Intelligence", "Luck"};
+    private static final String[] STAT_DISPLAY_NAMES = {
+            "Strength", "Agility", "Intelligence", "Luck"
+    };
     // Strength narratives - Fantasy-themed physical training and combat
     private static final String[] STRENGTH_NARRATIVES = {
             "You wrestle with a fierce orc warrior",
@@ -127,7 +129,10 @@ public class TrainAction implements CharacterAction {
      * @param loreRecognitionService the lore recognition service for milestone checks
      * @param worldCurseService      the world curse service for checking active curses
      */
-    public TrainAction(NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService, WorldCurseService worldCurseService) {
+    public TrainAction(
+            NilfheimEventService nilfheimEventService,
+            LoreRecognitionService loreRecognitionService,
+            WorldCurseService worldCurseService) {
         this.nilfheimEventService = nilfheimEventService;
         this.loreRecognitionService = loreRecognitionService;
         this.worldCurseService = worldCurseService;
@@ -136,7 +141,8 @@ public class TrainAction implements CharacterAction {
     /**
      * Creates a new TrainAction without WorldCurseService (backward compatibility).
      */
-    public TrainAction(NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService) {
+    public TrainAction(
+            NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService) {
         this(nilfheimEventService, loreRecognitionService, null);
     }
 
@@ -156,8 +162,8 @@ public class TrainAction implements CharacterAction {
     }
 
     /**
-     * Rolls for a training accident.
-     * Base chance: 8-12% (randomized), reduced by STR (-0.15% per STR) and AGI (-0.15% per AGI), minimum 2%.
+     * Rolls for a training accident. Base chance: 8-12% (randomized), reduced by STR (-0.15% per STR)
+     * and AGI (-0.15% per AGI), minimum 2%.
      *
      * @param character the character training
      * @return the accident type if triggered, null otherwise
@@ -193,8 +199,8 @@ public class TrainAction implements CharacterAction {
     }
 
     /**
-     * Rolls for a training failure.
-     * Base chance: 5-8% (randomized), reduced by INT (-0.1% per INT) and LUCK (-0.1% per LUCK), minimum 1%.
+     * Rolls for a training failure. Base chance: 5-8% (randomized), reduced by INT (-0.1% per INT)
+     * and LUCK (-0.1% per LUCK), minimum 1%.
      *
      * @param character the character training
      * @return the failure type if triggered, null otherwise
@@ -230,8 +236,7 @@ public class TrainAction implements CharacterAction {
     }
 
     /**
-     * Rolls for risky training method.
-     * Base chance: 10% for high-risk, high-reward option.
+     * Rolls for risky training method. Base chance: 10% for high-risk, high-reward option.
      *
      * @param character the character training
      * @return the risky training method type if triggered, null otherwise
@@ -255,7 +260,8 @@ public class TrainAction implements CharacterAction {
      * @param character    the character affected
      * @return array containing [damageTaken, narrative]
      */
-    private Object[] handleTrainingAccident(TrainingAccidentType accidentType, RPGCharacter character) {
+    private Object[] handleTrainingAccident(
+            TrainingAccidentType accidentType, RPGCharacter character) {
         int damageTaken = 0;
         String narrative = "";
 
@@ -267,26 +273,34 @@ public class TrainAction implements CharacterAction {
                 int currentHp = character.getStats().getCurrentHp();
                 damageTaken = Math.min(hpLoss, currentHp - 1); // Ensure at least 1 HP remains
                 character.getStats().takeDamage(damageTaken);
-                narrative = "💥 **Overexertion:** You pushed yourself too hard during training, taking " + damageTaken + " damage. At least you're still alive!";
+                narrative =
+                        "💥 **Overexertion:** You pushed yourself too hard during training, taking "
+                                + damageTaken
+                                + " damage. At least you're still alive!";
             }
 
             case TRAINING_INJURY -> {
                 // Set flag to lose charge on next action (3% chance when this accident triggers, rare)
                 if (random.nextDouble() < 0.03) {
                     character.setLoseChargeOnNextAction(true);
-                    narrative = "🩹 **Training Injury:** You've injured yourself during training. You'll lose an extra action charge on your next action.";
+                    narrative =
+                            "🩹 **Training Injury:** You've injured yourself during training. You'll lose an extra action charge on your next action.";
                 } else {
-                    narrative = "🩹 **Training Injury:** You've sustained a minor injury, but it doesn't affect your training.";
+                    narrative =
+                            "🩹 **Training Injury:** You've sustained a minor injury, but it doesn't affect your training.";
                 }
             }
 
             case MUSCLE_STRAIN -> {
-                // Apply temporary -1 to trained stat for 1 action (2% chance when this accident triggers, very rare)
+                // Apply temporary -1 to trained stat for 1 action (2% chance when this accident triggers,
+                // very rare)
                 if (random.nextDouble() < 0.02) {
                     // This will be handled in execute() after we know which stat was trained
-                    narrative = "⚡ **Muscle Strain:** You've strained a muscle. Your next action will be affected.";
+                    narrative =
+                            "⚡ **Muscle Strain:** You've strained a muscle. Your next action will be affected.";
                 } else {
-                    narrative = "⚡ **Muscle Strain:** You feel a slight strain, but it doesn't affect your training.";
+                    narrative =
+                            "⚡ **Muscle Strain:** You feel a slight strain, but it doesn't affect your training.";
                 }
             }
         }
@@ -302,7 +316,8 @@ public class TrainAction implements CharacterAction {
      * @param character    the character affected
      * @return array containing [statIncrease, xpReduction, narrative]
      */
-    private Object[] handleTrainingFailure(TrainingFailureType failureType, int statIncrease, RPGCharacter character) {
+    private Object[] handleTrainingFailure(
+            TrainingFailureType failureType, int statIncrease, RPGCharacter character) {
         int finalStatIncrease = statIncrease;
         double xpReduction = 0.0;
         String narrative = "";
@@ -312,23 +327,27 @@ public class TrainAction implements CharacterAction {
                 // No stat increase this action, XP reduced by 25%
                 finalStatIncrease = 0;
                 xpReduction = 0.25;
-                narrative = "❌ **Poor Form:** Your training form was poor this session. You don't gain any stat points, and your XP gain is reduced by 25%.";
+                narrative =
+                        "❌ **Poor Form:** Your training form was poor this session. You don't gain any stat points, and your XP gain is reduced by 25%.";
             }
 
             case EXHAUSTION -> {
                 // Set flag for next action to cost double (2% chance when this failure triggers, rare)
                 if (random.nextDouble() < 0.02) {
                     character.setNextActionCostsDouble(true);
-                    narrative = "😴 **Exhaustion:** You're exhausted from training. Your next action will cost 2 charges instead of 1.";
+                    narrative =
+                            "😴 **Exhaustion:** You're exhausted from training. Your next action will cost 2 charges instead of 1.";
                 } else {
-                    narrative = "😴 **Exhaustion:** You feel exhausted, but manage to complete your training.";
+                    narrative =
+                            "😴 **Exhaustion:** You feel exhausted, but manage to complete your training.";
                 }
             }
 
             case TRAINING_SETBACK -> {
                 // Stat increase reduced by 1 (minimum 1 point)
                 finalStatIncrease = Math.max(1, statIncrease - 1);
-                narrative = "📉 **Training Setback:** You experienced a setback during training. Your stat increase is reduced by 1 point.";
+                narrative =
+                        "📉 **Training Setback:** You experienced a setback during training. Your stat increase is reduced by 1 point.";
             }
         }
 
@@ -344,7 +363,8 @@ public class TrainAction implements CharacterAction {
      * @param character    the character affected
      * @return array containing [statIncrease, xpMultiplier, damageTaken, narrative]
      */
-    private Object[] handleRiskyTraining(RiskyTrainingMethodType riskyMethod, int statIncrease, int baseXp, RPGCharacter character) {
+    private Object[] handleRiskyTraining(
+            RiskyTrainingMethodType riskyMethod, int statIncrease, int baseXp, RPGCharacter character) {
         int finalStatIncrease = statIncrease;
         double xpMultiplier = riskyMethod.getXpMultiplier();
         int damageTaken = 0;
@@ -356,8 +376,10 @@ public class TrainAction implements CharacterAction {
 
         // Calculate HP loss
         int maxHp = character.getStats().getMaxHp();
-        double hpLossPercent = riskyMethod.getMinHpLossPercent() +
-                (random.nextDouble() * (riskyMethod.getMaxHpLossPercent() - riskyMethod.getMinHpLossPercent()));
+        double hpLossPercent =
+                riskyMethod.getMinHpLossPercent()
+                        + (random.nextDouble()
+                        * (riskyMethod.getMaxHpLossPercent() - riskyMethod.getMinHpLossPercent()));
         int hpLoss = (int) (maxHp * hpLossPercent);
         int currentHp = character.getStats().getCurrentHp();
         damageTaken = Math.min(hpLoss, currentHp - 1); // Ensure at least 1 HP remains
@@ -365,21 +387,28 @@ public class TrainAction implements CharacterAction {
 
         switch (riskyMethod) {
             case PUSH_BEYOND_LIMITS -> {
-                narrative = String.format("🔥 **Push Beyond Limits:** You push yourself beyond your limits! You gain +%d extra stat point%s and %.0f%% bonus XP, but take %d damage.",
-                        statBonus, statBonus > 1 ? "s" : "", xpMultiplier * 100, damageTaken);
+                narrative =
+                        String.format(
+                                "🔥 **Push Beyond Limits:** You push yourself beyond your limits! You gain +%d extra stat point%s and %.0f%% bonus XP, but take %d damage.",
+                                statBonus, statBonus > 1 ? "s" : "", xpMultiplier * 100, damageTaken);
 
-                // 10% chance to lose 1 action charge (for DANGEROUS_TECHNIQUE, but we'll handle it here for consistency)
+                // 10% chance to lose 1 action charge (for DANGEROUS_TECHNIQUE, but we'll handle it here for
+                // consistency)
             }
 
             case DANGEROUS_TECHNIQUE -> {
                 // 10% chance to lose 1 action charge
                 if (random.nextDouble() < 0.10) {
                     character.setLoseChargeOnNextAction(true);
-                    narrative = String.format("⚔️ **Dangerous Technique:** You attempt a dangerous training technique! You gain +%d extra stat point%s and %.0f%% bonus XP, but take %d damage and lose an extra charge on your next action.",
-                            statBonus, statBonus > 1 ? "s" : "", xpMultiplier * 100, damageTaken);
+                    narrative =
+                            String.format(
+                                    "⚔️ **Dangerous Technique:** You attempt a dangerous training technique! You gain +%d extra stat point%s and %.0f%% bonus XP, but take %d damage and lose an extra charge on your next action.",
+                                    statBonus, statBonus > 1 ? "s" : "", xpMultiplier * 100, damageTaken);
                 } else {
-                    narrative = String.format("⚔️ **Dangerous Technique:** You attempt a dangerous training technique! You gain +%d extra stat point%s and %.0f%% bonus XP, but take %d damage.",
-                            statBonus, statBonus > 1 ? "s" : "", xpMultiplier * 100, damageTaken);
+                    narrative =
+                            String.format(
+                                    "⚔️ **Dangerous Technique:** You attempt a dangerous training technique! You gain +%d extra stat point%s and %.0f%% bonus XP, but take %d damage.",
+                                    statBonus, statBonus > 1 ? "s" : "", xpMultiplier * 100, damageTaken);
                 }
             }
 
@@ -387,11 +416,15 @@ public class TrainAction implements CharacterAction {
                 // 5% chance for temporary stat debuff
                 if (random.nextDouble() < 0.05) {
                     // This will be handled in execute() after we know which stat was trained
-                    narrative = String.format("💀 **Extreme Training:** You push yourself to the absolute limit! You gain +%d extra stat point%s and %.0f%% bonus XP, but take %d damage and suffer a temporary stat debuff.",
-                            statBonus, statBonus > 1 ? "s" : "", xpMultiplier * 100, damageTaken);
+                    narrative =
+                            String.format(
+                                    "💀 **Extreme Training:** You push yourself to the absolute limit! You gain +%d extra stat point%s and %.0f%% bonus XP, but take %d damage and suffer a temporary stat debuff.",
+                                    statBonus, statBonus > 1 ? "s" : "", xpMultiplier * 100, damageTaken);
                 } else {
-                    narrative = String.format("💀 **Extreme Training:** You push yourself to the absolute limit! You gain +%d extra stat point%s and %.0f%% bonus XP, but take %d damage.",
-                            statBonus, statBonus > 1 ? "s" : "", xpMultiplier * 100, damageTaken);
+                    narrative =
+                            String.format(
+                                    "💀 **Extreme Training:** You push yourself to the absolute limit! You gain +%d extra stat point%s and %.0f%% bonus XP, but take %d damage.",
+                                    statBonus, statBonus > 1 ? "s" : "", xpMultiplier * 100, damageTaken);
                 }
             }
         }
@@ -546,7 +579,8 @@ public class TrainAction implements CharacterAction {
         }
 
         // Apply Nilfheim event effects for XP
-        if (activeEvent != null && activeEvent.getEffectType() == NilfheimEventType.EventEffectType.ALL_XP_BOOST) {
+        if (activeEvent != null
+                && activeEvent.getEffectType() == NilfheimEventType.EventEffectType.ALL_XP_BOOST) {
             // Starfall Ridge's Light: +15% XP on all actions
             xpGained = (int) (xpGained * (1.0 + activeEvent.getEffectValue()));
         }
@@ -584,14 +618,13 @@ public class TrainAction implements CharacterAction {
 
         String narrative;
         if (statIncrease > 0) {
-            narrative = String.format("%s, you improved your %s by %d point%s!",
-                    narrativePrefix,
-                    statDisplayName,
-                    statIncrease,
-                    statIncrease > 1 ? "s" : "");
+            narrative =
+                    String.format(
+                            "%s, you improved your %s by %d point%s!",
+                            narrativePrefix, statDisplayName, statIncrease, statIncrease > 1 ? "s" : "");
         } else {
-            narrative = String.format("%s, but your training was ineffective this time.",
-                    narrativePrefix);
+            narrative =
+                    String.format("%s, but your training was ineffective this time.", narrativePrefix);
         }
 
         // Add risk narratives
@@ -605,18 +638,25 @@ public class TrainAction implements CharacterAction {
             narrative += "\n\n" + failureNarrative;
         }
         if (statImbalancePenalty) {
-            narrative += "\n\n⚠️ **Stat Imbalance:** Training the same stat repeatedly has caused an imbalance. One of your other stats has been reduced.";
+            narrative +=
+                    "\n\n⚠️ **Stat Imbalance:** Training the same stat repeatedly has caused an imbalance. One of your other stats has been reduced.";
         }
         if (xpImbalanceReduction > 0 && !statImbalancePenalty) {
-            narrative += String.format("\n\n⚠️ **Stat Imbalance:** Training the same stat repeatedly reduces your XP gain by %.0f%%. Train a different stat to restore full XP gain.", xpImbalanceReduction * 100);
+            narrative +=
+                    String.format(
+                            "\n\n⚠️ **Stat Imbalance:** Training the same stat repeatedly reduces your XP gain by %.0f%%. Train a different stat to restore full XP gain.",
+                            xpImbalanceReduction * 100);
         }
 
         // Oathbreaker: Gain corruption from acting during world curses
-        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER && worldCurseService != null) {
+        if (character.getCharacterClass()
+                == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER
+                && worldCurseService != null) {
             List<WorldCurse> activeCurses = worldCurseService.getActiveCurses(guildId);
             if (!activeCurses.isEmpty()) {
                 character.addCorruption(1);
-                narrative += "\n\n⚔️💀 **Corruption:** The world's curses resonate with your broken oath, increasing your corruption.";
+                narrative +=
+                        "\n\n⚔️💀 **Corruption:** The world's curses resonate with your broken oath, increasing your corruption.";
             }
         }
 
@@ -645,4 +685,3 @@ public class TrainAction implements CharacterAction {
                 .build();
     }
 }
-

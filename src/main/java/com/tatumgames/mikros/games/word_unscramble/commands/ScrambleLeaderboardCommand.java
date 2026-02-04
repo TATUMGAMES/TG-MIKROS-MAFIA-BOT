@@ -1,10 +1,10 @@
 package com.tatumgames.mikros.games.word_unscramble.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleConfig;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscramblePlayerStats;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -22,8 +22,8 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Command handler for /scramble-leaderboard.
- * Shows top Word Unscramble players by total points with pagination.
+ * Command handler for /scramble-leaderboard. Shows top Word Unscramble players by total points with
+ * pagination.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class ScrambleLeaderboardCommand implements CommandHandler {
@@ -42,7 +42,8 @@ public class ScrambleLeaderboardCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("scramble-leaderboard", "View top Word Unscramble players by total points")
+        return Commands.slash(
+                        "scramble-leaderboard", "View top Word Unscramble players by total points")
                 .addOption(OptionType.INTEGER, "page", "Page number (default: 1)", false)
                 .setGuildOnly(true);
     }
@@ -51,30 +52,24 @@ public class ScrambleLeaderboardCommand implements CommandHandler {
     public void handle(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) {
-            event.reply("❌ This command can only be used in a server.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ This command can only be used in a server.").setEphemeral(true).queue();
             return;
         }
 
         Member member = event.getMember();
         if (member == null) {
-            event.reply("❌ Unable to get member information.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ Unable to get member information.").setEphemeral(true).queue();
             return;
         }
 
         String guildId = guild.getId();
 
-        // Check if games are configured
+        // Require setup before Word Unscramble commands work
         WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
-        if (config == null) {
-            event.reply("""
-                            ❌ Word Unscramble game is not set up yet!
-                            
-                            An administrator can set it up with `/admin-scramble-setup`
-                            """)
+        if (config == null || config.getGameChannelId() == null) {
+            event
+                    .reply(
+                            "❌ Word Unscramble is not set up for this server. An administrator must run `/admin-scramble-setup` first.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -82,7 +77,9 @@ public class ScrambleLeaderboardCommand implements CommandHandler {
 
         // Check role requirement
         if (!AdminUtils.canUserPlay(member, config.isAllowNoRoleUsers())) {
-            event.reply("❌ Users without roles cannot view Word Unscramble leaderboards in this server. Contact an administrator.")
+            event
+                    .reply(
+                            "❌ Users without roles cannot view Word Unscramble leaderboards in this server. Contact an administrator.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -93,9 +90,7 @@ public class ScrambleLeaderboardCommand implements CommandHandler {
         int page = (pageOption != null) ? (int) pageOption.getAsLong() : 1;
 
         if (page < 1) {
-            event.reply("❌ Page number must be 1 or greater!")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ Page number must be 1 or greater!").setEphemeral(true).queue();
             return;
         }
 
@@ -103,11 +98,12 @@ public class ScrambleLeaderboardCommand implements CommandHandler {
         List<WordUnscramblePlayerStats> allStats = wordUnscrambleService.getAllPlayerStats(guildId);
 
         if (allStats.isEmpty()) {
-            String message = """
+            String message =
+                    """
                     ❌ No players have attempted any words yet!
-                    
+
                     Be the first to play and solve a word!
-                    """;
+                            """;
 
             event.reply(message).setEphemeral(true).queue();
             return;
@@ -116,7 +112,10 @@ public class ScrambleLeaderboardCommand implements CommandHandler {
         // Calculate pagination
         int totalPages = (int) Math.ceil((double) allStats.size() / ENTRIES_PER_PAGE);
         if (page > totalPages) {
-            event.reply(String.format("❌ Page %d doesn't exist! There are only %d page(s).", page, totalPages))
+            event
+                    .reply(
+                            String.format(
+                                    "❌ Page %d doesn't exist! There are only %d page(s).", page, totalPages))
                     .setEphemeral(true)
                     .queue();
             return;
@@ -150,27 +149,30 @@ public class ScrambleLeaderboardCommand implements CommandHandler {
                 }
             } catch (Exception e) {
                 // User not found or error retrieving - use ID
-                displayName = "User " + stats.getUserId().substring(0, Math.min(8, stats.getUserId().length()));
-                logger.debug("Could not retrieve username for user {}: {}", stats.getUserId(), e.getMessage());
+                displayName =
+                        "User " + stats.getUserId().substring(0, Math.min(8, stats.getUserId().length()));
+                logger.debug(
+                        "Could not retrieve username for user {}: {}", stats.getUserId(), e.getMessage());
             }
 
             double accuracy = stats.getAccuracyPercentage();
 
-            leaderboard.append(String.format("""
+            leaderboard.append(
+                    String.format(
+                            """
                             %s **#%d** - **%s**
                             └ Points: **%,d** • Words Solved: **%,d** • High Score: **%,d**
                             └ Accuracy: **%.1f%%** • Attempts: **%,d**
-                            
-                            """,
-                    medal,
-                    rank,
-                    displayName,
-                    stats.getTotalPoints(),
-                    stats.getTotalWordsSolved(),
-                    stats.getHighestScore(),
-                    accuracy,
-                    stats.getTotalAttempts()
-            ));
+                                    
+                                    """,
+                            medal,
+                            rank,
+                            displayName,
+                            stats.getTotalPoints(),
+                            stats.getTotalWordsSolved(),
+                            stats.getHighestScore(),
+                            accuracy,
+                            stats.getTotalAttempts()));
 
             rank++;
         }
@@ -184,24 +186,20 @@ public class ScrambleLeaderboardCommand implements CommandHandler {
 
         event.replyEmbeds(embed.build()).queue();
 
-        logger.debug("Word Unscramble leaderboard requested for guild {} - showing page {} ({} players)",
-                guildId, page, pageStats.size());
+        logger.debug(
+                "Word Unscramble leaderboard requested for guild {} - showing page {} ({} players)",
+                guildId,
+                page,
+                pageStats.size());
     }
 
     private String buildFooterText(int page, int totalPages, int totalPlayers) {
         if (totalPages > 1) {
             return String.format(
                     "Page %d/%d • Total Players: %d • Use /scramble-leaderboard page:%d for next page",
-                    page,
-                    totalPages,
-                    totalPlayers,
-                    page < totalPages ? page + 1 : page
-            );
+                    page, totalPages, totalPlayers, page < totalPages ? page + 1 : page);
         } else {
-            return String.format(
-                    "Total Players: %d • Play to improve your rank!",
-                    totalPlayers
-            );
+            return String.format("Total Players: %d • Play to improve your rank!", totalPlayers);
         }
     }
 
@@ -222,4 +220,3 @@ public class ScrambleLeaderboardCommand implements CommandHandler {
         return "scramble-leaderboard";
     }
 }
-

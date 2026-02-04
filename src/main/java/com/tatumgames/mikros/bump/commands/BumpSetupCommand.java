@@ -1,9 +1,10 @@
 package com.tatumgames.mikros.bump.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.bump.model.BumpConfig;
+import com.tatumgames.mikros.bump.scheduler.BumpScheduler;
 import com.tatumgames.mikros.bump.service.BumpService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -20,22 +21,24 @@ import org.slf4j.LoggerFactory;
 import java.util.EnumSet;
 
 /**
- * Command handler for /admin-bump-setup.
- * Allows server administrators to set up automatic server bumping.
- * Admin-only command.
+ * Command handler for /admin-bump-setup. Allows server administrators to set up automatic server
+ * bumping. Admin-only command.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class BumpSetupCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(BumpSetupCommand.class);
     private final BumpService bumpService;
+    private final BumpScheduler bumpScheduler;
 
     /**
      * Creates a new BumpSetupCommand handler.
      *
-     * @param bumpService the bump service
+     * @param bumpService   the bump service
+     * @param bumpScheduler the bump scheduler (started on setup)
      */
-    public BumpSetupCommand(BumpService bumpService) {
+    public BumpSetupCommand(BumpService bumpService, BumpScheduler bumpScheduler) {
         this.bumpService = bumpService;
+        this.bumpScheduler = bumpScheduler;
     }
 
     @Override
@@ -49,7 +52,9 @@ public class BumpSetupCommand implements CommandHandler {
                 .addOption(OptionType.CHANNEL, "channel", "The channel to send bump commands in", true)
                 .addOptions(botsOption)
                 .setGuildOnly(true)
-                .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+                .setDefaultPermissions(
+                        net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(
+                                Permission.ADMINISTRATOR));
     }
 
     @Override
@@ -58,11 +63,8 @@ public class BumpSetupCommand implements CommandHandler {
         Member member = event.getMember();
         Guild guild = event.getGuild();
 
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ You must be an administrator to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("❌ You must be an administrator to use this command.").setEphemeral(true).queue();
             return;
         }
 
@@ -73,18 +75,14 @@ public class BumpSetupCommand implements CommandHandler {
         // Get the bots option
         String botsValue = event.getOption("bots", OptionMapping::getAsString);
         if (botsValue == null) {
-            event.reply("❌ You must select which bots to bump.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ You must select which bots to bump.").setEphemeral(true).queue();
             return;
         }
 
         // Parse bots selection
         EnumSet<BumpConfig.BumpBot> enabledBots = parseBotsSelection(botsValue);
         if (enabledBots.isEmpty()) {
-            event.reply("❌ Invalid bot selection.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ Invalid bot selection.").setEphemeral(true).queue();
             return;
         }
 
@@ -95,27 +93,34 @@ public class BumpSetupCommand implements CommandHandler {
         bumpService.setBumpChannel(guildId, channelId);
         bumpService.setEnabledBots(guildId, enabledBots);
 
+        // Start the bump scheduler (idempotent; safe to call on re-setup)
+        bumpScheduler.startIfNeeded(event.getJDA());
+
         // Build bot list string
-        String botsList = String.join(", ", enabledBots.stream()
-                .map(BumpConfig.BumpBot::getDisplayName)
-                .toList());
+        String botsList =
+                String.join(", ", enabledBots.stream().map(BumpConfig.BumpBot::getDisplayName).toList());
 
         // Send confirmation
-        event.reply(String.format(
-                "✅ **Auto-Bump Configured**\n\n" +
-                        "Bump channel: %s\n" +
-                        "Enabled bots: %s\n" +
-                        "Default interval: **8 hours**\n\n" +
-                        "**Next Steps:**\n" +
-                        "• Use `/admin-bump-config set-interval` to change the bump interval (1-24 hours)\n" +
-                        "• Use `/admin-bump-config view` to see current settings\n\n" +
-                        "The bot will automatically bump your server at the configured interval!",
-                channel.getAsMention(),
-                botsList
-        )).queue();
+        event
+                .reply(
+                        String.format(
+                                "✅ **Auto-Bump Configured**\n\n"
+                                        + "Bump channel: %s\n"
+                                        + "Enabled bots: %s\n"
+                                        + "Default interval: **8 hours**\n\n"
+                                        + "**Next Steps:**\n"
+                                        + "• Use `/admin-bump-config set-interval` to change the bump interval (1-24 hours)\n"
+                                        + "• Use `/admin-bump-config view` to see current settings\n\n"
+                                        + "The bot will automatically bump your server at the configured interval!",
+                                channel.getAsMention(), botsList))
+                .queue();
 
-        logger.info("Bump setup completed for guild {} by user {}: channel={}, bots={}",
-                guildId, member.getId(), channelId, enabledBots);
+        logger.info(
+                "Bump setup completed for guild {} by user {}: channel={}, bots={}",
+                guildId,
+                member.getId(),
+                channelId,
+                enabledBots);
     }
 
     /**
@@ -138,4 +143,3 @@ public class BumpSetupCommand implements CommandHandler {
         return "admin-bump-setup";
     }
 }
-

@@ -1,6 +1,5 @@
 package com.tatumgames.mikros.games.rpg.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.games.rpg.biome.BiomeType;
 import com.tatumgames.mikros.games.rpg.blessing.Blessing;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
@@ -9,6 +8,7 @@ import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.service.BlessingService;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
@@ -29,8 +29,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Command handler for /rpg-profile.
- * Displays a character's stats and information.
+ * Command handler for /rpg-profile. Displays a character's stats and information.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class RPGProfileCommand implements CommandHandler {
@@ -46,7 +45,10 @@ public class RPGProfileCommand implements CommandHandler {
      * @param worldCurseService the world curse service
      * @param blessingService   the blessing service
      */
-    public RPGProfileCommand(CharacterService characterService, WorldCurseService worldCurseService, BlessingService blessingService) {
+    public RPGProfileCommand(
+            CharacterService characterService,
+            WorldCurseService worldCurseService,
+            BlessingService blessingService) {
         this.characterService = characterService;
         this.worldCurseService = worldCurseService;
         this.blessingService = blessingService;
@@ -63,9 +65,7 @@ public class RPGProfileCommand implements CommandHandler {
         Guild guild = event.getGuild();
 
         if (guild == null) {
-            event.reply("❌ This command can only be used in a server.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ This command can only be used in a server.").setEphemeral(true).queue();
             return;
         }
 
@@ -77,9 +77,10 @@ public class RPGProfileCommand implements CommandHandler {
         RPGCharacter character = characterService.getCharacter(targetUserId);
 
         if (character == null) {
-            String message = targetUserId.equals(event.getUser().getId())
-                    ? "❌ You don't have a character yet! Use `/rpg-register` to create one."
-                    : "❌ That user doesn't have a character yet.";
+            String message =
+                    targetUserId.equals(event.getUser().getId())
+                            ? "❌ You don't have a character yet! Use `/rpg-register` to create one."
+                            : "❌ That user doesn't have a character yet.";
 
             event.reply(message).setEphemeral(true).queue();
             return;
@@ -88,13 +89,26 @@ public class RPGProfileCommand implements CommandHandler {
         // Get guild config for cooldown info
         RPGConfig config = characterService.getConfig(guild.getId());
 
+        // Require setup before RPG commands work
+        if (config.getRpgChannelId() == null) {
+            event
+                    .reply(
+                            "❌ RPG is not set up for this server. An administrator must run `/admin-rpg-setup` first.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
         // Check if in correct channel (if specified)
         if (config != null && config.getRpgChannelId() != null) {
             if (!event.getChannel().getId().equals(config.getRpgChannelId())) {
-                event.reply(String.format(
-                        "Please use `/rpg-profile` in <#%s>. RPG commands are restricted to the assigned channel.",
-                        config.getRpgChannelId()
-                )).setEphemeral(true).queue();
+                event
+                        .reply(
+                                String.format(
+                                        "Please use `/rpg-profile` in <#%s>. RPG commands are restricted to the assigned channel.",
+                                        config.getRpgChannelId()))
+                        .setEphemeral(true)
+                        .queue();
                 return;
             }
         }
@@ -104,14 +118,14 @@ public class RPGProfileCommand implements CommandHandler {
 
         // Build title with character title prefix if present
         String titlePrefix = character.getTitle() != null ? character.getTitle() + " " : "";
-        embed.setTitle(String.format(
-                "%s %s%s - Level %d %s",
-                character.getCharacterClass().getEmoji(),
-                titlePrefix,
-                character.getName(),
-                character.getLevel(),
-                character.getCharacterClass().getDisplayName()
-        ));
+        embed.setTitle(
+                String.format(
+                        "%s %s%s - Level %d %s",
+                        character.getCharacterClass().getEmoji(),
+                        titlePrefix,
+                        character.getName(),
+                        character.getLevel(),
+                        character.getCharacterClass().getDisplayName()));
 
         embed.setColor(getClassColor(character.getCharacterClass().name()));
 
@@ -120,15 +134,12 @@ public class RPGProfileCommand implements CommandHandler {
         embed.addField(
                 "📊 Experience",
                 String.format(
-                        "**%d** / %d XP (%.1f%%)\n" +
-                                "%d XP to next level",
+                        "**%d** / %d XP (%.1f%%)\n" + "%d XP to next level",
                         character.getXp(),
                         character.getXpToNextLevel(),
                         xpPercent,
-                        character.getXpToNextLevel() - character.getXp()
-                ),
-                false
-        );
+                        character.getXpToNextLevel() - character.getXp()),
+                false);
 
         // Get active curses for effective HP calculation
         String guildId = config != null ? config.getGuildId() : guild.getId();
@@ -136,7 +147,8 @@ public class RPGProfileCommand implements CommandHandler {
         if (activeCurses == null) {
             activeCurses = Collections.emptyList();
         }
-        int effectiveMaxHp = character.getStats().getEffectiveMaxHp(activeCurses, character.hasFrostbite());
+        int effectiveMaxHp =
+                character.getStats().getEffectiveMaxHp(activeCurses, character.hasFrostbite());
         int originalMaxHp = character.getStats().getMaxHp();
 
         // Calculate HP reduction percentage if cursed
@@ -149,23 +161,21 @@ public class RPGProfileCommand implements CommandHandler {
         // Stats
         embed.addField(
                 "📈 Stats",
-                String.format("""
+                String.format(
+                        """
                                 ❤️ HP: **%d** / %d%s
                                 ⚔️ STR: **%d**
                                 🏃 AGI: **%d**
                                 🧠 INT: **%d**
-                                🍀 LUCK: **%d**"""
-                        ,
+                                🍀 LUCK: **%d**""",
                         character.getStats().getCurrentHp(),
                         effectiveMaxHp,
                         hpModifier,
                         character.getStats().getStrength(),
                         character.getStats().getAgility(),
                         character.getStats().getIntelligence(),
-                        character.getStats().getLuck()
-                ),
-                true
-        );
+                        character.getStats().getLuck()),
+                true);
 
         // Cooldown Status
         boolean canAct = character.canPerformAction(config.getChargeRefreshHours());
@@ -174,36 +184,33 @@ public class RPGProfileCommand implements CommandHandler {
         if (canAct) {
             cooldownStatus = "✅ **Ready to act!**\n\nUse `/rpg-action` to continue your adventure";
         } else {
-            long secondsRemaining = character.getSecondsUntilChargeRefresh(config.getChargeRefreshHours());
+            long secondsRemaining =
+                    character.getSecondsUntilChargeRefresh(config.getChargeRefreshHours());
             Duration duration = Duration.ofSeconds(secondsRemaining);
             long hours = duration.toHours();
             long minutes = duration.toMinutesPart();
 
-            cooldownStatus = String.format(
-                    "⏳ **On cooldown**\n\nNext action available in:\n**%dh %dm**",
-                    hours, minutes
-            );
+            cooldownStatus =
+                    String.format(
+                            "⏳ **On cooldown**\n\nNext action available in:\n**%dh %dm**", hours, minutes);
         }
 
         embed.addField("⚡ Action Status", cooldownStatus, true);
 
         // Heroic charges (for boss battles)
-        String heroicStatus = String.format(
-                "⚔️ **%d/%d Heroic Charges**\n\nCharges refresh when a new boss spawns",
-                character.getHeroicCharges(),
-                character.getMaxHeroicCharges()
-        );
+        String heroicStatus =
+                String.format(
+                        "⚔️ **%d/%d Heroic Charges**\n\nCharges refresh when a new boss spawns",
+                        character.getHeroicCharges(), character.getMaxHeroicCharges());
         embed.addField("🛡️ Heroic Charges", heroicStatus, true);
 
         // Biome information
         BiomeType currentBiome = character.getCurrentBiome();
         int explorationsInBiome = character.getExplorationsInCurrentBiome();
-        String biomeStatus = String.format(
-                "%s **%s**\n\n%d/10 explorations\n\nAdvance to next biome after 10 explorations",
-                currentBiome.getEmoji(),
-                currentBiome.getDisplayName(),
-                explorationsInBiome
-        );
+        String biomeStatus =
+                String.format(
+                        "%s **%s**\n\n%d/10 explorations\n\nAdvance to next biome after 10 explorations",
+                        currentBiome.getEmoji(), currentBiome.getDisplayName(), explorationsInBiome);
         embed.addField("🗺️ Current Biome", biomeStatus, true);
 
         // Crafted bonuses
@@ -227,8 +234,10 @@ public class RPGProfileCommand implements CommandHandler {
                 String bossName = worldCurseService.getBossNameForCurse(guildId, curse);
                 String curseLine;
                 if (bossName != null) {
-                    curseLine = String.format("You have been cursed by **%s** for not defeating them.\n%s: %s\n\n",
-                            bossName, curse.getDisplayName(), curse.getDescription());
+                    curseLine =
+                            String.format(
+                                    "You have been cursed by **%s** for not defeating them.\n%s: %s\n\n",
+                                    bossName, curse.getDisplayName(), curse.getDescription());
                 } else {
                     curseLine = String.format("%s: %s\n\n", curse.getDisplayName(), curse.getDescription());
                 }
@@ -243,8 +252,10 @@ public class RPGProfileCommand implements CommandHandler {
         }
 
         if (character.getDarkRelicActionsRemaining() > 0) {
-            debuffs.append(String.format("🕯️ **Dark Relic:** +5%% XP, +10%% damage taken (%d actions remaining)\n",
-                    character.getDarkRelicActionsRemaining()));
+            debuffs.append(
+                    String.format(
+                            "🕯️ **Dark Relic:** +5%% XP, +10%% damage taken (%d actions remaining)\n",
+                            character.getDarkRelicActionsRemaining()));
             hasDebuffs = true;
         }
 
@@ -253,14 +264,17 @@ public class RPGProfileCommand implements CommandHandler {
         }
 
         // Duel record
-        embed.addField("⚔️ Duels",
-                String.format("**%d Wins** | **%d Losses**",
-                        character.getDuelsWon(), character.getDuelsLost()),
+        embed.addField(
+                "⚔️ Duels",
+                String.format(
+                        "**%d Wins** | **%d Losses**", character.getDuelsWon(), character.getDuelsLost()),
                 true);
 
         // Boss kills (including secret bosses)
-        embed.addField("🐲 Boss Defeats",
-                String.format("Normal: **%d** | Super: **%d** | Secret: **%d**",
+        embed.addField(
+                "🐲 Boss Defeats",
+                String.format(
+                        "Normal: **%d** | Super: **%d** | Secret: **%d**",
                         character.getBossesKilled(),
                         character.getSuperBossesKilled(),
                         character.getSecretBossesKilled()),
@@ -269,12 +283,13 @@ public class RPGProfileCommand implements CommandHandler {
         // Legendary Aura
         if (character.getLegendaryAura() != null) {
             String auraName = character.getLegendaryAura();
-            String auraDisplay = switch (auraName) {
-                case "SONG_OF_NILFHEIM" -> "🌟 Song of Nilfheim";
-                case "HEROS_MARK" -> "⚔️ Hero's Mark";
-                case "GRAVEBOUND_PRESENCE" -> "💀 Gravebound Presence";
-                default -> auraName;
-            };
+            String auraDisplay =
+                    switch (auraName) {
+                        case "SONG_OF_NILFHEIM" -> "🌟 Song of Nilfheim";
+                        case "HEROS_MARK" -> "⚔️ Hero's Mark";
+                        case "GRAVEBOUND_PRESENCE" -> "💀 Gravebound Presence";
+                        default -> auraName;
+                    };
             embed.addField("✨ Legendary Aura", auraDisplay, false);
         }
 
@@ -316,10 +331,12 @@ public class RPGProfileCommand implements CommandHandler {
             embed.addField("🔮 Irrevocable Choices", irrevocableInfo.toString().trim(), false);
         }
 
-        // World Flags (separate from story flags) - filter out test flags
-        Set<String> displayFlags = character.getWorldFlags().stream()
-                .filter(flag -> !flag.contains("_TEST_"))
-                .collect(Collectors.toSet());
+        // World Flags (separate from story flags) - filter out test flags (e.g. INT_TEST_PASSED,
+        // STR_TEST_ATTEMPTED)
+        Set<String> displayFlags =
+                character.getWorldFlags().stream()
+                        .filter(flag -> !flag.contains("TEST_PASSED") && !flag.contains("TEST_ATTEMPTED"))
+                        .collect(Collectors.toSet());
         if (!displayFlags.isEmpty()) {
             String worldFlags = String.join(" | ", displayFlags);
             embed.addField("🌍 World Flags", worldFlags, false);
@@ -349,8 +366,8 @@ public class RPGProfileCommand implements CommandHandler {
 
             // Add timestamp if base blessing is available
             if (baseBlessing != null) {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm")
-                        .withZone(ZoneId.systemDefault());
+                DateTimeFormatter formatter =
+                        DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm").withZone(ZoneId.systemDefault());
                 String timestamp = formatter.format(baseBlessing.getGrantedAt());
                 blessingInfo.append("\n\nActive since: ").append(timestamp);
             }
@@ -363,17 +380,17 @@ public class RPGProfileCommand implements CommandHandler {
         if (!activeCurses.isEmpty()) {
             StringBuilder curseDisplay = new StringBuilder();
             for (WorldCurse curse : activeCurses) {
-                curseDisplay.append(String.format("%s\n*%s*\n\n", curse.getDisplayName(), curse.getDescription()));
+                curseDisplay.append(
+                        String.format("%s\n*%s*\n\n", curse.getDisplayName(), curse.getDescription()));
             }
             embed.addField("🌑 Active World Curses", curseDisplay.toString().trim(), false);
             embed.setColor(Color.ORANGE); // Change color to indicate cursed state
         }
 
         // Footer
-        embed.setFooter(String.format(
-                "Character created • Total: %d characters",
-                characterService.getCharacterCount()
-        ));
+        embed.setFooter(
+                String.format(
+                        "Character created • Total: %d characters", characterService.getCharacterCount()));
         embed.setTimestamp(character.getCreatedAt());
 
         event.replyEmbeds(embed.build()).queue();
@@ -398,4 +415,3 @@ public class RPGProfileCommand implements CommandHandler {
         return "rpg-profile";
     }
 }
-

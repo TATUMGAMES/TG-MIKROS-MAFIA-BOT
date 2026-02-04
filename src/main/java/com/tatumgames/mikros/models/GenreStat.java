@@ -15,4 +15,3 @@ public record GenreStat(String genreName, double growthPercentage, long playerCo
     public GenreStat {
     }
 }
-

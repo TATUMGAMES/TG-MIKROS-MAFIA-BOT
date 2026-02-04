@@ -104,7 +104,8 @@ class LoreRecognitionServiceSecretBossTest {
         assertEquals(10, character.getBossesKilled());
 
         Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(2), 2);
-        when(bossService.checkAndSpawnSecretBoss(eq(GUILD_ID), eq(USER_ID), eq("boss_kills_10"), anyInt()))
+        when(bossService.checkAndSpawnSecretBoss(
+                eq(GUILD_ID), eq(USER_ID), eq("boss_kills_10"), anyInt()))
                 .thenReturn(mockBoss);
 
         loreRecognitionService.checkMilestones(character, GUILD_ID);
@@ -123,7 +124,8 @@ class LoreRecognitionServiceSecretBossTest {
         assertEquals(20, character.getBossesKilled());
 
         Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(3), 3);
-        when(bossService.checkAndSpawnSecretBoss(eq(GUILD_ID), eq(USER_ID), eq("boss_kills_20"), anyInt()))
+        when(bossService.checkAndSpawnSecretBoss(
+                eq(GUILD_ID), eq(USER_ID), eq("boss_kills_20"), anyInt()))
                 .thenReturn(mockBoss);
 
         loreRecognitionService.checkMilestones(character, GUILD_ID);
@@ -138,7 +140,8 @@ class LoreRecognitionServiceSecretBossTest {
         character.addStoryFlag("Frostborne's chosen");
 
         Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1);
-        when(bossService.checkAndSpawnSecretBoss(eq(GUILD_ID), eq(USER_ID), eq("story_flag_frostborne"), anyInt()))
+        when(bossService.checkAndSpawnSecretBoss(
+                eq(GUILD_ID), eq(USER_ID), eq("story_flag_frostborne"), anyInt()))
                 .thenReturn(mockBoss);
 
         loreRecognitionService.checkMilestones(character, GUILD_ID);
@@ -153,7 +156,8 @@ class LoreRecognitionServiceSecretBossTest {
         character.addStoryFlag("Echo of the Shattering");
 
         Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1);
-        when(bossService.checkAndSpawnSecretBoss(eq(GUILD_ID), eq(USER_ID), eq("story_flag_shattering"), anyInt()))
+        when(bossService.checkAndSpawnSecretBoss(
+                eq(GUILD_ID), eq(USER_ID), eq("story_flag_shattering"), anyInt()))
                 .thenReturn(mockBoss);
 
         loreRecognitionService.checkMilestones(character, GUILD_ID);
@@ -168,7 +172,8 @@ class LoreRecognitionServiceSecretBossTest {
         character.addStoryFlag("Elemental master");
 
         Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1);
-        when(bossService.checkAndSpawnSecretBoss(eq(GUILD_ID), eq(USER_ID), eq("story_flag_elemental"), anyInt()))
+        when(bossService.checkAndSpawnSecretBoss(
+                eq(GUILD_ID), eq(USER_ID), eq("story_flag_elemental"), anyInt()))
                 .thenReturn(mockBoss);
 
         loreRecognitionService.checkMilestones(character, GUILD_ID);
@@ -185,7 +190,8 @@ class LoreRecognitionServiceSecretBossTest {
         assertEquals(0, character.getSuperBossesKilled());
 
         Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1);
-        when(bossService.checkAndSpawnSecretBoss(eq(GUILD_ID), eq(USER_ID), eq("first_boss_kill"), anyInt()))
+        when(bossService.checkAndSpawnSecretBoss(
+                eq(GUILD_ID), eq(USER_ID), eq("first_boss_kill"), anyInt()))
                 .thenReturn(mockBoss);
 
         loreRecognitionService.checkMilestones(character, GUILD_ID);
@@ -201,7 +207,8 @@ class LoreRecognitionServiceSecretBossTest {
         assertEquals(1, character.getSuperBossesKilled());
 
         Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1);
-        when(bossService.checkAndSpawnSecretBoss(eq(GUILD_ID), eq(USER_ID), eq("first_super_boss_kill"), anyInt()))
+        when(bossService.checkAndSpawnSecretBoss(
+                eq(GUILD_ID), eq(USER_ID), eq("first_super_boss_kill"), anyInt()))
                 .thenReturn(mockBoss);
 
         loreRecognitionService.checkMilestones(character, GUILD_ID);
@@ -220,7 +227,8 @@ class LoreRecognitionServiceSecretBossTest {
         assertEquals(1, character.getTotalDeaths());
 
         Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1);
-        when(bossService.checkAndSpawnSecretBoss(eq(GUILD_ID), eq(USER_ID), eq("first_death_resurrection"), anyInt()))
+        when(bossService.checkAndSpawnSecretBoss(
+                eq(GUILD_ID), eq(USER_ID), eq("first_death_resurrection"), anyInt()))
                 .thenReturn(mockBoss);
 
         loreRecognitionService.checkMilestones(character, GUILD_ID);
@@ -241,7 +249,8 @@ class LoreRecognitionServiceSecretBossTest {
 
         loreRecognitionService.checkMilestones(character, GUILD_ID);
 
-        verify(bossService, never()).checkAndSpawnSecretBoss(anyString(), anyString(), eq("level_10"), anyInt());
+        verify(bossService, never())
+                .checkAndSpawnSecretBoss(anyString(), anyString(), eq("level_10"), anyInt());
     }
 
     @Test
@@ -255,7 +264,8 @@ class LoreRecognitionServiceSecretBossTest {
 
         loreRecognitionService.checkMilestones(character, null);
 
-        verify(bossService, never()).checkAndSpawnSecretBoss(anyString(), anyString(), anyString(), anyInt());
+        verify(bossService, never())
+                .checkAndSpawnSecretBoss(anyString(), anyString(), anyString(), anyInt());
     }
 
     @Test
@@ -282,7 +292,8 @@ class LoreRecognitionServiceSecretBossTest {
 
         loreRecognitionService.checkMilestones(character, GUILD_ID);
 
-        verify(bossService, never()).checkAndSpawnSecretBoss(anyString(), anyString(), startsWith("level_"), anyInt());
+        verify(bossService, never())
+                .checkAndSpawnSecretBoss(anyString(), anyString(), startsWith("level_"), anyInt());
     }
 
     @Test
@@ -297,6 +308,7 @@ class LoreRecognitionServiceSecretBossTest {
 
         loreRecognitionService.checkMilestones(character, GUILD_ID);
 
-        verify(bossService, never()).checkAndSpawnSecretBoss(anyString(), anyString(), startsWith("boss_kills_"), anyInt());
+        verify(bossService, never())
+                .checkAndSpawnSecretBoss(anyString(), anyString(), startsWith("boss_kills_"), anyInt());
     }
 }

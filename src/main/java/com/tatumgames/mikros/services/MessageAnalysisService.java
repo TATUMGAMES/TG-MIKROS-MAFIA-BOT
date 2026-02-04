@@ -7,29 +7,24 @@ import net.dv8tion.jda.api.entities.Message;
 import java.util.*;
 
 /**
- * Service for analyzing messages for toxic content, profanity, and other violations.
- * Uses keyword-based filtering (expandable to NLP in the future).
+ * Service for analyzing messages for toxic content, profanity, and other violations. Uses
+ * keyword-based filtering (expandable to NLP in the future).
  */
 public class MessageAnalysisService {
 
     // Critical severity - immediate ban consideration
-    private static final Set<String> CRITICAL_KEYWORDS = Set.of(
-            "n-word", "f-slur", "kys", "kill yourself",
-            "extreme-hate", "doxx", "swat"
-    );
+    private static final Set<String> CRITICAL_KEYWORDS =
+            Set.of("n-word", "f-slur", "kys", "kill yourself", "extreme-hate", "doxx", "swat");
 
     // High severity - kick consideration
-    private static final Set<String> HIGH_SEVERITY_KEYWORDS = Set.of(
-            "retard", "rape", "nazi", "hitler",
-            "gore", "die", "death threat"
-    );
+    private static final Set<String> HIGH_SEVERITY_KEYWORDS =
+            Set.of("retard", "rape", "nazi", "hitler", "gore", "die", "death threat");
 
     // Medium severity - warning consideration
-    private static final Set<String> MEDIUM_SEVERITY_KEYWORDS = Set.of(
-            "fuck", "shit", "bitch", "ass",
-            "damn", "crap", "piss", "idiot",
-            "stupid", "dumb", "loser"
-    );
+    private static final Set<String> MEDIUM_SEVERITY_KEYWORDS =
+            Set.of(
+                    "fuck", "shit", "bitch", "ass", "damn", "crap", "piss", "idiot", "stupid", "dumb",
+                    "loser");
 
     // Spam patterns
     private static final int MASS_PING_THRESHOLD = 5;
@@ -51,7 +46,10 @@ public class MessageAnalysisService {
         // Check for critical violations
         for (String keyword : CRITICAL_KEYWORDS) {
             if (content.contains(keyword)) {
-                return createSuggestion(message, keyword, SuggestionSeverity.CRITICAL,
+                return createSuggestion(
+                        message,
+                        keyword,
+                        SuggestionSeverity.CRITICAL,
                         "Contains severely inappropriate content: " + keyword);
             }
         }
@@ -59,31 +57,37 @@ public class MessageAnalysisService {
         // Check for high severity violations
         for (String keyword : HIGH_SEVERITY_KEYWORDS) {
             if (content.contains(keyword)) {
-                return createSuggestion(message, keyword, SuggestionSeverity.HIGH,
+                return createSuggestion(
+                        message,
+                        keyword,
+                        SuggestionSeverity.HIGH,
                         "Contains inappropriate content: " + keyword);
             }
         }
 
         // Check for mass mentions
-        int mentionCount = message.getMentions().getUsers().size() +
-                message.getMentions().getRoles().size();
+        int mentionCount =
+                message.getMentions().getUsers().size() + message.getMentions().getRoles().size();
         if (mentionCount >= MASS_PING_THRESHOLD) {
-            return createSuggestion(message, "@everyone/@role spam", SuggestionSeverity.HIGH,
+            return createSuggestion(
+                    message,
+                    "@everyone/@role spam",
+                    SuggestionSeverity.HIGH,
                     String.format("Mass pinging (%d mentions)", mentionCount));
         }
 
         // Check for medium severity violations
         for (String keyword : MEDIUM_SEVERITY_KEYWORDS) {
             if (content.contains(keyword)) {
-                return createSuggestion(message, keyword, SuggestionSeverity.MEDIUM,
-                        "Contains profanity: " + keyword);
+                return createSuggestion(
+                        message, keyword, SuggestionSeverity.MEDIUM, "Contains profanity: " + keyword);
             }
         }
 
         // Check for all caps (yelling)
         if (isAllCaps(content) && content.length() > 20) {
-            return createSuggestion(message, "ALL CAPS", SuggestionSeverity.LOW,
-                    "Excessive use of capital letters");
+            return createSuggestion(
+                    message, "ALL CAPS", SuggestionSeverity.LOW, "Excessive use of capital letters");
         }
 
         return null;
@@ -112,10 +116,15 @@ public class MessageAnalysisService {
             // Check for spam (repeated messages)
             userMessageCount.merge(userId, 1, Integer::sum);
             String lastMessage = userLastMessage.get(userId);
-            if (lastMessage != null && lastMessage.equals(content) &&
-                    userMessageCount.get(userId) >= REPEATED_MESSAGE_THRESHOLD) {
-                suggestions.add(createSuggestion(message, "repeated message", SuggestionSeverity.HIGH,
-                        "Spamming repeated messages"));
+            if (lastMessage != null
+                    && lastMessage.equals(content)
+                    && userMessageCount.get(userId) >= REPEATED_MESSAGE_THRESHOLD) {
+                suggestions.add(
+                        createSuggestion(
+                                message,
+                                "repeated message",
+                                SuggestionSeverity.HIGH,
+                                "Spamming repeated messages"));
                 if (suggestions.size() >= maxSuggestions) {
                     break;
                 }
@@ -142,17 +151,11 @@ public class MessageAnalysisService {
      * Creates a MessageSuggestion from a flagged message.
      */
     private MessageSuggestion createSuggestion(
-            Message message,
-            String flaggedContent,
-            SuggestionSeverity severity,
-            String reason
-    ) {
-        String messageLink = String.format(
-                "https://discord.com/channels/%s/%s/%s",
-                message.getGuild().getId(),
-                message.getChannel().getId(),
-                message.getId()
-        );
+            Message message, String flaggedContent, SuggestionSeverity severity, String reason) {
+        String messageLink =
+                String.format(
+                        "https://discord.com/channels/%s/%s/%s",
+                        message.getGuild().getId(), message.getChannel().getId(), message.getId());
 
         String content = message.getContentRaw();
         String snippet = content.length() > 100 ? content.substring(0, 97) + "..." : content;
@@ -167,8 +170,7 @@ public class MessageAnalysisService {
                 snippet,
                 messageLink,
                 severity,
-                reason
-        );
+                reason);
     }
 
     /**
@@ -182,4 +184,3 @@ public class MessageAnalysisService {
         return lettersOnly.equals(lettersOnly.toUpperCase());
     }
 }
-

@@ -13,8 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * Service for tracking user activity and message statistics.
- * Stores activity data in memory (expandable to database).
+ * Service for tracking user activity and message statistics. Stores activity data in memory
+ * (expandable to database).
  */
 public class ActivityTrackingService {
     private static final Logger logger = LoggerFactory.getLogger(ActivityTrackingService.class);
@@ -82,10 +82,11 @@ public class ActivityTrackingService {
     public int getActiveUsersThisMonth(String guildId) {
         long monthStart = Instant.now().minus(30, ChronoUnit.DAYS).toEpochMilli();
 
-        return (int) lastActiveMap.entrySet().stream()
-                .filter(entry -> entry.getKey().startsWith(guildId + ":"))
-                .filter(entry -> entry.getValue() >= monthStart)
-                .count();
+        return (int)
+                lastActiveMap.entrySet().stream()
+                        .filter(entry -> entry.getKey().startsWith(guildId + ":"))
+                        .filter(entry -> entry.getValue() >= monthStart)
+                        .count();
     }
 
     /**
@@ -107,10 +108,11 @@ public class ActivityTrackingService {
      * @return the average message count
      */
     public double getAverageMessagesPerUser(String guildId) {
-        List<Integer> counts = messageCountMap.entrySet().stream()
-                .filter(entry -> entry.getKey().startsWith(guildId + ":"))
-                .map(Map.Entry::getValue)
-                .toList();
+        List<Integer> counts =
+                messageCountMap.entrySet().stream()
+                        .filter(entry -> entry.getKey().startsWith(guildId + ":"))
+                        .map(Map.Entry::getValue)
+                        .toList();
 
         if (counts.isEmpty()) {
             return 0.0;
@@ -131,12 +133,12 @@ public class ActivityTrackingService {
                 .filter(entry -> entry.getKey().startsWith(guildId + ":"))
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .limit(limit)
-                .collect(Collectors.toMap(
-                        entry -> entry.getKey().substring(guildId.length() + 1),
-                        Map.Entry::getValue,
-                        (e1, e2) -> e1,
-                        LinkedHashMap::new
-                ));
+                .collect(
+                        Collectors.toMap(
+                                entry -> entry.getKey().substring(guildId.length() + 1),
+                                Map.Entry::getValue,
+                                (e1, e2) -> e1,
+                                LinkedHashMap::new));
     }
 
     /**
@@ -151,13 +153,14 @@ public class ActivityTrackingService {
                 .filter(entry -> entry.getKey().startsWith(guildId + ":"))
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .limit(limit)
-                .map(entry -> {
-                    String userId = entry.getKey().substring(guildId.length() + 1);
-                    String username = usernameCache.getOrDefault(entry.getKey(), "Unknown");
-                    int messageCount = entry.getValue();
-                    long lastActive = lastActiveMap.getOrDefault(entry.getKey(), 0L);
-                    return new UserActivity(userId, username, messageCount, lastActive);
-                })
+                .map(
+                        entry -> {
+                            String userId = entry.getKey().substring(guildId.length() + 1);
+                            String username = usernameCache.getOrDefault(entry.getKey(), "Unknown");
+                            int messageCount = entry.getValue();
+                            long lastActive = lastActiveMap.getOrDefault(entry.getKey(), 0L);
+                            return new UserActivity(userId, username, messageCount, lastActive);
+                        })
                 .collect(Collectors.toList());
     }
 
@@ -201,4 +204,3 @@ public class ActivityTrackingService {
         return guildId + ":" + entityId;
     }
 }
-

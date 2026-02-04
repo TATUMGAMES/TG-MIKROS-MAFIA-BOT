@@ -23,6 +23,7 @@ interactive gaming experiences.
 - [Documentation](#documentation)
 - [Troubleshooting & FAQ](#troubleshooting--faq)
 - [License & Credits](#license--credits)
+- [Release Notes](#release-notes)
 
 ---
 
@@ -421,9 +422,8 @@ for game developers and studios.
     - Configuration classes
 
 4. **Feature Modules**
-    - `communitygames/` - Daily games system
-    - `rpg/` - Text-based RPG
-    - `spelling/` - Spelling challenges
+    - `games/word_unscramble/` - Word Unscramble and daily games
+    - `games/rpg/` - Text-based RPG
     - `promo/` - Promotional detection
 
 ### Data Persistence
@@ -516,7 +516,7 @@ Includes:
 | `/warn`                         | Moderation | Warn a user with reason                                                                  | Moderate Members |
 | `/kick`                         | Moderation | Kick a user from server                                                                  | Kick Members     |
 | `/ban`                          | Moderation | Ban a user (optional message deletion)                                                   | Ban Members      |
-| `/history`                      | Moderation | View user moderation history                                                             | Moderate Members |
+| `/admin-history`                | Moderation | View user moderation history                                                             | Moderate Members |
 | `/warn-suggestions`             | Moderation | Get AI-powered warning suggestions                                                       | Moderate Members |
 | `/ban-suggestions`              | Moderation | Get AI-powered ban suggestions                                                           | Moderate Members |
 | `/server-stats`                 | Community  | View server activity statistics (includes bot prevention count)                          | Moderate Members |
@@ -544,8 +544,8 @@ Includes:
 | `/admin-rpg-setup`              | RPG        | Setup RPG system                                                                         | Administrator    |
 | `/admin-rpg-config`             | RPG        | Configure RPG (5 subcommands)                                                            | Administrator    |
 | `/rpg-reset`                    | RPG        | Reset all RPG data for server                                                            | Administrator    |
-| `/setup-promotions`             | Promo      | Enable/disable promo detection                                                           | Administrator    |
-| `/set-promo-frequency`          | Promo      | Set promo cooldown                                                                       | Administrator    |
+| `/admin-setup-promotions`       | Promo      | Enable/disable promo detection                                                           | Administrator    |
+| `/admin-set-promo-frequency`    | Promo      | Set promo cooldown                                                                       | Administrator    |
 | `/admin-promotion-setup`        | Admin      | Configure game promotion channel                                                         | Administrator    |
 | `/admin-promotion-config`       | Admin      | Configure promotion settings (view, update-channel, set-verbosity, disable, force-check) | Administrator    |
 | `/admin-bump-setup`             | Admin      | Set up automatic server bumping (channel, bots selection)                                | Administrator    |
@@ -1040,6 +1040,24 @@ For issues, questions, or contributions:
 
 ---
 
-**Last Updated:** 2025-10-08  
-**Version:** 1.0-SNAPSHOT  
+## Release Notes
+
+### 1.2.0 (02/01/26)
+
+Make major updates to how schedulers work, particularly for the RPG game. Resolved other bugs with messaging and channel
+notifications.
+
+### 1.1.0 (01/29/26)
+
+Expand word library for scramble word game. Expand lore library for RPG game. Resolve battling messaging issues.
+
+### 1.0.0 (12/29/25)
+
+Original release. The entire MIKROS Bot construct that includes features such as administration, game promotions, and
+community games.
+
+---
+
+**Last Updated:** 2026-02-01  
+**Version:** 1.2.0  
 **Status:** Production Ready ✅

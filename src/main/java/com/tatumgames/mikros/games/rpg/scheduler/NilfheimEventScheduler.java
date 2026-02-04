@@ -19,8 +19,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Scheduler for server-wide Nilfheim events.
- * Checks every 6 hours and triggers events every 48-96 hours (randomized per event type).
+ * Scheduler for server-wide Nilfheim events. Checks every 6 hours and triggers events every 48-96
+ * hours (randomized per event type).
  */
 public class NilfheimEventScheduler {
     private static final Logger logger = LoggerFactory.getLogger(NilfheimEventScheduler.class);
@@ -35,42 +35,73 @@ public class NilfheimEventScheduler {
     private final CharacterService characterService;
     private final ScheduledExecutorService scheduler;
     private final Random random;
+    private volatile boolean started = false;
     private JDA jda;
 
-    public NilfheimEventScheduler(NilfheimEventService eventService, CharacterService characterService) {
+    public NilfheimEventScheduler(
+            NilfheimEventService eventService, CharacterService characterService) {
         this.eventService = eventService;
         this.characterService = characterService;
         this.random = new Random();
-        this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "nilfheim-event-scheduler");
-            t.setDaemon(true);
-            return t;
-        });
+        this.scheduler =
+                Executors.newSingleThreadScheduledExecutor(
+                        r -> {
+                            Thread t = new Thread(r, "nilfheim-event-scheduler");
+                            t.setDaemon(true);
+                            return t;
+                        });
         logger.info("NilfheimEventScheduler initialized");
     }
 
     /**
-     * Starts the event scheduler.
-     * Checks every 6 hours to see if it's time to trigger a new event.
+     * Starts the event scheduler if not already started. Idempotent: safe to call multiple times.
+     *
+     * @param jda the JDA instance
+     */
+    public void startIfNeeded(JDA jda) {
+        start(jda);
+    }
+
+    /**
+     * Starts the event scheduler. Checks every 6 hours to see if it's time to trigger a new event.
      *
      * @param jda the JDA instance
      */
     public void start(JDA jda) {
+        synchronized (this) {
+            if (started) {
+                return;
+            }
+            started = true;
+        }
         this.jda = jda;
 
         // Calculate initial delay to next 6-hour boundary
         long initialDelay = calculateInitialDelay();
 
         // Run check every 6 hours
-        scheduler.scheduleAtFixedRate(() -> {
-            try {
-                checkAndTriggerEvents();
-            } catch (Exception e) {
-                logger.error("Error in Nilfheim event scheduler", e);
-            }
-        }, initialDelay, CHECK_INTERVAL_HOURS, TimeUnit.HOURS);
+        scheduler.scheduleAtFixedRate(
+                () -> {
+                    try {
+                        checkAndTriggerEvents();
+                    } catch (Exception e) {
+                        logger.error("Error in Nilfheim event scheduler", e);
+                    }
+                },
+                initialDelay,
+                CHECK_INTERVAL_HOURS,
+                TimeUnit.HOURS);
 
         logger.info("Nilfheim event scheduler started (checks every {} hours)", CHECK_INTERVAL_HOURS);
+    }
+
+    /**
+     * Shuts down the event scheduler gracefully.
+     */
+    public void shutdown() {
+        scheduler.shutdown();
+        started = false;
+        logger.info("Nilfheim event scheduler stopped");
     }
 
     /**
@@ -100,9 +131,9 @@ public class NilfheimEventScheduler {
             try {
                 String guildId = guild.getId();
 
-                // Check if RPG is enabled for this guild
+                // Check if RPG is enabled and channel configured for this guild
                 RPGConfig config = characterService.getConfig(guildId);
-                if (config == null || !config.isEnabled()) {
+                if (config == null || !config.isEnabled() || config.getRpgChannelId() == null) {
                     continue;
                 }
 
@@ -160,8 +191,11 @@ public class NilfheimEventScheduler {
         eventService.setActiveEvent(guildId, selectedEvent, expiresAt);
         eventService.setLastEventTime(guildId, now);
 
-        logger.info("Triggered Nilfheim event {} for guild {} (expires at {})",
-                selectedEvent.getDisplayName(), guildId, expiresAt);
+        logger.info(
+                "Triggered Nilfheim event {} for guild {} (expires at {})",
+                selectedEvent.getDisplayName(),
+                guildId,
+                expiresAt);
 
         // Post announcement in RPG channel (if configured)
         postEventAnnouncement(guild, guildId, selectedEvent);
@@ -199,12 +233,19 @@ public class NilfheimEventScheduler {
         embed.setFooter("This event will last for 12 hours");
         embed.setTimestamp(Instant.now());
 
-        channel.sendMessageEmbeds(embed.build()).queue(
-                success -> logger.info("Posted Nilfheim event announcement for {} in guild {}",
-                        eventType.getDisplayName(), guildId),
-                error -> logger.warn("Failed to post Nilfheim event announcement for {} in guild {}: {}",
-                        eventType.getDisplayName(), guildId, error.getMessage())
-        );
+        channel
+                .sendMessageEmbeds(embed.build())
+                .queue(
+                        success ->
+                                logger.info(
+                                        "Posted Nilfheim event announcement for {} in guild {}",
+                                        eventType.getDisplayName(),
+                                        guildId),
+                        error ->
+                                logger.warn(
+                                        "Failed to post Nilfheim event announcement for {} in guild {}: {}",
+                                        eventType.getDisplayName(),
+                                        guildId,
+                                        error.getMessage()));
     }
 }
-

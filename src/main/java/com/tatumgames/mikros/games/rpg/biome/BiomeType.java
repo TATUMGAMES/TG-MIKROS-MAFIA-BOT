@@ -1,8 +1,8 @@
 package com.tatumgames.mikros.games.rpg.biome;
 
 /**
- * Enum representing the different biomes/zones in Nilfheim.
- * Players progress through biomes in a cycle after completing 10 explorations in each biome.
+ * Enum representing the different biomes/zones in Nilfheim. Players progress through biomes in a
+ * cycle after completing 10 explorations in each biome.
  */
 public enum BiomeType {
     FROZEN_WASTES("Frozen Wastes", "❄️"),

@@ -5,15 +5,19 @@ import java.util.Objects;
 
 /**
  * Represents a promotional lead request from a user.
- * <p>
- * TODO: API Integration
- * - Submit to backend lead-capture API
- * - Generate unique MIKROS promo codes
- * - Track conversion and campaign effectiveness
- * - Integrate with CRM (see /docs/API_MIKROS_PROMO_SUBMISSION.md)
+ *
+ * <p>TODO: API Integration - Submit to backend lead-capture API - Generate unique MIKROS promo
+ * codes - Track conversion and campaign effectiveness - Integrate with CRM (see
+ * /docs/API_MIKROS_PROMO_SUBMISSION.md)
  */
-public record LeadRequest(String discordId, String username, String guildId, String campaignInterest, String email,
-                          Instant timestamp, String detectedPhrase) {
+public record LeadRequest(
+        String discordId,
+        String username,
+        String guildId,
+        String campaignInterest,
+        String email,
+        Instant timestamp,
+        String detectedPhrase) {
     /**
      * Creates a new lead request.
      *
@@ -25,9 +29,14 @@ public record LeadRequest(String discordId, String username, String guildId, Str
      * @param timestamp        when the request was made
      * @param detectedPhrase   the phrase that triggered detection (optional)
      */
-    public LeadRequest(String discordId, String username, String guildId,
-                       String campaignInterest, String email, Instant timestamp,
-                       String detectedPhrase) {
+    public LeadRequest(
+            String discordId,
+            String username,
+            String guildId,
+            String campaignInterest,
+            String email,
+            Instant timestamp,
+            String detectedPhrase) {
         this.discordId = Objects.requireNonNull(discordId);
         this.username = Objects.requireNonNull(username);
         this.guildId = Objects.requireNonNull(guildId);
@@ -37,7 +46,3 @@ public record LeadRequest(String discordId, String username, String guildId, Str
         this.detectedPhrase = detectedPhrase;
     }
 }
-
-
-
-

@@ -2,12 +2,9 @@ package com.tatumgames.mikros.games.rpg.config;
 
 /**
  * Configuration for RPG system per guild.
- * <p>
- * TODO: Server Persistence
- * - Store configuration in database
- * - Add difficulty modifiers (easy, normal, hard)
- * - Add custom XP multipliers
- * - Add server-specific events or quests
+ *
+ * <p>TODO: Server Persistence - Store configuration in database - Add difficulty modifiers (easy,
+ * normal, hard) - Add custom XP multipliers - Add server-specific events or quests
  */
 public class RPGConfig {
     private final String guildId;
@@ -27,7 +24,7 @@ public class RPGConfig {
         this.enabled = true;
         this.rpgChannelId = null; // No specific channel by default
         this.chargeRefreshHours = 12; // 12 hour charge refresh by default
-        this.xpMultiplier = 1.0;   // Normal XP rate
+        this.xpMultiplier = 1.0; // Normal XP rate
         this.allowNoRoleUsers = true; // Allow users without roles by default
     }
 
@@ -41,8 +38,13 @@ public class RPGConfig {
      * @param xpMultiplier       XP multiplier
      * @param allowNoRoleUsers   whether users without roles can play (default: true)
      */
-    public RPGConfig(String guildId, boolean enabled, String rpgChannelId,
-                     int chargeRefreshHours, double xpMultiplier, boolean allowNoRoleUsers) {
+    public RPGConfig(
+            String guildId,
+            boolean enabled,
+            String rpgChannelId,
+            int chargeRefreshHours,
+            double xpMultiplier,
+            boolean allowNoRoleUsers) {
         this.guildId = guildId;
         this.enabled = enabled;
         this.rpgChannelId = rpgChannelId;

@@ -1,8 +1,8 @@
 package com.tatumgames.mikros.botdetection.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.botdetection.config.BotDetectionConfig;
 import com.tatumgames.mikros.botdetection.service.BotDetectionService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -21,8 +21,8 @@ import java.awt.*;
 import java.time.Instant;
 
 /**
- * Command handler for /admin-bot-detection-config.
- * Allows administrators to configure bot detection settings.
+ * Command handler for /admin-bot-detection-config. Allows administrators to configure bot detection
+ * settings.
  */
 public class BotDetectionConfigCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(BotDetectionConfigCommand.class);
@@ -39,27 +39,37 @@ public class BotDetectionConfigCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("admin-bot-detection-config", "Configure bot detection settings (admin only)")
+        return Commands.slash(
+                        "admin-bot-detection-config", "Configure bot detection settings (admin only)")
                 .addSubcommands(
                         new SubcommandData("view", "View current bot detection configuration"),
                         new SubcommandData("set-account-age-threshold", "Set account age threshold in days")
                                 .addOption(OptionType.INTEGER, "days", "Account age threshold (1-365)", true),
-                        new SubcommandData("set-link-restriction-minutes", "Set link restriction time after joining")
-                                .addOption(OptionType.INTEGER, "minutes", "Minutes before links allowed (1-1440)", true),
+                        new SubcommandData(
+                                "set-link-restriction-minutes", "Set link restriction time after joining")
+                                .addOption(
+                                        OptionType.INTEGER, "minutes", "Minutes before links allowed (1-1440)", true),
                         new SubcommandData("set-multi-channel-threshold", "Set multi-channel spam threshold")
-                                .addOption(OptionType.INTEGER, "threshold", "Number of channels for spam detection (2-10)", true),
+                                .addOption(
+                                        OptionType.INTEGER,
+                                        "threshold",
+                                        "Number of channels for spam detection (2-10)",
+                                        true),
                         new SubcommandData("set-auto-action", "Set automatic action when bot detected")
                                 .addOptions(createActionOption()),
-                        new SubcommandData("toggle-reputation-reporting", "Enable or disable auto-reporting to reputation system")
+                        new SubcommandData(
+                                "toggle-reputation-reporting",
+                                "Enable or disable auto-reporting to reputation system")
                                 .addOption(OptionType.BOOLEAN, "enabled", "Enable reputation reporting?", true),
                         new SubcommandData("add-suspicious-domain", "Manually add a suspicious domain")
                                 .addOption(OptionType.STRING, "domain", "Domain to add", true)
                                 .addOption(OptionType.INTEGER, "risk-score", "Risk score (1-10)", true),
                         new SubcommandData("remove-suspicious-domain", "Remove a domain from suspicious list")
-                                .addOption(OptionType.STRING, "domain", "Domain to remove", true)
-                )
+                                .addOption(OptionType.STRING, "domain", "Domain to remove", true))
                 .setGuildOnly(true)
-                .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+                .setDefaultPermissions(
+                        net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(
+                                Permission.ADMINISTRATOR));
     }
 
     @Override
@@ -67,11 +77,8 @@ public class BotDetectionConfigCommand implements CommandHandler {
         Member member = event.getMember();
         Guild guild = event.getGuild();
 
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ You must be an administrator to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("❌ You must be an administrator to use this command.").setEphemeral(true).queue();
             return;
         }
 
@@ -106,11 +113,15 @@ public class BotDetectionConfigCommand implements CommandHandler {
         embed.addField("Status", config.isEnabled() ? "✅ Enabled" : "❌ Disabled", true);
         embed.addField("Account Age Threshold", config.getAccountAgeThresholdDays() + " days", true);
         embed.addField("Link Restriction", config.getLinkRestrictionMinutes() + " minutes", true);
-        embed.addField("Multi-Channel Spam Threshold", config.getMultiChannelSpamThreshold() + " channels", true);
-        embed.addField("Multi-Channel Time Window", config.getMultiChannelTimeWindowSeconds() + " seconds", true);
-        embed.addField("Join + Link Time Window", config.getJoinAndLinkTimeWindowSeconds() + " seconds", true);
+        embed.addField(
+                "Multi-Channel Spam Threshold", config.getMultiChannelSpamThreshold() + " channels", true);
+        embed.addField(
+                "Multi-Channel Time Window", config.getMultiChannelTimeWindowSeconds() + " seconds", true);
+        embed.addField(
+                "Join + Link Time Window", config.getJoinAndLinkTimeWindowSeconds() + " seconds", true);
         embed.addField("Auto Action", config.getAutoAction().toString(), true);
-        embed.addField("Reputation Reporting", config.isReportToReputation() ? "✅ Enabled" : "❌ Disabled", true);
+        embed.addField(
+                "Reputation Reporting", config.isReportToReputation() ? "✅ Enabled" : "❌ Disabled", true);
 
         embed.setFooter("Use subcommands to modify settings");
         embed.setTimestamp(Instant.now());
@@ -121,7 +132,8 @@ public class BotDetectionConfigCommand implements CommandHandler {
     private void handleSetAccountAgeThreshold(SlashCommandInteractionEvent event, String guildId) {
         Long days = event.getOption("days", OptionMapping::getAsLong);
         if (days == null || days < 1 || days > 365) {
-            event.reply("❌ Account age threshold must be between 1 and 365 days.")
+            event
+                    .reply("❌ Account age threshold must be between 1 and 365 days.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -131,14 +143,17 @@ public class BotDetectionConfigCommand implements CommandHandler {
         config.setAccountAgeThresholdDays(days.intValue());
         botDetectionService.updateConfig(guildId, config);
 
-        event.reply(String.format("✅ Account age threshold set to **%d days**", days.intValue())).queue();
+        event
+                .reply(String.format("✅ Account age threshold set to **%d days**", days.intValue()))
+                .queue();
         logger.info("Account age threshold set to {} days for guild {}", days, guildId);
     }
 
     private void handleSetLinkRestrictionMinutes(SlashCommandInteractionEvent event, String guildId) {
         Long minutes = event.getOption("minutes", OptionMapping::getAsLong);
         if (minutes == null || minutes < 1 || minutes > 1440) {
-            event.reply("❌ Link restriction must be between 1 and 1440 minutes (24 hours).")
+            event
+                    .reply("❌ Link restriction must be between 1 and 1440 minutes (24 hours).")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -148,14 +163,17 @@ public class BotDetectionConfigCommand implements CommandHandler {
         config.setLinkRestrictionMinutes(minutes.intValue());
         botDetectionService.updateConfig(guildId, config);
 
-        event.reply(String.format("✅ Link restriction set to **%d minutes**", minutes.intValue())).queue();
+        event
+                .reply(String.format("✅ Link restriction set to **%d minutes**", minutes.intValue()))
+                .queue();
         logger.info("Link restriction set to {} minutes for guild {}", minutes, guildId);
     }
 
     private void handleSetMultiChannelThreshold(SlashCommandInteractionEvent event, String guildId) {
         Long threshold = event.getOption("threshold", OptionMapping::getAsLong);
         if (threshold == null || threshold < 2 || threshold > 10) {
-            event.reply("❌ Multi-channel threshold must be between 2 and 10 channels.")
+            event
+                    .reply("❌ Multi-channel threshold must be between 2 and 10 channels.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -165,7 +183,11 @@ public class BotDetectionConfigCommand implements CommandHandler {
         config.setMultiChannelSpamThreshold(threshold.intValue());
         botDetectionService.updateConfig(guildId, config);
 
-        event.reply(String.format("✅ Multi-channel spam threshold set to **%d channels**", threshold.intValue())).queue();
+        event
+                .reply(
+                        String.format(
+                                "✅ Multi-channel spam threshold set to **%d channels**", threshold.intValue()))
+                .queue();
         logger.info("Multi-channel threshold set to {} for guild {}", threshold, guildId);
     }
 
@@ -180,7 +202,8 @@ public class BotDetectionConfigCommand implements CommandHandler {
         try {
             action = BotDetectionConfig.AutoAction.valueOf(actionStr.toUpperCase());
         } catch (IllegalArgumentException e) {
-            event.reply("❌ Invalid action. Must be: NONE, DELETE, WARN, MUTE, or KICK.")
+            event
+                    .reply("❌ Invalid action. Must be: NONE, DELETE, WARN, MUTE, or KICK.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -205,7 +228,9 @@ public class BotDetectionConfigCommand implements CommandHandler {
         config.setReportToReputation(enabled);
         botDetectionService.updateConfig(guildId, config);
 
-        event.reply(String.format("✅ Reputation reporting **%s**", enabled ? "enabled" : "disabled")).queue();
+        event
+                .reply(String.format("✅ Reputation reporting **%s**", enabled ? "enabled" : "disabled"))
+                .queue();
         logger.info("Reputation reporting {} for guild {}", enabled ? "enabled" : "disabled", guildId);
     }
 
@@ -225,7 +250,11 @@ public class BotDetectionConfigCommand implements CommandHandler {
 
         botDetectionService.addSuspiciousDomain(domain, riskScore.intValue());
 
-        event.reply(String.format("✅ Added suspicious domain: **%s** (risk: %d)", domain, riskScore.intValue())).queue();
+        event
+                .reply(
+                        String.format(
+                                "✅ Added suspicious domain: **%s** (risk: %d)", domain, riskScore.intValue()))
+                .queue();
         logger.info("Added suspicious domain {} (risk: {}) for guild {}", domain, riskScore, guildId);
     }
 
@@ -249,7 +278,8 @@ public class BotDetectionConfigCommand implements CommandHandler {
      * @return the OptionData
      */
     private OptionData createActionOption() {
-        OptionData actionOption = new OptionData(OptionType.STRING, "action", "Action: NONE, DELETE, WARN, MUTE, KICK", true);
+        OptionData actionOption =
+                new OptionData(OptionType.STRING, "action", "Action: NONE, DELETE, WARN, MUTE, KICK", true);
         actionOption.addChoice("NONE", "NONE");
         actionOption.addChoice("DELETE", "DELETE");
         actionOption.addChoice("WARN", "WARN");
@@ -263,4 +293,3 @@ public class BotDetectionConfigCommand implements CommandHandler {
         return "admin-bot-detection-config";
     }
 }
-

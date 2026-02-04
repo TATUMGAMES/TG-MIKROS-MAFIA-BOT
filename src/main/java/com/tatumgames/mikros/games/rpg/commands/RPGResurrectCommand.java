@@ -1,6 +1,5 @@
 package com.tatumgames.mikros.games.rpg.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.games.rpg.actions.ResurrectAction;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.model.CharacterClass;
@@ -9,6 +8,7 @@ import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
 import com.tatumgames.mikros.games.rpg.service.LoreRecognitionService;
 import com.tatumgames.mikros.games.rpg.service.WorldCurseService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
@@ -24,16 +24,19 @@ import java.awt.*;
 import java.time.Instant;
 
 /**
- * Command handler for /rpg-resurrect.
- * Allows Priests to resurrect dead players (free action, no charge cost).
+ * Command handler for /rpg-resurrect. Allows Priests to resurrect dead players (free action, no
+ * charge cost).
  */
 public class RPGResurrectCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(RPGResurrectCommand.class);
     private final CharacterService characterService;
+
     @SuppressWarnings("unused") // Used in constructor to create ResurrectAction
     private final WorldCurseService worldCurseService;
+
     @SuppressWarnings("unused") // Used in constructor to create ResurrectAction
     private final LoreRecognitionService loreRecognitionService;
+
     private final ResurrectAction resurrectAction;
 
     /**
@@ -43,7 +46,10 @@ public class RPGResurrectCommand implements CommandHandler {
      * @param worldCurseService      the world curse service
      * @param loreRecognitionService the lore recognition service
      */
-    public RPGResurrectCommand(CharacterService characterService, WorldCurseService worldCurseService, LoreRecognitionService loreRecognitionService) {
+    public RPGResurrectCommand(
+            CharacterService characterService,
+            WorldCurseService worldCurseService,
+            LoreRecognitionService loreRecognitionService) {
         this.characterService = characterService;
         this.worldCurseService = worldCurseService;
         this.loreRecognitionService = loreRecognitionService;
@@ -70,7 +76,8 @@ public class RPGResurrectCommand implements CommandHandler {
         // Check if user has a character
         RPGCharacter priest = characterService.getCharacter(userId);
         if (priest == null) {
-            event.reply("❌ You don't have a character yet! Use `/rpg-register` to create one.")
+            event
+                    .reply("❌ You don't have a character yet! Use `/rpg-register` to create one.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -78,47 +85,55 @@ public class RPGResurrectCommand implements CommandHandler {
 
         // Check if priest is actually a Priest
         if (priest.getCharacterClass() != CharacterClass.PRIEST) {
-            event.reply("❌ Only **Priests** can perform resurrection!")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ Only **Priests** can perform resurrection!").setEphemeral(true).queue();
             return;
         }
 
         // Get guild config
         RPGConfig config = characterService.getConfig(guildId);
 
+        // Require setup before RPG commands work
+        if (config.getRpgChannelId() == null) {
+            event
+                    .reply(
+                            "❌ RPG is not set up for this server. An administrator must run `/admin-rpg-setup` first.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
         // Check if RPG is enabled
         if (!config.isEnabled()) {
-            event.reply("❌ The RPG system is currently disabled in this server.")
+            event
+                    .reply("❌ The RPG system is currently disabled in this server.")
                     .setEphemeral(true)
                     .queue();
             return;
         }
 
         // Check if in correct channel (if specified)
-        if (config != null && config.getRpgChannelId() != null) {
+        if (config.getRpgChannelId() != null) {
             if (!event.getChannel().getId().equals(config.getRpgChannelId())) {
-                event.reply(String.format(
-                        "Please use `/rpg-resurrect` in <#%s>. RPG commands are restricted to the assigned channel.",
-                        config.getRpgChannelId()
-                )).setEphemeral(true).queue();
+                event
+                        .reply(
+                                String.format(
+                                        "Please use `/rpg-resurrect` in <#%s>. RPG commands are restricted to the assigned channel.",
+                                        config.getRpgChannelId()))
+                        .setEphemeral(true)
+                        .queue();
                 return;
             }
         }
 
         // Get target user
         User targetUser = event.getOption("target", OptionMapping::getAsUser);
-        String targetUserId = (targetUser != null)
-                ? targetUser.getId()
-                : event.getUser().getId();
+        String targetUserId = (targetUser != null) ? targetUser.getId() : event.getUser().getId();
 
         // Get character
         RPGCharacter target = characterService.getCharacter(targetUserId);
 
         if (target == null) {
-            event.reply("❌ That user doesn't have a character!")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ That user doesn't have a character!").setEphemeral(true).queue();
             return;
         }
 
@@ -147,12 +162,13 @@ public class RPGResurrectCommand implements CommandHandler {
 
             event.replyEmbeds(embed.build()).queue();
 
-            logger.info("Priest {} resurrected target {} - Success: {}",
-                    userId, targetUserId, outcome.success());
+            logger.info(
+                    "Priest {} resurrected target {} - Success: {}", userId, targetUserId, outcome.success());
 
         } catch (Exception e) {
             logger.error("Error performing resurrection for user {}", userId, e);
-            event.reply("❌ An error occurred during resurrection. Please try again.")
+            event
+                    .reply("❌ An error occurred during resurrection. Please try again.")
                     .setEphemeral(true)
                     .queue();
         }
@@ -163,4 +179,3 @@ public class RPGResurrectCommand implements CommandHandler {
         return "rpg-resurrect";
     }
 }
-

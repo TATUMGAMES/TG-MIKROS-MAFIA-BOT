@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Random;
 
 /**
- * Service for handling item crafting.
- * Validates materials, checks stat caps, and applies permanent stat bonuses.
+ * Service for handling item crafting. Validates materials, checks stat caps, and applies permanent
+ * stat bonuses.
  */
 public class CraftingService {
     private static final Logger logger = LoggerFactory.getLogger(CraftingService.class);
@@ -69,8 +69,10 @@ public class CraftingService {
         // If catalyst was preserved, restore it
         if (catalystPreserved) {
             inventory.addCatalyst(itemType.getRequiredCatalyst(), itemType.getCatalystCount());
-            logger.info("Character {} crafted {} - catalyst preserved due to high intelligence!",
-                    character.getName(), itemType.getDisplayName());
+            logger.info(
+                    "Character {} crafted {} - catalyst preserved due to high intelligence!",
+                    character.getName(),
+                    itemType.getDisplayName());
         }
 
         // Apply bonus to character stats
@@ -81,16 +83,19 @@ public class CraftingService {
             character.getInventory().consumeActiveInfusion();
         }
 
-        logger.info("Character {} crafted {} - applied +{} {}",
-                character.getName(), itemType.getDisplayName(),
-                itemType.getStatBonus(), statName);
+        logger.info(
+                "Character {} crafted {} - applied +{} {}",
+                character.getName(),
+                itemType.getDisplayName(),
+                itemType.getStatBonus(),
+                statName);
 
         return CraftingResult.SUCCESS;
     }
 
     /**
-     * Crafts an infusion for a character.
-     * Infusions are temporary single-use items that auto-consume on next action.
+     * Crafts an infusion for a character. Infusions are temporary single-use items that auto-consume
+     * on next action.
      *
      * @param character    the character crafting
      * @param infusionType the infusion type to craft
@@ -101,7 +106,8 @@ public class CraftingService {
 
         // Check if infusion already active (max 1 at a time)
         if (inventory.hasActiveInfusion()) {
-            return CraftingResult.INSUFFICIENT_MATERIALS; // Reuse this result for "infusion already active"
+            return CraftingResult
+                    .INSUFFICIENT_MATERIALS; // Reuse this result for "infusion already active"
         }
 
         // Check materials
@@ -114,7 +120,10 @@ public class CraftingService {
                     break;
                 }
             }
-            if (!hasAllEssences || inventory.getCatalystCount(com.tatumgames.mikros.games.rpg.model.CatalystType.RUNIC_BINDING) < 1) {
+            if (!hasAllEssences
+                    || inventory.getCatalystCount(
+                    com.tatumgames.mikros.games.rpg.model.CatalystType.RUNIC_BINDING)
+                    < 1) {
                 return CraftingResult.INSUFFICIENT_MATERIALS;
             }
 
@@ -128,8 +137,8 @@ public class CraftingService {
             int essenceCount = inventory.getEssenceCount(infusionType.getRequiredEssence());
             int catalystCount = inventory.getCatalystCount(infusionType.getRequiredCatalyst());
 
-            if (essenceCount < infusionType.getEssenceCount() ||
-                    catalystCount < infusionType.getCatalystCount()) {
+            if (essenceCount < infusionType.getEssenceCount()
+                    || catalystCount < infusionType.getCatalystCount()) {
                 return CraftingResult.INSUFFICIENT_MATERIALS;
             }
 
@@ -149,11 +158,11 @@ public class CraftingService {
             loreRecognitionService.checkMilestones(character);
         }
 
-        logger.info("Character {} crafted {} - infusion active (expires in 24 hours)",
-                character.getName(), infusionType.getDisplayName());
+        logger.info(
+                "Character {} crafted {} - infusion active (expires in 24 hours)",
+                character.getName(),
+                infusionType.getDisplayName());
 
         return CraftingResult.SUCCESS;
     }
-
 }
-

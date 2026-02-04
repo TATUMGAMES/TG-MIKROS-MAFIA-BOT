@@ -118,14 +118,14 @@ Permanently bans a user from the server.
 
 ---
 
-### `/history`
+### `/admin-history`
 
 Displays the moderation history for a specific user.
 
 **Syntax:**
 
 ```
-/history user:<@user>
+/admin-history user:<@user>
 ```
 
 **Parameters:**
@@ -146,7 +146,7 @@ Displays the moderation history for a specific user.
 **Example:**
 
 ```
-/history user:@JohnDoe
+/admin-history user:@JohnDoe
 ```
 
 **Response Format:**

@@ -1,6 +1,6 @@
 package com.tatumgames.mikros.promo.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
+import com.tatumgames.mikros.handler.CommandHandler;
 import com.tatumgames.mikros.promo.config.PromoConfig;
 import com.tatumgames.mikros.promo.service.PromoDetectionService;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -20,8 +20,8 @@ import java.time.Instant;
 import java.util.Optional;
 
 /**
- * Command handler for /setup-promotions.
- * Allows administrators to enable/disable smart promotional detection.
+ * Command handler for /setup-promotions. Allows administrators to enable/disable smart promotional
+ * detection.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class SetupPromotionsCommand implements CommandHandler {
@@ -39,10 +39,13 @@ public class SetupPromotionsCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("admin-setup-promotions", "Enable or disable smart promotional detection (admin only)")
+        return Commands.slash(
+                        "admin-setup-promotions", "Enable or disable smart promotional detection (admin only)")
                 .addOption(OptionType.BOOLEAN, "enabled", "Enable promotional detection?", true)
                 .setGuildOnly(true)
-                .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+                .setDefaultPermissions(
+                        net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(
+                                Permission.ADMINISTRATOR));
     }
 
     @Override
@@ -51,18 +54,16 @@ public class SetupPromotionsCommand implements CommandHandler {
         Member member = event.getMember();
         Guild guild = event.getGuild();
 
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ You must be an administrator to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("❌ You must be an administrator to use this command.").setEphemeral(true).queue();
             return;
         }
 
         String guildId = guild.getId();
-        boolean enabled = Optional.ofNullable(event.getOption("enabled"))
-                .map(OptionMapping::getAsBoolean)
-                .orElse(false);
+        boolean enabled =
+                Optional.ofNullable(event.getOption("enabled"))
+                        .map(OptionMapping::getAsBoolean)
+                        .orElse(false);
 
         PromoConfig config = promoService.getConfig(guildId);
         config.setEnabled(enabled);
@@ -72,14 +73,14 @@ public class SetupPromotionsCommand implements CommandHandler {
         embed.setTitle("⚙️ Promotional Detection Configuration");
         embed.setColor(enabled ? Color.GREEN : Color.RED);
 
-        embed.setDescription(String.format(
-                "Smart promotional detection is now **%s**",
-                enabled ? "ENABLED" : "DISABLED"
-        ));
+        embed.setDescription(
+                String.format(
+                        "Smart promotional detection is now **%s**", enabled ? "ENABLED" : "DISABLED"));
 
         embed.addField(
                 "Current Settings",
-                String.format("""
+                String.format(
+                        """
                                 **Status:** %s
                                 **Cooldown:** %d days
                                 **DM Prompts:** %s
@@ -88,10 +89,8 @@ public class SetupPromotionsCommand implements CommandHandler {
                         enabled ? "✅ Enabled" : "❌ Disabled",
                         config.getCooldownDays(),
                         config.isSendDm() ? "Yes" : "No",
-                        config.isSendInChannel() ? "Yes" : "No"
-                ),
-                false
-        );
+                        config.isSendInChannel() ? "Yes" : "No"),
+                false);
 
         if (enabled) {
             embed.addField(
@@ -101,11 +100,10 @@ public class SetupPromotionsCommand implements CommandHandler {
                             • "We're launching our game..."
                             • "Steam page is live"
                             • "Need help promoting"
-                            
+
                             Users will receive a gentle prompt offering MIKROS promotional help.
                             """,
-                    false
-            );
+                    false);
         }
 
         embed.setFooter("Use /set-promo-frequency to adjust cooldown settings");
@@ -113,8 +111,11 @@ public class SetupPromotionsCommand implements CommandHandler {
 
         event.replyEmbeds(embed.build()).queue();
 
-        logger.info("Promotional detection {} for guild {} by user {}",
-                enabled ? "enabled" : "disabled", guildId, member.getId());
+        logger.info(
+                "Promotional detection {} for guild {} by user {}",
+                enabled ? "enabled" : "disabled",
+                guildId,
+                member.getId());
     }
 
     @Override

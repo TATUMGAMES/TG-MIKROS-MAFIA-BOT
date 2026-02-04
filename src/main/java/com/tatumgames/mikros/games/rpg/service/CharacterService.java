@@ -11,14 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * Service for managing RPG characters.
- * Handles character creation, retrieval, and state management.
- * <p>
- * TODO: Future Features
- * - Database persistence for characters
- * - Character deletion/reset functionality
- * - Character transfer between servers
- * - Backup and restore functionality
+ * Service for managing RPG characters. Handles character creation, retrieval, and state management.
+ *
+ * <p>TODO: Future Features - Database persistence for characters - Character deletion/reset
+ * functionality - Character transfer between servers - Backup and restore functionality
  */
 public class CharacterService {
     private static final Logger logger = LoggerFactory.getLogger(CharacterService.class);
@@ -47,7 +43,8 @@ public class CharacterService {
      * @return the created character
      * @throws IllegalStateException if user already has a character
      */
-    public RPGCharacter registerCharacter(String discordId, String name, CharacterClass characterClass) {
+    public RPGCharacter registerCharacter(
+            String discordId, String name, CharacterClass characterClass) {
         if (characters.containsKey(discordId)) {
             throw new IllegalStateException("User already has a character");
         }
@@ -55,8 +52,11 @@ public class CharacterService {
         RPGCharacter character = new RPGCharacter(discordId, name, characterClass);
         characters.put(discordId, character);
 
-        logger.info("Registered new character for user {}: {} ({})",
-                discordId, name, characterClass.getDisplayName());
+        logger.info(
+                "Registered new character for user {}: {} ({})",
+                discordId,
+                name,
+                characterClass.getDisplayName());
 
         return character;
     }
@@ -115,13 +115,11 @@ public class CharacterService {
                 Comparator.comparingInt(RPGCharacter::getLevel)
                         .thenComparingInt(RPGCharacter::getXp)
                         .reversed(),
-                limit
-        );
+                limit);
     }
 
     /**
-     * Gets the RPG configuration for a guild.
-     * Creates a default config if none exists.
+     * Gets the RPG configuration for a guild. Creates a default config if none exists.
      *
      * @param guildId the guild ID
      * @return the RPG config
@@ -159,10 +157,8 @@ public class CharacterService {
     }
 
     /**
-     * Resets all RPG data for a specific server.
-     * This clears:
-     * - RPG configuration (resets to defaults)
-     * - Note: Characters are stored globally, not per-server
+     * Resets all RPG data for a specific server. This clears: - RPG configuration (resets to
+     * defaults) - Note: Characters are stored globally, not per-server
      *
      * @param guildId the guild ID
      */
@@ -173,8 +169,7 @@ public class CharacterService {
     }
 
     /**
-     * Gets the number of characters registered.
-     * Note: Characters are global, not per-server.
+     * Gets the number of characters registered. Note: Characters are global, not per-server.
      *
      * @return character count
      */
@@ -185,8 +180,7 @@ public class CharacterService {
     }
 
     /**
-     * Clears all characters (global reset).
-     * WARNING: This affects all servers.
+     * Clears all characters (global reset). WARNING: This affects all servers.
      *
      * @return number of characters cleared
      */
@@ -197,4 +191,3 @@ public class CharacterService {
         return count;
     }
 }
-

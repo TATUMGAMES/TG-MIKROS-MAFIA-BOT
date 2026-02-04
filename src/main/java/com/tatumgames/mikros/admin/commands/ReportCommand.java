@@ -1,7 +1,7 @@
 package com.tatumgames.mikros.admin.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
+import com.tatumgames.mikros.handler.CommandHandler;
 import com.tatumgames.mikros.models.BehaviorCategory;
 import com.tatumgames.mikros.models.BehaviorReport;
 import com.tatumgames.mikros.services.ReputationService;
@@ -22,9 +22,8 @@ import org.slf4j.LoggerFactory;
 import java.time.Instant;
 
 /**
- * Command handler for the /report command.
- * Allows admins to report negative behavior.
- * Admin-only command.
+ * Command handler for the /report command. Allows admins to report negative behavior. Admin-only
+ * command.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class ReportCommand implements CommandHandler {
@@ -42,7 +41,8 @@ public class ReportCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        OptionData behaviorOption = new OptionData(OptionType.STRING, "behavior", "Type of negative behavior", true);
+        OptionData behaviorOption =
+                new OptionData(OptionType.STRING, "behavior", "Type of negative behavior", true);
         for (BehaviorCategory category : BehaviorCategory.getNegativeBehaviors()) {
             behaviorOption.addChoice(category.getLabel(), category.name());
         }
@@ -61,20 +61,18 @@ public class ReportCommand implements CommandHandler {
         Member member = event.getMember();
         Guild guild = event.getGuild();
 
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.MODERATE_MEMBERS)) {
-            event.reply("❌ You don't have permission to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.MODERATE_MEMBERS)) {
+            event.reply("❌ You don't have permission to use this command.").setEphemeral(true).queue();
             return;
         }
 
         // Get command options
         User targetUser = event.getOption("user", OptionMapping::getAsUser);
         String behaviorName = event.getOption("behavior", OptionMapping::getAsString);
-        String notes = event.getOption("notes") != null
-                ? event.getOption("notes", OptionMapping::getAsString)
-                : "";
+        String notes =
+                event.getOption("notes") != null
+                        ? event.getOption("notes", OptionMapping::getAsString)
+                        : "";
 
         if (AdminUtils.isInvalidTargetUser(member, targetUser, event)) {
             return; // stop executing the command
@@ -85,9 +83,7 @@ public class ReportCommand implements CommandHandler {
         try {
             behaviorCategory = BehaviorCategory.valueOf(behaviorName);
         } catch (IllegalArgumentException e) {
-            event.reply("❌ Invalid behavior category.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ Invalid behavior category.").setEphemeral(true).queue();
             return;
         }
 
@@ -97,16 +93,16 @@ public class ReportCommand implements CommandHandler {
         }
 
         // Create and record behavior report
-        BehaviorReport report = new BehaviorReport(
-                targetUser.getId(),
-                targetUser.getName(),
-                member.getId(),
-                member.getEffectiveName(),
-                behaviorCategory,
-                notes,
-                Instant.now(),
-                guild.getId()
-        );
+        BehaviorReport report =
+                new BehaviorReport(
+                        targetUser.getId(),
+                        targetUser.getName(),
+                        member.getId(),
+                        member.getEffectiveName(),
+                        behaviorCategory,
+                        notes,
+                        Instant.now(),
+                        guild.getId());
 
         reputationService.recordBehavior(report);
 
@@ -115,20 +111,21 @@ public class ReportCommand implements CommandHandler {
 
         // Send confirmation
         assert notes != null;
-        String message = String.format("""
+        String message =
+                String.format(
+                        """
                         🚨 **Report Submitted**
                         User: %s
                         Behavior: %s (+%d points)
                         %s
                         Reporter: %s
-                        
-                        """,
-                targetUser.getName(),
-                behaviorCategory.getLabel(),
-                behaviorCategory.getWeight(),
-                notes.isEmpty() ? "" : "Notes: " + notes + "\n",
-                member.getAsMention()
-        );
+                                
+                                """,
+                        targetUser.getName(),
+                        behaviorCategory.getLabel(),
+                        behaviorCategory.getWeight(),
+                        notes.isEmpty() ? "" : "Notes: " + notes + "\n",
+                        member.getAsMention());
 
         if (apiSuccess) {
             message += "\n✅ Report has been recorded and sent to the reputation system.";
@@ -137,8 +134,12 @@ public class ReportCommand implements CommandHandler {
         }
         event.reply(message).setEphemeral(true).queue();
 
-        logger.info("User {} reported by {} in guild {}: {}",
-                targetUser.getId(), member.getId(), event.getGuild().getId(), behaviorCategory);
+        logger.info(
+                "User {} reported by {} in guild {}: {}",
+                targetUser.getId(),
+                member.getId(),
+                event.getGuild().getId(),
+                behaviorCategory);
     }
 
     @Override

@@ -16,8 +16,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Service for deleting messages across channels.
- * Handles bulk message deletion with rate limit awareness.
+ * Service for deleting messages across channels. Handles bulk message deletion with rate limit
+ * awareness.
  */
 public class MessageDeletionService {
     private static final Logger logger = LoggerFactory.getLogger(MessageDeletionService.class);
@@ -39,32 +39,49 @@ public class MessageDeletionService {
         AtomicInteger totalDeleted = new AtomicInteger(0);
         List<CompletableFuture<Void>> channelFutures = new ArrayList<>();
 
-        Instant cutoffTime = (days > 0 && days <= BULK_DELETE_MAX_DAYS)
-                ? Instant.now().minus(days, ChronoUnit.DAYS)
-                : null;
+        Instant cutoffTime =
+                (days > 0 && days <= BULK_DELETE_MAX_DAYS)
+                        ? Instant.now().minus(days, ChronoUnit.DAYS)
+                        : null;
 
         // Iterate through all text channels
         for (TextChannel channel : guild.getTextChannels()) {
-            CompletableFuture<Void> channelFuture = deleteUserMessagesInChannel(channel, user, cutoffTime)
-                    .thenAccept(count -> {
-                        totalDeleted.addAndGet(count);
-                        logger.debug("Deleted {} messages from user {} in channel {}", count, user.getId(), channel.getName());
-                    });
+            CompletableFuture<Void> channelFuture =
+                    deleteUserMessagesInChannel(channel, user, cutoffTime)
+                            .thenAccept(
+                                    count -> {
+                                        totalDeleted.addAndGet(count);
+                                        logger.debug(
+                                                "Deleted {} messages from user {} in channel {}",
+                                                count,
+                                                user.getId(),
+                                                channel.getName());
+                                    });
             channelFutures.add(channelFuture);
         }
 
         // Wait for all channels to complete
         CompletableFuture.allOf(channelFutures.toArray(new CompletableFuture[0]))
-                .thenRun(() -> {
-                    int total = totalDeleted.get();
-                    logger.info("Deleted {} total messages from user {} in guild {}", total, user.getId(), guild.getId());
-                    result.complete(total);
-                })
-                .exceptionally(error -> {
-                    logger.error("Error deleting messages from user {}: {}", user.getId(), error.getMessage(), error);
-                    result.completeExceptionally(error);
-                    return null;
-                });
+                .thenRun(
+                        () -> {
+                            int total = totalDeleted.get();
+                            logger.info(
+                                    "Deleted {} total messages from user {} in guild {}",
+                                    total,
+                                    user.getId(),
+                                    guild.getId());
+                            result.complete(total);
+                        })
+                .exceptionally(
+                        error -> {
+                            logger.error(
+                                    "Error deleting messages from user {}: {}",
+                                    user.getId(),
+                                    error.getMessage(),
+                                    error);
+                            result.completeExceptionally(error);
+                            return null;
+                        });
 
         return result;
     }
@@ -77,41 +94,55 @@ public class MessageDeletionService {
      * @param cutoffTime messages older than this will be skipped (null for all)
      * @return a CompletableFuture that completes with the number of messages deleted
      */
-    private CompletableFuture<Integer> deleteUserMessagesInChannel(TextChannel channel, User user, Instant cutoffTime) {
+    private CompletableFuture<Integer> deleteUserMessagesInChannel(
+            TextChannel channel, User user, Instant cutoffTime) {
         CompletableFuture<Integer> result = new CompletableFuture<>();
         AtomicInteger deletedCount = new AtomicInteger(0);
         List<Message> messagesToDelete = new ArrayList<>();
 
         // Fetch messages in batches
-        channel.getIterableHistory()
-                .forEachAsync(message -> {
-                    // Skip if message is too old for bulk delete
-                    if (cutoffTime != null && message.getTimeCreated().toInstant().isBefore(cutoffTime)) {
-                        return true; // Continue iteration
-                    }
+        channel
+                .getIterableHistory()
+                .forEachAsync(
+                        message -> {
+                            // Skip if message is too old for bulk delete
+                            if (cutoffTime != null && message.getTimeCreated().toInstant().isBefore(cutoffTime)) {
+                                return true; // Continue iteration
+                            }
 
-                    // Check if message is from the target user
-                    if (message.getAuthor().equals(user)) {
-                        messagesToDelete.add(message);
-                    }
+                            // Check if message is from the target user
+                            if (message.getAuthor().equals(user)) {
+                                messagesToDelete.add(message);
+                            }
 
-                    return true; // Continue iteration
-                })
-                .thenRun(() -> {
-                    // Delete messages in batches
-                    deleteMessagesInBatches(channel, messagesToDelete, deletedCount)
-                            .thenRun(() -> result.complete(deletedCount.get()))
-                            .exceptionally(error -> {
-                                logger.error("Error deleting messages in channel {}: {}", channel.getName(), error.getMessage(), error);
-                                result.completeExceptionally(error);
-                                return null;
-                            });
-                })
-                .exceptionally(error -> {
-                    logger.error("Error fetching messages in channel {}: {}", channel.getName(), error.getMessage(), error);
-                    result.completeExceptionally(error);
-                    return null;
-                });
+                            return true; // Continue iteration
+                        })
+                .thenRun(
+                        () -> {
+                            // Delete messages in batches
+                            deleteMessagesInBatches(channel, messagesToDelete, deletedCount)
+                                    .thenRun(() -> result.complete(deletedCount.get()))
+                                    .exceptionally(
+                                            error -> {
+                                                logger.error(
+                                                        "Error deleting messages in channel {}: {}",
+                                                        channel.getName(),
+                                                        error.getMessage(),
+                                                        error);
+                                                result.completeExceptionally(error);
+                                                return null;
+                                            });
+                        })
+                .exceptionally(
+                        error -> {
+                            logger.error(
+                                    "Error fetching messages in channel {}: {}",
+                                    channel.getName(),
+                                    error.getMessage(),
+                                    error);
+                            result.completeExceptionally(error);
+                            return null;
+                        });
 
         return result;
     }
@@ -124,7 +155,8 @@ public class MessageDeletionService {
      * @param deletedCount counter for deleted messages
      * @return a CompletableFuture that completes when all batches are processed
      */
-    private CompletableFuture<Void> deleteMessagesInBatches(TextChannel channel, List<Message> messages, AtomicInteger deletedCount) {
+    private CompletableFuture<Void> deleteMessagesInBatches(
+            TextChannel channel, List<Message> messages, AtomicInteger deletedCount) {
         if (messages.isEmpty()) {
             return CompletableFuture.completedFuture(null);
         }
@@ -151,17 +183,26 @@ public class MessageDeletionService {
 
             // Bulk delete requires at least 2 messages
             if (batch.size() >= 2) {
-                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> channel.deleteMessages(batch).queue(
-                        success -> {
-                            deletedCount.addAndGet(batch.size());
-                            logger.debug("Bulk deleted {} messages in channel {}", batch.size(), channel.getName());
-                        },
-                        error -> {
-                            logger.warn("Bulk delete failed, falling back to individual deletion: {}", error.getMessage());
-                            // Fall back to individual deletion
-                            deleteIndividually(channel, batch, deletedCount);
-                        }
-                ));
+                CompletableFuture<Void> future =
+                        CompletableFuture.runAsync(
+                                () ->
+                                        channel
+                                                .deleteMessages(batch)
+                                                .queue(
+                                                        success -> {
+                                                            deletedCount.addAndGet(batch.size());
+                                                            logger.debug(
+                                                                    "Bulk deleted {} messages in channel {}",
+                                                                    batch.size(),
+                                                                    channel.getName());
+                                                        },
+                                                        error -> {
+                                                            logger.warn(
+                                                                    "Bulk delete failed, falling back to individual deletion: {}",
+                                                                    error.getMessage());
+                                                            // Fall back to individual deletion
+                                                            deleteIndividually(channel, batch, deletedCount);
+                                                        }));
                 futures.add(future);
             } else {
                 // Too few messages for bulk delete, delete individually
@@ -184,14 +225,18 @@ public class MessageDeletionService {
      * @param messages     the messages to delete
      * @param deletedCount counter for deleted messages
      */
-    private void deleteIndividually(MessageChannel channel, List<Message> messages, AtomicInteger deletedCount) {
+    private void deleteIndividually(
+            MessageChannel channel, List<Message> messages, AtomicInteger deletedCount) {
         for (Message message : messages) {
-            message.delete()
+            message
+                    .delete()
                     .queue(
                             success -> deletedCount.incrementAndGet(),
-                            error -> logger.warn("Failed to delete individual message {}: {}", message.getId(), error.getMessage())
-                    );
+                            error ->
+                                    logger.warn(
+                                            "Failed to delete individual message {}: {}",
+                                            message.getId(),
+                                            error.getMessage()));
         }
     }
 }
-

@@ -1,8 +1,8 @@
 package com.tatumgames.mikros.games.rpg.exploration;
 
 /**
- * Enum representing different types of negative exploration events.
- * Events are categorized into three tiers based on severity.
+ * Enum representing different types of negative exploration events. Events are categorized into
+ * three tiers based on severity.
  */
 public enum ExplorationEventType {
     // Tier 1: Minor Setbacks (Most Common - 75% of negative events)
@@ -62,4 +62,3 @@ public enum ExplorationEventType {
         DISCOVERY // Discovery Events (high reward, some risk)
     }
 }
-

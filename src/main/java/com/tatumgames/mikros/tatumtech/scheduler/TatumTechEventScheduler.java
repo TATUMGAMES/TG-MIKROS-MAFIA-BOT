@@ -26,22 +26,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * Scheduler for Tatum Tech event promotions.
- * Posts preset event messages on specific dates (4 times per year).
- * Respects active campaigns and only posts when no active campaigns are running.
+ * Scheduler for Tatum Tech event promotions. Posts preset event messages on specific dates (4 times
+ * per year). Respects active campaigns and only posts when no active campaigns are running.
  */
 public class TatumTechEventScheduler {
     private static final Logger logger = LoggerFactory.getLogger(TatumTechEventScheduler.class);
 
     // Scheduled dates (month and day, year-independent)
-    private static final List<EventDate> SCHEDULED_DATES = List.of(
-            // Version A: Pre-event awareness
-            new EventDate(2, 6, EventVersion.VERSION_A),   // February 6th
-            new EventDate(8, 28, EventVersion.VERSION_A),   // August 28th
-            // Version B: Exposure-focused
-            new EventDate(3, 5, EventVersion.VERSION_B),   // March 5th
-            new EventDate(9, 2, EventVersion.VERSION_B)     // September 2nd
-    );
+    private static final List<EventDate> SCHEDULED_DATES =
+            List.of(
+                    // Version A: Pre-event awareness
+                    new EventDate(2, 6, EventVersion.VERSION_A), // February 6th
+                    new EventDate(8, 28, EventVersion.VERSION_A), // August 28th
+                    // Version B: Exposure-focused
+                    new EventDate(3, 5, EventVersion.VERSION_B), // March 5th
+                    new EventDate(9, 2, EventVersion.VERSION_B) // September 2nd
+            );
 
     // Post time: 10:00 AM PST (18:00 UTC)
     private static final int POST_HOUR_UTC = 18;
@@ -53,7 +53,8 @@ public class TatumTechEventScheduler {
     private final String recapMonthYear;
     private final String recapVideoUrl;
     // Track which dates have been posted this year (guildId -> set of dates posted)
-    private final ConcurrentHashMap<String, ConcurrentHashMap<String, Boolean>> postedDates = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ConcurrentHashMap<String, Boolean>> postedDates =
+            new ConcurrentHashMap<>();
     private JDA jda;
 
     /**
@@ -64,24 +65,24 @@ public class TatumTechEventScheduler {
      * @param recapVideoUrl        the recap video URL
      */
     public TatumTechEventScheduler(
-            GamePromotionService gamePromotionService,
-            String recapMonthYear,
-            String recapVideoUrl) {
+            GamePromotionService gamePromotionService, String recapMonthYear, String recapVideoUrl) {
         this.gamePromotionService = gamePromotionService;
         this.templates = new TatumTechEventTemplates();
         this.recapMonthYear = recapMonthYear;
         this.recapVideoUrl = recapVideoUrl;
-        this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "tatum-tech-event-scheduler");
-            t.setDaemon(true);
-            return t;
-        });
+        this.scheduler =
+                Executors.newSingleThreadScheduledExecutor(
+                        r -> {
+                            Thread t = new Thread(r, "tatum-tech-event-scheduler");
+                            t.setDaemon(true);
+                            return t;
+                        });
         logger.info("TatumTechEventScheduler initialized");
     }
 
     /**
-     * Starts the event scheduler.
-     * Checks daily at the scheduled post time to see if it's time to post.
+     * Starts the event scheduler. Checks daily at the scheduled post time to see if it's time to
+     * post.
      *
      * @param jda the JDA instance
      */
@@ -92,16 +93,22 @@ public class TatumTechEventScheduler {
         long initialDelay = calculateInitialDelay();
 
         // Run check every hour
-        scheduler.scheduleAtFixedRate(() -> {
-            try {
-                checkAndPostEvents();
-            } catch (Exception e) {
-                logger.error("Error in Tatum Tech event scheduler", e);
-            }
-        }, initialDelay, 60, TimeUnit.MINUTES);
+        scheduler.scheduleAtFixedRate(
+                () -> {
+                    try {
+                        checkAndPostEvents();
+                    } catch (Exception e) {
+                        logger.error("Error in Tatum Tech event scheduler", e);
+                    }
+                },
+                initialDelay,
+                60,
+                TimeUnit.MINUTES);
 
-        logger.info("Tatum Tech event scheduler started (checks every hour, posts at {}:{} UTC on scheduled dates)",
-                POST_HOUR_UTC, POST_MINUTE);
+        logger.info(
+                "Tatum Tech event scheduler started (checks every hour, posts at {}:{} UTC on scheduled dates)",
+                POST_HOUR_UTC,
+                POST_MINUTE);
     }
 
     /**
@@ -139,8 +146,11 @@ public class TatumTechEventScheduler {
         // Check if today matches any scheduled date
         for (EventDate eventDate : SCHEDULED_DATES) {
             if (eventDate.month == currentMonth && eventDate.day == currentDay) {
-                logger.info("Scheduled Tatum Tech event date detected: {} {} (Version {})",
-                        currentMonth, currentDay, eventDate.version);
+                logger.info(
+                        "Scheduled Tatum Tech event date detected: {} {} (Version {})",
+                        currentMonth,
+                        currentDay,
+                        eventDate.version);
 
                 // Post to all configured guilds
                 for (Guild guild : jda.getGuilds()) {
@@ -167,13 +177,14 @@ public class TatumTechEventScheduler {
         // Check if promotion channel is configured
         String channelId = gamePromotionService.getPromotionChannel(guildId);
         if (channelId == null) {
-            logger.debug("Guild {} has no promotion channel configured, skipping Tatum Tech event", guildId);
+            logger.debug(
+                    "Guild {} has no promotion channel configured, skipping Tatum Tech event", guildId);
             return;
         }
 
         // Check if we've already posted this event today
-        ConcurrentHashMap<String, Boolean> guildPostedDates = postedDates.computeIfAbsent(
-                guildId, k -> new ConcurrentHashMap<>());
+        ConcurrentHashMap<String, Boolean> guildPostedDates =
+                postedDates.computeIfAbsent(guildId, k -> new ConcurrentHashMap<>());
 
         String todayKey = LocalDate.now().toString() + "-" + dateKey;
         if (guildPostedDates.containsKey(todayKey)) {
@@ -183,14 +194,17 @@ public class TatumTechEventScheduler {
 
         // Check for active campaigns - don't interrupt active campaigns
         List<AppPromotion> allApps = gamePromotionService.fetchAllApps();
-        List<AppPromotion> activeApps = allApps.stream()
-                .filter(app -> isWithinCampaignWindow(app, Instant.now()))
-                .filter(AppPromotion::isCampaignActive)
-                .collect(Collectors.toList());
+        List<AppPromotion> activeApps =
+                allApps.stream()
+                        .filter(app -> isWithinCampaignWindow(app, Instant.now()))
+                        .filter(AppPromotion::isCampaignActive)
+                        .collect(Collectors.toList());
 
         if (!activeApps.isEmpty()) {
-            logger.info("Guild {} has {} active campaign(s), skipping Tatum Tech event to avoid interruption",
-                    guildId, activeApps.size());
+            logger.info(
+                    "Guild {} has {} active campaign(s), skipping Tatum Tech event to avoid interruption",
+                    guildId,
+                    activeApps.size());
             return;
         }
 
@@ -199,8 +213,10 @@ public class TatumTechEventScheduler {
         NewsChannel newsChannel = guild.getNewsChannelById(channelId);
 
         if (textChannel == null && newsChannel == null) {
-            logger.warn("Configured promotion channel {} not found in guild {} (tried TextChannel and NewsChannel)",
-                    channelId, guildId);
+            logger.warn(
+                    "Configured promotion channel {} not found in guild {} (tried TextChannel and NewsChannel)",
+                    channelId,
+                    guildId);
             return;
         }
 
@@ -247,11 +263,15 @@ public class TatumTechEventScheduler {
         embed.setFooter(templates.getRandomMikrosFooter());
         embed.setTimestamp(Instant.now());
 
-        channel.sendMessageEmbeds(embed.build()).queue(
-                success -> logger.info("Successfully posted Tatum Tech event (Version {}) to channel {}",
-                        eventDate.version, channel.getId()),
-                error -> logger.error("Failed to send Tatum Tech event message", error)
-        );
+        channel
+                .sendMessageEmbeds(embed.build())
+                .queue(
+                        success ->
+                                logger.info(
+                                        "Successfully posted Tatum Tech event (Version {}) to channel {}",
+                                        eventDate.version,
+                                        channel.getId()),
+                        error -> logger.error("Failed to send Tatum Tech event message", error));
     }
 
     /**
@@ -307,8 +327,8 @@ public class TatumTechEventScheduler {
      * Represents a scheduled event date.
      */
     private static class EventDate {
-        final int month;  // 1-12
-        final int day;    // 1-31
+        final int month; // 1-12
+        final int day; // 1-31
         final EventVersion version;
 
         EventDate(int month, int day, EventVersion version) {
@@ -322,4 +342,3 @@ public class TatumTechEventScheduler {
         }
     }
 }
-

@@ -10,4 +10,3 @@ public record ItemDrop(EssenceType essence, int count) {
         }
     }
 }
-

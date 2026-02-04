@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Mock implementation of GameStatsService.
- * Returns placeholder/mock data until the MIKROS Analytics API is integrated.
+ * Mock implementation of GameStatsService. Returns placeholder/mock data until the MIKROS Analytics
+ * API is integrated.
  */
 public class MockGameStatsService implements GameStatsService {
     private static final Logger logger = LoggerFactory.getLogger(MockGameStatsService.class);
@@ -36,10 +36,10 @@ public class MockGameStatsService implements GameStatsService {
         logger.debug("getTrendingGameGenres called - returning mock data");
 
         return Arrays.asList(
-                new GenreStat("Roguelike", 43.2, 185000, 1),
-                new GenreStat("Puzzle", 31.5, 142000, 2),
-                new GenreStat("Sandbox", 29.1, 198000, 3)
-        ).subList(0, Math.min(limit, 3));
+                        new GenreStat("Roguelike", 43.2, 185000, 1),
+                        new GenreStat("Puzzle", 31.5, 142000, 2),
+                        new GenreStat("Sandbox", 29.1, 198000, 3))
+                .subList(0, Math.min(limit, 3));
     }
 
     @Override
@@ -48,10 +48,10 @@ public class MockGameStatsService implements GameStatsService {
         logger.debug("getTrendingContentGenres called - returning mock data");
 
         return Arrays.asList(
-                new GenreStat("Co-op Multiplayer", 38.7, 220000, 1),
-                new GenreStat("Story-Driven", 35.2, 175000, 2),
-                new GenreStat("Action RPG", 27.8, 210000, 3)
-        ).subList(0, Math.min(limit, 3));
+                        new GenreStat("Co-op Multiplayer", 38.7, 220000, 1),
+                        new GenreStat("Story-Driven", 35.2, 175000, 2),
+                        new GenreStat("Action RPG", 27.8, 210000, 3))
+                .subList(0, Math.min(limit, 3));
     }
 
     @Override
@@ -60,12 +60,12 @@ public class MockGameStatsService implements GameStatsService {
         logger.debug("getTrendingContent called - returning mock data");
 
         return Arrays.asList(
-                new ContentStat("Nightmare Dungeon", "Boss", 52.3, 45000, 1),
-                new ContentStat("Crystal Caves", "Level", 47.1, 38000, 2),
-                new ContentStat("Shadow Assassin", "Character", 41.8, 32000, 3),
-                new ContentStat("Dragon's Lair", "Raid", 39.5, 29000, 4),
-                new ContentStat("Time Trial Mode", "Game Mode", 35.2, 27000, 5)
-        ).subList(0, Math.min(limit, 5));
+                        new ContentStat("Nightmare Dungeon", "Boss", 52.3, 45000, 1),
+                        new ContentStat("Crystal Caves", "Level", 47.1, 38000, 2),
+                        new ContentStat("Shadow Assassin", "Character", 41.8, 32000, 3),
+                        new ContentStat("Dragon's Lair", "Raid", 39.5, 29000, 4),
+                        new ContentStat("Time Trial Mode", "Game Mode", 35.2, 27000, 5))
+                .subList(0, Math.min(limit, 5));
     }
 
     @Override
@@ -74,10 +74,10 @@ public class MockGameStatsService implements GameStatsService {
         logger.debug("getTrendingGameplayTypes called - returning mock data");
 
         return Arrays.asList(
-                new GameplayTypeStat("Competitive", 41.5, 320000, 35.2, 1),
-                new GameplayTypeStat("Casual", 28.3, 450000, 49.5, 2),
-                new GameplayTypeStat("Hyper-Casual", 22.1, 140000, 15.3, 3)
-        ).subList(0, Math.min(limit, 3));
+                        new GameplayTypeStat("Competitive", 41.5, 320000, 35.2, 1),
+                        new GameplayTypeStat("Casual", 28.3, 450000, 49.5, 2),
+                        new GameplayTypeStat("Hyper-Casual", 22.1, 140000, 15.3, 3))
+                .subList(0, Math.min(limit, 3));
     }
 
     @Override
@@ -86,10 +86,10 @@ public class MockGameStatsService implements GameStatsService {
         logger.debug("getPopularGameGenres called - returning mock data");
 
         return Arrays.asList(
-                new GenreStat("Action", 12.5, 520000, 1),
-                new GenreStat("RPG", 8.3, 485000, 2),
-                new GenreStat("Strategy", 5.7, 340000, 3)
-        ).subList(0, Math.min(limit, 3));
+                        new GenreStat("Action", 12.5, 520000, 1),
+                        new GenreStat("RPG", 8.3, 485000, 2),
+                        new GenreStat("Strategy", 5.7, 340000, 3))
+                .subList(0, Math.min(limit, 3));
     }
 
     @Override
@@ -98,10 +98,10 @@ public class MockGameStatsService implements GameStatsService {
         logger.debug("getPopularContentGenres called - returning mock data");
 
         return Arrays.asList(
-                new GenreStat("Multiplayer", 15.2, 680000, 1),
-                new GenreStat("Open World", 11.8, 530000, 2),
-                new GenreStat("Story Mode", 9.4, 420000, 3)
-        ).subList(0, Math.min(limit, 3));
+                        new GenreStat("Multiplayer", 15.2, 680000, 1),
+                        new GenreStat("Open World", 11.8, 530000, 2),
+                        new GenreStat("Story Mode", 9.4, 420000, 3))
+                .subList(0, Math.min(limit, 3));
     }
 
     @Override
@@ -110,12 +110,12 @@ public class MockGameStatsService implements GameStatsService {
         logger.debug("getPopularContent called - returning mock data");
 
         return Arrays.asList(
-                new ContentStat("Battle Royale Mode", "Game Mode", 18.5, 125000, 1),
-                new ContentStat("Ancient Temple", "Level", 14.2, 98000, 2),
-                new ContentStat("Knight Class", "Character", 12.7, 87000, 3),
-                new ContentStat("Siege Warfare", "Game Mode", 11.3, 76000, 4),
-                new ContentStat("Mystic Forest", "Level", 10.1, 65000, 5)
-        ).subList(0, Math.min(limit, 5));
+                        new ContentStat("Battle Royale Mode", "Game Mode", 18.5, 125000, 1),
+                        new ContentStat("Ancient Temple", "Level", 14.2, 98000, 2),
+                        new ContentStat("Knight Class", "Character", 12.7, 87000, 3),
+                        new ContentStat("Siege Warfare", "Game Mode", 11.3, 76000, 4),
+                        new ContentStat("Mystic Forest", "Level", 10.1, 65000, 5))
+                .subList(0, Math.min(limit, 5));
     }
 
     @Override
@@ -124,10 +124,10 @@ public class MockGameStatsService implements GameStatsService {
         logger.debug("getPopularGameplayTypes called - returning mock data");
 
         return Arrays.asList(
-                new GameplayTypeStat("Casual", 8.5, 750000, 52.3, 1),
-                new GameplayTypeStat("Competitive", 6.2, 480000, 33.5, 2),
-                new GameplayTypeStat("Hyper-Casual", 3.1, 205000, 14.2, 3)
-        ).subList(0, Math.min(limit, 3));
+                        new GameplayTypeStat("Casual", 8.5, 750000, 52.3, 1),
+                        new GameplayTypeStat("Competitive", 6.2, 480000, 33.5, 2),
+                        new GameplayTypeStat("Hyper-Casual", 3.1, 205000, 14.2, 3))
+                .subList(0, Math.min(limit, 3));
     }
 
     @Override
@@ -214,4 +214,3 @@ public class MockGameStatsService implements GameStatsService {
         return config != null ? config.getChannelId() : null;
     }
 }
-

@@ -1,7 +1,7 @@
 package com.tatumgames.mikros.admin.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
+import com.tatumgames.mikros.handler.CommandHandler;
 import com.tatumgames.mikros.services.GameStatsService;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -15,11 +15,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Command handler for /admin-mikros-ecosystem-setup.
- * Allows administrators to configure the MIKROS Ecosystem channel for their server.
- * 
- * TODO: Currently unused - re-enable when MIKROS Analytics API integration is complete.
- * This class is kept for future use when the API integration is ready.
+ * Command handler for /admin-mikros-ecosystem-setup. Allows administrators to configure the MIKROS
+ * Ecosystem channel for their server.
+ *
+ * <p>TODO: Currently unused - re-enable when MIKROS Analytics API integration is complete. This
+ * class is kept for future use when the API integration is ready.
  */
 @SuppressWarnings({"ClassCanBeRecord", "unused"})
 public class MikrosEcosystemSetupCommand implements CommandHandler {
@@ -37,10 +37,15 @@ public class MikrosEcosystemSetupCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("admin-mikros-ecosystem-setup", "Configure the MIKROS Ecosystem channel for your server")
-                .addOption(OptionType.CHANNEL, "channel", "Channel for MIKROS Ecosystem analytics commands", true)
+        return Commands.slash(
+                        "admin-mikros-ecosystem-setup",
+                        "Configure the MIKROS Ecosystem channel for your server")
+                .addOption(
+                        OptionType.CHANNEL, "channel", "Channel for MIKROS Ecosystem analytics commands", true)
                 .setGuildOnly(true)
-                .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+                .setDefaultPermissions(
+                        net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(
+                                Permission.ADMINISTRATOR));
     }
 
     @Override
@@ -49,11 +54,8 @@ public class MikrosEcosystemSetupCommand implements CommandHandler {
         Member member = event.getMember();
         Guild guild = event.getGuild();
 
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ You must be an administrator to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("❌ You must be an administrator to use this command.").setEphemeral(true).queue();
             return;
         }
 
@@ -63,7 +65,8 @@ public class MikrosEcosystemSetupCommand implements CommandHandler {
 
         // Validate bot can post in channel
         if (!channel.canTalk()) {
-            event.reply("❌ I don't have permission to send messages in " + channel.getAsMention() + ".")
+            event
+                    .reply("❌ I don't have permission to send messages in " + channel.getAsMention() + ".")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -76,23 +79,29 @@ public class MikrosEcosystemSetupCommand implements CommandHandler {
         gameStatsService.setupEcosystem(guildId, channelId);
 
         // Send confirmation
-        event.reply(String.format("""
+        event
+                .reply(
+                        String.format(
+                                """
                         ✅ **MIKROS Ecosystem Configured!**
-                        
+
                         **Ecosystem Channel:** %s
                         **Status:** Enabled
-                        
+
                         📊 The MIKROS Ecosystem is now active!
-                        
+                                        
                         **Next Steps:**
                         • Use `/mikros-ecosystem` commands in this channel to view analytics
                         • All 13 analytics subcommands are available
-                        """,
-                channel.getAsMention()
-        )).queue();
+                                        """,
+                                channel.getAsMention()))
+                .queue();
 
-        logger.info("MIKROS Ecosystem setup for guild {} by user {}: channel={}",
-                guildId, member.getId(), channelId);
+        logger.info(
+                "MIKROS Ecosystem setup for guild {} by user {}: channel={}",
+                guildId,
+                member.getId(),
+                channelId);
     }
 
     @Override
@@ -100,4 +109,3 @@ public class MikrosEcosystemSetupCommand implements CommandHandler {
         return "admin-mikros-ecosystem-setup";
     }
 }
-

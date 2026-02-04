@@ -1,10 +1,10 @@
 package com.tatumgames.mikros.games.word_unscramble.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleType;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleResetScheduler;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -22,31 +22,38 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Command handler for /admin-scramble-setup.
- * Allows administrators to configure Word Unscramble game for their server.
+ * Command handler for /admin-scramble-setup. Allows administrators to configure Word Unscramble
+ * game for their server.
  */
 public class GameSetupCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(GameSetupCommand.class);
     private final WordUnscrambleService wordUnscrambleService;
 
+    private final WordUnscrambleResetScheduler wordUnscrambleResetScheduler;
+
     /**
      * Creates a new GameSetupCommand handler.
      *
      * @param wordUnscrambleService        the Word Unscramble service
-     * @param wordUnscrambleResetScheduler the reset scheduler (unused, kept for future use)
+     * @param wordUnscrambleResetScheduler the reset scheduler (started on setup)
      */
-    public GameSetupCommand(WordUnscrambleService wordUnscrambleService, WordUnscrambleResetScheduler wordUnscrambleResetScheduler) {
+    public GameSetupCommand(
+            WordUnscrambleService wordUnscrambleService,
+            WordUnscrambleResetScheduler wordUnscrambleResetScheduler) {
         this.wordUnscrambleService = wordUnscrambleService;
-        // wordUnscrambleResetScheduler reserved for future manual reset functionality
+        this.wordUnscrambleResetScheduler = wordUnscrambleResetScheduler;
     }
 
     @Override
     public CommandData getCommandData() {
         return Commands.slash("admin-scramble-setup", "Configure Word Unscramble game for your server")
                 .addOption(OptionType.CHANNEL, "channel", "Channel for hourly games", true)
-                .addOption(OptionType.INTEGER, "reset_hour", "Daily reset hour (0-23 UTC, default: 0)", false)
+                .addOption(
+                        OptionType.INTEGER, "reset_hour", "Daily reset hour (0-23 UTC, default: 0)", false)
                 .setGuildOnly(true)
-                .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+                .setDefaultPermissions(
+                        net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(
+                                Permission.ADMINISTRATOR));
     }
 
     @Override
@@ -55,11 +62,8 @@ public class GameSetupCommand implements CommandHandler {
         Member member = event.getMember();
         Guild guild = event.getGuild();
 
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ You must be an administrator to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("❌ You must be an administrator to use this command.").setEphemeral(true).queue();
             return;
         }
 
@@ -68,21 +72,18 @@ public class GameSetupCommand implements CommandHandler {
         if (channel == null) return;
 
         OptionMapping resetHourOption = event.getOption("reset_hour");
-        int resetHour = (resetHourOption != null)
-                ? resetHourOption.getAsInt()
-                : 0;
+        int resetHour = (resetHourOption != null) ? resetHourOption.getAsInt() : 0;
 
         // Validate reset hour
         if (resetHour < 0 || resetHour > 23) {
-            event.reply("❌ Reset hour must be between 0 and 23.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ Reset hour must be between 0 and 23.").setEphemeral(true).queue();
             return;
         }
 
         // Validate bot can post in channel
         if (!channel.canTalk()) {
-            event.reply("❌ I don't have permission to send messages in " + channel.getAsMention() + ".")
+            event
+                    .reply("❌ I don't have permission to send messages in " + channel.getAsMention() + ".")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -95,6 +96,9 @@ public class GameSetupCommand implements CommandHandler {
 
         wordUnscrambleService.setupGames(guildId, channel.getId(), allGames, resetTime);
 
+        // Start the reset scheduler (idempotent; safe to call on re-setup)
+        wordUnscrambleResetScheduler.startIfNeeded(event.getJDA());
+
         // Start the first game immediately
         wordUnscrambleService.startRandomEnabledGame(guildId);
         String announcement = wordUnscrambleService.getGameAnnouncement(guildId);
@@ -104,27 +108,32 @@ public class GameSetupCommand implements CommandHandler {
         }
 
         // Send confirmation
-        event.reply(String.format("""
+        event
+                .reply(
+                        String.format(
+                                """
                         ✅ **Word Unscramble Game Configured!**
-                        
+
                         **Game Channel:** %s
                         **Reset Time:** %02d:00 UTC (hourly)
                         **Enabled Games:** All (%d games)
-                        
+
                         🎮 The first game has been posted!
-                        
+
                         **Next Steps:**
                         • Use `/admin-scramble-config` to customize settings
                         • Use `/scramble-stats` to view the leaderboard
                         • Players can join with `/scramble-guess`
-                        """,
-                channel.getAsMention(),
-                resetHour,
-                allGames.size()
-        )).queue();
+                                        """,
+                                channel.getAsMention(), resetHour, allGames.size()))
+                .queue();
 
-        logger.info("Word Unscramble setup for guild {} by user {}: channel={}, resetHour={}",
-                guildId, member.getId(), channel.getId(), resetHour);
+        logger.info(
+                "Word Unscramble setup for guild {} by user {}: channel={}, resetHour={}",
+                guildId,
+                member.getId(),
+                channel.getId(),
+                resetHour);
     }
 
     @Override

@@ -1,10 +1,10 @@
 package com.tatumgames.mikros.games.word_unscramble.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleConfig;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleType;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -24,8 +24,8 @@ import java.time.Instant;
 import java.time.LocalTime;
 
 /**
- * Command handler for /admin-scramble-config.
- * Allows administrators to modify Word Unscramble game settings.
+ * Command handler for /admin-scramble-config. Allows administrators to modify Word Unscramble game
+ * settings.
  */
 public class GameConfigCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(GameConfigCommand.class);
@@ -42,7 +42,8 @@ public class GameConfigCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("admin-scramble-config", "Configure Word Unscramble game settings (admin only)")
+        return Commands.slash(
+                        "admin-scramble-config", "Configure Word Unscramble game settings (admin only)")
                 .addSubcommands(
                         new SubcommandData("view", "View current game configuration"),
                         new SubcommandData("update-channel", "Update the game channel")
@@ -54,10 +55,11 @@ public class GameConfigCommand implements CommandHandler {
                         new SubcommandData("disable-game", "Disable a specific game")
                                 .addOption(OptionType.STRING, "game", "Game to disable", true),
                         new SubcommandData("set-allow-no-role", "Allow or disallow users without roles to play")
-                                .addOption(OptionType.BOOLEAN, "enabled", "Allow users without roles?", true)
-                )
+                                .addOption(OptionType.BOOLEAN, "enabled", "Allow users without roles?", true))
                 .setGuildOnly(true)
-                .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+                .setDefaultPermissions(
+                        net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(
+                                Permission.ADMINISTRATOR));
     }
 
     @Override
@@ -66,11 +68,8 @@ public class GameConfigCommand implements CommandHandler {
         Member member = event.getMember();
         Guild guild = event.getGuild();
 
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ You must be an administrator to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("❌ You must be an administrator to use this command.").setEphemeral(true).queue();
             return;
         }
 
@@ -97,7 +96,8 @@ public class GameConfigCommand implements CommandHandler {
     private void handleView(SlashCommandInteractionEvent event, String guildId) {
         WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
         if (config == null) {
-            event.reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
+            event
+                    .reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -110,15 +110,13 @@ public class GameConfigCommand implements CommandHandler {
         embed.addField("Game Channel", "<#" + config.getGameChannelId() + ">", true);
         embed.addField("Reset Time", config.getResetTime().toString() + " UTC", true);
         embed.addField("Enabled Games", String.valueOf(config.getEnabledGames().size()), true);
-        embed.addField("Allow No-Role Users", config.isAllowNoRoleUsers() ? "✅ Enabled" : "❌ Disabled", true);
+        embed.addField(
+                "Allow No-Role Users", config.isAllowNoRoleUsers() ? "✅ Enabled" : "❌ Disabled", true);
 
         StringBuilder games = new StringBuilder();
         for (WordUnscrambleType type : WordUnscrambleType.values()) {
             String status = config.isGameEnabled(type) ? "✅" : "❌";
-            games.append(String.format("%s %s %s\n",
-                    status,
-                    type.getEmoji(),
-                    type.getDisplayName()));
+            games.append(String.format("%s %s %s\n", status, type.getEmoji(), type.getDisplayName()));
         }
 
         embed.addField("Game Types", games.toString(), false);
@@ -130,7 +128,8 @@ public class GameConfigCommand implements CommandHandler {
     private void handleSetChannel(SlashCommandInteractionEvent event, String guildId) {
         WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
         if (config == null) {
-            event.reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
+            event
+                    .reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -150,7 +149,8 @@ public class GameConfigCommand implements CommandHandler {
     private void handleSetResetTime(SlashCommandInteractionEvent event, String guildId) {
         WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
         if (config == null) {
-            event.reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
+            event
+                    .reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -159,9 +159,7 @@ public class GameConfigCommand implements CommandHandler {
         Integer hour = event.getOption("hour", OptionMapping::getAsInt);
 
         if (hour == null || hour < 0 || hour > 23) {
-            event.reply("❌ Hour must be between 0 and 23.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ Hour must be between 0 and 23.").setEphemeral(true).queue();
             return;
         }
 
@@ -175,7 +173,8 @@ public class GameConfigCommand implements CommandHandler {
     private void handleEnableGame(SlashCommandInteractionEvent event, String guildId) {
         WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
         if (config == null) {
-            event.reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
+            event
+                    .reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -184,9 +183,7 @@ public class GameConfigCommand implements CommandHandler {
         String gameName = event.getOption("game", OptionMapping::getAsString);
 
         if (gameName == null) {
-            event.reply("❌ You must provide a game name.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ You must provide a game name.").setEphemeral(true).queue();
             return;
         }
 
@@ -197,20 +194,19 @@ public class GameConfigCommand implements CommandHandler {
             config.enableGame(gameType);
             wordUnscrambleService.updateConfig(guildId, config);
 
-            event.reply(String.format("✅ Enabled: %s %s",
-                    gameType.getEmoji(),
-                    gameType.getDisplayName())).queue();
-        } catch (IllegalArgumentException e) {
-            event.reply("❌ Invalid game type. Options: WORD_UNSCRAMBLE")
-                    .setEphemeral(true)
+            event
+                    .reply(String.format("✅ Enabled: %s %s", gameType.getEmoji(), gameType.getDisplayName()))
                     .queue();
+        } catch (IllegalArgumentException e) {
+            event.reply("❌ Invalid game type. Options: WORD_UNSCRAMBLE").setEphemeral(true).queue();
         }
     }
 
     private void handleDisableGame(SlashCommandInteractionEvent event, String guildId) {
         WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
         if (config == null) {
-            event.reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
+            event
+                    .reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -219,9 +215,7 @@ public class GameConfigCommand implements CommandHandler {
         String gameName = event.getOption("game", OptionMapping::getAsString);
 
         if (gameName == null) {
-            event.reply("❌ You must provide a game name.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ You must provide a game name.").setEphemeral(true).queue();
             return;
         }
 
@@ -231,7 +225,8 @@ public class GameConfigCommand implements CommandHandler {
             WordUnscrambleType gameType = WordUnscrambleType.valueOf(gameName);
 
             if (config.getEnabledGames().size() <= 1) {
-                event.reply("❌ Cannot disable the last game! Enable another game first.")
+                event
+                        .reply("❌ Cannot disable the last game! Enable another game first.")
                         .setEphemeral(true)
                         .queue();
                 return;
@@ -240,20 +235,19 @@ public class GameConfigCommand implements CommandHandler {
             config.disableGame(gameType);
             wordUnscrambleService.updateConfig(guildId, config);
 
-            event.reply(String.format("✅ Disabled: %s %s",
-                    gameType.getEmoji(),
-                    gameType.getDisplayName())).queue();
-        } catch (IllegalArgumentException e) {
-            event.reply("❌ Invalid game type. Options: WORD_UNSCRAMBLE")
-                    .setEphemeral(true)
+            event
+                    .reply(String.format("✅ Disabled: %s %s", gameType.getEmoji(), gameType.getDisplayName()))
                     .queue();
+        } catch (IllegalArgumentException e) {
+            event.reply("❌ Invalid game type. Options: WORD_UNSCRAMBLE").setEphemeral(true).queue();
         }
     }
 
     private void handleSetAllowNoRole(SlashCommandInteractionEvent event, String guildId) {
         WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
         if (config == null) {
-            event.reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
+            event
+                    .reply("❌ Games not configured yet. Use `/admin-scramble-setup` first.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -265,10 +259,12 @@ public class GameConfigCommand implements CommandHandler {
         config.setAllowNoRoleUsers(enabled);
         wordUnscrambleService.updateConfig(guildId, config);
 
-        event.reply(String.format(
+        event
+                .reply(
+                        String.format(
                 "✅ Users without roles are now **%s** to play Word Unscramble games.",
-                enabled ? "allowed" : "not allowed"
-        )).queue();
+                                enabled ? "allowed" : "not allowed"))
+                .queue();
 
         logger.info("Word Unscramble allowNoRoleUsers set to {} for guild {}", enabled, guildId);
     }
@@ -278,5 +274,3 @@ public class GameConfigCommand implements CommandHandler {
         return "admin-scramble-config";
     }
 }
-
-
