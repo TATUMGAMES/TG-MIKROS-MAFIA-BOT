@@ -25,8 +25,6 @@ import java.time.Duration;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Command handler for /rpg-profile. Displays a character's stats and information.
@@ -116,16 +114,18 @@ public class RPGProfileCommand implements CommandHandler {
         // Build profile embed
         EmbedBuilder embed = new EmbedBuilder();
 
-        // Build title with character title prefix if present
+        // Build title with character title prefix if present; append (Dead) when dead
         String titlePrefix = character.getTitle() != null ? character.getTitle() + " " : "";
+        String deadSuffix = character.isDead() ? " (Dead)" : "";
         embed.setTitle(
                 String.format(
-                        "%s %s%s - Level %d %s",
+                        "%s %s%s - Level %d %s%s",
                         character.getCharacterClass().getEmoji(),
                         titlePrefix,
                         character.getName(),
                         character.getLevel(),
-                        character.getCharacterClass().getDisplayName()));
+                        character.getCharacterClass().getDisplayName(),
+                        deadSuffix));
 
         embed.setColor(getClassColor(character.getCharacterClass().name()));
 
@@ -197,11 +197,13 @@ public class RPGProfileCommand implements CommandHandler {
 
         embed.addField("⚡ Action Status", cooldownStatus, true);
 
-        // Heroic charges (for boss battles)
+        // Heroic charges (for boss battles); when dead, show unable to participate
         String heroicStatus =
-                String.format(
-                        "⚔️ **%d/%d Heroic Charges**\n\nCharges refresh when a new boss spawns",
-                        character.getHeroicCharges(), character.getMaxHeroicCharges());
+                character.isDead()
+                        ? "Player is currently dead. Unable to participate."
+                        : String.format(
+                                "⚔️ **%d/%d Heroic Charges**\n\nCharges refresh when a new boss spawns",
+                                character.getHeroicCharges(), character.getMaxHeroicCharges());
         embed.addField("🛡️ Heroic Charges", heroicStatus, true);
 
         // Biome information
@@ -329,17 +331,6 @@ public class RPGProfileCommand implements CommandHandler {
 
         if (hasIrrevocable) {
             embed.addField("🔮 Irrevocable Choices", irrevocableInfo.toString().trim(), false);
-        }
-
-        // World Flags (separate from story flags) - filter out test flags (e.g. INT_TEST_PASSED,
-        // STR_TEST_ATTEMPTED)
-        Set<String> displayFlags =
-                character.getWorldFlags().stream()
-                        .filter(flag -> !flag.contains("TEST_PASSED") && !flag.contains("TEST_ATTEMPTED"))
-                        .collect(Collectors.toSet());
-        if (!displayFlags.isEmpty()) {
-            String worldFlags = String.join(" | ", displayFlags);
-            embed.addField("🌍 World Flags", worldFlags, false);
         }
 
         // Active Stat Modifiers

@@ -229,8 +229,6 @@ public class BossScheduler {
     private final ScheduledExecutorService scheduler;
     // Track last warning sent per boss to avoid spam: "guildId_bossId" -> Instant
     private final Map<String, Instant> lastWarningSent;
-    // Track which players received private messages for each boss: "guildId_bossId" -> Set<userId>
-    private final Map<String, Set<String>> privateMessageSent;
     // Track announced boss IDs to prevent duplicate announcements: "guildId_bossId" -> Instant
     private final Map<String, Instant> announcedBossIds = new ConcurrentHashMap<>();
     private volatile boolean started = false;
@@ -255,7 +253,6 @@ public class BossScheduler {
         this.blessingService = blessingService;
         this.scheduler = Executors.newScheduledThreadPool(1);
         this.lastWarningSent = new ConcurrentHashMap<>();
-        this.privateMessageSent = new ConcurrentHashMap<>();
         logger.info("BossScheduler initialized");
     }
 
@@ -965,8 +962,6 @@ public class BossScheduler {
             // or null)
             if (lastWarning == null || java.time.Duration.between(lastWarning, now).toMinutes() >= 15) {
                 sendBossExpirationWarning(guild, boss, 0, (int) minutesRemaining);
-                // Send private messages to players with unused heroic charges
-                sendPrivateMessagesToInactivePlayers(guild, guildId, boss, null);
                 lastWarningSent.put(warningKey, now);
                 return;
             }
@@ -1020,8 +1015,6 @@ public class BossScheduler {
             // or null)
             if (lastWarning == null || java.time.Duration.between(lastWarning, now).toMinutes() >= 15) {
                 sendSuperBossExpirationWarning(guild, superBoss, 0, (int) minutesRemaining);
-                // Send private messages to players with unused heroic charges
-                sendPrivateMessagesToInactivePlayers(guild, guildId, null, superBoss);
                 lastWarningSent.put(warningKey, now);
                 return;
             }
@@ -1150,109 +1143,6 @@ public class BossScheduler {
                                         "Failed to send super boss expiration warning for guild {}",
                                         guild.getName(),
                                         failure));
-    }
-
-    /**
-     * Sends private messages to registered players who haven't used their heroic charges. Only called
-     * on the 30-minute warning.
-     *
-     * @param guild     the guild
-     * @param guildId   the guild ID
-     * @param boss      the boss (can be null if superBoss is provided)
-     * @param superBoss the super boss (can be null if boss is provided)
-     */
-    private void sendPrivateMessagesToInactivePlayers(
-            Guild guild, String guildId, Boss boss, SuperBoss superBoss) {
-        if (jda == null) {
-            logger.warn("Cannot send private messages: JDA instance is null");
-            return;
-        }
-
-        String bossId = boss != null ? boss.getBossId() : superBoss.getBossId();
-        String bossName = boss != null ? boss.getName() : superBoss.getName();
-        String messageKey = guildId + "_" + bossId;
-
-        // Get or create the set of users who received messages for this boss
-        Set<String> sentToUsers =
-                privateMessageSent.computeIfAbsent(messageKey, k -> ConcurrentHashMap.newKeySet());
-
-        // Get all guild members
-        List<net.dv8tion.jda.api.entities.Member> members = guild.getMembers();
-
-        final java.util.concurrent.atomic.AtomicInteger messagesSent =
-                new java.util.concurrent.atomic.AtomicInteger(0);
-        for (net.dv8tion.jda.api.entities.Member member : members) {
-            // Skip bots
-            if (member.getUser().isBot()) {
-                continue;
-            }
-
-            String userId = member.getUser().getId();
-
-            // Skip if already sent message to this user for this boss
-            if (sentToUsers.contains(userId)) {
-                continue;
-            }
-
-            // Check if user has a character
-            if (!characterService.hasCharacter(userId)) {
-                continue;
-            }
-
-            // Get character and check heroic charges
-            RPGCharacter character = characterService.getCharacter(userId);
-            if (character == null || character.getHeroicCharges() <= 0) {
-                continue;
-            }
-
-            // Send private message
-            int heroicCharges = character.getHeroicCharges();
-            String message =
-                    String.format(
-                            """
-                    🐲 **The world needs your help!**
-                                    
-                    The boss, **%s**, has not been defeated. Time is running out—only 30 minutes remain!
-                                    
-                    You still have **%d heroic charge%s** remaining. Use `/rpg-boss-battle battle` to join the fight and help save Nilfheim from the coming curse.
-                                    
-                                      The fate of the realm rests in your hands...
-                                    """,
-                            bossName, heroicCharges, heroicCharges != 1 ? "s" : "");
-
-            member
-                    .getUser()
-                    .openPrivateChannel()
-                    .queue(
-                            channel ->
-                                    channel
-                                            .sendMessage(message)
-                                            .queue(
-                                                    success -> {
-                                                        sentToUsers.add(userId);
-                                                        messagesSent.incrementAndGet();
-                                                        logger.debug(
-                                                                "Sent private boss warning to user {} for boss {}",
-                                                                userId,
-                                                                bossName);
-                                                    },
-                                                    error ->
-                                                            logger.warn(
-                                                                    "Failed to send private boss warning to user {}: {}",
-                                                                    userId,
-                                                                    error.getMessage())),
-                            error ->
-                                    logger.warn(
-                                            "Failed to open DM channel for user {}: {}", userId, error.getMessage()));
-        }
-
-        if (messagesSent.get() > 0) {
-            logger.info(
-                    "Sent {} private boss warning messages for boss {} in guild {}",
-                    messagesSent.get(),
-                    bossName,
-                    guild.getName());
-        }
     }
 
     /**
