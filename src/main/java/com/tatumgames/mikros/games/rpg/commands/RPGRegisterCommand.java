@@ -104,13 +104,19 @@ public class RPGRegisterCommand implements CommandHandler {
             }
         }
 
-        // Check if user already has a character
+        // Check if user already has a character (or can re-register after 24h dead)
         if (characterService.hasCharacter(userId)) {
-            event
-                    .reply("❌ You already have a character! Use `/rpg-profile` to view it.")
-                    .setEphemeral(true)
-                    .queue();
-            return;
+            if (characterService.canReregisterAfterDeath(userId)) {
+                characterService.archiveAndRemoveActive(userId);
+                // Fall through to register new character
+            } else {
+                event
+                        .reply(
+                                "❌ You already have a character! Use `/rpg-profile` to view it. If you are dead and not resurrected within 24 hours, you can re-register a new character.")
+                        .setEphemeral(true)
+                        .queue();
+                return;
+            }
         }
 
         // Get options

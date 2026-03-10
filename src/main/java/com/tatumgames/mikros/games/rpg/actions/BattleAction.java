@@ -510,6 +510,9 @@ public class BattleAction implements CharacterAction {
                 String traitInfo =
                         eliteTraits.isEmpty() ? "" : "\n\n**Elite Traits:** " + String.join(", ", traitNames);
 
+                character.recordAction();
+                character.recordActionType("battle");
+
                 return RPGActionOutcome.builder()
                         .narrative(eliteDetectionNarrative + "\n\n" + withdrawalNarrative + traitInfo)
                         .xpGained(0)

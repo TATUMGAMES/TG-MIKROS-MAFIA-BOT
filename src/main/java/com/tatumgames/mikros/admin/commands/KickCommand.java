@@ -69,7 +69,11 @@ public class KickCommand implements CommandHandler {
         }
 
         if (targetMember == null) {
-            event.reply("❌ User is not a member of this server.").setEphemeral(true).queue();
+            event
+                    .reply(
+                            "❌ User is not in this server or could not be found. They may have already left. Only current members can be kicked.")
+                    .setEphemeral(true)
+                    .queue();
             return;
         }
 

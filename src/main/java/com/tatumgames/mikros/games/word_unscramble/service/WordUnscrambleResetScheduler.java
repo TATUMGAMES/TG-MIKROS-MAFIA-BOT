@@ -9,24 +9,42 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Scheduler for Word Unscramble game resets. Resets games every 4 hours for all configured guilds.
- *
- * <p>TODO: Reward System Integration - Award MIKROS discounts to winners - Grant special Discord
- * roles to champions - Implement streak tracking for consecutive wins - Add monthly leaderboard for
- * cumulative winners
+ * Scheduler for Word Unscramble game resets. Uses activity-aware scheduling: when no one solves a
+ * word, backoff increases and the game can pause; when someone solves or uses a scramble command,
+ * scheduling resumes with the base interval.
  */
 public class WordUnscrambleResetScheduler {
     private static final Logger logger = LoggerFactory.getLogger(WordUnscrambleResetScheduler.class);
+
+    /** Default base interval in hours between word posts when activity is normal (admin setup uses this). */
+    public static final int DEFAULT_BASE_INTERVAL_HOURS = 4;
+
+    /** How often the scheduler checks whether to post the next word (per guild). */
+    private static final long CHECK_INTERVAL_MINUTES = 15;
 
     private final WordUnscrambleService wordUnscrambleService;
     private final ScheduledExecutorService scheduler;
     private volatile boolean started = false;
     private JDA jda;
+
+    /** Per-guild activity state for backoff and pause. */
+    private static final class ScrambleActivityState {
+        Instant nextRunTime;
+        int backoffHours;
+        int unansweredCount;
+        int unansweredStreakSets;
+        boolean gamePaused;
+    }
+
+    private final java.util.Map<String, ScrambleActivityState> scrambleActivity =
+            new ConcurrentHashMap<>();
 
     /**
      * Creates a new WordUnscrambleResetScheduler.
@@ -49,7 +67,8 @@ public class WordUnscrambleResetScheduler {
     }
 
     /**
-     * Starts the reset scheduler. Resets games every 4 hours for all configured guilds.
+     * Starts the reset scheduler. Checks every 15 minutes; each guild's next word is scheduled by
+     * activity (base interval + backoff when no one solves, or pause after 3 unanswered streaks).
      *
      * @param jda the JDA instance
      */
@@ -62,7 +81,6 @@ public class WordUnscrambleResetScheduler {
         }
         this.jda = jda;
 
-        // Reset games every 4 hours
         scheduler.scheduleAtFixedRate(
                 () -> {
                     try {
@@ -72,22 +90,24 @@ public class WordUnscrambleResetScheduler {
                     }
                 },
                 0,
-                4,
-                TimeUnit.HOURS);
+                CHECK_INTERVAL_MINUTES,
+                TimeUnit.MINUTES);
 
-        logger.info("Word Unscramble reset scheduler started (4-hour resets)");
+        logger.info(
+                "Word Unscramble reset scheduler started (activity-aware, check every {} minutes)",
+                CHECK_INTERVAL_MINUTES);
     }
 
     /**
-     * Checks all guilds and resets games every 4 hours.
+     * Checks all guilds; for each, if not paused and now >= nextRunTime, runs reset and updates
+     * backoff/pause/nextRunTime. Cleanup runs periodically.
      */
     private void checkAndResetGames() {
         if (jda == null) {
             return;
         }
 
-        // Clean up old used-word entries (older than 60 days) to prevent memory bloat
-        wordUnscrambleService.cleanupUsedWordTrackerEntries(null);
+        java.time.Instant now = Instant.now();
 
         for (String guildId : wordUnscrambleService.getConfiguredGuilds()) {
             try {
@@ -96,11 +116,113 @@ public class WordUnscrambleResetScheduler {
                     continue;
                 }
 
-                // Reset game every 4 hours
+                ScrambleActivityState state =
+                        scrambleActivity.computeIfAbsent(guildId, k -> new ScrambleActivityState());
+                synchronized (state) {
+                    if (state.gamePaused) {
+                        continue;
+                    }
+                    if (state.nextRunTime == null) {
+                        state.nextRunTime = now;
+                    }
+                    if (now.isBefore(state.nextRunTime)) {
+                        continue;
+                    }
+                }
+
+                // Capture previous outcome before reset
+                WordUnscrambleSession previousSession = wordUnscrambleService.getActiveSession(guildId);
+                boolean hadWinner =
+                        previousSession != null
+                                && previousSession.getWinner() != null;
+
                 resetAndStartNewGame(guildId);
+
+                int baseHours = config.getBaseIntervalHours();
+                ScrambleActivityState stateAgain = scrambleActivity.get(guildId);
+                if (stateAgain == null) {
+                    stateAgain =
+                            scrambleActivity.computeIfAbsent(
+                                    guildId, k -> new ScrambleActivityState());
+                }
+                synchronized (stateAgain) {
+                    if (hadWinner) {
+                        stateAgain.nextRunTime = now.plusSeconds(baseHours * 3600L);
+                    } else {
+                        stateAgain.unansweredCount++;
+                        if (stateAgain.unansweredCount >= 5) {
+                            stateAgain.unansweredStreakSets++;
+                            stateAgain.unansweredCount = 0;
+                            stateAgain.backoffHours += 2;
+                        }
+                        if (stateAgain.unansweredStreakSets >= 3) {
+                            stateAgain.gamePaused = true;
+                            stateAgain.nextRunTime = null;
+                            logger.info(
+                                    "Word Unscramble: Pausing game for guild {} (3 unanswered streak sets)",
+                                    guildId);
+                        } else {
+                            long delayHours = baseHours + stateAgain.backoffHours;
+                            stateAgain.nextRunTime = now.plusSeconds(delayHours * 3600L);
+                        }
+                    }
+                }
             } catch (Exception e) {
                 logger.error("Error resetting Word Unscramble game for guild {}", guildId, e);
             }
+        }
+
+        wordUnscrambleService.cleanupUsedWordTrackerEntries(null);
+    }
+
+    /**
+     * Records that a player solved the word in this guild. Resets backoff and pause, and schedules
+     * the next word at base interval. Call from WordUnscrambleService when a correct answer is
+     * recorded.
+     *
+     * @param guildId the guild ID
+     */
+    public void recordSolve(String guildId) {
+        WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
+        int baseHours = config != null ? config.getBaseIntervalHours() : DEFAULT_BASE_INTERVAL_HOURS;
+        ScrambleActivityState state =
+                scrambleActivity.computeIfAbsent(guildId, k -> new ScrambleActivityState());
+        synchronized (state) {
+            state.unansweredCount = 0;
+            state.unansweredStreakSets = 0;
+            state.backoffHours = 0;
+            state.gamePaused = false;
+            state.nextRunTime = Instant.now().plusSeconds(baseHours * 3600L);
+        }
+    }
+
+    /**
+     * Records that a player used a scramble command in this guild. If the game was paused, resumes
+     * and schedules the next word at base interval.
+     *
+     * @param guildId the guild ID
+     */
+    public void recordScrambleActivity(String guildId) {
+        WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
+        if (config == null) {
+            return;
+        }
+        ScrambleActivityState state = scrambleActivity.get(guildId);
+        if (state == null) {
+            return;
+        }
+        synchronized (state) {
+            if (!state.gamePaused) {
+                return;
+            }
+            int baseHours = config.getBaseIntervalHours();
+            state.gamePaused = false;
+            state.unansweredCount = 0;
+            state.unansweredStreakSets = 0;
+            state.backoffHours = 0;
+            state.nextRunTime = Instant.now().plusSeconds(baseHours * 3600L);
+            logger.info(
+                    "Word Unscramble: Resuming game for guild {} (scramble command used)", guildId);
         }
     }
 

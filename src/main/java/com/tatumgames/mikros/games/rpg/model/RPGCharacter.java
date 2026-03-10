@@ -29,6 +29,7 @@ public class RPGCharacter {
     private boolean isDead;
     private boolean isRecovering;
     private Instant recoverUntil;
+    private Instant diedAt; // When the character died (null if alive); used for 24h re-register window
 
     // Kill counter system
     private int enemiesKilled = 0;
@@ -165,6 +166,7 @@ public class RPGCharacter {
         this.isDead = false;
         this.isRecovering = false;
         this.recoverUntil = null;
+        this.diedAt = null;
 
         // Initialize kill counters
         this.enemiesKilled = 0;
@@ -459,10 +461,11 @@ public class RPGCharacter {
     }
 
     /**
-     * Records that an action was performed. Now uses charge system instead of cooldown.
+     * Records that an action was performed (updates lastActionTime only).
+     * Charge deduction is handled by the command before executing the action.
      */
     public void recordAction() {
-        useActionCharge();
+        this.lastActionTime = Instant.now();
     }
 
     /**
@@ -470,6 +473,7 @@ public class RPGCharacter {
      */
     public void die() {
         this.isDead = true;
+        this.diedAt = Instant.now();
         this.stats.setCurrentHp(0);
     }
 
@@ -480,6 +484,7 @@ public class RPGCharacter {
      */
     public void resurrect(int recoveryHours) {
         this.isDead = false;
+        this.diedAt = null;
         this.isRecovering = true;
         // Set HP to 50% of max
         this.stats.setCurrentHp(this.stats.getMaxHp() / 2);
@@ -584,6 +589,14 @@ public class RPGCharacter {
 
     public void setRecoverUntil(Instant recoverUntil) {
         this.recoverUntil = recoverUntil;
+    }
+
+    public Instant getDiedAt() {
+        return diedAt;
+    }
+
+    public void setDiedAt(Instant diedAt) {
+        this.diedAt = diedAt;
     }
 
     // Kill counter system getters

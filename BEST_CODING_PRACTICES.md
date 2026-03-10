@@ -74,20 +74,20 @@ if (condition) {
 - **Formatting:** Run `./gradlew spotlessApply` before commit to apply consistent Java formatting (Spotless with
   google-java-format). Run `./gradlew spotlessCheck` in CI to enforce.
 
-📄 Documentation Standards
+### 📄 Documentation Standards
 
-* All public classes and methods must have Javadoc comments.
-* Use @param, @return, and @throws tags as needed.
-* Write clear, concise, and actionable comments.
-* Avoid redundant or obvious comments.
+- All public classes and methods must have Javadoc comments.
+- Use `@param`, `@return`, and `@throws` tags as needed.
+- Write clear, concise, and actionable comments.
+- Avoid redundant or obvious comments.
 
-🧪 Unit Testing
+### 🧪 Unit Testing
 
-* All logic-heavy services should be unit tested.
-* Use JUnit 5.
-* Use Mockito for mocking dependencies.
-* Place tests in src/test/java/... matching the source structure.
-* Name test classes like XyzServiceTest.java.
+- All logic-heavy services should be unit tested.
+- Use JUnit 5.
+- Use Mockito for mocking dependencies.
+- Place tests in `src/test/java/...` matching the source structure.
+- Name test classes like `XyzServiceTest.java`.
 
 Example:
 
@@ -100,11 +100,11 @@ void shouldReturnTopGamesByGenre() {
 }
 ```
 
-Error Handling
+### Error Handling
 
-* Do not swallow exceptions.
-* Catch and log errors with context.
-* Use custom exceptions where it improves clarity.
+- Do not swallow exceptions.
+- Catch and log errors with context.
+- Use custom exceptions where it improves clarity.
 
 Example:
 
@@ -112,25 +112,25 @@ Example:
 throw new GameDataNotFoundException("Game ID " + gameId + " not found");
 ```
 
-Configuration Best Practices
+### Configuration Best Practices
 
-* Use .env or a config.properties file for:
-  ** Bot token
-  ** API URLs
-  ** Secrets and keys
+- Use `.env` or a `config.properties` file for:
+  - Bot token
+  - API URLs
+  - Secrets and keys
 
 * Do not hardcode values in classes.
 * Provide a ConfigLoader class to read and validate config at startup.
 
-Dependency Management
+### Dependency Management
 
-* Use Gradle with well-defined dependencies.
-* Keep dependencies minimal and necessary.
-* Use dependency versions via variables (avoid hardcoding multiple times).
+- Use Gradle with well-defined dependencies.
+- Keep dependencies minimal and necessary.
+- Use dependency versions via variables (avoid hardcoding multiple times).
 
-Enums over Constants
+### Enums over Constants
 
-* Use enums for any fixed set of values like game genres, roles, command types, etc.
+- Use enums for any fixed set of values like game genres, roles, command types, etc.
 
 ```java
 public enum GameGenre {
@@ -138,10 +138,10 @@ public enum GameGenre {
 }
 ```
 
-Clean Code Principles
+### Clean Code Principles
 
-* DRY – Don’t repeat yourself.
-* KISS – Keep it simple and stupid.
-* YAGNI – You aren’t gonna need it.
-* SRP – Single Responsibility Principle.
-* Favor readability over cleverness.
+- **DRY** – Don’t repeat yourself.
+- **KISS** – Keep it simple and stupid.
+- **YAGNI** – You aren’t gonna need it.
+- **SRP** – Single Responsibility Principle.
+- Favor readability over cleverness.

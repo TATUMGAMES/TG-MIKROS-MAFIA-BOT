@@ -193,11 +193,12 @@ public class RPGLeaderboardCommand implements CommandHandler {
                 }
             }
 
+            String deadLabel = character.isDead() ? " (Dead)" : "";
             leaderboard.append(
                     String.format(
                             """
                             %s **#%d** - %s **%s**
-                            └ %s Level %d • %,d XP • HP: %d/%d
+                            └ %s Level %d%s • %,d XP • HP: %d/%d
                             └ Mafia Member? %s
                                     
                                     """,
@@ -207,6 +208,7 @@ public class RPGLeaderboardCommand implements CommandHandler {
                             character.getName(),
                             character.getCharacterClass().getDisplayName(),
                             character.getLevel(),
+                            deadLabel,
                             character.getXp(),
                             character.getStats().getCurrentHp(),
                             character.getStats().getMaxHp(),

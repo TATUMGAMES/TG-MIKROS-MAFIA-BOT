@@ -15,14 +15,14 @@ the community. All actions are logged and tracked for accountability.
 
 ## Slash Commands
 
-### `/warn`
+### `/admin-warn`
 
 Issues a warning to a user without removing them from the server.
 
 **Syntax:**
 
 ```
-/warn user:<@user> reason:<string>
+/admin-warn user:<@user> reason:<string>
 ```
 
 **Parameters:**
@@ -43,19 +43,19 @@ Issues a warning to a user without removing them from the server.
 **Example:**
 
 ```
-/warn user:@JohnDoe reason:Spamming in general chat
+/admin-warn user:@JohnDoe reason:Spamming in general chat
 ```
 
 ---
 
-### `/kick`
+### `/admin-kick`
 
 Kicks a user from the server (they can rejoin with a new invite).
 
 **Syntax:**
 
 ```
-/kick user:<@user> reason:<string>
+/admin-kick user:<@user> reason:<string>
 ```
 
 **Parameters:**
@@ -77,19 +77,19 @@ Kicks a user from the server (they can rejoin with a new invite).
 **Example:**
 
 ```
-/kick user:@JohnDoe reason:Repeated rule violations
+/admin-kick user:@JohnDoe reason:Repeated rule violations
 ```
 
 ---
 
-### `/ban`
+### `/admin-ban`
 
 Permanently bans a user from the server.
 
 **Syntax:**
 
 ```
-/ban user:<@user> reason:<string> [delete_days:<integer>]
+/admin-ban user:<@user> reason:<string> [delete_days:<integer>]
 ```
 
 **Parameters:**
@@ -113,7 +113,7 @@ Permanently bans a user from the server.
 **Example:**
 
 ```
-/ban user:@JohnDoe reason:Severe harassment delete_days:7
+/admin-ban user:@JohnDoe reason:Severe harassment delete_days:7
 ```
 
 ---

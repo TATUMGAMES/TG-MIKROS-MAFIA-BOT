@@ -22,6 +22,8 @@ class LoreRecognitionServiceSecretBossTest {
 
     private static final String GUILD_ID = "test-guild-123";
     private static final String USER_ID = "test-user-456";
+    /** Livable seconds for test bosses (matches BossService default). */
+    private static final long LIVABLE_SECONDS = 24L * 3600;
     @Mock
     private BossService bossService;
     @Mock
@@ -46,7 +48,7 @@ class LoreRecognitionServiceSecretBossTest {
         }
         assertEquals(10, character.getLevel());
 
-        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(5), 5);
+        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(5), 5, LIVABLE_SECONDS);
         when(bossService.checkAndSpawnSecretBoss(eq(GUILD_ID), eq(USER_ID), eq("level_10"), anyInt()))
                 .thenReturn(mockBoss);
 
@@ -65,7 +67,7 @@ class LoreRecognitionServiceSecretBossTest {
         }
         assertEquals(20, character.getLevel());
 
-        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(10), 10);
+        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(10), 10, LIVABLE_SECONDS);
         when(bossService.checkAndSpawnSecretBoss(eq(GUILD_ID), eq(USER_ID), eq("level_20"), anyInt()))
                 .thenReturn(mockBoss);
 
@@ -84,7 +86,7 @@ class LoreRecognitionServiceSecretBossTest {
         }
         assertEquals(30, character.getLevel());
 
-        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(15), 15);
+        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(15), 15, LIVABLE_SECONDS);
         when(bossService.checkAndSpawnSecretBoss(eq(GUILD_ID), eq(USER_ID), eq("level_30"), anyInt()))
                 .thenReturn(mockBoss);
 
@@ -103,7 +105,7 @@ class LoreRecognitionServiceSecretBossTest {
         }
         assertEquals(10, character.getBossesKilled());
 
-        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(2), 2);
+        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(2), 2, LIVABLE_SECONDS);
         when(bossService.checkAndSpawnSecretBoss(
                 eq(GUILD_ID), eq(USER_ID), eq("boss_kills_10"), anyInt()))
                 .thenReturn(mockBoss);
@@ -123,7 +125,7 @@ class LoreRecognitionServiceSecretBossTest {
         }
         assertEquals(20, character.getBossesKilled());
 
-        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(3), 3);
+        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(3), 3, LIVABLE_SECONDS);
         when(bossService.checkAndSpawnSecretBoss(
                 eq(GUILD_ID), eq(USER_ID), eq("boss_kills_20"), anyInt()))
                 .thenReturn(mockBoss);
@@ -139,7 +141,7 @@ class LoreRecognitionServiceSecretBossTest {
         RPGCharacter character = new RPGCharacter(USER_ID, "TestCharacter", CharacterClass.WARRIOR);
         character.addStoryFlag("Frostborne's chosen");
 
-        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1);
+        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1, LIVABLE_SECONDS);
         when(bossService.checkAndSpawnSecretBoss(
                 eq(GUILD_ID), eq(USER_ID), eq("story_flag_frostborne"), anyInt()))
                 .thenReturn(mockBoss);
@@ -155,7 +157,7 @@ class LoreRecognitionServiceSecretBossTest {
         RPGCharacter character = new RPGCharacter(USER_ID, "TestCharacter", CharacterClass.WARRIOR);
         character.addStoryFlag("Echo of the Shattering");
 
-        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1);
+        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1, LIVABLE_SECONDS);
         when(bossService.checkAndSpawnSecretBoss(
                 eq(GUILD_ID), eq(USER_ID), eq("story_flag_shattering"), anyInt()))
                 .thenReturn(mockBoss);
@@ -171,7 +173,7 @@ class LoreRecognitionServiceSecretBossTest {
         RPGCharacter character = new RPGCharacter(USER_ID, "TestCharacter", CharacterClass.WARRIOR);
         character.addStoryFlag("Elemental master");
 
-        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1);
+        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1, LIVABLE_SECONDS);
         when(bossService.checkAndSpawnSecretBoss(
                 eq(GUILD_ID), eq(USER_ID), eq("story_flag_elemental"), anyInt()))
                 .thenReturn(mockBoss);
@@ -189,7 +191,7 @@ class LoreRecognitionServiceSecretBossTest {
         assertEquals(1, character.getBossesKilled());
         assertEquals(0, character.getSuperBossesKilled());
 
-        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1);
+        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1, LIVABLE_SECONDS);
         when(bossService.checkAndSpawnSecretBoss(
                 eq(GUILD_ID), eq(USER_ID), eq("first_boss_kill"), anyInt()))
                 .thenReturn(mockBoss);
@@ -206,7 +208,7 @@ class LoreRecognitionServiceSecretBossTest {
         character.incrementSuperBossesKilled();
         assertEquals(1, character.getSuperBossesKilled());
 
-        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1);
+        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1, LIVABLE_SECONDS);
         when(bossService.checkAndSpawnSecretBoss(
                 eq(GUILD_ID), eq(USER_ID), eq("first_super_boss_kill"), anyInt()))
                 .thenReturn(mockBoss);
@@ -226,7 +228,7 @@ class LoreRecognitionServiceSecretBossTest {
         assertEquals(1, character.getTotalResurrections());
         assertEquals(1, character.getTotalDeaths());
 
-        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1);
+        Boss mockBoss = BossCatalog.createBoss(BossCatalog.getRandomNormalBoss(1), 1, LIVABLE_SECONDS);
         when(bossService.checkAndSpawnSecretBoss(
                 eq(GUILD_ID), eq(USER_ID), eq("first_death_resurrection"), anyInt()))
                 .thenReturn(mockBoss);

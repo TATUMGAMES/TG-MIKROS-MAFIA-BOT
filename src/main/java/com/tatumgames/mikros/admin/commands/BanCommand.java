@@ -78,21 +78,16 @@ public class BanCommand implements CommandHandler {
             return;
         }
 
-        if (targetMember == null) {
-            event.reply("❌ User is not a member of this server.").setEphemeral(true).queue();
-            return;
-        }
-
-        // Check role hierarchy
-        if (!member.canInteract(targetMember)) {
-            event.reply("❌ You cannot ban this user due to role hierarchy.").setEphemeral(true).queue();
-            return;
-        }
-
-        // Check bot permissions
-        if (!guild.getSelfMember().canInteract(targetMember)) {
-            event.reply("❌ I cannot ban this user due to role hierarchy.").setEphemeral(true).queue();
-            return;
+        // Check role hierarchy only when target is in the server (has a Member); allow ban by User when not
+        if (targetMember != null) {
+            if (!member.canInteract(targetMember)) {
+                event.reply("❌ You cannot ban this user due to role hierarchy.").setEphemeral(true).queue();
+                return;
+            }
+            if (!guild.getSelfMember().canInteract(targetMember)) {
+                event.reply("❌ I cannot ban this user due to role hierarchy.").setEphemeral(true).queue();
+                return;
+            }
         }
 
         // Create and log the moderation action

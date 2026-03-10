@@ -54,11 +54,12 @@ public class BossCatalog {
     /**
      * Creates a Boss instance from a definition.
      *
-     * @param definition the boss definition
-     * @param level      the boss level
+     * @param definition     the boss definition
+     * @param level          the boss level
+     * @param livableSeconds time in seconds until boss expires (e.g. BossService.getLivableIntervalSeconds())
      * @return a Boss instance
      */
-    public static Boss createBoss(BossDefinition definition, int level) {
+    public static Boss createBoss(BossDefinition definition, int level, long livableSeconds) {
         int maxHp = 10000 * level;
         int attack = 50 + (level * 20);
         String baseId = "boss_" + definition.name.toLowerCase().replaceAll("\\s+", "_") + "_" + level;
@@ -71,17 +72,19 @@ public class BossCatalog {
                 level,
                 maxHp,
                 attack,
-                definition.hasClassHarmonyMechanic);
+                definition.hasClassHarmonyMechanic,
+                livableSeconds);
     }
 
     /**
      * Creates a SuperBoss instance from a definition.
      *
-     * @param definition the super boss definition
-     * @param level      the super boss level
+     * @param definition     the super boss definition
+     * @param level          the super boss level
+     * @param livableSeconds time in seconds until boss expires (e.g. BossService.getLivableIntervalSeconds())
      * @return a SuperBoss instance
      */
-    public static SuperBoss createSuperBoss(SuperBossDefinition definition, int level) {
+    public static SuperBoss createSuperBoss(SuperBossDefinition definition, int level, long livableSeconds) {
         int maxHp = 50000 * level;
         int attack = 200 + (level * 50);
         String baseId =
@@ -96,7 +99,8 @@ public class BossCatalog {
                 maxHp,
                 attack,
                 definition.specialMechanic,
-                definition.hasClassHarmonyMechanic);
+                definition.hasClassHarmonyMechanic,
+                livableSeconds);
     }
 
     private static void initializeNormalBosses() {

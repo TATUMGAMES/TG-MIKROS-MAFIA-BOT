@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -53,6 +54,32 @@ import java.util.stream.Collectors;
  */
 public class BotMain extends ListenerAdapter {
     private static final Logger logger = LoggerFactory.getLogger(BotMain.class);
+
+    /**
+     * Player RPG commands that count toward activity-aware boss spawn (excludes admin/setup).
+     */
+    private static final Set<String> RPG_COMMANDS_FOR_ACTIVITY =
+            Set.of(
+                    "rpg-action",
+                    "rpg-profile",
+                    "rpg-register",
+                    "rpg-leaderboard",
+                    "rpg-boss-battle",
+                    "rpg-inventory",
+                    "rpg-craft",
+                    "rpg-duel",
+                    "rpg-resurrect",
+                    "rpg-stats");
+
+    /**
+     * Scramble commands that can resume a paused game when used.
+     */
+    private static final Set<String> SCRAMBLE_COMMANDS_FOR_ACTIVITY =
+            Set.of(
+                    "scramble-guess",
+                    "scramble-stats",
+                    "scramble-leaderboard",
+                    "scramble-profile");
 
     private final Map<String, CommandHandler> commandHandlers;
     private final ConfigLoader config;
@@ -153,6 +180,7 @@ public class BotMain extends ListenerAdapter {
         this.gameStatsService = new MockGameStatsService();
         this.wordUnscrambleService = new WordUnscrambleService();
         this.wordUnscrambleResetScheduler = new WordUnscrambleResetScheduler(wordUnscrambleService);
+        this.wordUnscrambleService.setWordUnscrambleResetScheduler(wordUnscrambleResetScheduler);
         this.characterService = new CharacterService();
         this.achievementService = new AchievementService();
         this.auraService = new AuraService();
@@ -418,6 +446,13 @@ public class BotMain extends ListenerAdapter {
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         String commandName = event.getName();
+        if (event.getGuild() != null && RPG_COMMANDS_FOR_ACTIVITY.contains(commandName)) {
+            bossScheduler.recordRpgActivity(event.getGuild().getId());
+        }
+        if (event.getGuild() != null && SCRAMBLE_COMMANDS_FOR_ACTIVITY.contains(commandName)) {
+            wordUnscrambleResetScheduler.recordScrambleActivity(event.getGuild().getId());
+        }
+
         CommandHandler handler = commandHandlers.get(commandName);
 
         if (handler != null) {
