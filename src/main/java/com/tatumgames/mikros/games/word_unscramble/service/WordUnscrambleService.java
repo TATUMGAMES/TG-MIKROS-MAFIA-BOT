@@ -39,6 +39,8 @@ public class WordUnscrambleService {
     // Word rotation tracker for levels 1-5
     private final WordUnscrambleUsedWordTracker usedWordTracker;
     private final Random random = new Random();
+    /** Optional: for activity-aware scheduling (recordSolve when a player solves). */
+    private volatile WordUnscrambleResetScheduler resetScheduler;
 
     /**
      * Sets up Word Unscramble game for a guild.
@@ -73,6 +75,14 @@ public class WordUnscrambleService {
         this.usedWordTracker = new WordUnscrambleUsedWordTracker();
 
         logger.info("WordUnscrambleService initialized");
+    }
+
+    /**
+     * Sets the reset scheduler for activity-aware scheduling (recordSolve when a player solves).
+     * Called by BotMain after the scheduler is created.
+     */
+    public void setWordUnscrambleResetScheduler(WordUnscrambleResetScheduler resetScheduler) {
+        this.resetScheduler = resetScheduler;
     }
 
     /**
@@ -245,6 +255,11 @@ public class WordUnscrambleService {
                             "Word Unscramble level up for guild {}: Level {} reached!",
                             guildId,
                             progression.getLevel());
+                }
+
+                // Activity-aware scheduling: next word at base interval
+                if (resetScheduler != null) {
+                    resetScheduler.recordSolve(guildId);
                 }
 
                 return finalResult;

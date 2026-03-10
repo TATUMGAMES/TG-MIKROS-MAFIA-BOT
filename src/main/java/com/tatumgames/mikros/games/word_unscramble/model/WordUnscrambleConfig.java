@@ -1,5 +1,7 @@
 package com.tatumgames.mikros.games.word_unscramble.model;
 
+import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleResetScheduler;
+
 import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.Objects;
@@ -18,6 +20,8 @@ public class WordUnscrambleConfig {
     private LocalTime resetTime;
     private WordUnscrambleType activeGameType;
     private boolean allowNoRoleUsers; // Whether users without roles can play (default: true)
+    /** Base interval in hours between word posts when activity is normal (activity-aware scheduling). */
+    private int baseIntervalHours;
 
     /**
      * Creates a new WordUnscrambleConfig.
@@ -38,6 +42,7 @@ public class WordUnscrambleConfig {
         this.resetTime = resetTime != null ? resetTime : LocalTime.of(0, 0); // Default midnight UTC
         this.activeGameType = enabledGames.isEmpty() ? null : enabledGames.iterator().next();
         this.allowNoRoleUsers = true; // Allow users without roles by default
+        this.baseIntervalHours = WordUnscrambleResetScheduler.DEFAULT_BASE_INTERVAL_HOURS;
     }
 
     /**
@@ -104,5 +109,14 @@ public class WordUnscrambleConfig {
 
     public void setAllowNoRoleUsers(boolean allowNoRoleUsers) {
         this.allowNoRoleUsers = allowNoRoleUsers;
+    }
+
+    /** Base interval in hours between word posts when activity is normal (default 4). */
+    public int getBaseIntervalHours() {
+        return baseIntervalHours;
+    }
+
+    public void setBaseIntervalHours(int baseIntervalHours) {
+        this.baseIntervalHours = Math.max(1, Math.min(24, baseIntervalHours));
     }
 }

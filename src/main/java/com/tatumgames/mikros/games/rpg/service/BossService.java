@@ -28,6 +28,8 @@ public class BossService {
     private static final long COOLDOWN_AFTER_LIVABLE_HOURS = 24;
     private static final long MIN_SPAWN_INTERVAL_HOURS =
             LIVABLE_INTERVAL_HOURS + COOLDOWN_AFTER_LIVABLE_HOURS; // 48
+    /** How often the scheduler runs spawn checks (hours). */
+    private static final long SPAWN_CHECK_INTERVAL_HOURS = 24;
     // Per-server boss state: guildId -> ServerBossState
     private final Map<String, ServerBossState> serverStates;
     // Per-guild locks to prevent concurrent boss spawning
@@ -73,6 +75,42 @@ public class BossService {
         this.loreRecognitionService = loreRecognitionService;
         this.blessingService = blessingService;
         logger.info("BossService initialized");
+    }
+
+    /**
+     * Returns the livable interval in hours (time window to defeat a boss).
+     *
+     * @return livable interval in hours
+     */
+    public long getLivableIntervalHours() {
+        return LIVABLE_INTERVAL_HOURS;
+    }
+
+    /**
+     * Returns the livable interval in seconds (for Boss/SuperBoss expiry).
+     *
+     * @return livable interval in seconds
+     */
+    public long getLivableIntervalSeconds() {
+        return LIVABLE_INTERVAL_HOURS * 3600;
+    }
+
+    /**
+     * Returns the minimum spawn interval in hours (livable + cooldown).
+     *
+     * @return min spawn interval in hours
+     */
+    public long getMinSpawnIntervalHours() {
+        return MIN_SPAWN_INTERVAL_HOURS;
+    }
+
+    /**
+     * Returns the spawn check interval in hours (how often the scheduler checks for spawns).
+     *
+     * @return spawn check interval in hours
+     */
+    public long getSpawnCheckIntervalHours() {
+        return SPAWN_CHECK_INTERVAL_HOURS;
     }
 
     /**
@@ -299,7 +337,7 @@ public class BossService {
             definition = BossCatalog.getRandomNormalBoss(level);
         }
 
-        Boss boss = BossCatalog.createBoss(definition, level);
+        Boss boss = BossCatalog.createBoss(definition, level, getLivableIntervalSeconds());
 
         int consecutiveFailures = state.getConsecutiveFailures();
         int empowermentLevel = 0;
@@ -341,7 +379,7 @@ public class BossService {
 
         int level = state.getSuperBossLevel();
         BossCatalog.SuperBossDefinition definition = BossCatalog.getSuperBoss(level);
-        SuperBoss superBoss = BossCatalog.createSuperBoss(definition, level);
+        SuperBoss superBoss = BossCatalog.createSuperBoss(definition, level, getLivableIntervalSeconds());
 
         int consecutiveFailures = state.getConsecutiveFailures();
         int empowermentLevel = 0;
@@ -398,7 +436,7 @@ public class BossService {
             return existingBoss; // Return existing boss
         }
 
-        Boss boss = BossCatalog.createBoss(definition, level);
+        Boss boss = BossCatalog.createBoss(definition, level, getLivableIntervalSeconds());
         state.setSecretBoss(userId, boss);
 
         logger.info(

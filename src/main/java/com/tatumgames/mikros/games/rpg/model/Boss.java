@@ -29,9 +29,10 @@ public class Boss {
      * @param level  boss level
      * @param maxHp  maximum HP (10,000 × level)
      * @param attack attack power
+     * @param livableSeconds time in seconds until boss expires (e.g. from BossService.getLivableIntervalSeconds())
      */
-    public Boss(String bossId, String name, BossType type, int level, int maxHp, int attack) {
-        this(bossId, name, type, level, maxHp, attack, false);
+    public Boss(String bossId, String name, BossType type, int level, int maxHp, int attack, long livableSeconds) {
+        this(bossId, name, type, level, maxHp, attack, false, livableSeconds);
     }
 
     /**
@@ -44,6 +45,7 @@ public class Boss {
      * @param maxHp                   maximum HP (10,000 × level)
      * @param attack                  attack power
      * @param hasClassHarmonyMechanic whether this boss uses the class harmony system
+     * @param livableSeconds          time in seconds until boss expires (e.g. from BossService.getLivableIntervalSeconds())
      */
     public Boss(
             String bossId,
@@ -52,7 +54,8 @@ public class Boss {
             int level,
             int maxHp,
             int attack,
-            boolean hasClassHarmonyMechanic) {
+            boolean hasClassHarmonyMechanic,
+            long livableSeconds) {
         this.bossId = Objects.requireNonNull(bossId);
         this.name = Objects.requireNonNull(name);
         this.type = Objects.requireNonNull(type);
@@ -62,7 +65,7 @@ public class Boss {
         this.attack = attack;
         this.hasClassHarmonyMechanic = hasClassHarmonyMechanic;
         this.spawnTime = Instant.now();
-        this.expiresAt = spawnTime.plusSeconds(24 * 3600); // 24 hours
+        this.expiresAt = spawnTime.plusSeconds(livableSeconds);
         this.defeated = false;
         this.empowermentLevel = 0;
     }
