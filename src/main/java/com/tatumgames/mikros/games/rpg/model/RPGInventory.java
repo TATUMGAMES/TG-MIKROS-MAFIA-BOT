@@ -147,8 +147,8 @@ public class RPGInventory {
         int essenceCount = getEssenceCount(itemType.getRequiredEssence());
         int catalystCount = getCatalystCount(itemType.getRequiredCatalyst());
 
-        return essenceCount >= itemType.getEssenceCount() &&
-                catalystCount >= itemType.getCatalystCount();
+        return essenceCount >= itemType.getEssenceCount()
+                && catalystCount >= itemType.getCatalystCount();
     }
 
     /**
@@ -167,8 +167,8 @@ public class RPGInventory {
     }
 
     /**
-     * Crafts an item, consuming materials and applying the bonus.
-     * Does not validate - use canCraft() first.
+     * Crafts an item, consuming materials and applying the bonus. Does not validate - use canCraft()
+     * first.
      *
      * @param itemType the crafted item type
      */
@@ -204,8 +204,8 @@ public class RPGInventory {
     // Infusion methods
 
     /**
-     * Gets the currently active infusion, if any.
-     * Automatically checks expiration and clears if expired.
+     * Gets the currently active infusion, if any. Automatically checks expiration and clears if
+     * expired.
      *
      * @return the active infusion, or null if none or expired
      */
@@ -267,6 +267,5 @@ public class RPGInventory {
     public boolean hasActiveInfusion() {
         checkInfusionExpiration();
         return activeInfusion != null;
-    }
+  }
 }
-

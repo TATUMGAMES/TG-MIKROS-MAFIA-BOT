@@ -1,5 +1,7 @@
 package com.tatumgames.mikros.games.rpg.actions;
 
+import com.tatumgames.mikros.games.rpg.biome.BiomeEnemies;
+import com.tatumgames.mikros.games.rpg.biome.BiomeType;
 import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.curse.WorldCurse;
 import com.tatumgames.mikros.games.rpg.events.NilfheimEventType;
@@ -10,54 +12,22 @@ import java.time.Instant;
 import java.util.*;
 
 /**
- * Battle action - player fights an AI enemy.
- * Can result in victory (high XP) or defeat (damage taken, some XP).
- * <p>
- * TODO: Future Features
- * - Enemy variety with different stats and abilities
- * - Boss battles with special rewards
- * - PvP battles between players
- * - Battle items and consumables
+ * Battle action - player fights an AI enemy. Can result in victory (high XP) or defeat (damage
+ * taken, some XP).
+ *
+ * <p>TODO: Future Features - Enemy variety with different stats and abilities - Boss battles with
+ * special rewards - PvP battles between players - Battle items and consumables
  */
 public class BattleAction implements CharacterAction {
     private static final Random random = new Random();
-    
-    // Narrative format strings
-    private static final String VICTORY_NARRATIVE_FORMAT = "You encountered %s (Level %d) and emerged victorious!%s%s%s " +
-            "Your combat prowess proved superior, though you sustained minor wounds.%s%s%s";
-    private static final String DEFEAT_NARRATIVE_FORMAT = "You encountered %s (Level %d) but were defeated.%s%s " +
-            "Learn from this experience!";
-    
-    private static final String[] ENEMY_NAMES = {
-            // Original 16
-            "Goblin Scout", "Wild Wolf", "Bandit Thief", "Slime Monster",
-            "Skeleton Warrior", "Dark Mage", "Forest Troll", "Shadow Assassin",
-            "Fire Elemental", "Ice Golem", "Corrupted Knight", "Venomous Spider",
-            "Orc Berserker", "Necromancer", "Dragon Whelp", "Demon Imp",
-            // Additional 20 (Nilfheim-specific)
-            "Frost Goblin", "Ice Stalker", "Wailing Wisp", "Wandering Revenant",
-            "Dire Bat", "Frost-Bitten Bear", "Marauder", "Crystal Spider",
-            "Corrupted Elk", "Shade Assassin", "Blighted Serpent", "Spirit Knight",
-            "Snow Golem", "Frost Wisp", "Enraged Wendigo", "Frostfang Lynx",
-            "Glacial Slime", "Death-Rattle Skeleton", "Storm Raven", "Shrieking Banshee",
-            "Frost Troll", "Rime Drifter", "Blight Raven", "Possessed Armor",
-            "Coldshade Phantom", "Bone Warg", "Frostbound Sorcerer", "Mutated Frost Boar",
-            "Wraithling", "Corrupted Dryad", "Hollow Knight", "Frozen Ghoul",
-            "Spirit Snake", "Skeletal Horse", "Frost Sprite Cluster",
-            // New 30 enemies (Content Expansion)
-            // PHYSICAL (5)
-            "Frostbound Berserker", "Ironclad Marauder", "Glacial Brute", "Stonefist Warrior", "Frozen Knight",
-            // MAGICAL (5)
-            "Void Whisperer", "Arcane Wraith", "Frost Sorcerer", "Shadow Mage", "Crystal Enchanter",
-            // AGILE (5)
-            "Shadow Stalker", "Wind Dancer", "Frost Sprite", "Swift Reaper", "Blade Phantom",
-            // UNDEAD (5)
-            "Bone Reaver", "Soul Eater", "Grave Wight", "Necrotic Horror", "Frozen Lich",
-            // BEAST (5)
-            "Ice Wolf Pack", "Frost Bear", "Dire Frost Wolf", "Glacial Predator", "Tundra Beast",
-            // CONSTRUCT (5)
-            "Runic Golem", "Ice Sentinel", "Crystal Guardian", "Frost Automaton", "Stone Guardian"
-    };
+
+    // Narrative format strings (%s for level allows "Level X" or "Elite - Level X")
+    private static final String VICTORY_NARRATIVE_FORMAT =
+            "You encountered %s (%s) and emerged victorious!%s%s%s "
+                    + "Your combat prowess proved superior, though you sustained minor wounds.%s%s%s";
+    private static final String DEFEAT_NARRATIVE_FORMAT =
+            "You encountered %s (%s) but were defeated.%s%s " + "Learn from this experience!";
+
     // Enemy type mappings
     private static final Map<String, EnemyType> ENEMY_TYPE_MAP = new HashMap<>();
     private static final String[] ELITE_DETECTION_NARRATIVES = {
@@ -298,7 +268,12 @@ public class BattleAction implements CharacterAction {
      * @param loreRecognitionService the lore recognition service for milestone checks
      * @param bossService            the boss service for checking active bosses (can be null)
      */
-    public BattleAction(WorldCurseService worldCurseService, AuraService auraService, NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService, BossService bossService) {
+    public BattleAction(
+            WorldCurseService worldCurseService,
+            AuraService auraService,
+            NilfheimEventService nilfheimEventService,
+            LoreRecognitionService loreRecognitionService,
+            BossService bossService) {
         this.worldCurseService = worldCurseService;
         this.auraService = auraService;
         this.nilfheimEventService = nilfheimEventService;
@@ -309,7 +284,11 @@ public class BattleAction implements CharacterAction {
     /**
      * Creates a new BattleAction without BossService (backward compatibility).
      */
-    public BattleAction(WorldCurseService worldCurseService, AuraService auraService, NilfheimEventService nilfheimEventService, LoreRecognitionService loreRecognitionService) {
+    public BattleAction(
+            WorldCurseService worldCurseService,
+            AuraService auraService,
+            NilfheimEventService nilfheimEventService,
+            LoreRecognitionService loreRecognitionService) {
         this(worldCurseService, auraService, nilfheimEventService, loreRecognitionService, null);
     }
 
@@ -337,28 +316,43 @@ public class BattleAction implements CharacterAction {
         // Check for Song of Nilfheim aura (reduces curse penalties by 1-2%)
         double songReduction = auraService.getSongOfNilfheimCurseReduction(guildId);
 
-        // Select random enemy (March of the Dead increases undead chance)
+        // Check for PURGE path curse penalty reduction (-10%)
+        double purgeReduction = 1.0; // Default: no reduction
+        if (character.getCharacterClass() == CharacterClass.OATHBREAKER
+                && "PURGE".equals(character.getOathbreakerPath())
+                && !activeCurses.isEmpty()) {
+            purgeReduction = 0.90; // -10% curse penalty reduction
+        }
+
+        // Select biome-specific enemy (March of the Dead increases undead chance)
         String enemyName;
+        BiomeType biome = character.getCurrentBiome();
+
         if (activeCurses.contains(WorldCurse.MAJOR_MARCH_OF_THE_DEAD)) {
             // 50% chance for undead enemy when March of the Dead is active
             if (random.nextDouble() < 0.50) {
                 // Select from undead enemies
-                String[] undeadEnemies = ENEMY_TYPE_MAP.entrySet().stream()
-                        .filter(e -> e.getValue() == EnemyType.UNDEAD)
-                        .map(Map.Entry::getKey)
-                        .toArray(String[]::new);
+                String[] undeadEnemies =
+                        ENEMY_TYPE_MAP.entrySet().stream()
+                                .filter(e -> e.getValue() == EnemyType.UNDEAD)
+                                .map(Map.Entry::getKey)
+                                .toArray(String[]::new);
                 if (undeadEnemies.length > 0) {
                     enemyName = undeadEnemies[random.nextInt(undeadEnemies.length)];
                 } else {
-                    enemyName = ENEMY_NAMES[random.nextInt(ENEMY_NAMES.length)];
+                    // Fallback to biome-specific enemy
+                    enemyName = BiomeEnemies.getRandomEnemy(biome);
                 }
             } else {
-                enemyName = ENEMY_NAMES[random.nextInt(ENEMY_NAMES.length)];
+                // Use biome-specific enemy
+                enemyName = BiomeEnemies.getRandomEnemy(biome);
             }
         } else {
-            enemyName = ENEMY_NAMES[random.nextInt(ENEMY_NAMES.length)];
+            // Use biome-specific enemy
+            enemyName = BiomeEnemies.getRandomEnemy(biome);
         }
-        EnemyType enemyType = ENEMY_TYPE_MAP.getOrDefault(enemyName, EnemyType.PHYSICAL); // Default fallback
+        EnemyType enemyType =
+                ENEMY_TYPE_MAP.getOrDefault(enemyName, EnemyType.PHYSICAL); // Default fallback
 
         // Check if this is a pack enemy (pack enemies are rare but more dangerous)
         boolean isPack = isPackEnemy(enemyName);
@@ -376,7 +370,7 @@ public class BattleAction implements CharacterAction {
 
         // Oathbreaker: Increased elite spawn chance (+10%)
         double eliteSpawnChanceBase = character.getLevel() >= 15 ? 0.08 : 0.05;
-        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+        if (character.getCharacterClass() == CharacterClass.OATHBREAKER) {
             eliteSpawnChanceBase *= 1.10; // +10% relative increase (5% -> 5.5%, 8% -> 8.8%)
         }
 
@@ -386,7 +380,8 @@ public class BattleAction implements CharacterAction {
             boolean bossActive = false;
             if (bossService != null) {
                 BossService.ServerBossState state = bossService.getState(guildId);
-                if (state != null && (state.getCurrentBoss() != null || state.getCurrentSuperBoss() != null)) {
+                if (state != null
+                        && (state.getCurrentBoss() != null || state.getCurrentSuperBoss() != null)) {
                     bossActive = true;
                 }
             }
@@ -401,11 +396,13 @@ public class BattleAction implements CharacterAction {
                     isElite = true;
 
                     // Generate elite detection narrative
-                    if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
-                        eliteDetectionNarrative = "The elite's eyes lock onto you. It recognizes the broken oath within you. " +
-                                ELITE_DETECTION_NARRATIVES[random.nextInt(ELITE_DETECTION_NARRATIVES.length)];
+                    if (character.getCharacterClass() == CharacterClass.OATHBREAKER) {
+                        eliteDetectionNarrative =
+                                "The elite's eyes lock onto you. It recognizes the broken oath within you. "
+                                        + ELITE_DETECTION_NARRATIVES[random.nextInt(ELITE_DETECTION_NARRATIVES.length)];
                     } else {
-                        eliteDetectionNarrative = ELITE_DETECTION_NARRATIVES[random.nextInt(ELITE_DETECTION_NARRATIVES.length)];
+                        eliteDetectionNarrative =
+                                ELITE_DETECTION_NARRATIVES[random.nextInt(ELITE_DETECTION_NARRATIVES.length)];
                     }
 
                     // Apply elite modifiers (randomized within ranges)
@@ -422,7 +419,8 @@ public class BattleAction implements CharacterAction {
                     if (character.getLevel() >= 15 && character.getDeityBlessing() != null) {
                         if (random.nextDouble() < 0.20) { // 20% chance
                             isGodTouched = true;
-                            // TODO: Future enhancement - check if same deity or different for narrative variations
+                            // TODO: Future enhancement - check if same deity or different for narrative
+                            // variations
                         }
                     }
 
@@ -438,13 +436,38 @@ public class BattleAction implements CharacterAction {
             }
         }
 
-        // Calculate enemy strength based on character level
-        int enemyLevel = Math.max(1, character.getLevel() + random.nextInt(3) - 1);
+        // Calculate enemy strength based on character level (U-curve difficulty)
+        int playerLevel = character.getLevel();
+        int enemyLevel;
+        boolean isVeteran = false;
+
+        if (playerLevel <= 5) {
+            // New players (Level 1-5): More dangerous, chance for veteran enemy
+            if (random.nextDouble() < 0.05) {
+                // 5% chance for veteran enemy (+3 levels) - nearly unwinnable for newbies
+                enemyLevel = playerLevel + 3;
+                isVeteran = true;
+            } else {
+                // Normal: playerLevel to playerLevel + 2
+                enemyLevel = playerLevel + random.nextInt(3);
+            }
+        } else if (playerLevel <= 15) {
+            // Mid game (Level 6-15): Standard difficulty
+            enemyLevel = Math.max(1, playerLevel + random.nextInt(3) - 1);
+        } else {
+            // End game (Level 16+): Occasionally stronger enemies
+            enemyLevel = playerLevel + random.nextInt(3) - 1;
+            if (enemyLevel < playerLevel - 1) {
+                enemyLevel = playerLevel - 1; // Minimum -1 level
+            }
+        }
+
         int enemyPower = calculateEnemyPower(enemyLevel);
 
         // Apply elite modifiers to enemy power
         if (isElite) {
-            enemyPower = (int) (enemyPower * eliteHpModifier); // HP modifier affects base power calculation
+            enemyPower =
+                    (int) (enemyPower * eliteHpModifier); // HP modifier affects base power calculation
         }
 
         // Calculate player power with stat effectiveness
@@ -458,14 +481,14 @@ public class BattleAction implements CharacterAction {
         double luckModifier = statModifiers.getOrDefault("LUCK_EFFECTIVENESS", 1.0);
 
         // Create temporary stats with modifiers applied
-        RPGStats effectiveStats = new RPGStats(
-                stats.getMaxHp(),
-                stats.getCurrentHp(),
-                (int) stats.getEffectiveStrength(strModifier),
-                (int) stats.getEffectiveAgility(agiModifier),
-                (int) stats.getEffectiveIntelligence(intModifier),
-                (int) stats.getEffectiveLuck(luckModifier)
-        );
+        RPGStats effectiveStats =
+                new RPGStats(
+                        stats.getMaxHp(),
+                        stats.getCurrentHp(),
+                        (int) stats.getEffectiveStrength(strModifier),
+                        (int) stats.getEffectiveAgility(agiModifier),
+                        (int) stats.getEffectiveIntelligence(intModifier),
+                        (int) stats.getEffectiveLuck(luckModifier));
 
         // Elite Withdrawal Option (before battle calculations)
         boolean withdrewFromElite = false;
@@ -477,12 +500,18 @@ public class BattleAction implements CharacterAction {
             if (random.nextDouble() < withdrawalChance) {
                 // Successful withdrawal
                 withdrewFromElite = true;
-                int escapeDamage = (int) (stats.getMaxHp() * (0.05 + random.nextDouble() * 0.05)); // 5-10% HP
+                int escapeDamage =
+                        (int) (stats.getMaxHp() * (0.05 + random.nextDouble() * 0.05)); // 5-10% HP
                 stats.takeDamage(escapeDamage);
 
-                String withdrawalNarrative = WITHDRAWAL_SUCCESS_NARRATIVES[random.nextInt(WITHDRAWAL_SUCCESS_NARRATIVES.length)];
+                String withdrawalNarrative =
+                        WITHDRAWAL_SUCCESS_NARRATIVES[random.nextInt(WITHDRAWAL_SUCCESS_NARRATIVES.length)];
                 List<String> traitNames = formatTraitNames(eliteTraits);
-                String traitInfo = eliteTraits.isEmpty() ? "" : "\n\n**Elite Traits:** " + String.join(", ", traitNames);
+                String traitInfo =
+                        eliteTraits.isEmpty() ? "" : "\n\n**Elite Traits:** " + String.join(", ", traitNames);
+
+                character.recordAction();
+                character.recordActionType("battle");
 
                 return RPGActionOutcome.builder()
                         .narrative(eliteDetectionNarrative + "\n\n" + withdrawalNarrative + traitInfo)
@@ -498,7 +527,8 @@ public class BattleAction implements CharacterAction {
             } else {
                 // Failed withdrawal - enemy gets first strike bonus
                 eliteDamageModifier *= 1.25; // +25% damage on first turn
-                String withdrawalFailureNarrative = WITHDRAWAL_FAILURE_NARRATIVES[random.nextInt(WITHDRAWAL_FAILURE_NARRATIVES.length)];
+                String withdrawalFailureNarrative =
+                        WITHDRAWAL_FAILURE_NARRATIVES[random.nextInt(WITHDRAWAL_FAILURE_NARRATIVES.length)];
                 eliteDetectionNarrative += "\n\n" + withdrawalFailureNarrative;
             }
         }
@@ -508,7 +538,7 @@ public class BattleAction implements CharacterAction {
         BacklashEventType backlashEvent = null;
         String backlashNarrative = "";
         double backlashStatPenalty = 1.0; // Multiplier for stat penalty
-        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+        if (character.getCharacterClass() == CharacterClass.OATHBREAKER) {
             int corruption = character.getCorruption();
             double backlashChance = 0.0;
             if (corruption >= 20) {
@@ -530,7 +560,8 @@ public class BattleAction implements CharacterAction {
             }
         }
 
-        int basePlayerPower = calculatePlayerPower(effectiveStats, character.getCharacterClass().name());
+        int basePlayerPower =
+                calculatePlayerPower(effectiveStats, character.getCharacterClass().name());
 
         // Apply backlash stat penalty if triggered
         if (backlashTriggered && backlashStatPenalty < 1.0) {
@@ -541,7 +572,8 @@ public class BattleAction implements CharacterAction {
 
         // Apply elite resistance modifier (reduces effectiveness)
         if (isElite && effectiveness < 1.0) {
-            effectiveness = 1.0 - ((1.0 - effectiveness) * (1.0 / eliteResistanceModifier)); // Reduces weakness
+            effectiveness =
+                    1.0 - ((1.0 - effectiveness) * (1.0 / eliteResistanceModifier)); // Reduces weakness
         }
 
         // Apply Shattered Reality curse (reduces effectiveness multipliers)
@@ -558,9 +590,10 @@ public class BattleAction implements CharacterAction {
         // Apply Curse of Weakness (-10% STR effectiveness for physical classes)
         // Song of Nilfheim reduces the penalty
         if (activeCurses.contains(WorldCurse.MINOR_CURSE_OF_WEAKNESS)) {
-            if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.WARRIOR ||
-                    character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.KNIGHT) {
-                double weaknessPenalty = 0.90 * songReduction; // Apply Song reduction
+            if (character.getCharacterClass() == CharacterClass.WARRIOR
+                    || character.getCharacterClass() == CharacterClass.KNIGHT) {
+                double weaknessPenalty =
+                        0.90 * songReduction * purgeReduction; // Apply Song and PURGE reduction
                 basePlayerPower = (int) (basePlayerPower * weaknessPenalty);
             }
         }
@@ -568,7 +601,7 @@ public class BattleAction implements CharacterAction {
         int playerPower = (int) (basePlayerPower * effectiveness);
 
         // Apply Oathbreaker corruption damage bonus
-        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+        if (character.getCharacterClass() == CharacterClass.OATHBREAKER) {
             int corruption = character.getCorruption();
             int corruptionCap = character.getCorruptionCap();
             int effectiveCorruption = Math.min(corruption, corruptionCap);
@@ -581,26 +614,26 @@ public class BattleAction implements CharacterAction {
             for (EliteTrait trait : eliteTraits) {
                 switch (trait.getEffectType()) {
                     case DAMAGE_REDUCTION_STR:
-                        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.WARRIOR ||
-                                character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.KNIGHT) {
+                        if (character.getCharacterClass() == CharacterClass.WARRIOR
+                                || character.getCharacterClass() == CharacterClass.KNIGHT) {
                             playerPower = (int) (playerPower * 0.85); // 15% reduction
                         }
                         break;
                     case DAMAGE_REDUCTION_STR_HEAVY:
-                        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.WARRIOR ||
-                                character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.KNIGHT) {
+                        if (character.getCharacterClass() == CharacterClass.WARRIOR
+                                || character.getCharacterClass() == CharacterClass.KNIGHT) {
                             playerPower = (int) (playerPower * 0.80); // 20% reduction
                         }
                         break;
                     case RESISTANCE_INT:
-                        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.MAGE ||
-                                character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.PRIEST ||
-                                character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.NECROMANCER) {
+                        if (character.getCharacterClass() == CharacterClass.MAGE
+                                || character.getCharacterClass() == CharacterClass.PRIEST
+                                || character.getCharacterClass() == CharacterClass.NECROMANCER) {
                             playerPower = (int) (playerPower * 0.90); // 10% reduction
                         }
                         break;
                     case RESISTANCE_AGI:
-                        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.ROGUE) {
+                        if (character.getCharacterClass() == CharacterClass.ROGUE) {
                             playerPower = (int) (playerPower * 0.90); // 10% reduction
                         }
                         break;
@@ -609,12 +642,28 @@ public class BattleAction implements CharacterAction {
                         break;
                     case MAGICAL_AMPLIFICATION:
                         // INT attacks are stronger but also resisted - net effect depends on class
-                        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.MAGE ||
-                                character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.PRIEST ||
-                                character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.NECROMANCER) {
+                        if (character.getCharacterClass() == CharacterClass.MAGE
+                                || character.getCharacterClass() == CharacterClass.PRIEST
+                                || character.getCharacterClass() == CharacterClass.NECROMANCER) {
                             // 15% stronger but 10% resisted = net +5% (simplified)
                             playerPower = (int) (playerPower * 1.05);
                         }
+                        break;
+                    case FIRST_STRIKE_BOOST:
+                        // Handled via eliteDamageModifier on withdrawal failure (line 532), not needed here
+                        break;
+                    case DEATH_EXPLOSION:
+                        // Handled after battle outcome (line 1078), not needed in power calculation
+                        break;
+                    case CURSED_POWER:
+                        // Affects enemy damage, not player power - handled in enemy power calculation
+                        break;
+                    case DAMAGE_BOOST_LOW_HP:
+                        // Affects enemy damage when low HP, not player power - handled in enemy power
+                        // calculation
+                        break;
+                    default:
+                        // All other cases handled above or not applicable to player power calculation
                         break;
                 }
             }
@@ -625,14 +674,14 @@ public class BattleAction implements CharacterAction {
         double critChance = effectiveStats.getAgility() / 2.0 / 100.0; // AGI/2% chance
 
         // Mage Arcane Precision: +5% crit chance
-        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.MAGE) {
+        if (character.getCharacterClass() == CharacterClass.MAGE) {
             critChance += 0.05;
         }
 
         if (random.nextDouble() < critChance) {
             isCrit = true;
             // Rogue Lethal Strikes: 2.0x damage instead of 1.5x
-            if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.ROGUE) {
+            if (character.getCharacterClass() == CharacterClass.ROGUE) {
                 playerPower = (int) (playerPower * 2.0);
             } else {
                 playerPower = (int) (playerPower * 1.5); // 1.5x damage on crit
@@ -640,7 +689,7 @@ public class BattleAction implements CharacterAction {
         }
 
         // Warrior Berserker Rage: +10% damage when HP < 50%
-        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.WARRIOR) {
+        if (character.getCharacterClass() == CharacterClass.WARRIOR) {
             double hpPercent = (double) stats.getCurrentHp() / stats.getMaxHp();
             if (hpPercent < 0.50) {
                 playerPower = (int) (playerPower * 1.10); // +10% damage
@@ -676,7 +725,7 @@ public class BattleAction implements CharacterAction {
             for (EliteTrait trait : eliteTraits) {
                 switch (trait.getEffectType()) {
                     case FIRST_STRIKE_BOOST:
-                        // Already applied via eliteDamageModifier on withdrawal failure
+                        // Already applied via eliteDamageModifier on withdrawal failure (line 532)
                         break;
                     case DAMAGE_BOOST_LOW_HP:
                         // Will be applied if enemy is below 50% HP (simulated as always active for elites)
@@ -684,6 +733,21 @@ public class BattleAction implements CharacterAction {
                         break;
                     case CURSED_POWER:
                         effectiveEnemyPower = (int) (effectiveEnemyPower * 1.05); // +5% damage
+                        break;
+                    case DEATH_EXPLOSION:
+                        // Handled after battle outcome (line 1078), not needed in power calculation
+                        break;
+                    case RESISTANCE_AGI:
+                    case RESISTANCE_INT:
+                    case DAMAGE_REDUCTION_STR:
+                    case DAMAGE_REDUCTION_STR_HEAVY:
+                    case MAGICAL_AMPLIFICATION:
+                    case UNIVERSAL_RESISTANCE:
+                        // These affect player power reduction, not enemy power - handled in player power
+                        // calculation (line 613)
+                        break;
+                    default:
+                        // All cases handled above
                         break;
                 }
             }
@@ -732,7 +796,8 @@ public class BattleAction implements CharacterAction {
             // Apply Curse of Clouded Mind (-5% XP, but ensure minimum 90%)
             // Song of Nilfheim reduces the penalty
             if (activeCurses.contains(WorldCurse.MINOR_CURSE_OF_CLOUDED_MIND)) {
-                double cloudedPenalty = 0.95 * songReduction; // Apply Song reduction
+                double cloudedPenalty =
+                        0.95 * songReduction * purgeReduction; // Apply Song and PURGE reduction
                 xpGained = (int) (xpGained * cloudedPenalty);
                 // Ensure minimum 90% of original
                 int minXpWithCurse = (int) (baseXp * 0.90);
@@ -743,7 +808,10 @@ public class BattleAction implements CharacterAction {
             // Song of Nilfheim reduces the penalty
             if (activeCurses.contains(WorldCurse.MINOR_CURSE_OF_WANING_RESOLVE)) {
                 // Reduce XP by 5-10% randomly (shifts variance lower)
-                double reduction = (0.05 + (random.nextDouble() * 0.05)) * songReduction; // Apply Song reduction
+                double reduction =
+                        (0.05 + (random.nextDouble() * 0.05))
+                                * songReduction
+                                * purgeReduction; // Apply Song and PURGE reduction
                 xpGained = (int) (xpGained * (1 - reduction));
             }
 
@@ -768,7 +836,7 @@ public class BattleAction implements CharacterAction {
 
             // Necromancer Decay: 10% chance to double XP on victory
             boolean decayTriggered = false;
-            if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.NECROMANCER) {
+            if (character.getCharacterClass() == CharacterClass.NECROMANCER) {
                 if (random.nextDouble() < 0.10) { // 10% chance
                     xpGained *= 2; // Double XP
                     decayTriggered = true;
@@ -783,30 +851,34 @@ public class BattleAction implements CharacterAction {
                 character.incrementEliteKills();
 
                 // Oathbreaker: Gain corruption from elite kill
-                if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+                if (character.getCharacterClass() == CharacterClass.OATHBREAKER) {
                     character.addCorruption(1);
 
                     // 15% chance to drop Oath Fragment
                     if (random.nextDouble() < 0.15) {
                         character.incrementOathFragments();
-                        narrative += "\n\n💀 **Oath Fragment:** A fragment of your broken oath materializes from the elite's essence.";
+                        narrative +=
+                                "\n\n💀 **Oath Fragment:** A fragment of your broken oath materializes from the elite's essence.";
                     }
                 }
             }
 
             // Oathbreaker: Gain corruption from acting during world curses
             String curseCorruptionNote = "";
-            if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER && !activeCurses.isEmpty()) {
+            if (character.getCharacterClass() == CharacterClass.OATHBREAKER && !activeCurses.isEmpty()) {
                 character.addCorruption(1);
-                curseCorruptionNote = "\n\n⚔️💀 **Corruption:** The world's curses resonate with your broken oath, increasing your corruption.";
+                curseCorruptionNote =
+                        "\n\n⚔️💀 **Corruption:** The world's curses resonate with your broken oath, increasing your corruption.";
             }
 
             // Generate narrative with stat effectiveness and crit mentions
             String effectivenessNote = "";
             if (effectiveness > 1.0) {
-                effectivenessNote = getEffectivenessNarrative(character.getCharacterClass(), enemyType, true);
+                effectivenessNote =
+                        getEffectivenessNarrative(character.getCharacterClass(), enemyType, true);
             } else if (effectiveness < 1.0) {
-                effectivenessNote = getEffectivenessNarrative(character.getCharacterClass(), enemyType, false);
+                effectivenessNote =
+                        getEffectivenessNarrative(character.getCharacterClass(), enemyType, false);
             }
 
             String critNote = "";
@@ -815,35 +887,42 @@ public class BattleAction implements CharacterAction {
             }
 
             String classNote = "";
-            if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.WARRIOR) {
+            if (character.getCharacterClass() == CharacterClass.WARRIOR) {
                 double hpPercent = (double) stats.getCurrentHp() / stats.getMaxHp();
                 if (hpPercent < 0.50) {
                     classNote = " Your rage intensifies as your wounds mount!";
                 }
             }
 
-            String decayNote = decayTriggered ?
-                    "\n\n💀 **Decay Effect:** Your dark magic saps the enemy's essence, doubling your XP gain!" : "";
+            String decayNote =
+                    decayTriggered
+                            ? "\n\n💀 **Decay Effect:** Your dark magic saps the enemy's essence, doubling your XP gain!"
+                            : "";
 
-            String agilityNote = stats.getAgility() >= 15 ?
-                    " Your swift movements helped you avoid the worst of the enemy's attacks." : "";
+            String agilityNote =
+                    stats.getAgility() >= 15
+                            ? " Your swift movements helped you avoid the worst of the enemy's attacks."
+                            : "";
 
             // Format enemy name for narrative (handle pack enemies)
             String formattedEnemyName = formatEnemyNameForNarrative(enemyName, isPack);
-            String packNote = isPack ?
-                    " The pack's coordinated attacks made the battle more challenging, but you prevailed!" : "";
+            String packNote =
+                    isPack
+                            ? " The pack's coordinated attacks made the battle more challenging, but you prevailed!"
+                            : "";
 
             // Elite-specific narrative
             String eliteNarrative = "";
             String traitInfo = "";
             if (isElite) {
-                eliteNarrative = "\n\n" + ELITE_VICTORY_NARRATIVES[random.nextInt(ELITE_VICTORY_NARRATIVES.length)];
+                eliteNarrative =
+                        "\n\n" + ELITE_VICTORY_NARRATIVES[random.nextInt(ELITE_VICTORY_NARRATIVES.length)];
                 if (!eliteTraits.isEmpty()) {
                     List<String> traitNames = formatTraitNames(eliteTraits);
                     traitInfo = "\n\n**Elite Traits:** " + String.join(", ", traitNames);
 
                     // Oathbreaker: Special trait interaction narratives
-                    if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+                    if (character.getCharacterClass() == CharacterClass.OATHBREAKER) {
                         String traitInteraction = getOathbreakerTraitInteraction(eliteTraits);
                         if (!traitInteraction.isEmpty()) {
                             traitInfo += "\n\n" + traitInteraction;
@@ -851,28 +930,38 @@ public class BattleAction implements CharacterAction {
                     }
                 }
                 if (isGodTouched) {
-                    String godNarrative = character.getDeityBlessing() != null ?
-                            GOD_TOUCHED_SAME_DEITY_NARRATIVES[random.nextInt(GOD_TOUCHED_SAME_DEITY_NARRATIVES.length)] :
-                            GOD_TOUCHED_DIFFERENT_DEITY_NARRATIVES[random.nextInt(GOD_TOUCHED_DIFFERENT_DEITY_NARRATIVES.length)];
+                    String godNarrative =
+                            character.getDeityBlessing() != null
+                                    ? GOD_TOUCHED_SAME_DEITY_NARRATIVES[
+                                    random.nextInt(GOD_TOUCHED_SAME_DEITY_NARRATIVES.length)]
+                                    : GOD_TOUCHED_DIFFERENT_DEITY_NARRATIVES[
+                                    random.nextInt(GOD_TOUCHED_DIFFERENT_DEITY_NARRATIVES.length)];
                     eliteNarrative += "\n\n" + godNarrative;
                 }
                 if (isCursedElite) {
-                    eliteNarrative += "\n\n" + CURSED_ELITE_DETECTION_NARRATIVES[random.nextInt(CURSED_ELITE_DETECTION_NARRATIVES.length)];
+                    eliteNarrative +=
+                            "\n\n"
+                                    + CURSED_ELITE_DETECTION_NARRATIVES[
+                                    random.nextInt(CURSED_ELITE_DETECTION_NARRATIVES.length)];
                 }
             }
 
             // Oathbreaker: Add corruption threshold narrative
             String corruptionNote = "";
-            if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+            if (character.getCharacterClass() == CharacterClass.OATHBREAKER) {
                 int corruption = character.getCorruption();
                 if (corruption >= 20) {
-                    corruptionNote = "\n\n⚔️💀 **Corruption (Max):** You have fully embraced the broken oath. Demons whisper your name, and power flows through you like dark fire.";
+                    corruptionNote =
+                            "\n\n⚔️💀 **Corruption (Max):** You have fully embraced the broken oath. Demons whisper your name, and power flows through you like dark fire.";
                 } else if (corruption >= 15) {
-                    corruptionNote = "\n\n⚔️💀 **Corruption (High):** The broken oath screams in your mind. You walk a dangerous edge, but power answers your call.";
+                    corruptionNote =
+                            "\n\n⚔️💀 **Corruption (High):** The broken oath screams in your mind. You walk a dangerous edge, but power answers your call.";
                 } else if (corruption >= 10) {
-                    corruptionNote = "\n\n⚔️💀 **Corruption:** Corruption seeps into your bones. Every strike costs more, but hits harder.";
+                    corruptionNote =
+                            "\n\n⚔️💀 **Corruption:** Corruption seeps into your bones. Every strike costs more, but hits harder.";
                 } else if (corruption >= 5) {
-                    corruptionNote = "\n\n⚔️💀 **Corruption:** You feel the weight of your broken oath. Power flows through you, tainted but potent.";
+                    corruptionNote =
+                            "\n\n⚔️💀 **Corruption:** You feel the weight of your broken oath. Power flows through you, tainted but potent.";
                 }
             }
 
@@ -881,11 +970,35 @@ public class BattleAction implements CharacterAction {
                 corruptionNote += "\n\n" + backlashNarrative;
             }
 
-            String victoryNarrative = String.format(VICTORY_NARRATIVE_FORMAT,
-                    formattedEnemyName, enemyLevel, critNote, effectivenessNote, classNote, agilityNote, decayNote, packNote);
-            narrative = isElite ?
-                    eliteDetectionNarrative + "\n\n" + victoryNarrative + eliteNarrative + traitInfo + corruptionNote + curseCorruptionNote :
-                    victoryNarrative + corruptionNote + curseCorruptionNote;
+            // Veteran enemy narrative (for low levels only)
+            String veteranNarrative = "";
+            if (isVeteran && playerLevel <= 5) {
+                veteranNarrative =
+                        "\n\n⚠️ **Veteran Enemy:** You've encountered a veteran warrior who has seen countless battles. Against all odds, you emerged victorious! This victory will be remembered.";
+            }
+
+            String levelDescriptor = isElite ? "Level " + enemyLevel + " - Elite" : "Level " + enemyLevel;
+            String victoryNarrative =
+                    String.format(
+                            VICTORY_NARRATIVE_FORMAT,
+                            formattedEnemyName,
+                            levelDescriptor,
+                            critNote,
+                            effectivenessNote,
+                            classNote,
+                            agilityNote,
+                            decayNote,
+                            packNote);
+            narrative =
+                    isElite
+                            ? eliteDetectionNarrative
+                            + "\n\n"
+                            + victoryNarrative
+                            + eliteNarrative
+                            + traitInfo
+                            + corruptionNote
+                            + curseCorruptionNote
+                            : victoryNarrative + veteranNarrative + corruptionNote + curseCorruptionNote;
         } else {
             // Defeat: moderate XP, significant damage
             int baseXp = (int) ((20 + (enemyLevel * 4)) * config.getXpMultiplier());
@@ -899,8 +1012,11 @@ public class BattleAction implements CharacterAction {
             xpGained = Math.max(minXp, xpGained);
 
             // Apply Curse of Clouded Mind (-5% XP, but ensure minimum 90%)
+            // Song of Nilfheim and PURGE path reduce the penalty
             if (activeCurses.contains(WorldCurse.MINOR_CURSE_OF_CLOUDED_MIND)) {
-                xpGained = (int) (xpGained * 0.95);
+                double cloudedPenalty =
+                        0.95 * songReduction * purgeReduction; // Apply Song and PURGE reduction
+                xpGained = (int) (xpGained * cloudedPenalty);
                 // Ensure minimum 90% of original
                 int minXpWithCurse = (int) (baseXp * 0.90);
                 xpGained = Math.max(minXpWithCurse, xpGained);
@@ -919,37 +1035,45 @@ public class BattleAction implements CharacterAction {
                 }
 
                 // Oathbreaker: Gain corruption even on elite defeat
-                if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+                if (character.getCharacterClass() == CharacterClass.OATHBREAKER) {
                     character.addCorruption(1);
                 }
             }
 
             // Oathbreaker: Gain corruption from acting during world curses (defeat)
-            if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER && !activeCurses.isEmpty()) {
+            if (character.getCharacterClass() == CharacterClass.OATHBREAKER && !activeCurses.isEmpty()) {
                 character.addCorruption(1);
             }
 
             // Generate narrative emphasizing injury severity
-            String injurySeverity = enemyLevel >= 5 ?
-                    " You suffered severe injuries in the encounter." :
-                    " You managed to escape, but not without significant injury.";
+            String injurySeverity =
+                    enemyLevel >= 5
+                            ? " You suffered severe injuries in the encounter."
+                            : " You managed to escape, but not without significant injury.";
+
+            // Veteran enemy narrative (for low levels only)
+            String veteranNarrative = "";
+            if (isVeteran && playerLevel <= 5) {
+                veteranNarrative =
+                        "\n\n⚠️ **Veteran Enemy:** You've encountered a veteran warrior who has seen countless battles. This foe is far beyond your current strength - survival itself is a victory!";
+            }
 
             // Format enemy name for narrative (handle pack enemies)
             String formattedEnemyName = formatEnemyNameForNarrative(enemyName, isPack);
-            String packNote = isPack ?
-                    " The pack's overwhelming numbers proved too much to handle." : "";
+            String packNote = isPack ? " The pack's overwhelming numbers proved too much to handle." : "";
 
             // Elite-specific defeat narrative
             String eliteDefeatNarrative = "";
             String traitInfo = "";
             if (isElite) {
-                eliteDefeatNarrative = "\n\n" + ELITE_DEFEAT_NARRATIVES[random.nextInt(ELITE_DEFEAT_NARRATIVES.length)];
+                eliteDefeatNarrative =
+                        "\n\n" + ELITE_DEFEAT_NARRATIVES[random.nextInt(ELITE_DEFEAT_NARRATIVES.length)];
                 if (!eliteTraits.isEmpty()) {
                     List<String> traitNames = formatTraitNames(eliteTraits);
                     traitInfo = "\n\n**Elite Traits:** " + String.join(", ", traitNames);
 
                     // Oathbreaker: Special trait interaction narratives
-                    if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+                    if (character.getCharacterClass() == CharacterClass.OATHBREAKER) {
                         String traitInteraction = getOathbreakerTraitInteraction(eliteTraits);
                         if (!traitInteraction.isEmpty()) {
                             traitInfo += "\n\n" + traitInteraction;
@@ -957,22 +1081,40 @@ public class BattleAction implements CharacterAction {
                     }
                 }
                 if (character.isLoseChargeOnNextRefresh()) {
-                    eliteDefeatNarrative += "\n\n⚠️ **Elite Defeat Penalty:** You will lose an action charge on your next refresh.";
+                    eliteDefeatNarrative +=
+                            "\n\n⚠️ **Elite Defeat Penalty:** You will lose an action charge on your next refresh.";
                 }
                 if (character.hasTemporaryCurse()) {
-                    eliteDefeatNarrative += "\n\n💀 **Temporary Curse:** A dark curse lingers for 12 hours, weakening your resolve.";
+                    eliteDefeatNarrative +=
+                            "\n\n💀 **Temporary Curse:** A dark curse lingers for 12 hours, weakening your resolve.";
                 }
             }
 
-            String defeatNarrative = String.format(DEFEAT_NARRATIVE_FORMAT,
-                    formattedEnemyName, enemyLevel, injurySeverity, packNote);
-            narrative = isElite ?
-                    eliteDetectionNarrative + "\n\n" + defeatNarrative + eliteDefeatNarrative + traitInfo :
-                    defeatNarrative;
+            String levelDescriptor = isElite ? "Level " + enemyLevel + " - Elite" : "Level " + enemyLevel;
+            String defeatNarrative =
+                    String.format(
+                            DEFEAT_NARRATIVE_FORMAT, formattedEnemyName, levelDescriptor, injurySeverity, packNote);
+            narrative =
+                    isElite
+                            ? eliteDetectionNarrative
+                            + "\n\n"
+                            + defeatNarrative
+                            + eliteDefeatNarrative
+                            + traitInfo
+                            : defeatNarrative + veteranNarrative;
         }
 
         // Calculate base damage with variance
         int baseDamage = calculateBaseDamage(enemyPower, enemyLevel, victory);
+
+        // Apply U-curve difficulty damage multipliers
+        double damageMultiplier = 1.0;
+        if (playerLevel <= 5) {
+            damageMultiplier = 1.25; // +25% damage for new players (Level 1-5)
+        } else if (playerLevel >= 16) {
+            damageMultiplier = 1.15; // +15% damage for end game (Level 16+)
+        }
+        baseDamage = (int) (baseDamage * damageMultiplier);
 
         // Apply ±25% random variance
         // Variance range: baseDamage * 0.75 to baseDamage * 1.25
@@ -992,7 +1134,8 @@ public class BattleAction implements CharacterAction {
         // Apply Curse of Sluggish Steps (reduces AGI defense cap: 30% → 25%)
         // Song of Nilfheim reduces the penalty
         if (activeCurses.contains(WorldCurse.MINOR_CURSE_OF_SLUGGISH_STEPS)) {
-            double sluggishPenalty = 0.25 * songReduction; // Apply Song reduction
+            double sluggishPenalty =
+                    0.25 * songReduction * purgeReduction; // Apply Song and PURGE reduction
             agilityReduction = Math.min(sluggishPenalty, agilityReduction);
         }
 
@@ -1001,31 +1144,34 @@ public class BattleAction implements CharacterAction {
         // Apply Eclipse of Nilfheim (+10% enemy damage)
         // Song of Nilfheim reduces the penalty
         if (activeCurses.contains(WorldCurse.MAJOR_ECLIPSE_OF_NILFHEIM)) {
-            double eclipseBonus = 1.10 / songReduction; // Reduce the bonus (divide by reduction)
+            double eclipseBonus =
+                    1.10 / songReduction / purgeReduction; // Reduce the bonus (divide by reductions)
             damageTaken = (int) (damageTaken * eclipseBonus);
         }
 
         // Apply Curse of Bleeding Wounds (+10% defeat damage)
         // Song of Nilfheim reduces the penalty
         if (!victory && activeCurses.contains(WorldCurse.MINOR_CURSE_OF_BLEEDING_WOUNDS)) {
-            double bleedingBonus = 1.10 / songReduction; // Reduce the bonus
+            double bleedingBonus =
+                    1.10 / songReduction / purgeReduction; // Reduce the bonus (divide by reductions)
             damageTaken = (int) (damageTaken * bleedingBonus);
         }
 
         // Apply March of the Dead (+15% defeat damage)
         // Song of Nilfheim reduces the penalty
         if (!victory && activeCurses.contains(WorldCurse.MAJOR_MARCH_OF_THE_DEAD)) {
-            double marchBonus = 1.15 / songReduction; // Reduce the bonus
+            double marchBonus =
+                    1.15 / songReduction / purgeReduction; // Reduce the bonus (divide by reductions)
             damageTaken = (int) (damageTaken * marchBonus);
         }
 
         // Apply class bonus (Knight gets 10% additional reduction, stacks with agility)
-        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.KNIGHT) {
+        if (character.getCharacterClass() == CharacterClass.KNIGHT) {
             damageTaken = (int) (damageTaken * 0.90); // 10% reduction (balanced from 15%)
         }
 
         // Apply Oathbreaker corruption damage penalty
-        if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+        if (character.getCharacterClass() == CharacterClass.OATHBREAKER) {
             int corruption = character.getCorruption();
             if (corruption >= 20) {
                 // Embraced path at max corruption
@@ -1039,12 +1185,6 @@ public class BattleAction implements CharacterAction {
             // Apply Purge path damage reduction
             if ("PURGE".equals(character.getOathbreakerPath())) {
                 damageTaken = (int) (damageTaken * 0.95); // -5% damage reduction
-            }
-
-            // Apply Purge path curse penalty reduction
-            if ("PURGE".equals(character.getOathbreakerPath()) && !activeCurses.isEmpty()) {
-                // -10% curse penalties (applied to curse effects above)
-                // This is handled in individual curse applications
             }
         }
 
@@ -1072,7 +1212,10 @@ public class BattleAction implements CharacterAction {
             // Elite died, explosion deals minor unavoidable damage
             int explosionDamage = (int) (stats.getMaxHp() * 0.05); // 5% max HP
             stats.takeDamage(explosionDamage);
-            narrative += "\n\n💥 **Unstable Essence:** The elite's essence explodes violently, dealing " + explosionDamage + " unavoidable damage!";
+            narrative +=
+                    "\n\n💥 **Unstable Essence:** The elite's essence explodes violently, dealing "
+                            + explosionDamage
+                            + " unavoidable damage!";
         }
 
         // Check if character died
@@ -1081,21 +1224,28 @@ public class BattleAction implements CharacterAction {
             character.incrementDeathCount();
 
             // Oathbreaker: Unique death mechanics
-            if (character.getCharacterClass() == com.tatumgames.mikros.games.rpg.model.CharacterClass.OATHBREAKER) {
+            if (character.getCharacterClass() == CharacterClass.OATHBREAKER) {
                 double deathRoll = random.nextDouble();
                 if (deathRoll < 0.30) {
                     // 30% chance: Lose 2-3 corruption (despair purges some)
                     int corruptionLoss = 2 + random.nextInt(2); // 2-3
                     character.removeCorruption(corruptionLoss);
-                    narrative += "\n\n⚔️💀 **Death's Purge:** In death's embrace, some corruption is purged. You lose " + corruptionLoss + " corruption.";
+                    narrative +=
+                            "\n\n⚔️💀 **Death's Purge:** In death's embrace, some corruption is purged. You lose "
+                                    + corruptionLoss
+                                    + " corruption.";
                 } else if (deathRoll < 0.50) {
                     // 20% chance: Gain 1-2 corruption (despair strengthens oath)
                     int corruptionGain = 1 + random.nextInt(2); // 1-2
                     character.addCorruption(corruptionGain);
-                    narrative += "\n\n⚔️💀 **Death's Embrace:** Despair strengthens the broken oath. You gain " + corruptionGain + " corruption.";
+                    narrative +=
+                            "\n\n⚔️💀 **Death's Embrace:** Despair strengthens the broken oath. You gain "
+                                    + corruptionGain
+                                    + " corruption.";
                 } else if (deathRoll < 0.60) {
                     // 10% chance: Vision encounter (special narrative)
-                    narrative += "\n\n⚔️💀 **Vision of the Broken Oath:** In death's threshold, you see visions of the oath you broke. The memory is both curse and blessing.";
+                    narrative +=
+                            "\n\n⚔️💀 **Vision of the Broken Oath:** In death's threshold, you see visions of the oath you broke. The memory is both curse and blessing.";
                 }
                 // 40% chance: Normal death (no corruption change)
             }
@@ -1154,16 +1304,17 @@ public class BattleAction implements CharacterAction {
         }
 
         // Roll for item drops with LUCK bonus
-        RPGActionOutcome.Builder outcomeBuilder = RPGActionOutcome.builder()
-                .narrative(narrative)
-                .xpGained(xpGained)
-                .leveledUp(leveledUp)
-                .damageTaken(damageTaken)
-                .hpRestored(0)
-                .success(victory)
-                .isElite(isElite)
-                .eliteTraits(formatTraitNames(eliteTraits))
-                .withdrewFromElite(withdrewFromElite);
+        RPGActionOutcome.Builder outcomeBuilder =
+                RPGActionOutcome.builder()
+                        .narrative(narrative)
+                        .xpGained(xpGained)
+                        .leveledUp(leveledUp)
+                        .damageTaken(damageTaken)
+                        .hpRestored(0)
+                        .success(victory)
+                        .isElite(isElite)
+                        .eliteTraits(formatTraitNames(eliteTraits))
+                        .withdrewFromElite(withdrewFromElite);
 
         // Base drop chance: Victory 20%, Defeat 5%
         // Note: Elite victories already got guaranteed drop above, so this is additional
@@ -1228,10 +1379,17 @@ public class BattleAction implements CharacterAction {
     }
 
     /**
-     * Calculates enemy power based on level.
+     * Calculates enemy power based on level. Uses tiered scaling: early game unchanged, mid and
+     * late game enemies are progressively stronger.
      */
     private int calculateEnemyPower(int level) {
-        return 20 + (level * 8);
+        if (level <= 5) {
+            return 20 + (level * 8);
+        } else if (level <= 15) {
+            return 23 + (level * 9);
+        } else {
+            return 25 + (level * 10);
+        }
     }
 
     /**
@@ -1258,7 +1416,9 @@ public class BattleAction implements CharacterAction {
      */
     private double getStatEffectiveness(String className, EnemyType enemyType) {
         // STR-based classes (Warrior, Knight, Oathbreaker)
-        if (className.equals("WARRIOR") || className.equals("KNIGHT") || className.equals("OATHBREAKER")) {
+        if (className.equals("WARRIOR")
+                || className.equals("KNIGHT")
+                || className.equals("OATHBREAKER")) {
             return switch (enemyType) {
                 case PHYSICAL, CONSTRUCT -> 1.3; // STR effective
                 case MAGICAL, AGILE -> 0.85; // STR weak
@@ -1266,7 +1426,9 @@ public class BattleAction implements CharacterAction {
             };
         }
         // INT-based classes (Mage, Priest, Necromancer)
-        else if (className.equals("MAGE") || className.equals("PRIEST") || className.equals("NECROMANCER")) {
+        else if (className.equals("MAGE")
+                || className.equals("PRIEST")
+                || className.equals("NECROMANCER")) {
             return switch (enemyType) {
                 case MAGICAL, UNDEAD -> 1.3; // INT effective
                 case CONSTRUCT, PHYSICAL -> 0.85; // INT weak
@@ -1292,7 +1454,8 @@ public class BattleAction implements CharacterAction {
      * @param effective      whether the attack was effective
      * @return narrative text
      */
-    private String getEffectivenessNarrative(com.tatumgames.mikros.games.rpg.model.CharacterClass characterClass, EnemyType enemyType, boolean effective) {
+    private String getEffectivenessNarrative(
+            CharacterClass characterClass, EnemyType enemyType, boolean effective) {
         if (effective) {
             return switch (characterClass) {
                 case WARRIOR, KNIGHT, OATHBREAKER -> switch (enemyType) {
@@ -1338,7 +1501,7 @@ public class BattleAction implements CharacterAction {
      * @param characterClass the character's class
      * @return crit narrative text
      */
-    private String getCritNarrative(com.tatumgames.mikros.games.rpg.model.CharacterClass characterClass) {
+    private String getCritNarrative(CharacterClass characterClass) {
         return switch (characterClass) {
             case ROGUE -> " A lethal strike finds the perfect opening!";
             case MAGE -> " Your magical precision finds a critical weakness!";
@@ -1382,8 +1545,8 @@ public class BattleAction implements CharacterAction {
     }
 
     /**
-     * Calculates base damage based on enemy power and level.
-     * Scales with enemy strength and applies different formulas for victory vs defeat.
+     * Calculates base damage based on enemy power and level. Scales with enemy strength and applies
+     * different formulas for victory vs defeat.
      *
      * @param enemyPower the calculated enemy power
      * @param enemyLevel the enemy's level
@@ -1461,41 +1624,65 @@ public class BattleAction implements CharacterAction {
     /**
      * Handles a backlash event and returns narrative.
      *
-     * @param event     the backlash event type
+     * @param event the backlash event type
      * @param character the character
-     * @param stats     the character's stats
+     * @param stats the character's stats
      * @return narrative describing the backlash
      */
-    private String handleBacklashEvent(BacklashEventType event, RPGCharacter character, RPGStats stats) {
+    private String handleBacklashEvent(
+            BacklashEventType event, RPGCharacter character, RPGStats stats) {
         String narrative = "";
 
         switch (event.getEffectType()) {
             case ELITE_SPAWN:
                 // Note: This would spawn an additional elite, but for simplicity, we'll just add narrative
-                narrative = "⚔️💀 **" + event.getDisplayName() + ":** " + event.getDescription() +
-                        " The broken oath draws another elite to the fight!";
+                narrative =
+                        "⚔️💀 **"
+                                + event.getDisplayName()
+                                + ":** "
+                                + event.getDescription()
+                                + " The broken oath draws another elite to the fight!";
                 break;
             case TEMPORARY_CURSE:
                 character.setTemporaryCurseExpiresAt(Instant.now().plusSeconds(12 * 3600));
-                narrative = "⚔️💀 **" + event.getDisplayName() + ":** " + event.getDescription() +
-                        " A temporary curse afflicts you for 12 hours.";
+                narrative =
+                        "⚔️💀 **"
+                                + event.getDisplayName()
+                                + ":** "
+                                + event.getDescription()
+                                + " A temporary curse afflicts you for 12 hours.";
                 break;
             case POWER_OFFER:
                 character.addCorruption(1);
                 // Apply +5% damage bonus for this battle (handled via corruption bonus)
-                narrative = "⚔️💀 **" + event.getDisplayName() + ":** " + event.getDescription() +
-                        " You accept the demon's offer, gaining corruption and power for this battle.";
+                narrative =
+                        "⚔️💀 **"
+                                + event.getDisplayName()
+                                + ":** "
+                                + event.getDescription()
+                                + " You accept the demon's offer, gaining corruption and power for this battle.";
                 break;
             case DAMAGE:
-                int surgeDamage = (int) (stats.getMaxHp() * (0.05 + random.nextDouble() * 0.05)); // 5-10% max HP
+                int surgeDamage =
+                        (int) (stats.getMaxHp() * (0.05 + random.nextDouble() * 0.05)); // 5-10% max HP
                 stats.takeDamage(surgeDamage);
-                narrative = "⚔️💀 **" + event.getDisplayName() + ":** " + event.getDescription() +
-                        " You take " + surgeDamage + " damage from the corruption surge.";
+                narrative =
+                        "⚔️💀 **"
+                                + event.getDisplayName()
+                                + ":** "
+                                + event.getDescription()
+                                + " You take "
+                                + surgeDamage
+                                + " damage from the corruption surge.";
                 break;
             case STAT_PENALTY:
                 // Applied via effectiveness reduction (handled in narrative)
-                narrative = "⚔️💀 **" + event.getDisplayName() + ":** " + event.getDescription() +
-                        " Your power is weakened this battle.";
+                narrative =
+                        "⚔️💀 **"
+                                + event.getDisplayName()
+                                + ":** "
+                                + event.getDescription()
+                                + " Your power is weakened this battle.";
                 break;
         }
 

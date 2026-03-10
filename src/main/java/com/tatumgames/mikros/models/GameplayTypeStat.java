@@ -3,8 +3,8 @@ package com.tatumgames.mikros.models;
 /**
  * Represents statistics for a gameplay type (casual, competitive, hyper-casual, etc.).
  */
-public record GameplayTypeStat(String gameplayType, double growthPercentage, long playerCount, double marketShare,
-                               int rank) {
+public record GameplayTypeStat(
+        String gameplayType, double growthPercentage, long playerCount, double marketShare, int rank) {
     /**
      * Creates a new GameplayTypeStat.
      *
@@ -17,4 +17,3 @@ public record GameplayTypeStat(String gameplayType, double growthPercentage, lon
     public GameplayTypeStat {
     }
 }
-

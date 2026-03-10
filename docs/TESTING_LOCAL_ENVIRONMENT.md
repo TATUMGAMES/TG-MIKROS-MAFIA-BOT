@@ -233,21 +233,21 @@ The bot **automatically runs in mock mode** by default. All external API calls a
 
 ### Games Testing
 
-#### Community Games Setup
+#### Community Games Setup (Word Unscramble)
 
-| Command              | Test Case                     | Expected Result            | Notes                       |
-|----------------------|-------------------------------|----------------------------|-----------------------------|
-| `/admin-game-setup`  | Configure games channel       | Channel set, games enabled | Admin only                  |
-| `/admin-game-setup`  | Set reset time to 00:00 UTC   | Daily reset scheduled      | Time in UTC                 |
-| `/admin-game-config` | Enable/disable specific games | Game status updated        | Can toggle individual games |
+| Command                  | Test Case                   | Expected Result            | Notes           |
+|--------------------------|-----------------------------|----------------------------|-----------------|
+| `/admin-scramble-setup`  | Configure games channel     | Channel set, games enabled | Admin only      |
+| `/admin-scramble-setup`  | Set reset time to 00:00 UTC | 4-hour reset scheduled     | Time in UTC     |
+| `/admin-scramble-config` | Enable/disable game         | Game status updated        | Can toggle game |
 
 #### Word Unscramble Game
 
-| Command            | Test Case        | Expected Result                 | Notes                     |
-|--------------------|------------------|---------------------------------|---------------------------|
-| `/guess gameplay`  | Correct guess    | Public announcement, game ends  | First correct guess wins  |
-| `/guess wrongword` | Incorrect guess  | Private error message           | Can try again             |
-| `/game-stats`      | View game status | Shows current game, leaderboard | Displays time until reset |
+| Command                          | Test Case        | Expected Result                 | Notes                     |
+|----------------------------------|------------------|---------------------------------|---------------------------|
+| `/scramble-guess word:gameplay`  | Correct guess    | Public announcement, game ends  | First correct guess wins  |
+| `/scramble-guess word:wrongword` | Incorrect guess  | Private error message           | Can try again             |
+| `/scramble-stats`                | View game status | Shows current game, leaderboard | Displays time until reset |
 
 ### RPG Testing
 
@@ -284,15 +284,15 @@ The bot **automatically runs in mock mode** by default. All external API calls a
 | `/admin-rpg-config set-cooldown 12`       | Set cooldown      | Cooldown changed to 12 hours | Affects all players |
 | `/admin-rpg-config set-xp-multiplier 1.5` | Set XP multiplier | XP gains increased by 50%    | 0.5x to 2.0x range  |
 
-### Spelling Testing
+### Word Unscramble (Spelling) Testing
 
-| Command              | Test Case            | Expected Result              | Notes                       |
-|----------------------|----------------------|------------------------------|-----------------------------|
-| `/spell-challenge`   | View daily challenge | Scrambled word displayed     | Auto-creates if none exists |
-| `/guess gaming`      | Correct guess        | Points awarded (3 or 1)      | First solver gets 3 pts     |
-| `/guess wrong`       | Incorrect guess      | Error, attempt counted       | 3 attempts per day          |
-| `/guess`             | 4th attempt          | Error: no attempts remaining | Resets daily                |
-| `/spell-leaderboard` | View rankings        | Top 10 players by points     | All-time cumulative         |
+| Command                       | Test Case              | Expected Result              | Notes                        |
+|-------------------------------|------------------------|------------------------------|------------------------------|
+| `/scramble-stats`             | View current challenge | Scrambled word / game state  | Auto-creates if none exists  |
+| `/scramble-guess word:gaming` | Correct guess          | Points awarded               | First solver gets bonus      |
+| `/scramble-guess word:wrong`  | Incorrect guess        | Error, attempt counted       | 3 incorrect guesses per word |
+| `/scramble-guess`             | 4th incorrect          | Error: no attempts remaining | Resets when new word starts  |
+| `/scramble-leaderboard`       | View rankings          | Top players by points        | All-time cumulative          |
 
 ### Analytics Testing
 
@@ -332,6 +332,20 @@ with TODO comments.
 
 ### Existing Tests
 
+Run all tests with `./gradlew test`. View the HTML report at `build/reports/tests/test/index.html`.
+
+| Test Class                               | Location                                                             | Description                                                                                               |
+|------------------------------------------|----------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| **ConfigLoaderTest**                     | `config/ConfigLoaderTest.java`                                       | Loads and validates configuration (env, .env).                                                            |
+| **InMemoryModerationLogServiceTest**     | `services/InMemoryModerationLogServiceTest.java`                     | Moderation log: log, getUserHistory, filtering, guild/user isolation, concurrency, null/blank validation. |
+| **InMemoryGamePromotionServiceTest**     | `services/InMemoryGamePromotionServiceTest.java`                     | Game promotion service: channel config, verbosity, active promotions.                                     |
+| **BiomeEnemiesTest**                     | `games/rpg/biome/BiomeEnemiesTest.java`                              | RPG biome enemy definitions and lookups.                                                                  |
+| **BossServiceSecretBossTest**            | `games/rpg/service/BossServiceSecretBossTest.java`                   | Secret boss spawn, charges, defeat, expiry, rewards.                                                      |
+| **LoreRecognitionServiceSecretBossTest** | `games/rpg/service/LoreRecognitionServiceSecretBossTest.java`        | Lore-based secret boss milestone recognition.                                                             |
+| **RPGCharacterSecretBossTest**           | `games/rpg/model/RPGCharacterSecretBossTest.java`                    | RPGCharacter event charges, secret boss counter, milestones.                                              |
+| **WordUnscrambleUsedWordTrackerTest**    | `games/word_unscramble/model/WordUnscrambleUsedWordTrackerTest.java` | Used-word tracking, filter, cleanup, reset per level/guild.                                               |
+| **InMemoryBumpServiceTest**              | `bump/service/InMemoryBumpServiceTest.java`                          | Bump config, channel, interval, record bump, stats, clear guild, null/blank validation.                   |
+
 #### InMemoryModerationLogServiceTest
 
 **Location:** `src/test/java/com/tatumgames/mikros/services/InMemoryModerationLogServiceTest.java`
@@ -363,8 +377,26 @@ with TODO comments.
 
 ```
 src/test/java/com/tatumgames/mikros/
-└── services/
-    └── InMemoryModerationLogServiceTest.java
+├── config/
+│   └── ConfigLoaderTest.java
+├── services/
+│   ├── InMemoryModerationLogServiceTest.java
+│   └── InMemoryGamePromotionServiceTest.java
+├── bump/
+│   └── service/
+│       └── InMemoryBumpServiceTest.java
+├── games/
+│   ├── rpg/
+│   │   ├── biome/
+│   │   │   └── BiomeEnemiesTest.java
+│   │   ├── model/
+│   │   │   └── RPGCharacterSecretBossTest.java
+│   │   └── service/
+│   │       ├── BossServiceSecretBossTest.java
+│   │       └── LoreRecognitionServiceSecretBossTest.java
+│   └── word_unscramble/
+│       └── model/
+│           └── WordUnscrambleUsedWordTrackerTest.java
 ```
 
 ### Running All Tests
@@ -384,6 +416,15 @@ src/test/java/com/tatumgames/mikros/
 
 # Skip tests during build
 ./gradlew build -x test
+```
+
+### Code Coverage (JaCoCo)
+
+After running tests, an HTML coverage report is generated at `build/reports/jacoco/test/html/index.html`. Coverage
+excludes the `bot` package and `commands` packages. To enforce a minimum line coverage (50%) on the included code, run:
+
+```bash
+./gradlew jacocoTestCoverageVerification
 ```
 
 ### Test Framework

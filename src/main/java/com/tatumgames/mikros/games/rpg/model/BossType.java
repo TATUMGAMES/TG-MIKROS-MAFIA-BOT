@@ -1,8 +1,7 @@
 package com.tatumgames.mikros.games.rpg.model;
 
 /**
- * Enum representing boss types.
- * Determines which classes get bonuses against this boss.
+ * Enum representing boss types. Determines which classes get bonuses against this boss.
  */
 public enum BossType {
     BEAST("Beast", "🐺"),
@@ -32,4 +31,3 @@ public enum BossType {
         return emoji;
     }
 }
-

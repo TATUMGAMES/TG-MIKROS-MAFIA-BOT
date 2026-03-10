@@ -46,7 +46,8 @@ public class AuraService {
      * @return true if can acquire
      */
     public boolean canAcquireAura(String guildId, LegendaryAura aura, RPGCharacter character) {
-        Map<LegendaryAura, List<String>> guildAuras = auraHolders.computeIfAbsent(guildId, k -> new ConcurrentHashMap<>());
+        Map<LegendaryAura, List<String>> guildAuras =
+                auraHolders.computeIfAbsent(guildId, k -> new ConcurrentHashMap<>());
         List<String> holders = guildAuras.computeIfAbsent(aura, k -> new ArrayList<>());
 
         // Check max holders
@@ -77,7 +78,8 @@ public class AuraService {
      * @return true if successfully acquired
      */
     public boolean acquireAura(String guildId, LegendaryAura aura, String userId) {
-        Map<LegendaryAura, List<String>> guildAuras = auraHolders.computeIfAbsent(guildId, k -> new ConcurrentHashMap<>());
+        Map<LegendaryAura, List<String>> guildAuras =
+                auraHolders.computeIfAbsent(guildId, k -> new ConcurrentHashMap<>());
         List<String> holders = guildAuras.computeIfAbsent(aura, k -> new ArrayList<>());
 
         // Check max holders
@@ -150,8 +152,8 @@ public class AuraService {
      * @return damage with penalty applied
      */
     public int applyHerosMarkPenalty(RPGCharacter character, int baseDamage) {
-        if (character.getLegendaryAura() != null &&
-                character.getLegendaryAura().equals(LegendaryAura.HEROS_MARK.name())) {
+        if (character.getLegendaryAura() != null
+                && character.getLegendaryAura().equals(LegendaryAura.HEROS_MARK.name())) {
             // Apply +10% damage penalty
             return (int) (baseDamage * 1.10);
         }
@@ -206,4 +208,3 @@ public class AuraService {
         }
     }
 }
-

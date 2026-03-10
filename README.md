@@ -1,7 +1,7 @@
 # MIKROS Discord Bot
 
 [![Java](https://img.shields.io/badge/Java-17-orange.svg)](https://www.oracle.com/java/)
-[![Gradle](https://img.shields.io/badge/Gradle-8.5-blue.svg)](https://gradle.org/)
+[![Gradle](https://img.shields.io/badge/Gradle-8.x-blue.svg)](https://gradle.org/)
 [![JDA](https://img.shields.io/badge/JDA-5.0.0--beta.20-5865F2.svg)](https://github.com/DV8FromTheWorld/JDA)
 [![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 
@@ -23,6 +23,7 @@ interactive gaming experiences.
 - [Documentation](#documentation)
 - [Troubleshooting & FAQ](#troubleshooting--faq)
 - [License & Credits](#license--credits)
+- [Release Notes](#release-notes)
 
 ---
 
@@ -51,14 +52,15 @@ for game developers and studios.
 
 ## ✨ Features
 
-### 🔨 Admin Tools (TASKS_01)
+### 🔨 Admin Tools
 
 **Moderation Commands:**
 
-- `/warn` - Issue warnings with logged reasons
-- `/kick` - Remove users from the server
-- `/ban` - Ban users with optional message deletion
-- `/history` - View complete moderation history for any user
+- `/admin-warn` - Issue warnings with logged reasons
+- `/admin-kick` - Remove users from the server
+- `/admin-ban` - Ban users with optional message deletion
+- `/admin-history` - View user moderation history
+- Moderation history is tracked per user per guild (viewable via admin tools and reputation lookup)
 
 **Features:**
 
@@ -67,7 +69,7 @@ for game developers and studios.
 - Permission checks
 - Detailed action timestamps
 
-### 🛡️ Enhanced Moderation (TASKS_02)
+### 🛡️ Enhanced Moderation
 
 **Smart Suggestions:**
 
@@ -89,7 +91,7 @@ for game developers and studios.
 - Integration with moderation actions
 - Automatic bot detection reporting
 
-### 🎮 Game Promotion System (TASKS_03)
+### 🎮 Game Promotion System
 
 **Admin Commands:**
 
@@ -110,7 +112,7 @@ for game developers and studios.
 **Features:**
 
 - Automatic server bumping for Disboard and/or Disurl
-- Configurable bump interval (1-24 hours, default: 4 hours)
+- Configurable bump interval (1-24 hours, default: 8 hours)
 - Per-server independent configuration
 - Rate limit safety (respects external bot cooldowns)
 - Bot presence verification before bumping
@@ -127,9 +129,11 @@ for game developers and studios.
 
 **TODO:** Integration with MIKROS Game Promotion API
 
-### 📊 MIKROS Ecosystem Analytics (TASKS_04)
+### 📊 MIKROS Ecosystem Analytics
 
-**Setup:** Use `/admin-mikros-ecosystem-setup` to configure a channel for analytics commands.
+**Status:** MIKROS Ecosystem analytics commands are **temporarily disabled** until backend API integration is complete. The following is the intended design:
+
+**Setup:** `/admin-mikros-ecosystem-setup` would configure a channel for analytics commands.
 
 **Command:** `/mikros-ecosystem` with 13 subcommands (requires channel setup):
 
@@ -165,7 +169,7 @@ for game developers and studios.
 
 **TODO:** Integration with MIKROS Analytics API (see `/docs/API_*.md`)
 
-### 🤖 Bot Detection System (TASKS_31)
+### 🤖 Bot Detection System
 
 **Automated Bot & Spam Detection:**
 
@@ -195,7 +199,18 @@ for game developers and studios.
 - Builds negative reputation scores visible in `/lookup` and `/history`
 - No positive reports for bots (only negative)
 
-### 🎲 Community Games Engine (TASKS_05)
+### 🍯 Honeypot System
+
+**Spam Detection & Cleanup:**
+
+- `/honeypot` - Manage honeypot system for spam detection (admin)
+- `/ban-and-remove-all-messages` - Ban a user and delete all their messages
+- `/cleanup` - Remove messages from a user without banning
+- `/list-bans` - Display recent bans and reasons
+
+Per-server configuration for honeypot channels and alert channels.
+
+### 🎲 Community Games Engine
 
 **Daily Reset Games:**
 
@@ -208,18 +223,31 @@ for game developers and studios.
 
 **Player Commands:**
 
-- `/scramble-guess <word>` - Submit word unscramble guess
+- `/scramble-guess word:<guess>` - Submit word unscramble guess or request a hint (`word:hint`)
+    - **Note:** Word Unscramble commands must be used in the channel assigned by administrators via
+      `/admin-scramble-setup`
 - `/scramble-stats` - View leaderboard and time remaining
-- `/scramble-profile` - View your individual statistics (words solved, points, fastest time, accuracy, etc.)
+- `/scramble-profile` - View your individual statistics (words solved, points, fastest time, accuracy, streaks, etc.)
+- `/scramble-leaderboard` - View top players by total points
 
 **Features:**
 
-- Daily automatic resets
+- 4-hour automatic resets with 20 progressive difficulty levels
+- Word rotation system (levels 1-5: 60-day cooldown per server)
+- Level isolation (no duplicate words across levels)
+- Enhanced scoring system:
+    - Level multipliers (1.0x to 2.0x based on difficulty)
+    - Scaled first solver bonuses (50-200 points)
+    - Volume bonuses (10th word milestone, 3-streak bonus)
+    - Accuracy factor in final score
+- Hint system (one hint per word per player)
+- Partial reveals for levels 6+ (hints instead of full answers)
+- Enhanced scrambling algorithm for higher levels
 - Per-server configuration
 - Rich leaderboards with medals
-- Time-based scoring
+- Time-based scoring with diminishing returns bonuses
 
-### ⚔️ Text-Based RPG System (TASKS_06, TASKS_23)
+### ⚔️ Text-Based RPG System
 
 **Character System:**
 
@@ -239,14 +267,17 @@ for game developers and studios.
 **Player Commands:**
 
 - `/rpg-register` - Create your character (6 classes available)
+    - **Note:** RPG commands must be used in the channel assigned by administrators via `/admin-rpg-setup`
 - `/rpg-profile` - View character stats, charges, recovery status
-- `/rpg-action` - Perform actions (explore, train, battle, rest)
+- `/rpg-action` - Perform actions (explore, train, battle, rest). Failure messages are private. Explore and train now
+  have increased XP with balanced risks.
 - `/rpg-resurrect` - Resurrect dead players (Priest-only, free action)
 - `/rpg-duel` - Challenge another player to a duel (free action, 3x/24h limit)
 - `/rpg-boss-battle` - Attack community bosses (attack, status, leaderboard)
 - `/rpg-leaderboard` - View top players
-- `/rpg-inventory` - View your collected items and crafted bonuses
-- `/rpg-craft` - Craft permanent stat-boosting items from materials
+- `/rpg-inventory` - View your collected items and crafted bonuses (private by default, use `visibility:public` to
+  share)
+- `/rpg-craft` - Craft permanent stat-boosting items from materials (success messages are public, errors are private)
 
 **Admin Commands:**
 
@@ -257,9 +288,19 @@ for game developers and studios.
 
 - **Action Charge System:** Dynamic charges (3-10 based on level), refresh every 12 hours
 - **Four Action Types:** Explore, Train, Battle, Rest, Donate
-- **65+ narrative encounters** (Nilfheim-themed)
+- **U-Curve Difficulty System:** Battle difficulty scales with player level
+    - **Level 1-5:** More dangerous encounters (can face enemies up to +2 levels), 5% chance for veteran enemies (+3
+      levels), +25% damage taken
+    - **Level 6-15:** Moderate difficulty (standard enemy scaling)
+    - **Level 16+:** Challenging encounters (+15% damage taken, occasionally stronger enemies)
+- **Level-Up HP Restoration:** Restores 75% of new max HP (not 100%) to preserve battle tension
+- **Biome System:** Six biomes/zones (Frozen Wastes, Ancient Ruins, Shadowed Forests, Volcanic Depths, Mystical Heights,
+  Twisted Realms)
+    - Players start in a random biome and progress through biomes after 10 explorations
+    - Biome-specific narratives for exploration (65+ total)
+    - Biome-specific enemies for battles (66+ total)
+    - Biome information visible in `/rpg-profile`
 - **Wandering Figures:** Ultra-rare (0.5% chance) encounters with mysterious figures during exploration
-- **66 enemy types** for battles with stat effectiveness system
 - **Pack Enemies:** Rare pack enemies (e.g., "Ice Wolf Pack") deal 15% more damage and use pack-specific narrative
 - **Server-Wide Events:** Nilfheim Calms affect all players (every 48-96 hours, 12-hour duration)
 - **Consumable Infusions:** Temporary single-use crafting items with powerful effects
@@ -270,6 +311,12 @@ for game developers and studios.
 - **Boss Progression:** Levels increase based on defeats
 - **Boss XP Rewards:** Top 30% of participants receive proportional XP rewards (scales with participation)
 - **Class Bonuses:** Each class gets +20% damage vs specific boss types
+- **Blessings System:** Temporary stat boosts granted after consecutive boss failures (5, 10, 15+ failures)
+    - Class-specific stat multipliers (STR/AGI/INT +25% base, scales with tier)
+    - Minor (5 failures), Major (10 failures), Legendary (15+ failures) tiers
+    - Blessings expire immediately upon boss defeat
+    - Visible in boss announcements and `/rpg-profile`
+    - Only affects damage output (stat multipliers), as players don't take damage in boss battles
 - **Boss Expiration:** Bosses expire after 24 hours if not defeated, applying world curses (checked every 30 minutes)
 - **World Curse System:** Temporary world-wide curses when bosses expire undefeated (7 minor + 6 major curses)
 - **Achievement System:** First-to achievements, pattern achievements, legendary auras, titles, story flags
@@ -280,35 +327,7 @@ for game developers and studios.
 
 **TODO:** Quests, multiplayer, prestige system
 
-### 🧠 Word Unscramble Game (TASKS_05)
-
-**Features:**
-
-- Daily word unscrambling challenge
-- Gaming/fantasy-themed words
-- Hourly game resets
-- Point-based scoring (100-1000 points based on solve speed)
-- Bonus points for solving words that stumped others
-- **3 incorrect guesses limit per word** (prevents spam, resets with each new word)
-
-**Commands:**
-
-- `/scramble-guess <word>` - Submit word unscramble guess
-- `/scramble-stats` - View game leaderboard and status
-- `/admin-scramble-setup` - Setup word unscramble game (Admin only)
-
-**Gameplay:**
-
-- Hourly game resets
-- Leaderboard tracking
-- Individual player statistics tracking (words solved, points, fastest time, accuracy)
-- Beautiful embed formatting
-- Remaining guesses shown after each incorrect attempt
-- Branding words included: "MIKROS", "TATUM GAMES", "TATUM TECH"
-
-**TODO:** Hint system, RPG integration, difficulty levels
-
-### 🚀 Smart Promotional Lead Generator (TASKS_08)
+### 🚀 Smart Promotional Lead Generator
 
 **Passive Detection:**
 
@@ -319,8 +338,9 @@ for game developers and studios.
 
 **Commands:**
 
-- `/setup-promotions` - Enable/disable detection (admin)
-- `/set-promo-frequency` - Set cooldown days (admin)
+- `/admin-setup-promotions` - Enable/disable detection (admin)
+- `/admin-set-promo-frequency` - Set cooldown days (admin)
+- `/promo-request` - Request MIKROS promotional services and schedule a demo
 
 **Features:**
 
@@ -389,10 +409,15 @@ for game developers and studios.
     - Configuration classes
 
 4. **Feature Modules**
-    - `communitygames/` - Daily games system
-    - `rpg/` - Text-based RPG
-    - `spelling/` - Spelling challenges
-    - `promo/` - Promotional detection
+    - `admin/` - Moderation, history, analytics (admin commands)
+    - `games/word_unscramble/` - Word Unscramble game
+    - `games/rpg/` - Text-based RPG
+    - `bump/` - Auto-bump (Disboard/Disurl)
+    - `botdetection/` - Bot and spam detection
+    - `honeypot/` - Honeypot spam detection and cleanup
+    - `promo/` - Promotional detection and promo-request
+    - `support/` - Support and info commands
+    - `tatumtech/` - Tatum Tech event scheduler
 
 ### Data Persistence
 
@@ -479,63 +504,67 @@ Includes:
 
 ### Command Reference
 
-| Command                          | Category   | Description                                                                              | Permission       |
-|----------------------------------|------------|------------------------------------------------------------------------------------------|------------------|
-| `/warn`                          | Moderation | Warn a user with reason                                                                  | Moderate Members |
-| `/kick`                          | Moderation | Kick a user from server                                                                  | Kick Members     |
-| `/ban`                           | Moderation | Ban a user (optional message deletion)                                                   | Ban Members      |
-| `/history`                       | Moderation | View user moderation history                                                             | Moderate Members |
-| `/warn-suggestions`              | Moderation | Get AI-powered warning suggestions                                                       | Moderate Members |
-| `/ban-suggestions`               | Moderation | Get AI-powered ban suggestions                                                           | Moderate Members |
-| `/server-stats`                  | Community  | View server activity statistics (includes bot prevention count)                          | Moderate Members |
-| `/top-contributors`              | Community  | View most active members                                                                 | Everyone         |
-| `/praise`                        | Reputation | Award positive reputation                                                                | Admin Only       |
-| `/report`                        | Reputation | Report negative behavior                                                                 | Admin Only       |
-| `/lookup`                        | Reputation | Lookup user scores by username                                                           | Admin Only       |
-| `/admin-mikros-ecosystem-setup`  | Analytics  | Setup MIKROS Ecosystem channel                                                           | Administrator    |
-| `/mikros-ecosystem`              | Analytics  | View MIKROS Analytics (13 subcommands, requires channel setup)                           | Everyone         |
-| `/admin-scramble-setup`          | Games      | Setup word unscramble game                                                               | Administrator    |
-| `/admin-scramble-config`         | Games      | Configure games (5 subcommands)                                                          | Administrator    |
-| `/scramble-guess`                | Games      | Submit word unscramble guess                                                             | Everyone         |
-| `/scramble-stats`                | Games      | View game leaderboard                                                                    | Everyone         |
-| `/scramble-profile`              | Games      | View your individual statistics (words solved, points, fastest time, etc.)               | Everyone         |
-| `/rpg-register`                  | RPG        | Create RPG character (6 classes)                                                         | Everyone         |
-| `/rpg-profile`                   | RPG        | View character profile                                                                   | Everyone         |
-| `/rpg-action`                    | RPG        | Perform action (explore/train/battle/rest)                                               | Everyone         |
-| `/rpg-resurrect`                 | RPG        | Resurrect dead player (Priest-only)                                                      | Everyone         |
-| `/rpg-duel`                      | RPG        | Challenge another player to a duel (free, 3x/24h limit)                                  | Everyone         |
-| `/rpg-boss-battle`               | RPG        | Attack boss, check status, leaderboard                                                   | Everyone         |
-| `/rpg-leaderboard`               | RPG        | View RPG leaderboard                                                                     | Everyone         |
-| `/rpg-inventory`                 | RPG        | View collected items and crafted bonuses                                                 | Everyone         |
-| `/rpg-craft`                     | RPG        | Craft permanent stat-boosting items                                                      | Everyone         |
-| `/rpg-stats`                     | RPG        | View detailed RPG statistics                                                             | Everyone         |
-| `/admin-rpg-setup`               | RPG        | Setup RPG system                                                                         | Administrator    |
-| `/admin-rpg-config`              | RPG        | Configure RPG (5 subcommands)                                                            | Administrator    |
-| `/rpg-reset`                     | RPG        | Reset all RPG data for server                                                            | Administrator    |
-| `/setup-promotions`              | Promo      | Enable/disable promo detection                                                           | Administrator    |
-| `/set-promo-frequency`           | Promo      | Set promo cooldown                                                                       | Administrator    |
-| `/admin-promotion-setup`         | Admin      | Configure game promotion channel                                                         | Administrator    |
-| `/admin-promotion-config`        | Admin      | Configure promotion settings (view, update-channel, set-verbosity, disable, force-check) | Administrator    |
-| `/admin-bump-setup`              | Admin      | Set up automatic server bumping (channel, bots selection)                               | Administrator    |
-| `/admin-bump-config`             | Admin      | Configure auto-bump settings (view, set-interval, update-bots, disable)               | Administrator    |
-| `/admin-bump-stats`              | Admin      | View server bump statistics and history                                                 | Admin            |
-| `/admin-bot-detection-setup`     | Moderation | Enable/disable bot detection system                                                      | Administrator    |
-| `/admin-bot-detection-config`    | Moderation | Configure bot detection settings (8 subcommands)                                         | Administrator    |
-| `/promo-request`                  | Promo      | Request MIKROS promotional services and schedule a demo                                  | Everyone         |
+| Command                         | Category   | Description                                                                              | Permission       |
+|---------------------------------|------------|------------------------------------------------------------------------------------------|------------------|
+| `/admin-warn`                   | Moderation | Warn a user with reason                                                                  | Moderate Members |
+| `/admin-kick`                   | Moderation | Kick a user from server                                                                  | Kick Members     |
+| `/admin-ban`                    | Moderation | Ban a user (optional message deletion)                                                   | Ban Members      |
+| `/admin-history`                | Moderation | View user moderation history                                                             | Moderate Members |
+| `/warn-suggestions`             | Moderation | Get AI-powered warning suggestions                                                       | Moderate Members |
+| `/ban-suggestions`              | Moderation | Get AI-powered ban suggestions                                                           | Moderate Members |
+| `/server-stats`                 | Community  | View server activity statistics (includes bot prevention count)                          | Moderate Members |
+| `/top-contributors`             | Community  | View most active members                                                                 | Everyone         |
+| `/praise`                       | Reputation | Award positive reputation                                                                | Admin Only       |
+| `/report`                       | Reputation | Report negative behavior                                                                 | Admin Only       |
+| `/lookup`                       | Reputation | Lookup user scores by username                                                           | Admin Only       |
+| *(disabled)* `/admin-mikros-ecosystem-setup` | Analytics  | Setup MIKROS Ecosystem channel (temporarily disabled)                    | Administrator    |
+| *(disabled)* `/mikros-ecosystem`             | Analytics  | View MIKROS Analytics (temporarily disabled until API integration)       | Everyone         |
+| `/admin-scramble-setup`         | Games      | Setup word unscramble game                                                               | Administrator    |
+| `/admin-scramble-config`        | Games      | Configure games (5 subcommands)                                                          | Administrator    |
+| `/scramble-guess`               | Games      | Submit word unscramble guess                                                             | Everyone         |
+| `/scramble-stats`               | Games      | View game leaderboard                                                                    | Everyone         |
+| `/scramble-profile`             | Games      | View your individual statistics (words solved, points, fastest time, etc.)               | Everyone         |
+| `/rpg-register`                 | RPG        | Create RPG character (7 classes)                                                          | Everyone         |
+| `/rpg-profile`                  | RPG        | View character profile                                                                   | Everyone         |
+| `/rpg-action`                   | RPG        | Perform action (explore/train/battle/rest). Failure messages are private.                | Everyone         |
+| `/rpg-resurrect`                | RPG        | Resurrect dead player (Priest-only, free action)                                         | Everyone         |
+| `/rpg-duel`                     | RPG        | Challenge another player to a duel (free, 3x/24h limit)                                  | Everyone         |
+| `/rpg-boss-battle`              | RPG        | Attack boss, check status, leaderboard                                                   | Everyone         |
+| `/rpg-leaderboard`              | RPG        | View RPG leaderboard                                                                     | Everyone         |
+| `/rpg-inventory`                | RPG        | View collected items and crafted bonuses (private by default, optional public)           | Everyone         |
+| `/rpg-craft`                    | RPG        | Craft permanent stat-boosting items (success messages public, errors private)            | Everyone         |
+| `/rpg-stats`                    | RPG        | View detailed RPG statistics                                                             | Everyone         |
+| `/admin-rpg-setup`              | RPG        | Setup RPG system                                                                         | Administrator    |
+| `/admin-rpg-config`             | RPG        | Configure RPG (5 subcommands)                                                            | Administrator    |
+| `/rpg-reset`                    | RPG        | Reset all RPG data for server                                                            | Administrator    |
+| `/admin-setup-promotions`       | Promo      | Enable/disable promo detection                                                           | Administrator    |
+| `/admin-set-promo-frequency`    | Promo      | Set promo cooldown                                                                       | Administrator    |
+| `/admin-promotion-setup`        | Admin      | Configure game promotion channel                                                         | Administrator    |
+| `/admin-promotion-config`       | Admin      | Configure promotion settings (view, update-channel, set-verbosity, disable, force-check) | Administrator    |
+| `/admin-bump-setup`             | Admin      | Set up automatic server bumping (channel, bots selection)                                | Administrator    |
+| `/admin-bump-config`            | Admin      | Configure auto-bump settings (view, set-interval, update-bots, disable)                  | Administrator    |
+| `/admin-bump-stats`             | Admin      | View server bump statistics and history                                                  | Admin            |
+| `/admin-bot-detection-setup`    | Moderation | Enable/disable bot detection system                                                      | Administrator    |
+| `/admin-bot-detection-config`   | Moderation | Configure bot detection settings (8 subcommands)                                         | Administrator    |
+| `/honeypot`                     | Honeypot   | Manage honeypot system for spam detection                                                | Administrator    |
+| `/ban-and-remove-all-messages`  | Honeypot   | Ban a user and delete all their messages                                                 | Administrator    |
+| `/cleanup`                      | Honeypot   | Remove messages from a user without banning                                              | Administrator    |
+| `/list-bans`                    | Honeypot   | Display recent bans and reasons                                                          | Administrator    |
+| `/promo-request`                | Promo      | Request MIKROS promotional services and schedule a demo                                  | Everyone         |
 | `/support`                      | Support    | Learn how to support the MIKROS Bot development                                          | Everyone         |
-| `/info`                         | Support    | Learn about the MIKROS Bot and MIKROS Ecosystem                                        | Everyone         |
+| `/info`                         | Support    | Learn about the MIKROS Bot and MIKROS Ecosystem                                          | Everyone         |
 
-**Total Commands:** 41+ (including subcommands)
+**Total Commands:** 45+ (including subcommands)
 
 ### Example Usage
 
 #### Moderation
 
 ```
-/warn @user Spamming in general channel
-/kick @user Inappropriate behavior
-/ban @user Repeated violations delete_days:7
-/history @user
+/admin-warn user:@user reason:Spamming in general channel
+/admin-kick user:@user reason:Inappropriate behavior
+/admin-ban user:@user reason:Repeated violations delete_days:7
+/admin-history user:@user
 ```
 
 #### Community Games
@@ -663,37 +692,33 @@ This project follows strict coding standards defined in:
 src/main/java/com/tatumgames/mikros/
 ├── bot/                    # Bot entry point
 │   └── BotMain.java
-├── commands/               # Command handlers
-│   ├── CommandHandler.java (interface)
-│   └── [33+ command files]
-├── config/                 # Configuration
-│   ├── ConfigLoader.java
-│   └── ModerationConfig.java
-├── models/                 # Data models
-│   └── [20+ model files]
-├── services/               # Business logic
-│   └── [15+ service files]
-├── communitygames/         # Community games feature
-│   ├── commands/
-│   ├── games/
-│   ├── model/
-│   └── service/
-├── rpg/                    # RPG system
-│   ├── actions/
+├── handler/                # Command handler interface
+│   └── CommandHandler.java
+├── config/                 # Configuration (ConfigLoader, etc.)
+├── models/                 # Shared data models
+├── services/               # Shared business logic
+├── admin/                  # Admin moderation & analytics commands
+│   └── commands/
+├── games/
+│   ├── word_unscramble/    # Word Unscramble game
+│   │   ├── commands/
+│   │   ├── model/
+│   │   └── service/
+│   └── rpg/                # Text-based RPG
+│       ├── actions/
+│       ├── commands/
+│       ├── model/
+│       ├── service/
+│       └── ...
+├── bump/                   # Auto-bump (Disboard/Disurl)
+├── botdetection/           # Bot & spam detection
+├── honeypot/               # Honeypot spam detection
+├── promo/                  # Promotional detection
 │   ├── commands/
 │   ├── config/
-│   ├── model/
-│   └── service/
-├── spelling/               # Spelling challenge
-│   ├── commands/
-│   ├── model/
-│   └── service/
-└── promo/                  # Promotional detection
-    ├── commands/
-    ├── config/
-    ├── listener/
-    ├── model/
-    └── service/
+│   └── ...
+├── support/                # Support & info commands
+└── tatumtech/              # Tatum Tech event scheduler
 ```
 
 ### Adding New Features
@@ -752,11 +777,12 @@ src/main/java/com/tatumgames/mikros/
 
 - **[`DEPLOYMENT_GOOGLE_CLOUD.md`](docs/DEPLOYMENT_GOOGLE_CLOUD.md)** - GCP deployment guide
 
-**API Specifications:**
+**API & Command Specifications:**
 
-- **[`API_MIKROS_PROMO_SUBMISSION.md`](docs/API_MIKROS_PROMO_SUBMISSION.md)** - Promo lead submission API
-- **[`API_GOOGLE_GENERATIVE_AI.md`](docs/API_GOOGLE_GENERATIVE_AI.md)** - NLP integration API
-- **[`admin-tools-api.md`](docs/admin-tools-api.md)** - Admin tools API
+- **[`API_ADMIN_TOOLS.md`](docs/API_ADMIN_TOOLS.md)** - Admin moderation tools API
+- **[`ADMIN_COMMANDS.md`](docs/ADMIN_COMMANDS.md)** - Full admin command reference
+- **[`PROMO_COMMANDS.md`](docs/PROMO_COMMANDS.md)** - Promo and promotion commands
+- **[`API_GOOGLE_GENERATIVE_AI.md`](docs/API_GOOGLE_GENERATIVE_AI.md)** - NLP integration API (TODO)
 
 **Analytics APIs (TODO for integration):**
 
@@ -779,9 +805,16 @@ src/main/java/com/tatumgames/mikros/
 - `API_MIKROS_MARKETING_DISCOUNT_OFFER.md`
 - `API_GLOBAL_USER_MODERATION_LOG.md`
 
+**Game & Feature Guides:**
+
+- **[`GAME_SCRAMBLE.md`](docs/GAME_SCRAMBLE.md)** - Word Unscramble game (scramble-guess, scoring, levels)
+- **[`GAME_RPG.md`](docs/GAME_RPG.md)** - RPG system (classes, actions, bosses, crafting)
+- **[`REPUTATION_SYSTEM.md`](docs/REPUTATION_SYSTEM.md)** - Reputation and moderation tracking
+
 **Testing Guides:**
 
 - **[`COMMUNITY_GAMES_TESTING_GUIDE.md`](docs/COMMUNITY_GAMES_TESTING_GUIDE.md)** - Community games testing
+- **[`TESTING_LOCAL_ENVIRONMENT.md`](docs/TESTING_LOCAL_ENVIRONMENT.md)** - Local testing setup
 
 **System Configuration:**
 
@@ -996,18 +1029,39 @@ For issues, questions, or contributions:
     - Boss progression persistence
     - Leaderboard caching and optimization
     - Support for 1M+ users across 10K+ servers
-- 🔮 MIKROS Analytics API integration
+- 🔮 MIKROS Analytics API integration (re-enable `/mikros-ecosystem` and `/admin-mikros-ecosystem-setup`)
 - 🔮 MIKROS Marketing API integration
 - 🔮 Google Generative AI NLP integration
-- 🔮 Inventory system for RPG
 - 🔮 Quest system for RPG
 - 🔮 Multiplayer features
 - 🔮 Custom word lists per server
-- 🔮 Hint system for spelling challenge
 - 🔮 Web dashboard
 
 ---
 
-**Last Updated:** 2025-10-08  
-**Version:** 1.0-SNAPSHOT  
+## Release Notes
+
+### 2.0.0 (03/09/26)
+
+Major updates to how schedulers work to take into consideration server inactivity. Also resolved conflicts with players
+for the RPG game not being able to continue playing after death.
+
+### 1.2.0 (02/01/26)
+
+Make major updates to how schedulers work, particularly for the RPG game. Resolved other bugs with messaging and channel
+notifications.
+
+### 1.1.0 (01/29/26)
+
+Expand word library for scramble word game. Expand lore library for RPG game. Resolve battling messaging issues.
+
+### 1.0.0 (12/29/25)
+
+Original release. The entire MIKROS Bot construct that includes features such as administration, game promotions, and
+community games.
+
+---
+
+**Last Updated:** 2026-03-09  
+**Version:** 2.0.0  
 **Status:** Production Ready ✅

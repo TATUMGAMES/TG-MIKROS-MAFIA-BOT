@@ -1,7 +1,7 @@
 package com.tatumgames.mikros.admin.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
+import com.tatumgames.mikros.handler.CommandHandler;
 import com.tatumgames.mikros.models.ActionType;
 import com.tatumgames.mikros.models.ModerationAction;
 import com.tatumgames.mikros.services.ModerationLogService;
@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -20,8 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Instant;
 
 /**
- * Command handler for the /kick command.
- * Kicks a user from the server and logs the action.
+ * Command handler for the /kick command. Kicks a user from the server and logs the action.
  * Admin-only command.
  */
 @SuppressWarnings("ClassCanBeRecord")
@@ -44,7 +44,8 @@ public class KickCommand implements CommandHandler {
                 .addOption(OptionType.USER, "user", "The user to kick", true)
                 .addOption(OptionType.STRING, "reason", "The reason for the kick", true)
                 .setGuildOnly(true)
-                .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS));
+                .setDefaultPermissions(
+                        DefaultMemberPermissions.enabledFor(Permission.KICK_MEMBERS));
     }
 
     @Override
@@ -53,11 +54,8 @@ public class KickCommand implements CommandHandler {
         Member member = event.getMember();
         Guild guild = event.getGuild();
 
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.KICK_MEMBERS)) {
-            event.reply("❌ You don't have permission to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.KICK_MEMBERS)) {
+            event.reply("❌ You don't have permission to use this command.").setEphemeral(true).queue();
             return;
         }
 
@@ -71,7 +69,9 @@ public class KickCommand implements CommandHandler {
         }
 
         if (targetMember == null) {
-            event.reply("❌ User is not a member of this server.")
+            event
+                    .reply(
+                            "❌ User is not in this server or could not be found. They may have already left. Only current members can be kicked.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -79,31 +79,28 @@ public class KickCommand implements CommandHandler {
 
         // Check role hierarchy
         if (!member.canInteract(targetMember)) {
-            event.reply("❌ You cannot kick this user due to role hierarchy.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ You cannot kick this user due to role hierarchy.").setEphemeral(true).queue();
             return;
         }
 
         // Check bot permissions
         if (!guild.getSelfMember().canInteract(targetMember)) {
-            event.reply("❌ I cannot kick this user due to role hierarchy.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ I cannot kick this user due to role hierarchy.").setEphemeral(true).queue();
             return;
         }
 
         // Create and log the moderation action
-        ModerationAction action = new ModerationAction(
-                targetUser.getId(),
-                targetUser.getEffectiveName(),
-                member.getId(),
-                member.getEffectiveName(),
-                ActionType.KICK,
-                reason,
-                Instant.now(),
-                guild.getId()
-        );
+        assert targetUser != null;
+        ModerationAction action =
+                new ModerationAction(
+                        targetUser.getId(),
+                        targetUser.getEffectiveName(),
+                        member.getId(),
+                        member.getEffectiveName(),
+                        ActionType.KICK,
+                        reason,
+                        Instant.now(),
+                        guild.getId());
 
         moderationLogService.logAction(action);
 
@@ -111,31 +108,38 @@ public class KickCommand implements CommandHandler {
         event.deferReply().queue();
 
         // Perform the kick
-        guild.kick(targetMember)
+        guild
+                .kick(targetMember)
                 .reason(reason)
-                .queue(success -> {
-                            String message = String.format("""
+                .queue(
+                        success -> {
+                            String message =
+                                    String.format(
+                                            """
                                             👢 **User Kicked**
                                             User: %s
                                             Reason: %s
                                             Moderator: %s
-                                            """,
-                                    targetUser.getName(),
-                                    reason,
-                                    member.getAsMention()
-                            );
+                                                   \s""",
+                                            targetUser.getName(), reason, member.getAsMention());
                             event.getHook().sendMessage(message).queue();
 
-                            logger.info("User {} kicked by {} in guild {}: {}",
-                                    targetUser.getId(), member.getId(), guild.getId(), reason);
+                            logger.info(
+                                    "User {} kicked by {} in guild {}: {}",
+                                    targetUser.getId(),
+                                    member.getId(),
+                                    guild.getId(),
+                                    reason);
                         },
                         error -> {
-                            event.getHook().sendMessage("❌ Failed to kick user: " + error.getMessage())
+                            event
+                                    .getHook()
+                                    .sendMessage("❌ Failed to kick user: " + error.getMessage())
                                     .setEphemeral(true)
                                     .queue();
-                            logger.error("Failed to kick user {}: {}", targetUser.getId(), error.getMessage(), error);
-                        }
-                );
+                            logger.error(
+                                    "Failed to kick user {}: {}", targetUser.getId(), error.getMessage(), error);
+                        });
     }
 
     @Override

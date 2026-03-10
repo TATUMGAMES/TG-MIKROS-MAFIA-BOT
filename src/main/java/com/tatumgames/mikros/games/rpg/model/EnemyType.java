@@ -1,8 +1,8 @@
 package com.tatumgames.mikros.games.rpg.model;
 
 /**
- * Enum representing enemy types for regular battles.
- * Determines stat effectiveness multipliers (STR/INT/AGI).
+ * Enum representing enemy types for regular battles. Determines stat effectiveness multipliers
+ * (STR/INT/AGI).
  */
 public enum EnemyType {
     PHYSICAL("Physical", "⚔️"),
@@ -28,4 +28,3 @@ public enum EnemyType {
         return emoji;
     }
 }
-

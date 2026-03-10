@@ -1,102 +1,107 @@
 package com.tatumgames.mikros.games.rpg.model;
 
 /**
- * Enum representing available character classes in the RPG system.
- * Each class has unique base stats and gameplay styles.
+ * Enum representing available character classes in the RPG system. Each class has unique base stats
+ * and gameplay styles.
  */
 public enum CharacterClass {
     /**
-     * Warrior - High HP and Strength, moderate agility.
-     * Role: Bruiser / Tank
-     * Focus: Melee combat and endurance.
+     * Warrior - High HP and Strength, moderate agility. Role: Bruiser / Tank Focus: Melee combat and
+     * endurance.
      */
-    WARRIOR("Warrior", "⚔️",
+    WARRIOR(
+            "Warrior",
+            "⚔️",
             110, // Base HP
-            17,  // Base STR
-            8,   // Base AGI
-            5,   // Base INT
-            7    // Base LUCK
+            17, // Base STR
+            8, // Base AGI
+            5, // Base INT
+            7 // Base LUCK
     ),
 
     /**
-     * Knight - Massive HP and Defense, low agility and luck.
-     * Role: Full Tank
-     * Focus: Tanking, reduced incoming damage by 15%
+     * Knight - Massive HP and Defense, low agility and luck. Role: Full Tank Focus: Tanking, reduced
+     * incoming damage by 15%
      */
-    KNIGHT("Knight", "🛡️",
+    KNIGHT(
+            "Knight",
+            "🛡️",
             135, // Base HP
-            13,  // Base STR
-            6,   // Base AGI
-            6,   // Base INT
-            5    // Base LUCK
+            13, // Base STR
+            6, // Base AGI
+            6, // Base INT
+            5 // Base LUCK
     ),
 
     /**
-     * Mage - High Intelligence, lower HP.
-     * Role: Glass Cannon
-     * Focus: Magic attacks and strategic gameplay.
+     * Mage - High Intelligence, lower HP. Role: Glass Cannon Focus: Magic attacks and strategic
+     * gameplay.
      */
-    MAGE("Mage", "🔮",
-            70,  // Base HP
-            5,   // Base STR
-            7,   // Base AGI
-            20,  // Base INT
-            5    // Base LUCK
+    MAGE(
+            "Mage",
+            "🔮",
+            70, // Base HP
+            5, // Base STR
+            7, // Base AGI
+            20, // Base INT
+            5 // Base LUCK
     ),
 
     /**
-     * Rogue - High Agility and Luck, moderate HP.
-     * Role: Crit / Dodge specialist
-     * Focus: Speed, critical hits, and evasion.
+     * Rogue - High Agility and Luck, moderate HP. Role: Crit / Dodge specialist Focus: Speed,
+     * critical hits, and evasion.
      */
-    ROGUE("Rogue", "🗡️",
-            85,  // Base HP
-            8,   // Base STR
-            16,  // Base AGI
-            7,   // Base INT
-            12   // Base LUCK
+    ROGUE(
+            "Rogue",
+            "🗡️",
+            85, // Base HP
+            8, // Base STR
+            16, // Base AGI
+            7, // Base INT
+            12 // Base LUCK
     ),
 
     /**
-     * Necromancer - Hybrid Mage + Rogue.
-     * Role: Damage-over-time + crit-magic
-     * Special: 10% chance to apply "Decay" (DoT), doubling XP from battles if triggered.
-     * Focus: INT + LUCK based combat.
+     * Necromancer - Hybrid Mage + Rogue. Role: Damage-over-time + crit-magic Special: 10% chance to
+     * apply "Decay" (DoT), doubling XP from battles if triggered. Focus: INT + LUCK based combat.
      */
-    NECROMANCER("Necromancer", "💀",
-            75,  // Base HP
-            6,   // Base STR
-            10,  // Base AGI
-            15,  // Base INT
-            10   // Base LUCK
+    NECROMANCER(
+            "Necromancer",
+            "💀",
+            75, // Base HP
+            6, // Base STR
+            10, // Base AGI
+            15, // Base INT
+            10 // Base LUCK
     ),
 
     /**
-     * Priest - Support class with healing and resurrection.
-     * Role: Healer + Resurrector
-     * Special: Can resurrect dead players (free action).
-     * Focus: INT + supportive utility.
+     * Priest - Support class with healing and resurrection. Role: Healer + Resurrector Special: Can
+     * resurrect dead players (free action). Focus: INT + supportive utility.
      */
-    PRIEST("Priest", "🙏",
-            90,  // Base HP
-            5,   // Base STR
-            6,   // Base AGI
-            15,  // Base INT
-            10   // Base LUCK
+    PRIEST(
+            "Priest",
+            "🙏",
+            90, // Base HP
+            5, // Base STR
+            6, // Base AGI
+            15, // Base INT
+            10 // Base LUCK
     ),
 
     /**
-     * Oathbreaker - A mortal who broke a divine oath and survived.
-     * Role: Contested / Risk-Reward
-     * Special: Corruption system - gains power from corruption but takes more damage.
-     * Focus: STR + LUCK based combat with corruption mechanics.
+     * Oathbreaker - A mortal who broke a divine oath and survived. Role: Contested / Risk-Reward
+     * Special: Corruption system - gains power from corruption but takes more damage. Focus: STR +
+     * LUCK based combat with corruption mechanics.
      */
-    OATHBREAKER("Oathbreaker", "⚔️💀",
-            95,  // Base HP
-            10,  // Base STR
-            9,   // Base AGI
-            12,  // Base INT
-            8    // Base LUCK
+    OATHBREAKER(
+            "Oathbreaker",
+            "⚔️💀",
+            95, // Base HP
+            10, // Base STR
+            9, // Base AGI
+            12, // Base INT
+            8 // Base LUCK
     );
 
     private final String displayName;
@@ -118,8 +123,14 @@ public enum CharacterClass {
      * @param baseInt     base intelligence
      * @param baseLuck    base luck
      */
-    CharacterClass(String displayName, String emoji, int baseHp, int baseStr,
-                   int baseAgi, int baseInt, int baseLuck) {
+    CharacterClass(
+            String displayName,
+            String emoji,
+            int baseHp,
+            int baseStr,
+            int baseAgi,
+            int baseInt,
+            int baseLuck) {
         this.displayName = displayName;
         this.emoji = emoji;
         this.baseHp = baseHp;
@@ -157,4 +168,3 @@ public enum CharacterClass {
         return baseLuck;
     }
 }
-

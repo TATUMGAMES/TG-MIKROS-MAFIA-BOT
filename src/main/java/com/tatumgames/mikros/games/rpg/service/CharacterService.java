@@ -6,25 +6,26 @@ import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * Service for managing RPG characters.
- * Handles character creation, retrieval, and state management.
- * <p>
- * TODO: Future Features
- * - Database persistence for characters
- * - Character deletion/reset functionality
- * - Character transfer between servers
- * - Backup and restore functionality
+ * Service for managing RPG characters. Handles character creation, retrieval, and state management.
+ *
+ * <p>TODO: Future Features - Database persistence for characters - Character deletion/reset
+ * functionality - Character transfer between servers - Backup and restore functionality
  */
 public class CharacterService {
     private static final Logger logger = LoggerFactory.getLogger(CharacterService.class);
 
-    // Character storage: discordId -> RPGCharacter
+    // Character storage: discordId -> RPGCharacter (active character only)
     private final Map<String, RPGCharacter> characters;
+
+    // Retired character history: discordId -> list of archived characters (for re-register after 24h dead)
+    private final Map<String, List<RPGCharacter>> characterHistory;
 
     // Guild configurations: guildId -> RPGConfig
     private final Map<String, RPGConfig> guildConfigs;
@@ -34,6 +35,7 @@ public class CharacterService {
      */
     public CharacterService() {
         this.characters = new ConcurrentHashMap<>();
+        this.characterHistory = new ConcurrentHashMap<>();
         this.guildConfigs = new ConcurrentHashMap<>();
         logger.info("CharacterService initialized");
     }
@@ -47,7 +49,8 @@ public class CharacterService {
      * @return the created character
      * @throws IllegalStateException if user already has a character
      */
-    public RPGCharacter registerCharacter(String discordId, String name, CharacterClass characterClass) {
+    public RPGCharacter registerCharacter(
+            String discordId, String name, CharacterClass characterClass) {
         if (characters.containsKey(discordId)) {
             throw new IllegalStateException("User already has a character");
         }
@@ -55,8 +58,11 @@ public class CharacterService {
         RPGCharacter character = new RPGCharacter(discordId, name, characterClass);
         characters.put(discordId, character);
 
-        logger.info("Registered new character for user {}: {} ({})",
-                discordId, name, characterClass.getDisplayName());
+        logger.info(
+                "Registered new character for user {}: {} ({})",
+                discordId,
+                name,
+                characterClass.getDisplayName());
 
         return character;
     }
@@ -79,6 +85,43 @@ public class CharacterService {
      */
     public boolean hasCharacter(String discordId) {
         return characters.containsKey(discordId);
+    }
+
+    /**
+     * Returns true if the user has an active character that is dead and has been dead for at least
+     * 24 hours (so they are allowed to re-register a new character; the old one will be archived).
+     *
+     * @param discordId the Discord user ID
+     * @return true if the user can re-register after death (dead 24h+ without resurrection)
+     */
+    public boolean canReregisterAfterDeath(String discordId) {
+        RPGCharacter character = characters.get(discordId);
+        if (character == null || !character.isDead()) {
+            return false;
+        }
+        Instant diedAt = character.getDiedAt();
+        if (diedAt == null) {
+            return false;
+        }
+        return Instant.now().isAfter(diedAt.plus(24, ChronoUnit.HOURS));
+    }
+
+    /**
+     * Archives the user's current active character to history and removes it from active storage.
+     * Call this before allowing re-registration when the user has been dead 24h+.
+     *
+     * @param discordId the Discord user ID
+     */
+    public void archiveAndRemoveActive(String discordId) {
+        RPGCharacter character = characters.remove(discordId);
+        if (character != null) {
+            characterHistory.computeIfAbsent(discordId, k -> new ArrayList<>()).add(character);
+            logger.info(
+                    "Archived character {} ({}) for user {} (re-register after 24h dead)",
+                    character.getName(),
+                    character.getCharacterClass().getDisplayName(),
+                    discordId);
+        }
     }
 
     /**
@@ -115,13 +158,11 @@ public class CharacterService {
                 Comparator.comparingInt(RPGCharacter::getLevel)
                         .thenComparingInt(RPGCharacter::getXp)
                         .reversed(),
-                limit
-        );
+                limit);
     }
 
     /**
-     * Gets the RPG configuration for a guild.
-     * Creates a default config if none exists.
+     * Gets the RPG configuration for a guild. Creates a default config if none exists.
      *
      * @param guildId the guild ID
      * @return the RPG config
@@ -159,10 +200,8 @@ public class CharacterService {
     }
 
     /**
-     * Resets all RPG data for a specific server.
-     * This clears:
-     * - RPG configuration (resets to defaults)
-     * - Note: Characters are stored globally, not per-server
+     * Resets all RPG data for a specific server. This clears: - RPG configuration (resets to
+     * defaults) - Note: Characters are stored globally, not per-server
      *
      * @param guildId the guild ID
      */
@@ -173,8 +212,7 @@ public class CharacterService {
     }
 
     /**
-     * Gets the number of characters registered.
-     * Note: Characters are global, not per-server.
+     * Gets the number of characters registered. Note: Characters are global, not per-server.
      *
      * @return character count
      */
@@ -185,8 +223,7 @@ public class CharacterService {
     }
 
     /**
-     * Clears all characters (global reset).
-     * WARNING: This affects all servers.
+     * Clears all characters (global reset). WARNING: This affects all servers.
      *
      * @return number of characters cleared
      */
@@ -197,4 +234,3 @@ public class CharacterService {
         return count;
     }
 }
-

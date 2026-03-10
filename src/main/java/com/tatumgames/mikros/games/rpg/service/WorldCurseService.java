@@ -6,49 +6,134 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Service for managing World Curses per guild.
- * Curses are applied when bosses despawn undefeated and affect all players.
+ * Service for managing World Curses per guild. Curses are applied when bosses despawn undefeated
+ * and affect all players.
  */
 public class WorldCurseService {
+    private static final Random random = new Random();
+
     // Map: guildId -> List of active curses
     private final Map<String, List<WorldCurse>> activeCurses;
+    // Map: guildId -> Map<WorldCurse, String> -> boss name that caused the curse
+    private final Map<String, Map<WorldCurse, String>> curseBossNames;
 
     public WorldCurseService() {
         this.activeCurses = new ConcurrentHashMap<>();
+        this.curseBossNames = new ConcurrentHashMap<>();
     }
 
     /**
-     * Applies a curse to a guild.
-     * Enforces max limits: 1 minor + 1 major curse at a time.
+     * Applies a curse to a guild. Enforces max limits: 1 minor + 1 major curse at a time. Also
+     * adjusts all characters' HP if the curse affects max HP.
      *
-     * @param guildId the guild ID
-     * @param curse   the curse to apply
+     * @param guildId          the guild ID
+     * @param curse            the curse to apply
+     * @param characterService the character service (for adjusting HP, can be null)
      * @return true if curse was applied, false if max limit reached
      */
-    public boolean applyCurse(String guildId, WorldCurse curse) {
+    public boolean applyCurse(String guildId, WorldCurse curse, CharacterService characterService) {
+        return applyCurse(guildId, curse, characterService, null);
+    }
+
+    /**
+     * Applies a curse to a guild with boss name tracking. Enforces max limits: 1 minor + 1 major
+     * curse at a time. Also adjusts all characters' HP if the curse affects max HP.
+     *
+     * @param guildId          the guild ID
+     * @param curse            the curse to apply
+     * @param characterService the character service (for adjusting HP, can be null)
+     * @param bossName         the name of the boss that caused this curse (can be null)
+     * @return true if curse was applied, false if max limit reached
+     */
+    public boolean applyCurse(
+            String guildId, WorldCurse curse, CharacterService characterService, String bossName) {
         List<WorldCurse> guildCurses = activeCurses.computeIfAbsent(guildId, k -> new ArrayList<>());
 
         // Check max limits
-        long minorCount = guildCurses.stream()
-                .filter(c -> c.getType() == WorldCurse.CurseType.MINOR)
-                .count();
-        long majorCount = guildCurses.stream()
-                .filter(c -> c.getType() == WorldCurse.CurseType.MAJOR)
-                .count();
+        long minorCount =
+                guildCurses.stream().filter(c -> c.getType() == WorldCurse.CurseType.MINOR).count();
+        long majorCount =
+                guildCurses.stream().filter(c -> c.getType() == WorldCurse.CurseType.MAJOR).count();
 
         // If trying to add minor curse and one already exists, replace it
         if (curse.getType() == WorldCurse.CurseType.MINOR && minorCount >= 1) {
+            WorldCurse oldCurse =
+                    guildCurses.stream()
+                            .filter(c -> c.getType() == WorldCurse.CurseType.MINOR)
+                            .findFirst()
+                            .orElse(null);
             guildCurses.removeIf(c -> c.getType() == WorldCurse.CurseType.MINOR);
+            // Remove old boss name tracking
+            if (oldCurse != null) {
+                Map<WorldCurse, String> bossNames = curseBossNames.get(guildId);
+                if (bossNames != null) {
+                    bossNames.remove(oldCurse);
+                }
+            }
         }
 
         // If trying to add major curse and one already exists, replace it
         if (curse.getType() == WorldCurse.CurseType.MAJOR && majorCount >= 1) {
+            WorldCurse oldCurse =
+                    guildCurses.stream()
+                            .filter(c -> c.getType() == WorldCurse.CurseType.MAJOR)
+                            .findFirst()
+                            .orElse(null);
             guildCurses.removeIf(c -> c.getType() == WorldCurse.CurseType.MAJOR);
+            // Remove old boss name tracking
+            if (oldCurse != null) {
+                Map<WorldCurse, String> bossNames = curseBossNames.get(guildId);
+                if (bossNames != null) {
+                    bossNames.remove(oldCurse);
+                }
+            }
         }
 
         // Add the new curse
         guildCurses.add(curse);
+
+        // Store boss name if provided
+        if (bossName != null) {
+            curseBossNames.computeIfAbsent(guildId, k -> new ConcurrentHashMap<>()).put(curse, bossName);
+        }
+
+        // If curse affects HP (Curse of Frailty), adjust all characters' HP
+        if (curse == WorldCurse.MINOR_CURSE_OF_FRAILTY && characterService != null) {
+            adjustCharactersHpForCurse(guildId, characterService);
+        }
+
         return true;
+    }
+
+    /**
+     * Legacy method for backward compatibility.
+     */
+    public boolean applyCurse(String guildId, WorldCurse curse) {
+        return applyCurse(guildId, curse, null);
+    }
+
+    /**
+     * Adjusts all characters' HP when a curse that affects max HP is applied. Characters with current
+     * HP exceeding effective max HP will have their HP reduced.
+     *
+     * @param guildId          the guild ID
+     * @param characterService the character service
+     */
+    private void adjustCharactersHpForCurse(String guildId, CharacterService characterService) {
+        List<WorldCurse> guildCurses = getActiveCurses(guildId);
+
+        for (com.tatumgames.mikros.games.rpg.model.RPGCharacter character :
+                characterService.getAllCharacters()) {
+            // Calculate effective max HP with current curses
+            int effectiveMaxHp =
+                    character.getStats().getEffectiveMaxHp(guildCurses, character.hasFrostbite());
+            int currentHp = character.getStats().getCurrentHp();
+
+            // If current HP exceeds effective max, reduce it
+            if (currentHp > effectiveMaxHp) {
+                character.getStats().setCurrentHp(currentHp, effectiveMaxHp);
+            }
+        }
     }
 
     /**
@@ -65,6 +150,14 @@ public class WorldCurseService {
                 activeCurses.remove(guildId);
             }
         }
+        // Remove boss name tracking
+        Map<WorldCurse, String> bossNames = curseBossNames.get(guildId);
+        if (bossNames != null) {
+            bossNames.remove(curse);
+            if (bossNames.isEmpty()) {
+                curseBossNames.remove(guildId);
+            }
+        }
     }
 
     /**
@@ -74,6 +167,7 @@ public class WorldCurseService {
      */
     public void clearAllCurses(String guildId) {
         activeCurses.remove(guildId);
+        curseBossNames.remove(guildId);
     }
 
     /**
@@ -84,9 +178,21 @@ public class WorldCurseService {
     public void clearCursesOnSpawn(String guildId) {
         List<WorldCurse> guildCurses = activeCurses.get(guildId);
         if (guildCurses != null) {
-            guildCurses.removeIf(c -> c.getDuration() == WorldCurse.CurseDuration.UNTIL_NEXT_SPAWN);
+            List<WorldCurse> toRemove =
+                    guildCurses.stream()
+                            .filter(c -> c.getDuration() == WorldCurse.CurseDuration.UNTIL_NEXT_SPAWN)
+                            .toList();
+            guildCurses.removeAll(toRemove);
             if (guildCurses.isEmpty()) {
                 activeCurses.remove(guildId);
+            }
+            // Remove boss name tracking for removed curses
+            Map<WorldCurse, String> bossNames = curseBossNames.get(guildId);
+            if (bossNames != null) {
+                toRemove.forEach(bossNames::remove);
+                if (bossNames.isEmpty()) {
+                    curseBossNames.remove(guildId);
+                }
             }
         }
     }
@@ -99,9 +205,21 @@ public class WorldCurseService {
     public void clearCursesOnDefeat(String guildId) {
         List<WorldCurse> guildCurses = activeCurses.get(guildId);
         if (guildCurses != null) {
-            guildCurses.removeIf(c -> c.getDuration() == WorldCurse.CurseDuration.UNTIL_NEXT_DEFEAT);
+            List<WorldCurse> toRemove =
+                    guildCurses.stream()
+                            .filter(c -> c.getDuration() == WorldCurse.CurseDuration.UNTIL_NEXT_DEFEAT)
+                            .toList();
+            guildCurses.removeAll(toRemove);
             if (guildCurses.isEmpty()) {
                 activeCurses.remove(guildId);
+            }
+            // Remove boss name tracking for removed curses
+            Map<WorldCurse, String> bossNames = curseBossNames.get(guildId);
+            if (bossNames != null) {
+                toRemove.forEach(bossNames::remove);
+                if (bossNames.isEmpty()) {
+                    curseBossNames.remove(guildId);
+                }
             }
         }
     }
@@ -135,10 +253,11 @@ public class WorldCurseService {
      * @return random minor curse
      */
     public WorldCurse getRandomMinorCurse() {
-        List<WorldCurse> minorCurses = Arrays.stream(WorldCurse.values())
-                .filter(c -> c.getType() == WorldCurse.CurseType.MINOR)
-                .toList();
-        return minorCurses.get(new Random().nextInt(minorCurses.size()));
+        List<WorldCurse> minorCurses =
+                Arrays.stream(WorldCurse.values())
+                        .filter(c -> c.getType() == WorldCurse.CurseType.MINOR)
+                        .toList();
+        return minorCurses.get(random.nextInt(minorCurses.size()));
     }
 
     /**
@@ -147,15 +266,16 @@ public class WorldCurseService {
      * @return random major curse
      */
     public WorldCurse getRandomMajorCurse() {
-        List<WorldCurse> majorCurses = Arrays.stream(WorldCurse.values())
-                .filter(c -> c.getType() == WorldCurse.CurseType.MAJOR)
-                .toList();
-        return majorCurses.get(new Random().nextInt(majorCurses.size()));
+        List<WorldCurse> majorCurses =
+                Arrays.stream(WorldCurse.values())
+                        .filter(c -> c.getType() == WorldCurse.CurseType.MAJOR)
+                        .toList();
+        return majorCurses.get(random.nextInt(majorCurses.size()));
     }
 
     /**
-     * Gets curse resistance multiplier for a character.
-     * Oath of Null provides +5% curse resistance (0.95 multiplier = 5% reduction).
+     * Gets curse resistance multiplier for a character. Oath of Null provides +5% curse resistance
+     * (0.95 multiplier = 5% reduction).
      *
      * @param character the character
      * @return resistance multiplier (1.0 = no resistance, 0.95 = 5% resistance)
@@ -179,5 +299,16 @@ public class WorldCurseService {
 
         return 1.0; // No resistance
     }
-}
 
+    /**
+     * Gets the boss name that caused a specific curse.
+     *
+     * @param guildId the guild ID
+     * @param curse   the curse
+     * @return the boss name, or null if not tracked
+     */
+    public String getBossNameForCurse(String guildId, WorldCurse curse) {
+        Map<WorldCurse, String> bossNames = curseBossNames.get(guildId);
+        return bossNames != null ? bossNames.get(curse) : null;
+    }
+}

@@ -8,10 +8,9 @@ import java.util.Objects;
 
 /**
  * Configuration for server auto-bump feature per guild.
- * <p>
- * TODO: Server Persistence
- * - Store configuration in database
- * - Add additional settings (custom bump messages, timezone support)
+ *
+ * <p>TODO: Server Persistence - Store configuration in database - Add additional settings (custom
+ * bump messages, timezone support)
  */
 public class BumpConfig {
     private final String guildId;
@@ -30,7 +29,7 @@ public class BumpConfig {
         this.guildId = Objects.requireNonNull(guildId);
         this.channelId = null;
         this.enabledBots = EnumSet.noneOf(BumpBot.class);
-        this.intervalHours = 4; // Default: 4 hours
+        this.intervalHours = 8; // Default: 8 hours
         this.lastBumpTime = new HashMap<>();
     }
 
@@ -42,10 +41,12 @@ public class BumpConfig {
      * @param enabledBots   the set of enabled bots
      * @param intervalHours the bump interval in hours (1-24)
      */
-    public BumpConfig(String guildId, String channelId, EnumSet<BumpBot> enabledBots, int intervalHours) {
+    public BumpConfig(
+            String guildId, String channelId, EnumSet<BumpBot> enabledBots, int intervalHours) {
         this.guildId = Objects.requireNonNull(guildId);
         this.channelId = channelId;
-        this.enabledBots = enabledBots != null ? EnumSet.copyOf(enabledBots) : EnumSet.noneOf(BumpBot.class);
+        this.enabledBots =
+                enabledBots != null ? EnumSet.copyOf(enabledBots) : EnumSet.noneOf(BumpBot.class);
         this.intervalHours = Math.max(1, Math.min(24, intervalHours)); // Clamp to 1-24
         this.lastBumpTime = new HashMap<>();
     }
@@ -69,7 +70,8 @@ public class BumpConfig {
     }
 
     public void setEnabledBots(EnumSet<BumpBot> enabledBots) {
-        this.enabledBots = enabledBots != null ? EnumSet.copyOf(enabledBots) : EnumSet.noneOf(BumpBot.class);
+        this.enabledBots =
+                enabledBots != null ? EnumSet.copyOf(enabledBots) : EnumSet.noneOf(BumpBot.class);
     }
 
     public int getIntervalHours() {
@@ -133,4 +135,3 @@ public class BumpConfig {
         }
     }
 }
-

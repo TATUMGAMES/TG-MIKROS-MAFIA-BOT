@@ -5,22 +5,30 @@ import java.util.Objects;
 /**
  * Represents a message that has been flagged for moderation review.
  */
-public record MessageSuggestion(String messageId, String userId, String username, String channelId, String channelName,
-                                String messageContent, String snippet, String messageLink, SuggestionSeverity severity,
-                                String reason) {
+public record MessageSuggestion(
+        String messageId,
+        String userId,
+        String username,
+        String channelId,
+        String channelName,
+        String messageContent,
+        String snippet,
+        String messageLink,
+        SuggestionSeverity severity,
+        String reason) {
     /**
      * Creates a new MessageSuggestion.
      *
-     * @param messageId      the ID of the message
-     * @param userId         the ID of the message author
-     * @param username       the username of the message author
-     * @param channelId      the ID of the channel
-     * @param channelName    the name of the channel
+     * @param messageId the ID of the message
+     * @param userId the ID of the message author
+     * @param username the username of the message author
+     * @param channelId the ID of the channel
+     * @param channelName the name of the channel
      * @param messageContent the full message content
-     * @param snippet        a snippet of the problematic content
-     * @param messageLink    a direct link to the message
-     * @param severity       the severity level
-     * @param reason         the reason for flagging
+     * @param snippet a snippet of the problematic content
+     * @param messageLink a direct link to the message
+     * @param severity the severity level
+     * @param reason the reason for flagging
      */
     public MessageSuggestion(
             String messageId,
@@ -32,8 +40,7 @@ public record MessageSuggestion(String messageId, String userId, String username
             String snippet,
             String messageLink,
             SuggestionSeverity severity,
-            String reason
-    ) {
+            String reason) {
         this.messageId = Objects.requireNonNull(messageId);
         this.userId = Objects.requireNonNull(userId);
         this.username = Objects.requireNonNull(username);
@@ -46,4 +53,3 @@ public record MessageSuggestion(String messageId, String userId, String username
         this.reason = Objects.requireNonNull(reason);
     }
 }
-

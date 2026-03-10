@@ -4,8 +4,8 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * Represents a detected promotional trigger event.
- * Tracks when a user's message matches launch-related patterns.
+ * Represents a detected promotional trigger event. Tracks when a user's message matches
+ * launch-related patterns.
  */
 public class PromoTrigger {
     private final String userId;
@@ -28,8 +28,14 @@ public class PromoTrigger {
      * @param detectedPattern the pattern that matched
      * @param timestamp       when the trigger was detected
      */
-    public PromoTrigger(String userId, String username, String guildId, String channelId,
-                        String messageContent, String detectedPattern, Instant timestamp) {
+    public PromoTrigger(
+            String userId,
+            String username,
+            String guildId,
+            String channelId,
+            String messageContent,
+            String detectedPattern,
+            Instant timestamp) {
         this.userId = Objects.requireNonNull(userId);
         this.username = Objects.requireNonNull(username);
         this.guildId = Objects.requireNonNull(guildId);
@@ -76,8 +82,3 @@ public class PromoTrigger {
         this.promptSent = promptSent;
     }
 }
-
-
-
-
-

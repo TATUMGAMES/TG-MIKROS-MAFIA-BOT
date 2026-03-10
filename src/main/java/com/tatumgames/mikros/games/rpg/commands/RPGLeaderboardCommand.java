@@ -1,9 +1,10 @@
 package com.tatumgames.mikros.games.rpg.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.config.ConfigLoader;
+import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.model.RPGCharacter;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -20,8 +21,8 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * Command handler for /rpg-leaderboard.
- * Shows top characters by level and XP with Mafia Member status and pagination.
+ * Command handler for /rpg-leaderboard. Shows top characters by level and XP with Mafia Member
+ * status and pagination.
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class RPGLeaderboardCommand implements CommandHandler {
@@ -49,14 +50,43 @@ public class RPGLeaderboardCommand implements CommandHandler {
 
     @Override
     public void handle(SlashCommandInteractionEvent event) {
+        Guild guild = event.getGuild();
+
+        if (guild == null) {
+            event.reply("❌ This command can only be used in a server.").setEphemeral(true).queue();
+            return;
+        }
+
+        RPGConfig config = characterService.getConfig(guild.getId());
+
+        // Require setup before RPG commands work
+        if (config.getRpgChannelId() == null) {
+            event
+                    .reply(
+                            "❌ RPG is not set up for this server. An administrator must run `/admin-rpg-setup` first.")
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
+        // Check if in correct channel
+        if (!event.getChannel().getId().equals(config.getRpgChannelId())) {
+            event
+                    .reply(
+                            String.format(
+                                    "Please use `/rpg-leaderboard` in <#%s>. RPG commands are restricted to the assigned channel.",
+                                    config.getRpgChannelId()))
+                    .setEphemeral(true)
+                    .queue();
+            return;
+        }
+
         // Get page number (default: 1)
         OptionMapping pageOption = event.getOption("page");
         int page = (pageOption != null) ? (int) pageOption.getAsLong() : 1;
 
         if (page < 1) {
-            event.reply("❌ Page number must be 1 or greater!")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ Page number must be 1 or greater!").setEphemeral(true).queue();
             return;
         }
 
@@ -64,11 +94,12 @@ public class RPGLeaderboardCommand implements CommandHandler {
         List<RPGCharacter> allCharacters = characterService.getLeaderboard(Integer.MAX_VALUE);
 
         if (allCharacters.isEmpty()) {
-            String message = """
+            String message =
+                    """
                     ❌ No characters have been registered yet!
-                    
+
                     Be the first to start your adventure with `/rpg-register`
-                    """;
+                            """;
 
             event.reply(message).setEphemeral(true).queue();
             return;
@@ -77,7 +108,10 @@ public class RPGLeaderboardCommand implements CommandHandler {
         // Calculate pagination
         int totalPages = (int) Math.ceil((double) allCharacters.size() / ENTRIES_PER_PAGE);
         if (page > totalPages) {
-            event.reply(String.format("❌ Page %d doesn't exist! There are only %d page(s).", page, totalPages))
+            event
+                    .reply(
+                            String.format(
+                                    "❌ Page %d doesn't exist! There are only %d page(s).", page, totalPages))
                     .setEphemeral(true)
                     .queue();
             return;
@@ -100,18 +134,25 @@ public class RPGLeaderboardCommand implements CommandHandler {
             if (mafiaGuildId != null && !mafiaGuildId.isBlank()) {
                 if (mafiaGuildId.equals(currentGuild.getId())) {
                     mafiaGuild = currentGuild;
-                    logger.debug("Using current guild as MIKROS Mafia guild: {} ({})", currentGuild.getName(), mafiaGuildId);
+                    logger.debug(
+                            "Using current guild as MIKROS Mafia guild: {} ({})",
+                            currentGuild.getName(),
+                            mafiaGuildId);
                 } else {
                     mafiaGuild = event.getJDA().getGuildById(mafiaGuildId);
                     if (mafiaGuild == null) {
-                        logger.warn("MIKROS Mafia guild not found with ID: {}. Falling back to current guild.", mafiaGuildId);
+                        logger.warn(
+                                "MIKROS Mafia guild not found with ID: {}. Falling back to current guild.",
+                                mafiaGuildId);
                         mafiaGuild = currentGuild; // Fallback to current guild
                     }
                 }
             } else {
                 // Not configured, assume current guild is the Mafia guild
                 mafiaGuild = currentGuild;
-                logger.debug("MIKROS_MAFIA_GUILD_ID not configured. Using current guild as Mafia guild: {}", currentGuild.getName());
+                logger.debug(
+                        "MIKROS_MAFIA_GUILD_ID not configured. Using current guild as Mafia guild: {}",
+                        currentGuild.getName());
             }
         }
 
@@ -138,33 +179,40 @@ public class RPGLeaderboardCommand implements CommandHandler {
                     Member member = mafiaGuild.retrieveMemberById(character.getDiscordId()).complete();
                     if (member != null) {
                         mafiaStatus = "✅ Yes";
-                        logger.trace("User {} ({}) is a Mafia member", character.getDiscordId(), character.getName());
+                        logger.trace(
+                                "User {} ({}) is a Mafia member", character.getDiscordId(), character.getName());
                     }
                 } catch (Exception e) {
                     // Member not found or error retrieving - not in Mafia
                     // This is expected for most users, so we don't log it at info level
-                    logger.trace("User {} ({}) is not a Mafia member or error checking: {}",
-                            character.getDiscordId(), character.getName(), e.getMessage());
+                    logger.trace(
+                            "User {} ({}) is not a Mafia member or error checking: {}",
+                            character.getDiscordId(),
+                            character.getName(),
+                            e.getMessage());
                 }
             }
 
-            leaderboard.append(String.format("""
+            String deadLabel = character.isDead() ? " (Dead)" : "";
+            leaderboard.append(
+                    String.format(
+                            """
                             %s **#%d** - %s **%s**
-                            └ %s Level %d • %,d XP • HP: %d/%d
+                            └ %s Level %d%s • %,d XP • HP: %d/%d
                             └ Mafia Member? %s
-                            
-                            """,
-                    medal,
-                    rank,
-                    classEmoji,
-                    character.getName(),
-                    character.getCharacterClass().getDisplayName(),
-                    character.getLevel(),
-                    character.getXp(),
-                    character.getStats().getCurrentHp(),
-                    character.getStats().getMaxHp(),
-                    mafiaStatus
-            ));
+                                    
+                                    """,
+                            medal,
+                            rank,
+                            classEmoji,
+                            character.getName(),
+                            character.getCharacterClass().getDisplayName(),
+                            character.getLevel(),
+                            deadLabel,
+                            character.getXp(),
+                            character.getStats().getCurrentHp(),
+                            character.getStats().getMaxHp(),
+                            mafiaStatus));
 
             rank++;
         }
@@ -178,7 +226,8 @@ public class RPGLeaderboardCommand implements CommandHandler {
 
         event.replyEmbeds(embed.build()).queue();
 
-        logger.debug("Leaderboard requested - showing page {} ({} characters)", page, pageCharacters.size());
+        logger.debug(
+                "Leaderboard requested - showing page {} ({} characters)", page, pageCharacters.size());
     }
 
     private String buildFooterText(int page, int totalPages) {
@@ -186,16 +235,10 @@ public class RPGLeaderboardCommand implements CommandHandler {
         if (totalPages > 1) {
             return String.format(
                     "Page %d/%d • Total Characters: %d • Use /rpg-leaderboard page:%d for next page",
-                    page,
-                    totalPages,
-                    totalCharacters,
-                    page < totalPages ? page + 1 : page
-            );
+                    page, totalPages, totalCharacters, page < totalPages ? page + 1 : page);
         } else {
             return String.format(
-                    "Total Characters: %d • Join the adventure with /rpg-register",
-                    totalCharacters
-            );
+                    "Total Characters: %d • Join the adventure with /rpg-register", totalCharacters);
         }
     }
 

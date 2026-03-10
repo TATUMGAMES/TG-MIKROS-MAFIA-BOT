@@ -13,22 +13,25 @@ public class AdminUtils {
 
     /**
      * Validates whether the given target user is invalid for moderation actions.
-     * <p>
-     * This method performs common checks for moderation commands:
+     *
+     * <p>This method performs common checks for moderation commands:
+     *
      * <ul>
-     *     <li>Whether the target user exists (non-null).</li>
-     *     <li>Whether the target user is a bot.</li>
-     *     <li>Whether the target user is the same as the executor (self-action).</li>
+     *   <li>Whether the target user exists (non-null).
+     *   <li>Whether the target user is a bot.
+     *   <li>Whether the target user is the same as the executor (self-action).
      * </ul>
+     * <p>
      * If any check fails, the method sends an ephemeral error message via the provided event.
      *
      * @param member     The member performing the action (executor/moderator).
      * @param targetUser The target user to validate.
      * @param event      The slash command event used to send error messages.
-     * @return {@code true} if the target user is invalid (and an error message has been sent),
-     * {@code false} if the target user is valid.
+     * @return {@code true} if the target user is invalid (and an error message has been sent), {@code
+     * false} if the target user is valid.
      */
-    public static boolean isInvalidTargetUser(Member member, User targetUser, SlashCommandInteractionEvent event) {
+    public static boolean isInvalidTargetUser(
+            Member member, User targetUser, SlashCommandInteractionEvent event) {
         if (targetUser == null) {
             event.reply("❌ You must specify a user.").setEphemeral(true).queue();
             return true;
@@ -48,17 +51,20 @@ public class AdminUtils {
     }
 
     /**
-     * Safely gets a MessageChannel (TextChannel or NewsChannel) from a slash command option and validates bot permissions.
+     * Safely gets a MessageChannel (TextChannel or NewsChannel) from a slash command option and
+     * validates bot permissions.
      *
      * @param event      The slash command event
      * @param optionName The name of the channel option
      * @return The valid MessageChannel, or null if invalid (error reply is sent automatically)
      */
-    public static MessageChannel getValidTextChannel(SlashCommandInteractionEvent event, String optionName) {
+    public static MessageChannel getValidTextChannel(
+            SlashCommandInteractionEvent event, String optionName) {
         OptionMapping channelOption = event.getOption(optionName);
 
         if (channelOption == null) {
-            event.reply("❌ You must select a text channel or announcement channel.")
+            event
+                    .reply("❌ You must select a text channel or announcement channel.")
                     .setEphemeral(true)
                     .queue();
             return null;
@@ -72,14 +78,19 @@ public class AdminUtils {
         } else if (guildChannel instanceof NewsChannel newsChannel) {
             messageChannel = newsChannel;
         } else {
-            event.reply("❌ Please select a text channel or announcement channel.")
+            event
+                    .reply("❌ Please select a text channel or announcement channel.")
                     .setEphemeral(true)
                     .queue();
             return null;
         }
 
         if (!messageChannel.canTalk()) {
-            event.reply("❌ I don't have permission to send messages in " + messageChannel.getAsMention() + ".")
+            event
+                    .reply(
+                            "❌ I don't have permission to send messages in "
+                                    + messageChannel.getAsMention()
+                                    + ".")
                     .setEphemeral(true)
                     .queue();
             return null;
@@ -90,14 +101,15 @@ public class AdminUtils {
 
     /**
      * Checks if a user can play games based on role requirements.
-     * <p>
-     * A user can play if:
+     *
+     * <p>A user can play if:
+     *
      * <ul>
-     *     <li>They have at least one role (excluding @everyone), OR</li>
-     *     <li>No-role users are allowed (allowNoRoleUsers = true)</li>
+     *   <li>They have at least one role (excluding @everyone), OR
+     *   <li>No-role users are allowed (allowNoRoleUsers = true)
      * </ul>
-     * <p>
-     * Note: The @everyone role is not counted as a role for this check.
+     *
+     * <p>Note: The @everyone role is not counted as a role for this check.
      *
      * @param member           The member to check (can be null)
      * @param allowNoRoleUsers Whether users without roles are allowed to play

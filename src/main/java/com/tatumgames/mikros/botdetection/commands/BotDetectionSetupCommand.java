@@ -1,12 +1,13 @@
 package com.tatumgames.mikros.botdetection.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.botdetection.config.BotDetectionConfig;
 import com.tatumgames.mikros.botdetection.service.BotDetectionService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -15,8 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Command handler for /admin-bot-detection-setup.
- * Allows administrators to enable/disable bot detection.
+ * Command handler for /admin-bot-detection-setup. Allows administrators to enable/disable bot
+ * detection.
  */
 public class BotDetectionSetupCommand implements CommandHandler {
     private static final Logger logger = LoggerFactory.getLogger(BotDetectionSetupCommand.class);
@@ -36,7 +37,7 @@ public class BotDetectionSetupCommand implements CommandHandler {
         return Commands.slash("admin-bot-detection-setup", "Enable or disable bot detection system")
                 .addOption(OptionType.BOOLEAN, "enabled", "Enable bot detection (true/false)", true)
                 .setGuildOnly(true)
-                .setDefaultPermissions(net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
 
     @Override
@@ -44,19 +45,14 @@ public class BotDetectionSetupCommand implements CommandHandler {
         Member member = event.getMember();
         Guild guild = event.getGuild();
 
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ You must be an administrator to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("❌ You must be an administrator to use this command.").setEphemeral(true).queue();
             return;
         }
 
         Boolean enabled = event.getOption("enabled", OptionMapping::getAsBoolean);
         if (enabled == null) {
-            event.reply("❌ You must specify enabled (true/false).")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ You must specify enabled (true/false).").setEphemeral(true).queue();
             return;
         }
 
@@ -65,16 +61,19 @@ public class BotDetectionSetupCommand implements CommandHandler {
         config.setEnabled(enabled);
         botDetectionService.updateConfig(guildId, config);
 
-        event.reply(String.format("""
+        event
+                .reply(
+                        String.format(
+                                """
                         ✅ **Bot Detection System %s**
-                        
+
                         **Status:** %s
                         **Account Age Threshold:** %d days
                         **Link Restriction:** %d minutes after join
                         **Multi-Channel Spam Threshold:** %d channels
                         **Auto Action:** %s
                         **Reputation Reporting:** %s
-                        
+
                         Use `/admin-bot-detection-config` to customize settings.
                         """,
                 enabled ? "Enabled" : "Disabled",
@@ -83,11 +82,14 @@ public class BotDetectionSetupCommand implements CommandHandler {
                 config.getLinkRestrictionMinutes(),
                 config.getMultiChannelSpamThreshold(),
                 config.getAutoAction(),
-                config.isReportToReputation() ? "Enabled" : "Disabled"
-        )).queue();
+                                config.isReportToReputation() ? "Enabled" : "Disabled"))
+                .queue();
 
-        logger.info("Bot detection {} for guild {} by user {}",
-                enabled ? "enabled" : "disabled", guildId, member.getId());
+        logger.info(
+                "Bot detection {} for guild {} by user {}",
+                enabled ? "enabled" : "disabled",
+                guildId,
+                member.getId());
     }
 
     @Override
@@ -95,4 +97,3 @@ public class BotDetectionSetupCommand implements CommandHandler {
         return "admin-bot-detection-setup";
     }
 }
-

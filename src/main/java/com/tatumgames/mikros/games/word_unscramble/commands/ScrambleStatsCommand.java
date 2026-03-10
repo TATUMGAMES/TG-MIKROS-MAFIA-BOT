@@ -1,12 +1,12 @@
 package com.tatumgames.mikros.games.word_unscramble.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleConfig;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleProgression;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleResult;
 import com.tatumgames.mikros.games.word_unscramble.model.WordUnscrambleSession;
 import com.tatumgames.mikros.games.word_unscramble.service.WordUnscrambleService;
+import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -23,26 +23,27 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 /**
- * Command handler for /scramble-stats.
- * Shows the current Word Unscramble game status and leaderboard.
+ * Command handler for /scramble-stats. Shows the current Word Unscramble game status and
+ * leaderboard.
  */
 @SuppressWarnings("ClassCanBeRecord")
-public class GameStatsCommand implements CommandHandler {
-    private static final Logger logger = LoggerFactory.getLogger(GameStatsCommand.class);
+public class ScrambleStatsCommand implements CommandHandler {
+    private static final Logger logger = LoggerFactory.getLogger(ScrambleStatsCommand.class);
     private final WordUnscrambleService wordUnscrambleService;
 
     /**
-     * Creates a new GameStatsCommand handler.
+     * Creates a new ScrambleStatsCommand handler.
      *
      * @param wordUnscrambleService the Word Unscramble service
      */
-    public GameStatsCommand(WordUnscrambleService wordUnscrambleService) {
+    public ScrambleStatsCommand(WordUnscrambleService wordUnscrambleService) {
         this.wordUnscrambleService = wordUnscrambleService;
     }
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("scramble-stats", "View current Word Unscramble game status and leaderboard")
+        return Commands.slash(
+                        "scramble-stats", "View current Word Unscramble game status and leaderboard")
                 .setGuildOnly(true);
     }
 
@@ -50,31 +51,25 @@ public class GameStatsCommand implements CommandHandler {
     public void handle(SlashCommandInteractionEvent event) {
         Guild guild = event.getGuild();
         if (guild == null) {
-            event.reply("❌ This command can only be used in a server.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ This command can only be used in a server.").setEphemeral(true).queue();
             return;
         }
 
         Member member = event.getMember();
         if (member == null) {
-            event.reply("❌ Unable to get member information.")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ Unable to get member information.").setEphemeral(true).queue();
             return;
         }
 
         // Get guild id
         String guildId = guild.getId();
 
-        // Check if games are configured
+        // Require setup before Word Unscramble commands work
         WordUnscrambleConfig config = wordUnscrambleService.getConfig(guildId);
-        if (config == null) {
-            event.reply("""
-                            ❌ Word Unscramble game is not set up yet!
-                            
-                            An administrator can set it up with `/admin-scramble-setup`
-                            """)
+        if (config == null || config.getGameChannelId() == null) {
+            event
+                    .reply(
+                            "❌ Word Unscramble is not set up for this server. An administrator must run `/admin-scramble-setup` first.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -82,7 +77,9 @@ public class GameStatsCommand implements CommandHandler {
 
         // Check role requirement
         if (!AdminUtils.canUserPlay(member, config.isAllowNoRoleUsers())) {
-            event.reply("❌ Users without roles cannot play Word Unscramble games in this server. Contact an administrator.")
+            event
+                    .reply(
+                            "❌ Users without roles cannot play Word Unscramble games in this server. Contact an administrator.")
                     .setEphemeral(true)
                     .queue();
             return;
@@ -91,17 +88,16 @@ public class GameStatsCommand implements CommandHandler {
         // Get active session
         WordUnscrambleSession session = wordUnscrambleService.getActiveSession(guildId);
         if (session == null) {
-            event.reply("❌ No active game. Wait for the next hourly reset!")
-                    .setEphemeral(true)
-                    .queue();
+            event.reply("❌ No active game. Wait for the next hourly reset!").setEphemeral(true).queue();
             return;
         }
 
         // Build stats embed
         EmbedBuilder embed = new EmbedBuilder();
-        embed.setTitle(String.format("%s %s - Game of the Hour",
-                session.getGameType().getEmoji(),
-                session.getGameType().getDisplayName()));
+        embed.setTitle(
+                String.format(
+                        "%s %s - Game of the Hour",
+                        session.getGameType().getEmoji(), session.getGameType().getDisplayName()));
         embed.setColor(Color.CYAN);
 
         // Game status
@@ -127,21 +123,25 @@ public class GameStatsCommand implements CommandHandler {
 
             String progressText;
             if (progression.isMaxLevel()) {
-                progressText = String.format("**Level %d**\nXP: %d / %d\n%s\n%.1f%%\n\n**Progress:** Max level reached!",
-                        progression.getLevel(),
-                        progression.getXp(),
-                        progression.getXpRequired(),
-                        progressBar,
-                        progression.getProgressPercentage());
+                progressText =
+                        String.format(
+                                "**Level %d**\nXP: %d / %d\n%s\n%.1f%%\n\n**Progress:** Max level reached!",
+                                progression.getLevel(),
+                                progression.getXp(),
+                                progression.getXpRequired(),
+                                progressBar,
+                                progression.getProgressPercentage());
             } else {
-                progressText = String.format("**Level %d**\nXP: %d / %d\n%s\n%.1f%%\n\n**Progress:** %d more words needed to reach Level %d",
-                        progression.getLevel(),
-                        progression.getXp(),
-                        progression.getXpRequired(),
-                        progressBar,
-                        progression.getProgressPercentage(),
-                        wordsRemaining,
-                        nextLevel);
+                progressText =
+                        String.format(
+                                "**Level %d**\nXP: %d / %d\n%s\n%.1f%%\n\n**Progress:** %d more words needed to reach Level %d",
+                                progression.getLevel(),
+                                progression.getXp(),
+                                progression.getXpRequired(),
+                                progressBar,
+                                progression.getProgressPercentage(),
+                                wordsRemaining,
+                                nextLevel);
             }
 
             embed.addField("📊 Progression", progressText, false);
@@ -168,33 +168,36 @@ public class GameStatsCommand implements CommandHandler {
         WordUnscrambleResult winner = session.getWinner();
 
         if (winner != null) {
-            long timeToWin = winner.timestamp().getEpochSecond() - session.getStartTime().getEpochSecond();
+            long timeToWin =
+                    winner.timestamp().getEpochSecond() - session.getStartTime().getEpochSecond();
 
             // Display score with bonus breakdown if bonus > 0
             String scoreText;
             if (winner.bonus() > 0) {
                 int baseScore = winner.score() - winner.bonus();
-                scoreText = String.format("%d points (%d base + %d bonus)",
-                        winner.score(), baseScore, winner.bonus());
+                scoreText =
+                        String.format(
+                                "%d points (%d base + %d bonus)", winner.score(), baseScore, winner.bonus());
             } else {
                 scoreText = String.format("%d points", winner.score());
             }
 
-            embed.addField("🏆 Winner",
-                    String.format("**%s**\nSolved in %d seconds with %s!",
-                            winner.username(),
-                            timeToWin,
-                            scoreText),
+            embed.addField(
+                    "🏆 Winner",
+                    String.format(
+                            "**%s**\nSolved in %d seconds with %s!", winner.username(), timeToWin, scoreText),
                     false);
         } else if (session.isActive()) {
-            embed.addField("🏆 Status",
-                    String.format("No winner yet! %d attempts made.\n\nBe the first to solve it!",
+            embed.addField(
+                    "🏆 Status",
+                    String.format(
+                            "No winner yet! %d attempts made.\n\nBe the first to solve it!",
                             session.getResults().size()),
                     false);
         } else {
-            embed.addField("🏆 Result",
-                    String.format("No one solved it! %d attempts were made.",
-                            session.getResults().size()),
+            embed.addField(
+                    "🏆 Result",
+                    String.format("No one solved it! %d attempts were made.", session.getResults().size()),
                     false);
         }
     }
@@ -221,5 +224,3 @@ public class GameStatsCommand implements CommandHandler {
         return "scramble-stats";
     }
 }
-
-

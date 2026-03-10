@@ -33,8 +33,8 @@ public class GetUserScoreDetailResponse {
     }
 
     /**
-     * Gets the list of user scores.
-     * Note: API returns data as a direct array, not wrapped in a Data object.
+     * Gets the list of user scores. Note: API returns data as a direct array, not wrapped in a Data
+     * object.
      *
      * @return the list of user scores
      */
@@ -52,8 +52,8 @@ public class GetUserScoreDetailResponse {
     }
 
     /**
-     * Gets the list of user scores (convenience method for backward compatibility).
-     * This method provides access to scores through the same interface as before.
+     * Gets the list of user scores (convenience method for backward compatibility). This method
+     * provides access to scores through the same interface as before.
      *
      * @return the list of user scores, or empty list if data is null
      */
@@ -109,8 +109,8 @@ public class GetUserScoreDetailResponse {
     }
 
     /**
-     * User score information from the API.
-     * Note: Actual API only returns username and reputationScore.
+     * User score information from the API. Note: Actual API only returns username and
+     * reputationScore.
      */
     public static class UserScore {
         @JsonProperty("username")
@@ -165,4 +165,3 @@ public class GetUserScoreDetailResponse {
         }
     }
 }
-

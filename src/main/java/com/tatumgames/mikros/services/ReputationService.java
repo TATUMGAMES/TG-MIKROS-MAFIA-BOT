@@ -29,8 +29,8 @@ public interface ReputationService {
 
     /**
      * Reports behavior to the external reputation API.
-     * <p>
-     * TODO: Integrate with Tatum Games Reputation Score Update API
+     *
+     * <p>TODO: Integrate with Tatum Games Reputation Score Update API
      *
      * @param report the behavior report to submit
      * @return true if successful, false otherwise
@@ -53,4 +53,3 @@ public interface ReputationService {
      */
     GetUserScoreDetailResponse getUserScoreDetail(List<String> usernames);
 }
-

@@ -16,8 +16,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * In-memory implementation of GamePromotionService.
- * Stores configuration in memory (expandable to database).
+ * In-memory implementation of GamePromotionService. Stores configuration in memory (expandable to
+ * database).
  */
 public class InMemoryGamePromotionService implements GamePromotionService {
     private static final Logger logger = LoggerFactory.getLogger(InMemoryGamePromotionService.class);
@@ -26,7 +26,8 @@ public class InMemoryGamePromotionService implements GamePromotionService {
     private final Map<String, String> promotionChannels; // guildId -> channelId
     private final Map<String, PromotionVerbosity> promotionVerbosity; // guildId -> verbosity
 
-    // App promotion step tracking: guildId -> (appId -> PromotionStepRecord)
+    // App promotion step tracking: guildId -> (compositeKey -> PromotionStepRecord)
+    // Composite key format: "appId:campaignId" when campaignId is provided, "appId" when null
     private final Map<String, Map<String, PromotionStepRecord>> promotionSteps;
     private final ObjectMapper objectMapper;
     // Cached apps from stub JSON
@@ -99,8 +100,7 @@ public class InMemoryGamePromotionService implements GamePromotionService {
     }
 
     /**
-     * Loads apps from stub JSON file.
-     * TODO: Replace with real API call to /getAllApps when available.
+     * Loads apps from stub JSON file. TODO: Replace with real API call to /getAllApps when available.
      *
      * @return list of app promotions
      */
@@ -110,8 +110,8 @@ public class InMemoryGamePromotionService implements GamePromotionService {
         }
 
         try {
-            InputStream inputStream = getClass().getClassLoader()
-                    .getResourceAsStream("stubs/getAllApps.json");
+            InputStream inputStream =
+                    getClass().getClassLoader().getResourceAsStream("stubs/getAllApps.json");
 
             if (inputStream == null) {
                 logger.error("Could not find stub JSON file: stubs/getAllApps.json");
@@ -146,23 +146,47 @@ public class InMemoryGamePromotionService implements GamePromotionService {
         return loadStubApps();
     }
 
+    /**
+     * Creates a composite key for tracking promotion steps. Format: "appId:campaignId" when
+     * campaignId is provided, "appId" when null.
+     *
+     * @param appId      the app ID
+     * @param campaignId the campaign ID (can be null)
+     * @return composite key string
+     */
+    private String createCompositeKey(String appId, String campaignId) {
+        return campaignId != null && !campaignId.isBlank() ? appId + ":" + campaignId : appId;
+    }
+
     @Override
     public int getLastPromotionStep(String guildId, String appId) {
+        return getLastPromotionStep(guildId, appId, null);
+    }
+
+    @Override
+    public int getLastPromotionStep(String guildId, String appId, String campaignId) {
         if (guildId == null || guildId.isBlank() || appId == null || appId.isBlank()) {
             return 0;
         }
 
+        String key = createCompositeKey(appId, campaignId);
         Map<String, PromotionStepRecord> guildSteps = promotionSteps.get(guildId);
         if (guildSteps == null) {
             return 0;
         }
 
-        PromotionStepRecord record = guildSteps.get(appId);
+        PromotionStepRecord record = guildSteps.get(key);
         return record != null ? record.lastStep : 0;
     }
 
     @Override
     public void recordPromotionStep(String guildId, String appId, int step, Instant postTime) {
+        recordPromotionStep(guildId, appId, null, step, postTime);
+    }
+
+    @Override
+    public void recordPromotionStep(
+            String guildId, String appId, String campaignId, int step, Instant postTime) {
         if (guildId == null || guildId.isBlank()) {
             throw new IllegalArgumentException("guildId cannot be null or blank");
         }
@@ -176,30 +200,48 @@ public class InMemoryGamePromotionService implements GamePromotionService {
             throw new IllegalArgumentException("postTime cannot be null");
         }
 
-        promotionSteps.computeIfAbsent(guildId, k -> new ConcurrentHashMap<>())
-                .put(appId, new PromotionStepRecord(step, postTime));
+        String key = createCompositeKey(appId, campaignId);
+        promotionSteps
+                .computeIfAbsent(guildId, k -> new ConcurrentHashMap<>())
+                .put(key, new PromotionStepRecord(step, postTime));
 
-        logger.debug("Recorded promotion step {} for app {} in guild {} at {}",
-                step, appId, guildId, postTime);
+        logger.debug(
+                "Recorded promotion step {} for app {} (campaign: {}) in guild {} at {}",
+                step,
+                appId,
+                campaignId != null ? campaignId : "none",
+                guildId,
+                postTime);
     }
 
     @Override
     public boolean hasAppBeenPromoted(String guildId, String appId) {
-        return getLastPromotionStep(guildId, appId) > 0;
+        return hasAppBeenPromoted(guildId, appId, null);
+    }
+
+    @Override
+    public boolean hasAppBeenPromoted(String guildId, String appId, String campaignId) {
+        return getLastPromotionStep(guildId, appId, campaignId) > 0;
     }
 
     @Override
     public Instant getLastAppPostTime(String guildId, String appId) {
+        return getLastAppPostTime(guildId, appId, null);
+    }
+
+    @Override
+    public Instant getLastAppPostTime(String guildId, String appId, String campaignId) {
         if (guildId == null || guildId.isBlank() || appId == null || appId.isBlank()) {
             return null;
         }
 
+        String key = createCompositeKey(appId, campaignId);
         Map<String, PromotionStepRecord> guildSteps = promotionSteps.get(guildId);
         if (guildSteps == null) {
             return null;
         }
 
-        PromotionStepRecord record = guildSteps.get(appId);
+        PromotionStepRecord record = guildSteps.get(key);
         return record != null ? record.lastPostTime : null;
     }
 
@@ -212,9 +254,7 @@ public class InMemoryGamePromotionService implements GamePromotionService {
         Map<String, Object> stats = new HashMap<>();
         stats.put("guilds_with_channel_configured", promotionChannels.size());
         stats.put("guilds_with_custom_verbosity", promotionVerbosity.size());
-        stats.put("total_promoted_apps", promotionSteps.values().stream()
-                .mapToInt(Map::size)
-                .sum());
+        stats.put("total_promoted_apps", promotionSteps.values().stream().mapToInt(Map::size).sum());
         return stats;
     }
 
@@ -222,8 +262,8 @@ public class InMemoryGamePromotionService implements GamePromotionService {
      * Record of promotion step and last post time for an app.
      */
     private static class PromotionStepRecord {
-        int lastStep;           // 1-4, or 0 if never posted
-        Instant lastPostTime;   // When last step was posted
+        int lastStep; // 1-4, or 0 if never posted
+        Instant lastPostTime; // When last step was posted
 
         PromotionStepRecord(int lastStep, Instant lastPostTime) {
             this.lastStep = lastStep;
@@ -231,4 +271,3 @@ public class InMemoryGamePromotionService implements GamePromotionService {
         }
     }
 }
-

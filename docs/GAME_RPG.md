@@ -9,11 +9,16 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 
 ## How to Play
 
+> **Important:** All RPG commands must be used in the channel assigned by administrators via `/admin-rpg-setup`. If you
+> try to use a command in the wrong channel, you'll receive a message directing you to the correct channel.
+
 1. **Create Your Character:**
     - Use `/rpg-register name:<name> class:<class>`
     - Choose from: **WARRIOR**, **KNIGHT**, **MAGE**, **ROGUE**, **NECROMANCER**, **PRIEST**, or **OATHBREAKER**
     - One character per user
     - Your soul awakens in Nilfheim...
+   - **Tutorial:** After registration, you'll receive a private tutorial message explaining actions, charges, and boss
+     battles
 
 2. **View Your Profile:**
     - Use `/rpg-profile` to see your stats, charges, and recovery status
@@ -52,18 +57,18 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 
 ### Player Commands
 
-| Command                    | Description                                    | Example                                    |
-|----------------------------|------------------------------------------------|--------------------------------------------|
-| `/rpg-register`            | Create your RPG character                      | `/rpg-register name:Aragorn class:WARRIOR` |
-| `/rpg-profile`             | View your character stats                      | `/rpg-profile`                             |
-| `/rpg-profile user:<user>` | View another player's profile                  | `/rpg-profile user:@Player`                |
-| `/rpg-action`              | Perform an action (uses 1 charge)              | `/rpg-action type:explore`                 |
-| `/rpg-resurrect`           | Resurrect a dead player (Priest-only, free)    | `/rpg-resurrect target:@Player`            |
-| `/rpg-duel`                | Challenge another player to a duel (free, 3x/24h) | `/rpg-duel target:@Player`              |
-| `/rpg-boss-battle`         | Battle boss, check status, or view leaderboard | `/rpg-boss-battle battle`                  |
-| `/rpg-leaderboard`         | View top players                               | `/rpg-leaderboard`                         |
-| `/rpg-inventory`           | View your collected items and crafted bonuses  | `/rpg-inventory`                           |
-| `/rpg-craft`               | Craft permanent stat-boosting items or consumable infusions | `/rpg-craft item:Ember Infusion`           |
+| Command                    | Description                                                      | Example                                                |
+|----------------------------|------------------------------------------------------------------|--------------------------------------------------------|
+| `/rpg-register`            | Create your RPG character                                        | `/rpg-register name:Aragorn class:WARRIOR`             |
+| `/rpg-profile`             | View your character stats                                        | `/rpg-profile`                                         |
+| `/rpg-profile user:<user>` | View another player's profile                                    | `/rpg-profile user:@Player`                            |
+| `/rpg-action`              | Perform an action (uses 1 charge). Failure messages are private. | `/rpg-action type:explore`                             |
+| `/rpg-resurrect`           | Resurrect a dead player (Priest-only, free)                      | `/rpg-resurrect target:@Player`                        |
+| `/rpg-duel`                | Challenge another player to a duel (free, 3x/24h)                | `/rpg-duel target:@Player`                             |
+| `/rpg-boss-battle`         | Battle boss, check status, or view leaderboard                   | `/rpg-boss-battle battle`                              |
+| `/rpg-leaderboard`         | View top players                                                 | `/rpg-leaderboard`                                     |
+| `/rpg-inventory`           | View your collected items and crafted bonuses                    | `/rpg-inventory` or `/rpg-inventory visibility:public` |
+| `/rpg-craft`               | Craft permanent stat-boosting items or consumable infusions      | `/rpg-craft item:Ember Infusion`                       |
 
 **Boss Battle Subcommands:**
 
@@ -292,13 +297,48 @@ Different stats are effective or weak against different enemy types:
 - Great drops, good exploration, decent defense
 - Unreliable damage, weak to tanks
 
+## Biome System
+
+The world of Nilfheim is divided into **six distinct biomes/zones**, each with its own lore, narratives, and enemies.
+
+### Biomes
+
+1. **Frozen Wastes** ❄️ - The primary biome of Nilfheim, filled with ice, snow, and frost-themed encounters
+2. **Ancient Ruins** 🏛️ - Forgotten lands and ancient civilizations with undead and construct enemies
+3. **Shadowed Forests** 🌲 - Dark forests and cursed woods with nature and shadow-themed enemies
+4. **Volcanic Depths** 🌋 - Caves, dungeons, and volcanic areas with fire and magical enemies
+5. **Mystical Heights** ⛰️ - Mountain peaks and astral realms with flying and agile enemies
+6. **Twisted Realms** 🌀 - Arcane and spirit-themed areas with mystical and wraith enemies
+
+### Biome Progression
+
+- **Starting Biome:** Upon registration (`/rpg-register`), players are randomly assigned a starting biome
+- **Exploration Counter:** Each exploration in a biome increments a counter (shown in `/rpg-profile`)
+- **Biome Advancement:** After **10 explorations** in a biome, players automatically advance to the next biome in the
+  cycle
+- **Cycle:** Frozen Wastes → Ancient Ruins → Shadowed Forests → Volcanic Depths → Mystical Heights → Twisted Realms → (
+  back to Frozen Wastes)
+- **Biome-Specific Content:**
+    - **Exploration:** Each biome has unique narratives themed to that location
+    - **Battles:** Enemies encountered during battles are specific to the current biome
+    - **March of the Dead:** The curse still increases undead enemy spawns, but undead will primarily come from biomes
+      that contain them
+
+### Viewing Biome Information
+
+Use `/rpg-profile` to see:
+
+- Current biome name and emoji
+- Progress toward next biome (X/10 explorations)
+
 ## Actions
 
 ### Explore 🧭
 
-- **Type:** Safe exploration
-- **XP Gain:** 30 + (level × 5) ± 10
-- **Risk:** None (no damage)
+- **Type:** Exploration with risks
+- **XP Gain:** 35 + (level × 6) ± 15
+- **Level Scaling:** +2% XP per level above 5, capped at +30% at level 20
+- **Risk:** 8% base chance for negative events (reduced by AGI/LUCK, minimum 2%)
 - **Narratives:** 65+ unique encounter stories (Nilfheim-themed)
 - **Item Drops:** 
   - Base: 12.5% chance to find 1-2 random essences
@@ -310,8 +350,36 @@ Different stats are effective or weak against different enemy types:
   - **The Mysterious Merchant** (Any level): Trade essences OR +1 catalyst OR story flag
   - **The Stormwarden Apprentice** (Any level): +1 Gale Fragment OR +10% AGI OR story flag
   - Class-specific flavor: Preferred classes have 2x encounter chance
-- **Best For:** Consistent XP without risk, item collection (especially with high AGI)
-- **Charge Cost:** 1
+- **Best For:** Consistent XP with manageable risks, item collection (especially with high AGI)
+- **Charge Cost:** 1 (may cost 2 if affected by "Lost Time" event)
+
+#### Explore Action Risks
+
+Exploration now includes various risks that can occur during your journey:
+
+**Tier 1 Events (Minor Setbacks - 75% of negative events):**
+
+- **Environmental Hazard:** 3-8% HP loss (cannot kill)
+- **Exhaustion:** 5% chance to lose an extra action charge on your next action
+- **Temporary Stat Debuff:** 2% chance for -1 to a random stat for 3 actions (very rare)
+- Existing events: Slipped on Ice, Pickpocketed by Thieves, Mocked by Angry Mob, Lost in the Fog
+
+**Tier 2 Events (Dangerous Encounters - 20% of negative events):**
+
+- **Dangerous Terrain:** 10-15% HP loss (cannot kill)
+- **Lost Time:** 3% chance for your next action to cost 2 charges instead of 1 (rare)
+- **Cursed Discovery:** 3% chance for -5% XP for the next 5 actions (rare)
+- Existing events: Ambushed by Creature, Frostbite
+
+**Tier 3 Events (Legendary Events - 5% of negative events):**
+
+- Existing events: Touched by a Dark Relic, Seen by Something Ancient
+
+**Discovery Events (High Reward, Some Risk - 10-15% chance):**
+
+- **Ancient Discovery:** +50-100% XP bonus, 5-10% HP loss
+- **Hidden Cache:** +75% XP, 10% chance for 8-12% HP loss (trap)
+- **Rare Encounter:** +100% XP, must survive ambush (similar to normal ambush but higher stakes)
 
 #### Irrevocable World Encounters (Level 5+, Ultra-Rare)
 
@@ -383,14 +451,45 @@ During exploration, you may encounter environmental obstacles (10-15% chance) th
 
 ### Train 💪
 
-- **Type:** Stat improvement
-- **XP Gain:** 25 + (level × 4) ± 7
+- **Type:** Stat improvement with risks
+- **XP Gain:** 30 + (level × 5) ± 10
+- **Level Scaling:** +2% XP per level above 5, capped at +30% at level 20
 - **Stat Gain:** +1 to +3 random stat (STR, AGI, INT, or LUCK)
 - **Nilfheim Event Bonus:** During "The Grand Library Opens" event, training grants +1 guaranteed stat point
-- **Risk:** None
+- **Risk:** Training accidents (8-12% base chance, reduced by STR/AGI), training failures (5-8% base chance, reduced by
+  INT/LUCK), risky training methods (10% chance)
 - **Narratives:** 20 training scenarios per stat (80 total)
-- **Best For:** Building stats over time
-- **Charge Cost:** 1
+- **Best For:** Building stats over time, with occasional high-risk, high-reward opportunities
+- **Charge Cost:** 1 (may cost 2 if affected by "Exhaustion" failure)
+
+#### Train Action Risks
+
+Training now includes various risks and opportunities:
+
+**Training Accidents (8-12% base chance, reduced by STR/AGI):**
+
+- **Overexertion:** 3-7% HP loss (cannot kill) - Most common (70% of accidents)
+- **Training Injury:** 3% chance to lose an extra action charge on your next action (rare) - Moderate (25% of accidents)
+- **Muscle Strain:** 2% chance for -1 to trained stat for 1 action (very rare) - Severe (5% of accidents)
+
+**Training Failures (5-8% base chance, reduced by INT/LUCK):**
+
+- **Poor Form:** No stat increase this action, XP reduced by 25% - Most common (70% of failures)
+- **Exhaustion:** 2% chance for your next action to cost 2 charges instead of 1 (rare) - Moderate (25% of failures)
+- **Training Setback:** Stat increase reduced by 1 (minimum 1 point) - Severe (5% of failures)
+
+**Risky Training Methods (10% chance, high-risk, high-reward):**
+
+- **Push Beyond Limits:** +50% XP, +1 extra stat point, 5-10% HP loss
+- **Dangerous Technique:** +75% XP, 10% chance to lose 1 action charge, 8-12% HP loss
+- **Extreme Training:** +100% XP, 8-12% HP loss, 5% chance for temporary stat debuff
+
+**Stat Imbalance Penalties:**
+
+- Training the same stat 3+ times in a row can cause stat imbalance
+- **15% chance:** -1 to opposite stat (e.g., training STR too much reduces AGI)
+- **10-20% XP reduction** until you train a different stat
+- Encourages balanced stat training
 
 ### Battle ⚔️
 
@@ -401,8 +500,20 @@ During exploration, you may encounter environmental obstacles (10-15% chance) th
 - **XP Bonuses:**
   - **INT Bonus:** INT/10% bonus XP (capped at 15%)
   - **LUCK Floor:** Minimum XP = baseXP × (1 + LUCK/20) - prevents bad rolls
-- **Damage (Victory):** Low (scales with enemy power, ±25% variance)
-- **Damage (Defeat):** High (scales with enemy power, ±25% variance)
+- **U-Curve Difficulty System:**
+    - **Level 1-5 (New Players):** More dangerous encounters
+        - Can face enemies up to +2 levels above player level
+        - 5% chance for **Veteran Enemies** (+3 levels) - nearly unwinnable for newbies, creates real danger
+        - +25% damage taken (ensures battles matter)
+    - **Level 6-15 (Mid Game):** Moderate difficulty
+        - Standard enemy scaling (player level ±1)
+        - Standard damage values
+    - **Level 16+ (End Game):** Challenging encounters
+        - Occasionally face stronger enemies (up to +2 levels)
+        - +15% damage taken (scales with monster strength)
+- **Level-Up HP Restoration:** Restores 75% of new max HP (not 100%) to preserve battle tension between levels
+- **Damage (Victory):** Low (scales with enemy power, ±25% variance, modified by U-curve multipliers)
+- **Damage (Defeat):** High (scales with enemy power, ±25% variance, modified by U-curve multipliers)
 - **Damage Reduction:**
   - **AGI Defense:** 1% reduction per AGI point (capped at 30%)
   - **Knight Class:** Additional 15% reduction (stacks with AGI)
@@ -411,6 +522,8 @@ During exploration, you may encounter environmental obstacles (10-15% chance) th
 - **Stat Effectiveness:** STR/INT/AGI have 1.3x effectiveness vs certain enemy types, 0.85x vs others
 - **Critical Hits:** AGI/2% chance for 1.5x damage
 - **Pack Enemies:** Rare pack enemies (e.g., "Ice Wolf Pack") deal 15% more damage and use pack-specific narrative. Pack encounters are not common but are more dangerous.
+- **Veteran Enemies:** Low-level players (1-5) have a 5% chance to encounter veteran enemies that are +3 levels above
+  them. These encounters are extremely dangerous and create real risk for new players.
 - **Nilfheim Event Bonus:** During "A Stormwarden's Blessing" event, battles deal +5% damage
 - **Item Drops:**
   - Base: 20% chance on victory, 5% chance on defeat
@@ -695,7 +808,9 @@ Players can also craft temporary single-use infusions that provide powerful effe
 ### Commands
 
 - `/rpg-inventory` - View your collected essences, catalysts, and current crafted bonuses
+    - **Privacy:** Private by default (only you can see). Use `visibility:public` to share with everyone
 - `/rpg-craft item:<name>` - Craft a permanent stat-boosting item
+    - **Privacy:** Success messages are public (everyone can see), error messages are private (only you can see)
 
 ### Item Display
 
@@ -709,13 +824,17 @@ Items are displayed inline in action result messages:
 
 ## Death and Recovery System
 
+**For detailed information about death mechanics, see [DEATH_MECHANICS.md](DEATH_MECHANICS.md)**
+
 ### Death
 
 - Characters can die when HP reaches 0 in battle
+- **Death message**: "💀 **YOU HAVE DIED!** A Priest can resurrect you." (public, shown in action result)
 - Dead characters:
     - Cannot perform actions
     - Cannot battle bosses
     - Can be resurrected by Priests
+- **Current behavior:** Dead characters remain dead indefinitely (no automatic deletion or 24-hour timer)
 
 ### Recovery
 
@@ -725,13 +844,20 @@ Items are displayed inline in action result messages:
     - Cannot perform actions
     - Cannot battle bosses
     - Recovery timer shown in profile
+- Recovery period can be extended to 36 hours if "Fading Hope" curse is active
 
 ### Resurrection
 
-- **Priest-only** action (free, no charge cost)
+- **Priest-only**: Only Priests can use the `/rpg-resurrect` command
+- **Free action**: Does not consume action charges
+- **Usage**: `/rpg-resurrect target:@Player`
 - If target is **alive:** Priest gives a blessing (+2 XP)
 - If target is **dead:** Target is resurrected at 50% HP, enters recovery
 - Priest gets +5 XP for successful resurrection
+- **Message visibility**: Public (shown in resurrection command result)
+
+**See [DEATH_MECHANICS.md](DEATH_MECHANICS.md) for complete details about death and resurrection mechanics, message
+examples, and code references.**
 
 ## Boss System
 
@@ -788,9 +914,9 @@ Bosses have types that determine class bonuses:
 When a boss or super boss is within 1-2 hours of expiring, the bot will automatically post a warning message in the RPG channel. These warnings:
 
 - **Check Interval:** Bot checks every 30 minutes for bosses nearing expiration
-- **Warning Window:** Warnings appear when 1-2 hours remain before expiration
-- **Message Variety:** 5 different message variations (randomly selected) to keep things fresh
-- **Spam Prevention:** Only one warning per hour per boss to avoid flooding the channel
+- **Warning Times:** Warnings appear at 4 hours, 2 hours, 1 hour, and 30 minutes remaining
+- **Message Variety:** Multiple message variations (randomly selected) to keep things fresh
+- **Spam Prevention:** Warnings are sent once per threshold to avoid flooding the channel
 - **Information Displayed:**
   - Boss/super boss name, level, and type
   - Current HP and max HP with percentage remaining
@@ -798,6 +924,72 @@ When a boss or super boss is within 1-2 hours of expiring, the bot will automati
   - Call to action to join the fight
 
 Players can use these warnings as a reminder to join the fight before time runs out and the boss escapes!
+
+### Blessings System
+
+The Blessings system provides temporary stat boosts during boss battles when players fail to defeat bosses repeatedly.
+This mercy mechanic prevents frustration while maintaining challenge and stakes.
+
+**Trigger Conditions:**
+
+- **Minor Blessing:** After 5 consecutive boss failures
+- **Major Blessing:** After 10 consecutive boss failures
+- **Legendary Blessing:** After 15+ consecutive boss failures
+- **Reset:** Blessings expire immediately upon boss defeat, and consecutive failure counter resets
+
+**Mechanics:**
+
+- Blessings are **active only during boss battles** (not regular actions)
+- Effects are **class-specific** and scale with blessing tier
+- Blessings **do not remove curses** - they work alongside them to give players a fighting chance
+- Blessings are visible in boss spawn announcements and `/rpg-profile`
+
+**Class-Specific Effects (Minor Tier - base values):**
+
+| Class       | Blessing Effect    |
+|-------------|--------------------|
+| Warrior     | +25% STR           |
+| Knight      | +25% STR           |
+| Mage        | +25% INT           |
+| Rogue       | +25% AGI           |
+| Necromancer | +25% INT           |
+| Priest      | +25% INT           |
+| Oathbreaker | +20% STR, +20% INT |
+
+> **Note:** Blessings only affect damage output in boss battles. Stat multipliers (STR/AGI/INT) are the only relevant
+> effects since players don't take damage during boss battles.
+
+**Tier Scaling:**
+
+- **Minor (5 failures):** Base values (shown above)
+- **Major (10 failures):** +50% to all effects (e.g., +37.5% STR instead of +25%)
+- **Legendary (15+ failures):** +100% to all effects (e.g., +50% STR instead of +25%)
+
+**Narrative Variety:** Blessing announcements feature different narrative styles:
+
+- Blessings from the Gods/Deities
+- Blessings from Ancient Spirits of Nilfheim
+- Blessings from Celestial Events
+- Blessings from Echoes of Nilfheim
+
+**Example Blessing Announcement:**
+
+```
+✨ BLESSINGS FROM THE ANCIENTS ✨
+The Gods have sensed your struggle. All heroes are imbued with divine strength:
+- STR +25%
+- AGI +25%
+- INT +25%
+
+Use this power wisely; it will vanish when the boss falls!
+```
+
+> **Note:** Blessing effects are class-specific. Each class receives only their relevant stat multiplier (Warrior/Knight
+> get STR, Rogue gets AGI, Mage/Necromancer/Priest get INT, Oathbreaker gets both STR and INT).
+
+**Profile Display:**
+Blessings appear in `/rpg-profile` under "💫 Active Blessings" showing all active stat bonuses with a note that they're "
+Active only during boss battles".
 
 ### Heroic Charges System
 
@@ -813,6 +1005,54 @@ Boss battles use a separate charge system from regular actions:
 - Prevents boss spam while allowing multiple attempts
 - Ensures fair participation across all players
 - Refreshes automatically with each new boss spawn
+
+### Secret Boss System
+
+Secret bosses are mysterious event bosses that spawn for individual players based on hidden achievement milestones.
+These bosses provide enhanced rewards and use a separate charge system. The exact triggers for secret bosses are
+intentionally kept secret from players.
+
+**Spawn Triggers:**
+Secret bosses appear automatically when certain milestones are reached. The specific triggers are not revealed to
+players, adding mystery and discovery to the system.
+
+**Event Charges System:**
+
+- **10 Event Charges** granted automatically when a secret boss spawns
+- Maximum of **10 event charges** (capped at 10)
+- Each secret boss battle consumes **1 event charge**
+- Event charges are **separate** from heroic charges and action charges
+- View your event charges in `/rpg-profile`
+- **Important:** You have exactly 10 attempts to defeat the secret boss. If you fail to defeat it within 10 attempts,
+  you must wait until the next secret boss appears.
+
+**Special Rewards:**
+Secret bosses provide better rewards than normal or super bosses:
+
+- **Guaranteed:** 1 catalyst
+- **Guaranteed:** 2-4 essences (random)
+- **Bonus XP:** 200 + (bossLevel × 50)
+- **10% chance:** Additional rare catalyst
+
+**Boss Level Calculation:**
+Secret boss levels are determined by various factors related to the milestone that triggered them.
+
+**Secret Boss Counter:**
+
+- Defeating secret bosses increments a separate counter
+- View secret boss defeats in `/rpg-profile` and `/rpg-stats`
+- Title unlock: **Secret Challenger** at 5 secret boss defeats (2% XP bonus)
+
+**Commands:**
+
+- `/rpg-boss-battle secret-boss` - Battle your active secret boss
+- Secret bosses expire after 24 hours if not defeated
+
+**Visibility:**
+
+- Secret bosses are only visible to the player who has them
+- Other players cannot see your secret boss
+- All messages are ephemeral (only visible to you)
 
 ### Boss Catalog
 
@@ -1313,10 +1553,11 @@ are fewer. Yet fate stirs… and your journey begins.
 
 ---
 
-**Last Updated:** 2026-01-01 (Enhanced Encounters: Level 10+ Stat Interactions, 3x limits, expanded narratives)  
+**Last Updated:** 2026-01-01 (Blessings System: Mercy mechanic for consecutive boss failures)  
 **Game Type:** Text-Based RPG  
 **Realm:** Nilfheim  
 **Command Prefix:** `rpg-*`  
 **Action System:** Dynamic charges (3-10 based on level), 12h refresh  
 **Boss System:** 48 normal + 20 super bosses  
-**Features:** Dual System, Item & Crafting System, Dynamic Charges, World Curse System, Irrevocable World Encounters, Stat-Gated Interactions
+**Features:** Dual System, Item & Crafting System, Dynamic Charges, World Curse System, Blessings System, Irrevocable
+World Encounters, Stat-Gated Interactions

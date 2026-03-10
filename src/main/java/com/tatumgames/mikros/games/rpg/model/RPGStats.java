@@ -1,8 +1,7 @@
 package com.tatumgames.mikros.games.rpg.model;
 
 /**
- * Represents the stats for an RPG character.
- * Stats grow with leveling and affect action outcomes.
+ * Represents the stats for an RPG character. Stats grow with leveling and affect action outcomes.
  */
 public class RPGStats {
     private int maxHp;
@@ -46,15 +45,17 @@ public class RPGStats {
     }
 
     /**
-     * Applies stat growth when leveling up.
-     * Level up: +5 HP, +1 to all stats (as per TASKS_23.md).
+     * Applies stat growth when leveling up. Level up: +5 HP, +1 to all stats (as per TASKS_23.md). HP
+     * restoration: Restores 75% of new max HP to preserve battle tension.
      *
      * @param characterClass the character's class
      */
     public void applyLevelUpGrowth(CharacterClass characterClass) {
         // +5 HP on level up
         this.maxHp += 5;
-        this.currentHp = this.maxHp; // Heal on level up
+        // Restore 75% of new max HP (preserves some damage tension)
+        // Uses Math.max to ensure current HP is at least 75%, but doesn't reduce if already higher
+        this.currentHp = Math.max(this.currentHp, (int) (this.maxHp * 0.75));
 
         // +1 to all stats
         this.strength += 1;
@@ -125,7 +126,8 @@ public class RPGStats {
      * @param activeCurses list of active world curses
      * @return effective max HP (cannot go below 1)
      */
-    public int getEffectiveMaxHp(java.util.List<com.tatumgames.mikros.games.rpg.curse.WorldCurse> activeCurses) {
+    public int getEffectiveMaxHp(
+            java.util.List<com.tatumgames.mikros.games.rpg.curse.WorldCurse> activeCurses) {
         return getEffectiveMaxHp(activeCurses, false);
     }
 
@@ -136,11 +138,15 @@ public class RPGStats {
      * @param hasFrostbite whether the character has frostbite (-5% max HP)
      * @return effective max HP (cannot go below 1)
      */
-    public int getEffectiveMaxHp(java.util.List<com.tatumgames.mikros.games.rpg.curse.WorldCurse> activeCurses, boolean hasFrostbite) {
+    public int getEffectiveMaxHp(
+            java.util.List<com.tatumgames.mikros.games.rpg.curse.WorldCurse> activeCurses,
+            boolean hasFrostbite) {
         int effectiveMaxHp = maxHp;
 
         // Apply Curse of Frailty (-10% HP)
-        if (activeCurses != null && activeCurses.contains(com.tatumgames.mikros.games.rpg.curse.WorldCurse.MINOR_CURSE_OF_FRAILTY)) {
+        if (activeCurses != null
+                && activeCurses.contains(
+                com.tatumgames.mikros.games.rpg.curse.WorldCurse.MINOR_CURSE_OF_FRAILTY)) {
             effectiveMaxHp = (int) (effectiveMaxHp * 0.90);
         }
 
@@ -159,6 +165,16 @@ public class RPGStats {
 
     public void setCurrentHp(int currentHp) {
         this.currentHp = Math.max(0, Math.min(maxHp, currentHp));
+    }
+
+    /**
+     * Sets current HP, capping at effective max HP (for curse/frostbite effects).
+     *
+     * @param currentHp      the desired current HP
+     * @param effectiveMaxHp the effective max HP (after curses/frostbite)
+     */
+    public void setCurrentHp(int currentHp, int effectiveMaxHp) {
+        this.currentHp = Math.max(0, Math.min(effectiveMaxHp, currentHp));
     }
 
     public int getStrength() {
@@ -232,5 +248,34 @@ public class RPGStats {
     public double getEffectiveLuck(double modifier) {
         return luck * modifier;
     }
-}
 
+    /**
+     * Gets the effective stat value after applying temporary debuffs. Checks the character's
+     * temporary stat debuff fields and applies the reduction.
+     *
+     * @param statName  the stat name (STR, AGI, INT, LUCK)
+     * @param character the character to check for debuffs
+     * @return effective stat value (base stat minus debuff amount)
+     */
+    public int getEffectiveStat(String statName, RPGCharacter character) {
+        int baseStat;
+        switch (statName.toUpperCase()) {
+            case "STR", "STRENGTH" -> baseStat = this.strength;
+            case "AGI", "AGILITY" -> baseStat = this.agility;
+            case "INT", "INTELLIGENCE" -> baseStat = this.intelligence;
+            case "LUCK" -> baseStat = this.luck;
+            default -> baseStat = 0;
+        }
+
+        // Apply temporary stat debuff if active
+        if (character != null && character.getTemporaryStatDebuffStat() != null) {
+            String debuffStat = character.getTemporaryStatDebuffStat();
+            if (debuffStat != null && debuffStat.equalsIgnoreCase(statName)) {
+                int debuffAmount = character.getTemporaryStatDebuffAmount();
+                return Math.max(0, baseStat - debuffAmount);
+            }
+        }
+
+        return baseStat;
+  }
+}

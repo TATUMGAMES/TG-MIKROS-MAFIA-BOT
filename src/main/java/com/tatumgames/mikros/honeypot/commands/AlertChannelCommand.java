@@ -1,7 +1,7 @@
 package com.tatumgames.mikros.honeypot.commands;
 
-import com.tatumgames.mikros.admin.handler.CommandHandler;
 import com.tatumgames.mikros.admin.utils.AdminUtils;
+import com.tatumgames.mikros.handler.CommandHandler;
 import com.tatumgames.mikros.honeypot.service.HoneypotService;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -34,8 +34,13 @@ public class AlertChannelCommand implements CommandHandler {
 
     @Override
     public CommandData getCommandData() {
-        return Commands.slash("alert_channel", "Set the admin channel for bot alerts (e.g., honeypot triggers)")
-                .addOption(OptionType.CHANNEL, "channel", "The channel to send alerts to (leave empty to clear)", false)
+        return Commands.slash(
+                        "alert-channel", "Set the admin channel for bot alerts (e.g., honeypot triggers)")
+                .addOption(
+                        OptionType.CHANNEL,
+                        "channel",
+                        "The channel to send alerts to (leave empty to clear)",
+                        false)
                 .setGuildOnly(true)
                 .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
     }
@@ -45,11 +50,8 @@ public class AlertChannelCommand implements CommandHandler {
         Member member = event.getMember();
         Guild guild = event.getGuild();
 
-        if (member == null || guild == null ||
-                !member.hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ You don't have permission to use this command.")
-                    .setEphemeral(true)
-                    .queue();
+        if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
+            event.reply("❌ You don't have permission to use this command.").setEphemeral(true).queue();
             return;
         }
 
@@ -58,7 +60,8 @@ public class AlertChannelCommand implements CommandHandler {
         if (event.getOption("channel") == null) {
             // Clear alert channel
             config.setAlertChannelId(null);
-            event.reply("✅ Alert channel cleared. Honeypot triggers will no longer send alerts.")
+            event
+                    .reply("✅ Alert channel cleared. Honeypot triggers will no longer send alerts.")
                     .setEphemeral(true)
                     .queue();
             logger.info("Alert channel cleared for guild {}", guild.getId());
@@ -70,28 +73,35 @@ public class AlertChannelCommand implements CommandHandler {
         if (channel == null) return;
 
         // Check bot permissions (MessageChannel extends GuildChannel, so this is safe)
-        if (channel instanceof GuildChannel guildChannel &&
-                !guild.getSelfMember().hasPermission(guildChannel, Permission.MESSAGE_SEND, Permission.MESSAGE_EMBED_LINKS)) {
-            event.reply("❌ I don't have permission to send messages in that channel.")
+        if (channel instanceof GuildChannel guildChannel
+                && !guild
+                .getSelfMember()
+                .hasPermission(guildChannel, Permission.MESSAGE_SEND, Permission.MESSAGE_EMBED_LINKS)) {
+            event
+                    .reply("❌ I don't have permission to send messages in that channel.")
                     .setEphemeral(true)
                     .queue();
             return;
         }
 
         config.setAlertChannelId(channel.getId());
-        event.reply(String.format("""
+        event
+                .reply(
+                        String.format(
+                                """
                         ✅ **Alert Channel Set**
                         Alerts will be sent to: %s
                         Honeypot triggers and other admin events will be logged here.
-                        """,
-                channel.getAsMention()
-        )).setEphemeral(true).queue();
+                                        """,
+                                channel.getAsMention()))
+                .setEphemeral(true)
+                .queue();
 
         logger.info("Alert channel set to {} for guild {}", channel.getName(), guild.getId());
     }
 
     @Override
     public String getCommandName() {
-        return "alert_channel";
+        return "alert-channel";
     }
 }

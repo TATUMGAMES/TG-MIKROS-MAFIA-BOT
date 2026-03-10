@@ -1,8 +1,8 @@
 package com.tatumgames.mikros.games.rpg.model;
 
 /**
- * Enum representing essence types that can be collected from actions.
- * Each essence is aligned with a specific stat.
+ * Enum representing essence types that can be collected from actions. Each essence is aligned with
+ * a specific stat.
  */
 public enum EssenceType {
     EMBER_SHARD("Ember Shard", "🔥", "STR"),
@@ -33,4 +33,3 @@ public enum EssenceType {
         return statAlignment;
     }
 }
-

@@ -1,35 +1,30 @@
 package com.tatumgames.mikros.games.rpg.model;
 
 /**
- * Enum representing backlash event types that can occur for Oathbreakers at high corruption.
- * These events represent the consequences of the broken oath.
+ * Enum representing backlash event types that can occur for Oathbreakers at high corruption. These
+ * events represent the consequences of the broken oath.
  */
 public enum BacklashEventType {
     ELITE_REINFORCEMENT(
             "Elite Reinforcement",
             "The broken oath draws another elite to the fight! Your corruption has attracted dangerous attention.",
-            BacklashEffectType.ELITE_SPAWN
-    ),
+            BacklashEffectType.ELITE_SPAWN),
     TEMPORARY_CURSE(
             "Temporary Curse",
             "Corruption surges, cursing you with dark energy. The broken oath's power turns against you.",
-            BacklashEffectType.TEMPORARY_CURSE
-    ),
+            BacklashEffectType.TEMPORARY_CURSE),
     DEMON_WHISPER(
             "Demon Whisper",
             "A demon's voice echoes in your mind, offering power in exchange for deeper corruption.",
-            BacklashEffectType.POWER_OFFER
-    ),
+            BacklashEffectType.POWER_OFFER),
     CORRUPTION_SURGE(
             "Corruption Surge",
             "The broken oath lashes out violently, dealing damage as corruption overwhelms you.",
-            BacklashEffectType.DAMAGE
-    ),
+            BacklashEffectType.DAMAGE),
     GODS_WRATH(
             "God's Wrath",
             "The gods punish your broken oath, weakening your resolve and power.",
-            BacklashEffectType.STAT_PENALTY
-    );
+            BacklashEffectType.STAT_PENALTY);
 
     private final String displayName;
     private final String description;
@@ -57,10 +52,10 @@ public enum BacklashEventType {
      * Enum representing the type of effect a backlash event has.
      */
     public enum BacklashEffectType {
-        ELITE_SPAWN,        // Spawns additional elite enemy
-        TEMPORARY_CURSE,    // Applies temporary curse (12h)
-        POWER_OFFER,        // Offers power (+corruption, +damage this battle)
-        DAMAGE,             // Deals damage (5-10% max HP)
-        STAT_PENALTY        // Reduces stats this battle (-5% to all)
+        ELITE_SPAWN, // Spawns additional elite enemy
+        TEMPORARY_CURSE, // Applies temporary curse (12h)
+        POWER_OFFER, // Offers power (+corruption, +damage this battle)
+        DAMAGE, // Deals damage (5-10% max HP)
+        STAT_PENALTY // Reduces stats this battle (-5% to all)
     }
 }
