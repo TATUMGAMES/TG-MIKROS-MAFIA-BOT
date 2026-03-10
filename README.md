@@ -1041,6 +1041,11 @@ For issues, questions, or contributions:
 
 ## Release Notes
 
+### 2.0.0 (03/09/26)
+
+Major updates to how schedulers work to take into consideration server inactivity. Also resolved conflicts with players
+for the RPG game not being able to continue playing after death.
+
 ### 1.2.0 (02/01/26)
 
 Make major updates to how schedulers work, particularly for the RPG game. Resolved other bugs with messaging and channel
@@ -1058,5 +1063,5 @@ community games.
 ---
 
 **Last Updated:** 2026-03-09  
-**Version:** 1.2.0  
+**Version:** 2.0.0  
 **Status:** Production Ready ✅
