@@ -255,7 +255,9 @@ server moderation, configuration, and management.
 **Subcommands:**
 
 - `view` - View current configuration
-- `update-channel` - Update the game channel (requires setup first)
+- `update-channel` - Update the game channel (requires setup first). **Resets all Word Unscramble data** for the server
+  (sessions, progression, per-player stats, used-word history), restarts the activity scheduler, and posts a new game in
+  the new channel (same behavior as `/admin-scramble-setup` clean start).
 - `set-reset-time` - Change daily reset hour
 - `enable-game` - Enable Word Unscramble game
 - `disable-game` - Disable Word Unscramble game
@@ -291,6 +293,8 @@ server moderation, configuration, and management.
 - Configures RPG channel
 - Enables RPG system
 - Sets up initial configuration
+- Clears all RPG play data for the server (fresh start: characters, bosses, curses, blessings, events, achievements,
+  auras)
 
 **Example:**
 
@@ -310,17 +314,38 @@ server moderation, configuration, and management.
 
 - `view` - View current configuration
 - `toggle` - Enable/disable RPG system
-- `update-channel` - Update RPG channel (requires setup first)
+- `update-channel` - Update RPG channel (requires setup first). **Fresh start:** assigning a new channel wipes all RPG
+  play data for the server (same as `/admin-rpg-setup`). Clearing the channel to allow “any channel” does **not** wipe.
 - `set-charge-refresh` - Set charge refresh period (hours, default: 12)
-- `set-xp-multiplier` - Set XP multiplier (0.5x - 2.0x)
+- `set-xp-multiplier` - Set XP multiplier (0.1x - 10.0x)
+- `set-allow-no-role` - Allow or disallow users without roles from playing
 
 **Example:**
 
 ```
 /admin-rpg-config view
 /admin-rpg-config toggle enabled:true
-/admin-rpg-config set-cooldown hours:12
+/admin-rpg-config set-charge-refresh hours:12
 ```
+
+---
+
+### `/rpg-reset`
+
+**Purpose:** Administrator full reset of **all** RPG data for the server (including stored guild configuration).
+
+**Permission Required:** `ADMINISTRATOR`
+
+**Syntax (two steps, 30-second confirmation window):**
+
+```
+/rpg-reset type:full
+/rpg-reset type:full confirm:confirm
+```
+
+**Behavior:** Clears RPG config, all characters, boss state, world curses, blessings, Nilfheim events, first-to
+achievements, legendary aura holders, and boss spawn activity. An administrator must run `/admin-rpg-setup` again;
+then players can use `/rpg-register`.
 
 ---
 

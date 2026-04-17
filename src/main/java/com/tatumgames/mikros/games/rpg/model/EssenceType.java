@@ -5,31 +5,31 @@ package com.tatumgames.mikros.games.rpg.model;
  * a specific stat.
  */
 public enum EssenceType {
-    EMBER_SHARD("Ember Shard", "🔥", "STR"),
-    GALE_FRAGMENT("Gale Fragment", "🌪️", "AGI"),
-    MIND_CRYSTAL("Mind Crystal", "🔮", "INT"),
-    FATE_CLOVER("Fate Clover", "🍀", "LUCK"),
-    VITAL_ASH("Vital Ash", "🩸", "HP");
+  EMBER_SHARD("Ember Shard", "🔥", "STR"),
+  GALE_FRAGMENT("Gale Fragment", "🌪️", "AGI"),
+  MIND_CRYSTAL("Mind Crystal", "🔮", "INT"),
+  FATE_CLOVER("Fate Clover", "🍀", "LUCK"),
+  VITAL_ASH("Vital Ash", "🩸", "HP");
 
-    private final String displayName;
-    private final String emoji;
-    private final String statAlignment;
+  private final String displayName;
+  private final String emoji;
+  private final String statAlignment;
 
-    EssenceType(String displayName, String emoji, String statAlignment) {
-        this.displayName = displayName;
-        this.emoji = emoji;
-        this.statAlignment = statAlignment;
-    }
+  EssenceType(String displayName, String emoji, String statAlignment) {
+    this.displayName = displayName;
+    this.emoji = emoji;
+    this.statAlignment = statAlignment;
+  }
 
-    public String getDisplayName() {
-        return displayName;
-    }
+  public String getDisplayName() {
+    return displayName;
+  }
 
-    public String getEmoji() {
-        return emoji;
-    }
+  public String getEmoji() {
+    return emoji;
+  }
 
-    public String getStatAlignment() {
-        return statAlignment;
-    }
+  public String getStatAlignment() {
+    return statAlignment;
+  }
 }

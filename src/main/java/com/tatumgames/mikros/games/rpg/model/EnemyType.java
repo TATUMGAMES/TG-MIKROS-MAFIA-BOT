@@ -5,26 +5,26 @@ package com.tatumgames.mikros.games.rpg.model;
  * (STR/INT/AGI).
  */
 public enum EnemyType {
-    PHYSICAL("Physical", "⚔️"),
-    MAGICAL("Magical", "🔮"),
-    AGILE("Agile", "🌪️"),
-    UNDEAD("Undead", "💀"),
-    BEAST("Beast", "🐺"),
-    CONSTRUCT("Construct", "🤖");
+  PHYSICAL("Physical", "⚔️"),
+  MAGICAL("Magical", "🔮"),
+  AGILE("Agile", "🌪️"),
+  UNDEAD("Undead", "💀"),
+  BEAST("Beast", "🐺"),
+  CONSTRUCT("Construct", "🤖");
 
-    private final String displayName;
-    private final String emoji;
+  private final String displayName;
+  private final String emoji;
 
-    EnemyType(String displayName, String emoji) {
-        this.displayName = displayName;
-        this.emoji = emoji;
-    }
+  EnemyType(String displayName, String emoji) {
+    this.displayName = displayName;
+    this.emoji = emoji;
+  }
 
-    public String getDisplayName() {
-        return displayName;
-    }
+  public String getDisplayName() {
+    return displayName;
+  }
 
-    public String getEmoji() {
-        return emoji;
-    }
+  public String getEmoji() {
+    return emoji;
+  }
 }

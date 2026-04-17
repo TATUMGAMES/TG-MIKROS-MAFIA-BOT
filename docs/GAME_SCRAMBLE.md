@@ -46,7 +46,9 @@ scrambled word is posted, and players compete to be the first to solve it.
 **Admin Subcommands:**
 
 - `view` - View current configuration
-- `update-channel` - Update the game channel (requires setup first)
+- `update-channel` - Update the game channel (requires setup first). **Full reset** for Word Unscramble on that server
+  (stats, sessions, progression, used words), then a new game is posted in the new channel—same clean start as
+  `/admin-scramble-setup`.
 - `set-reset-time` - Change daily reset hour
 - `enable-game` - Enable Scramble game
 - `disable-game` - Disable Scramble game

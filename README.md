@@ -219,7 +219,7 @@ Per-server configuration for honeypot channels and alert channels.
 **Admin Commands:**
 
 - `/admin-scramble-setup` - Initial game configuration
-- `/admin-scramble-config` - Modify game settings (5 subcommands)
+- `/admin-scramble-config` - Modify game settings (6 subcommands)
 
 **Player Commands:**
 
@@ -268,6 +268,8 @@ Per-server configuration for honeypot channels and alert channels.
 
 - `/rpg-register` - Create your character (6 classes available)
     - **Note:** RPG commands must be used in the channel assigned by administrators via `/admin-rpg-setup`
+- `/rpg-reset-account` - Delete **your** character and progression in this server (two-step confirmation; run in the RPG
+  channel)
 - `/rpg-profile` - View character stats, charges, recovery status
 - `/rpg-action` - Perform actions (explore, train, battle, rest). Failure messages are private. Explore and train now
   have increased XP with balanced risks.
@@ -281,8 +283,9 @@ Per-server configuration for honeypot channels and alert channels.
 
 **Admin Commands:**
 
-- `/admin-rpg-setup` - Initial RPG system setup
-- `/admin-rpg-config` - Configure RPG system (5 subcommands)
+- `/admin-rpg-setup` - Initial RPG system setup (also wipes all RPG play data for the server for a clean start)
+- `/admin-rpg-config` - Configure RPG system (6 subcommands). **`update-channel`:** assigning a new RPG channel wipes
+  all RPG play data for the server (same as setup). Clearing the channel (any channel) does **not** wipe data.
 
 **Features:**
 
@@ -520,11 +523,12 @@ Includes:
 | *(disabled)* `/admin-mikros-ecosystem-setup` | Analytics  | Setup MIKROS Ecosystem channel (temporarily disabled)                    | Administrator    |
 | *(disabled)* `/mikros-ecosystem`             | Analytics  | View MIKROS Analytics (temporarily disabled until API integration)       | Everyone         |
 | `/admin-scramble-setup`         | Games      | Setup word unscramble game                                                               | Administrator    |
-| `/admin-scramble-config`        | Games      | Configure games (5 subcommands)                                                          | Administrator    |
+| `/admin-scramble-config`        | Games      | Configure games (6 subcommands); `update-channel` resets all scramble stats/sessions      | Administrator    |
 | `/scramble-guess`               | Games      | Submit word unscramble guess                                                             | Everyone         |
 | `/scramble-stats`               | Games      | View game leaderboard                                                                    | Everyone         |
 | `/scramble-profile`             | Games      | View your individual statistics (words solved, points, fastest time, etc.)               | Everyone         |
 | `/rpg-register`                 | RPG        | Create RPG character (7 classes)                                                          | Everyone         |
+| `/rpg-reset-account`            | RPG        | Delete your RPG character/progression (confirm within 30s)                                | Everyone         |
 | `/rpg-profile`                  | RPG        | View character profile                                                                   | Everyone         |
 | `/rpg-action`                   | RPG        | Perform action (explore/train/battle/rest). Failure messages are private.                | Everyone         |
 | `/rpg-resurrect`                | RPG        | Resurrect dead player (Priest-only, free action)                                         | Everyone         |
@@ -535,7 +539,7 @@ Includes:
 | `/rpg-craft`                    | RPG        | Craft permanent stat-boosting items (success messages public, errors private)            | Everyone         |
 | `/rpg-stats`                    | RPG        | View detailed RPG statistics                                                             | Everyone         |
 | `/admin-rpg-setup`              | RPG        | Setup RPG system                                                                         | Administrator    |
-| `/admin-rpg-config`             | RPG        | Configure RPG (5 subcommands)                                                            | Administrator    |
+| `/admin-rpg-config`             | RPG        | Configure RPG (6 subcommands)                                                            | Administrator    |
 | `/rpg-reset`                    | RPG        | Reset all RPG data for server                                                            | Administrator    |
 | `/admin-setup-promotions`       | Promo      | Enable/disable promo detection                                                           | Administrator    |
 | `/admin-set-promo-frequency`    | Promo      | Set promo cooldown                                                                       | Administrator    |
@@ -581,6 +585,8 @@ Includes:
 ```
 /rpg-register name:Aragorn class:WARRIOR
 /rpg-register name:Oathkeeper class:OATHBREAKER
+/rpg-reset-account
+/rpg-reset-account confirm:confirm
 /rpg-profile
 /rpg-action type:explore
 /rpg-action type:battle
@@ -1041,6 +1047,12 @@ For issues, questions, or contributions:
 
 ## Release Notes
 
+### 2.0.1 (04/17/26)
+
+Minor fixes: RPG boss and Nilfheim idle behavior aligned with activity gating (including respawn after boss expiry),
+Word Unscramble scheduler hardening and logging, `/rpg-reset-account` no longer counts as community RPG activity for
+spawn gating.
+
 ### 2.0.0 (03/09/26)
 
 Major updates to how schedulers work to take into consideration server inactivity. Also resolved conflicts with players
@@ -1062,6 +1074,6 @@ community games.
 
 ---
 
-**Last Updated:** 2026-03-09  
-**Version:** 2.0.0  
+**Last Updated:** 2026-04-17  
+**Version:** 2.0.1  
 **Status:** Production Ready ✅

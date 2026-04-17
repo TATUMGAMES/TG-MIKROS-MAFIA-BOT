@@ -7,169 +7,167 @@ import java.util.Objects;
  * across all game sessions.
  */
 public class WordUnscramblePlayerStats {
-    private final String userId;
-    private final String guildId;
-    private int totalWordsSolved;
-    private int totalPoints;
-    private int highestScore;
-    private long fastestTimeSeconds; // Fastest solve time in seconds (0 if no solves yet)
-    private int totalAttempts;
-    private int wrongGuesses;
-    private int currentStreak; // Current consecutive correct solves
-    private int longestStreak; // Longest streak achieved
+  private final String userId;
+  private final String guildId;
+  private int totalWordsSolved;
+  private int totalPoints;
+  private int highestScore;
+  private long fastestTimeSeconds; // Fastest solve time in seconds (0 if no solves yet)
+  private int totalAttempts;
+  private int wrongGuesses;
+  private int currentStreak; // Current consecutive correct solves
+  private int longestStreak; // Longest streak achieved
 
-    /**
-     * Creates a new WordUnscramblePlayerStats starting with zero stats.
-     *
-     * @param userId  the user's Discord ID
-     * @param guildId the guild ID
-     */
-    public WordUnscramblePlayerStats(String userId, String guildId) {
-        this.userId = Objects.requireNonNull(userId);
-        this.guildId = Objects.requireNonNull(guildId);
-        this.totalWordsSolved = 0;
-        this.totalPoints = 0;
-        this.highestScore = 0;
-        this.fastestTimeSeconds = 0; // 0 means no fastest time set yet
-        this.totalAttempts = 0;
-        this.wrongGuesses = 0;
-        this.currentStreak = 0;
-        this.longestStreak = 0;
+  /**
+   * Creates a new WordUnscramblePlayerStats starting with zero stats.
+   *
+   * @param userId the user's Discord ID
+   * @param guildId the guild ID
+   */
+  public WordUnscramblePlayerStats(String userId, String guildId) {
+    this.userId = Objects.requireNonNull(userId);
+    this.guildId = Objects.requireNonNull(guildId);
+    this.totalWordsSolved = 0;
+    this.totalPoints = 0;
+    this.highestScore = 0;
+    this.fastestTimeSeconds = 0; // 0 means no fastest time set yet
+    this.totalAttempts = 0;
+    this.wrongGuesses = 0;
+    this.currentStreak = 0;
+    this.longestStreak = 0;
+  }
+
+  /**
+   * Creates a WordUnscramblePlayerStats with specific values.
+   *
+   * @param userId the user's Discord ID
+   * @param guildId the guild ID
+   * @param totalWordsSolved total correct answers
+   * @param totalPoints cumulative points earned
+   * @param highestScore best single-word score
+   * @param fastestTimeSeconds fastest solve time in seconds
+   * @param totalAttempts total guesses (correct + incorrect)
+   * @param wrongGuesses total incorrect attempts
+   */
+  public WordUnscramblePlayerStats(
+      String userId,
+      String guildId,
+      int totalWordsSolved,
+      int totalPoints,
+      int highestScore,
+      long fastestTimeSeconds,
+      int totalAttempts,
+      int wrongGuesses) {
+    this.userId = Objects.requireNonNull(userId);
+    this.guildId = Objects.requireNonNull(guildId);
+    this.totalWordsSolved = totalWordsSolved;
+    this.totalPoints = totalPoints;
+    this.highestScore = highestScore;
+    this.fastestTimeSeconds = fastestTimeSeconds;
+    this.totalAttempts = totalAttempts;
+    this.wrongGuesses = wrongGuesses;
+    this.currentStreak = 0; // Default, will be calculated if needed
+    this.longestStreak = 0; // Default, will be calculated if needed
+  }
+
+  /**
+   * Records a correct answer and updates relevant stats.
+   *
+   * @param score the score achieved for this word
+   * @param timeSeconds the time taken to solve in seconds
+   */
+  public void recordCorrectAnswer(int score, long timeSeconds) {
+    totalWordsSolved++;
+    totalPoints += score;
+    totalAttempts++;
+    currentStreak++; // Increment streak
+
+    // Update longest streak if current is better
+    if (currentStreak > longestStreak) {
+      longestStreak = currentStreak;
     }
 
-    /**
-     * Creates a WordUnscramblePlayerStats with specific values.
-     *
-     * @param userId             the user's Discord ID
-     * @param guildId            the guild ID
-     * @param totalWordsSolved   total correct answers
-     * @param totalPoints        cumulative points earned
-     * @param highestScore       best single-word score
-     * @param fastestTimeSeconds fastest solve time in seconds
-     * @param totalAttempts      total guesses (correct + incorrect)
-     * @param wrongGuesses       total incorrect attempts
-     */
-    public WordUnscramblePlayerStats(
-            String userId,
-            String guildId,
-            int totalWordsSolved,
-            int totalPoints,
-            int highestScore,
-            long fastestTimeSeconds,
-            int totalAttempts,
-            int wrongGuesses) {
-        this.userId = Objects.requireNonNull(userId);
-        this.guildId = Objects.requireNonNull(guildId);
-        this.totalWordsSolved = totalWordsSolved;
-        this.totalPoints = totalPoints;
-        this.highestScore = highestScore;
-        this.fastestTimeSeconds = fastestTimeSeconds;
-        this.totalAttempts = totalAttempts;
-        this.wrongGuesses = wrongGuesses;
-        this.currentStreak = 0; // Default, will be calculated if needed
-        this.longestStreak = 0; // Default, will be calculated if needed
+    // Update highest score if this is better
+    if (score > highestScore) {
+      highestScore = score;
     }
 
-    /**
-     * Records a correct answer and updates relevant stats.
-     *
-     * @param score       the score achieved for this word
-     * @param timeSeconds the time taken to solve in seconds
-     */
-    public void recordCorrectAnswer(int score, long timeSeconds) {
-        totalWordsSolved++;
-        totalPoints += score;
-        totalAttempts++;
-        currentStreak++; // Increment streak
-
-        // Update longest streak if current is better
-        if (currentStreak > longestStreak) {
-            longestStreak = currentStreak;
-        }
-
-        // Update highest score if this is better
-        if (score > highestScore) {
-            highestScore = score;
-        }
-
-        // Update fastest time if this is faster (or if no fastest time set yet)
-        if (fastestTimeSeconds == 0 || timeSeconds < fastestTimeSeconds) {
-            fastestTimeSeconds = timeSeconds;
-        }
+    // Update fastest time if this is faster (or if no fastest time set yet)
+    if (fastestTimeSeconds == 0 || timeSeconds < fastestTimeSeconds) {
+      fastestTimeSeconds = timeSeconds;
     }
+  }
 
-    /**
-     * Records a wrong guess.
-     */
-    public void recordWrongGuess() {
-        wrongGuesses++;
-        totalAttempts++;
-        currentStreak = 0; // Reset streak on wrong guess
+  /** Records a wrong guess. */
+  public void recordWrongGuess() {
+    wrongGuesses++;
+    totalAttempts++;
+    currentStreak = 0; // Reset streak on wrong guess
+  }
+
+  public int getCurrentStreak() {
+    return currentStreak;
+  }
+
+  public int getLongestStreak() {
+    return longestStreak;
+  }
+
+  /**
+   * Gets the accuracy percentage (correct answers / total attempts * 100).
+   *
+   * @return accuracy percentage (0-100), or 0 if no attempts
+   */
+  public double getAccuracyPercentage() {
+    if (totalAttempts == 0) {
+      return 0.0;
     }
+    return (double) totalWordsSolved / totalAttempts * 100.0;
+  }
 
-    public int getCurrentStreak() {
-        return currentStreak;
+  /**
+   * Gets the average score per correct answer.
+   *
+   * @return average score, or 0 if no words solved
+   */
+  public double getAverageScore() {
+    if (totalWordsSolved == 0) {
+      return 0.0;
     }
+    return (double) totalPoints / totalWordsSolved;
+  }
 
-    public int getLongestStreak() {
-        return longestStreak;
-    }
+  // Getters
 
-    /**
-     * Gets the accuracy percentage (correct answers / total attempts * 100).
-     *
-     * @return accuracy percentage (0-100), or 0 if no attempts
-     */
-    public double getAccuracyPercentage() {
-        if (totalAttempts == 0) {
-            return 0.0;
-        }
-        return (double) totalWordsSolved / totalAttempts * 100.0;
-    }
+  public String getUserId() {
+    return userId;
+  }
 
-    /**
-     * Gets the average score per correct answer.
-     *
-     * @return average score, or 0 if no words solved
-     */
-    public double getAverageScore() {
-        if (totalWordsSolved == 0) {
-            return 0.0;
-        }
-        return (double) totalPoints / totalWordsSolved;
-    }
+  public String getGuildId() {
+    return guildId;
+  }
 
-    // Getters
+  public int getTotalWordsSolved() {
+    return totalWordsSolved;
+  }
 
-    public String getUserId() {
-        return userId;
-    }
+  public int getTotalPoints() {
+    return totalPoints;
+  }
 
-    public String getGuildId() {
-        return guildId;
-    }
+  public int getHighestScore() {
+    return highestScore;
+  }
 
-    public int getTotalWordsSolved() {
-        return totalWordsSolved;
-    }
+  public long getFastestTimeSeconds() {
+    return fastestTimeSeconds;
+  }
 
-    public int getTotalPoints() {
-        return totalPoints;
-    }
+  public int getTotalAttempts() {
+    return totalAttempts;
+  }
 
-    public int getHighestScore() {
-        return highestScore;
-    }
-
-    public long getFastestTimeSeconds() {
-        return fastestTimeSeconds;
-    }
-
-    public int getTotalAttempts() {
-        return totalAttempts;
-    }
-
-    public int getWrongGuesses() {
-        return wrongGuesses;
-    }
+  public int getWrongGuesses() {
+    return wrongGuesses;
+  }
 }
