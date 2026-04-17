@@ -5,6 +5,7 @@ import com.tatumgames.mikros.games.rpg.config.RPGConfig;
 import com.tatumgames.mikros.games.rpg.scheduler.NilfheimEventScheduler;
 import com.tatumgames.mikros.games.rpg.service.BossScheduler;
 import com.tatumgames.mikros.games.rpg.service.CharacterService;
+import com.tatumgames.mikros.games.rpg.service.RpgGuildResetService;
 import com.tatumgames.mikros.handler.CommandHandler;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -23,106 +24,112 @@ import org.slf4j.LoggerFactory;
  * server.
  */
 public class RPGSetupCommand implements CommandHandler {
-    private static final Logger logger = LoggerFactory.getLogger(RPGSetupCommand.class);
-    private final CharacterService characterService;
-    private final BossScheduler bossScheduler;
-    private final NilfheimEventScheduler nilfheimEventScheduler;
+  private static final Logger logger = LoggerFactory.getLogger(RPGSetupCommand.class);
+  private final CharacterService characterService;
+  private final RpgGuildResetService rpgGuildResetService;
+  private final BossScheduler bossScheduler;
+  private final NilfheimEventScheduler nilfheimEventScheduler;
 
-    /**
-     * Creates a new RPGSetupCommand handler.
-     *
-     * @param characterService       the character service
-     * @param bossScheduler          the boss scheduler (started on setup; spawns initial boss)
-     * @param nilfheimEventScheduler the Nilfheim event scheduler (started on setup)
-     */
-    public RPGSetupCommand(
-            CharacterService characterService,
-            BossScheduler bossScheduler,
-            NilfheimEventScheduler nilfheimEventScheduler) {
-        this.characterService = characterService;
-        this.bossScheduler = bossScheduler;
-        this.nilfheimEventScheduler = nilfheimEventScheduler;
+  /**
+   * Creates a new RPGSetupCommand handler.
+   *
+   * @param characterService the character service
+   * @param rpgGuildResetService orchestrates guild play-state wipes
+   * @param bossScheduler the boss scheduler (started on setup; spawns initial boss)
+   * @param nilfheimEventScheduler the Nilfheim event scheduler (started on setup)
+   */
+  public RPGSetupCommand(
+      CharacterService characterService,
+      RpgGuildResetService rpgGuildResetService,
+      BossScheduler bossScheduler,
+      NilfheimEventScheduler nilfheimEventScheduler) {
+    this.characterService = characterService;
+    this.rpgGuildResetService = rpgGuildResetService;
+    this.bossScheduler = bossScheduler;
+    this.nilfheimEventScheduler = nilfheimEventScheduler;
+  }
+
+  @Override
+  public CommandData getCommandData() {
+    return Commands.slash("admin-rpg-setup", "Configure RPG system for your server")
+        .addOption(OptionType.CHANNEL, "channel", "Channel for RPG commands and boss battles", true)
+        .setGuildOnly(true)
+        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+  }
+
+  @Override
+  public void handle(SlashCommandInteractionEvent event) {
+    // Check if user has permission
+    Member member = event.getMember();
+    Guild guild = event.getGuild();
+
+    if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
+      event.reply("❌ You must be an administrator to use this command.").setEphemeral(true).queue();
+      return;
     }
 
-    @Override
-    public CommandData getCommandData() {
-        return Commands.slash("admin-rpg-setup", "Configure RPG system for your server")
-                .addOption(OptionType.CHANNEL, "channel", "Channel for RPG commands and boss battles", true)
-                .setGuildOnly(true)
-                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+    // Get the channel option
+    MessageChannel channel = AdminUtils.getValidTextChannel(event, "channel");
+    if (channel == null) return;
+
+    // Validate bot can post in channel
+    if (!channel.canTalk()) {
+      event
+          .reply("❌ I don't have permission to send messages in " + channel.getAsMention() + ".")
+          .setEphemeral(true)
+          .queue();
+      return;
     }
 
-    @Override
-    public void handle(SlashCommandInteractionEvent event) {
-        // Check if user has permission
-        Member member = event.getMember();
-        Guild guild = event.getGuild();
+    // Get or create RPG config
+    String guildId = guild.getId();
+    RPGConfig config = characterService.getConfig(guildId);
 
-        if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ You must be an administrator to use this command.").setEphemeral(true).queue();
-            return;
-        }
+    // Set channel and enable RPG
+    config.setRpgChannelId(channel.getId());
+    config.setEnabled(true);
+    // Keep default values: chargeRefreshHours = 12, xpMultiplier = 1.0
+    characterService.updateConfig(config);
 
-        // Get the channel option
-        MessageChannel channel = AdminUtils.getValidTextChannel(event, "channel");
-        if (channel == null) return;
+    // Clean start for this guild (prevents duplicate profiles after re-setup).
+    int clearedCharacters = rpgGuildResetService.resetPlayProgress(guildId);
 
-        // Validate bot can post in channel
-        if (!channel.canTalk()) {
-            event
-                    .reply("❌ I don't have permission to send messages in " + channel.getAsMention() + ".")
-                    .setEphemeral(true)
-                    .queue();
-            return;
-        }
+    // Start schedulers (idempotent; safe to call on re-setup)
+    // BossScheduler runs immediately (delay 0) and will spawn+announce the initial boss
+    bossScheduler.startIfNeeded(event.getJDA());
+    nilfheimEventScheduler.startIfNeeded(event.getJDA());
 
-        // Get or create RPG config
-        String guildId = guild.getId();
-        RPGConfig config = characterService.getConfig(guildId);
-
-        // Set channel and enable RPG
-        config.setRpgChannelId(channel.getId());
-        config.setEnabled(true);
-        // Keep default values: chargeRefreshHours = 12, xpMultiplier = 1.0
-        characterService.updateConfig(config);
-
-        // Start schedulers (idempotent; safe to call on re-setup)
-        // BossScheduler runs immediately (delay 0) and will spawn+announce the initial boss
-        bossScheduler.startIfNeeded(event.getJDA());
-        nilfheimEventScheduler.startIfNeeded(event.getJDA());
-
-        // Send confirmation
-        event
-                .reply(
-                        String.format(
-                                """
+    // Send confirmation
+    event
+        .reply(
+            String.format(
+                """
                         ✅ **RPG System Configured!**
-                                        
+
                         **RPG Channel:** %s
                         **Status:** Enabled
                         **Charge Refresh:** 12 hours (default)
                         **XP Multiplier:** 1.0x (default)
-                                        
+
                         ⚔️ The RPG system is now active!
                         🐲 **A boss will spawn in the channel shortly!**
-                                        
+
                         **Next Steps:**
                         • Use `/admin-rpg-config` to customize settings
                         • Players can register with `/rpg-register`
                         • Bosses spawn every 48 hours (24h livable + 24h cooldown)
                         """,
-                                channel.getAsMention()))
-                .queue();
+                channel.getAsMention()))
+        .queue();
 
-        logger.info(
-                "RPG setup for guild {} by user {}: channel={}",
-                guildId,
-                member.getId(),
-                channel.getId());
-    }
+    logger.info(
+        "RPG setup for guild {} by user {}: channel={}", guildId, member.getId(), channel.getId());
+    logger.info(
+        "RPG setup clean-start cleared {} character(s) for guild {}", clearedCharacters, guildId);
+  }
 
-    @Override
-    public String getCommandName() {
-        return "admin-rpg-setup";
-    }
+  @Override
+  public String getCommandName() {
+    return "admin-rpg-setup";
+  }
 }

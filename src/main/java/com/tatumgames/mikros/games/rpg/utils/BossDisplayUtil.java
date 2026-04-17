@@ -8,8 +8,7 @@ import java.time.format.DateTimeFormatter;
 public final class BossDisplayUtil {
 
   private static final DateTimeFormatter BOSS_TIMESTAMP_FORMATTER =
-      DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a z")
-          .withZone(ZoneId.systemDefault());
+      DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a z").withZone(ZoneId.systemDefault());
 
   private BossDisplayUtil() {}
 

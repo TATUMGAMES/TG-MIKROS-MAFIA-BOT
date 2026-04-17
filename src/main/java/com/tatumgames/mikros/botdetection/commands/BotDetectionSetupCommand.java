@@ -20,51 +20,51 @@ import org.slf4j.LoggerFactory;
  * detection.
  */
 public class BotDetectionSetupCommand implements CommandHandler {
-    private static final Logger logger = LoggerFactory.getLogger(BotDetectionSetupCommand.class);
-    private final BotDetectionService botDetectionService;
+  private static final Logger logger = LoggerFactory.getLogger(BotDetectionSetupCommand.class);
+  private final BotDetectionService botDetectionService;
 
-    /**
-     * Creates a new BotDetectionSetupCommand handler.
-     *
-     * @param botDetectionService the bot detection service
-     */
-    public BotDetectionSetupCommand(BotDetectionService botDetectionService) {
-        this.botDetectionService = botDetectionService;
+  /**
+   * Creates a new BotDetectionSetupCommand handler.
+   *
+   * @param botDetectionService the bot detection service
+   */
+  public BotDetectionSetupCommand(BotDetectionService botDetectionService) {
+    this.botDetectionService = botDetectionService;
+  }
+
+  @Override
+  public CommandData getCommandData() {
+    return Commands.slash("admin-bot-detection-setup", "Enable or disable bot detection system")
+        .addOption(OptionType.BOOLEAN, "enabled", "Enable bot detection (true/false)", true)
+        .setGuildOnly(true)
+        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+  }
+
+  @Override
+  public void handle(SlashCommandInteractionEvent event) {
+    Member member = event.getMember();
+    Guild guild = event.getGuild();
+
+    if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
+      event.reply("❌ You must be an administrator to use this command.").setEphemeral(true).queue();
+      return;
     }
 
-    @Override
-    public CommandData getCommandData() {
-        return Commands.slash("admin-bot-detection-setup", "Enable or disable bot detection system")
-                .addOption(OptionType.BOOLEAN, "enabled", "Enable bot detection (true/false)", true)
-                .setGuildOnly(true)
-                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+    Boolean enabled = event.getOption("enabled", OptionMapping::getAsBoolean);
+    if (enabled == null) {
+      event.reply("❌ You must specify enabled (true/false).").setEphemeral(true).queue();
+      return;
     }
 
-    @Override
-    public void handle(SlashCommandInteractionEvent event) {
-        Member member = event.getMember();
-        Guild guild = event.getGuild();
+    String guildId = guild.getId();
+    BotDetectionConfig config = botDetectionService.getConfig(guildId);
+    config.setEnabled(enabled);
+    botDetectionService.updateConfig(guildId, config);
 
-        if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ You must be an administrator to use this command.").setEphemeral(true).queue();
-            return;
-        }
-
-        Boolean enabled = event.getOption("enabled", OptionMapping::getAsBoolean);
-        if (enabled == null) {
-            event.reply("❌ You must specify enabled (true/false).").setEphemeral(true).queue();
-            return;
-        }
-
-        String guildId = guild.getId();
-        BotDetectionConfig config = botDetectionService.getConfig(guildId);
-        config.setEnabled(enabled);
-        botDetectionService.updateConfig(guildId, config);
-
-        event
-                .reply(
-                        String.format(
-                                """
+    event
+        .reply(
+            String.format(
+                """
                         ✅ **Bot Detection System %s**
 
                         **Status:** %s
@@ -82,18 +82,18 @@ public class BotDetectionSetupCommand implements CommandHandler {
                 config.getLinkRestrictionMinutes(),
                 config.getMultiChannelSpamThreshold(),
                 config.getAutoAction(),
-                                config.isReportToReputation() ? "Enabled" : "Disabled"))
-                .queue();
+                config.isReportToReputation() ? "Enabled" : "Disabled"))
+        .queue();
 
-        logger.info(
-                "Bot detection {} for guild {} by user {}",
-                enabled ? "enabled" : "disabled",
-                guildId,
-                member.getId());
-    }
+    logger.info(
+        "Bot detection {} for guild {} by user {}",
+        enabled ? "enabled" : "disabled",
+        guildId,
+        member.getId());
+  }
 
-    @Override
-    public String getCommandName() {
-        return "admin-bot-detection-setup";
-    }
+  @Override
+  public String getCommandName() {
+    return "admin-bot-detection-setup";
+  }
 }
