@@ -22,60 +22,60 @@ import org.slf4j.LoggerFactory;
  */
 @SuppressWarnings("ClassCanBeRecord")
 public class SetupPromotionChannelCommand implements CommandHandler {
-    private static final Logger logger = LoggerFactory.getLogger(SetupPromotionChannelCommand.class);
-    private final GamePromotionService gamePromotionService;
-    private final GamePromotionScheduler gamePromotionScheduler;
+  private static final Logger logger = LoggerFactory.getLogger(SetupPromotionChannelCommand.class);
+  private final GamePromotionService gamePromotionService;
+  private final GamePromotionScheduler gamePromotionScheduler;
 
-    /**
-     * Creates a new SetupPromotionChannelCommand handler.
-     *
-     * @param gamePromotionService   the game promotion service
-     * @param gamePromotionScheduler the promotion scheduler (started on setup)
-     */
-    public SetupPromotionChannelCommand(
-            GamePromotionService gamePromotionService, GamePromotionScheduler gamePromotionScheduler) {
-        this.gamePromotionService = gamePromotionService;
-        this.gamePromotionScheduler = gamePromotionScheduler;
+  /**
+   * Creates a new SetupPromotionChannelCommand handler.
+   *
+   * @param gamePromotionService the game promotion service
+   * @param gamePromotionScheduler the promotion scheduler (started on setup)
+   */
+  public SetupPromotionChannelCommand(
+      GamePromotionService gamePromotionService, GamePromotionScheduler gamePromotionScheduler) {
+    this.gamePromotionService = gamePromotionService;
+    this.gamePromotionScheduler = gamePromotionScheduler;
+  }
+
+  @Override
+  public CommandData getCommandData() {
+    return Commands.slash(
+            "admin-promotion-setup", "Configure the promotion channel for your server")
+        .addOption(OptionType.CHANNEL, "channel", "The channel to post promotions in", true)
+        .setGuildOnly(true)
+        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
+  }
+
+  @Override
+  public void handle(SlashCommandInteractionEvent event) {
+    // Check if user has permission
+    Member member = event.getMember();
+    Guild guild = event.getGuild();
+
+    if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
+      event.reply("❌ You must be an administrator to use this command.").setEphemeral(true).queue();
+      return;
     }
 
-    @Override
-    public CommandData getCommandData() {
-        return Commands.slash(
-                        "admin-promotion-setup", "Configure the promotion channel for your server")
-                .addOption(OptionType.CHANNEL, "channel", "The channel to post promotions in", true)
-                .setGuildOnly(true)
-                .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR));
-    }
+    // Get the channel option
+    MessageChannel channel = AdminUtils.getValidTextChannel(event, "channel");
+    if (channel == null) return;
 
-    @Override
-    public void handle(SlashCommandInteractionEvent event) {
-        // Check if user has permission
-        Member member = event.getMember();
-        Guild guild = event.getGuild();
+    // Save the configuration
+    String guildId = guild.getId();
+    String channelId = channel.getId();
 
-        if (member == null || guild == null || !member.hasPermission(Permission.ADMINISTRATOR)) {
-            event.reply("❌ You must be an administrator to use this command.").setEphemeral(true).queue();
-            return;
-        }
+    gamePromotionService.setPromotionChannel(guildId, channelId);
 
-        // Get the channel option
-        MessageChannel channel = AdminUtils.getValidTextChannel(event, "channel");
-        if (channel == null) return;
+    // Start the promotion scheduler (idempotent; safe to call on re-setup)
+    gamePromotionScheduler.startIfNeeded(event.getJDA());
 
-        // Save the configuration
-        String guildId = guild.getId();
-        String channelId = channel.getId();
-
-        gamePromotionService.setPromotionChannel(guildId, channelId);
-
-        // Start the promotion scheduler (idempotent; safe to call on re-setup)
-        gamePromotionScheduler.startIfNeeded(event.getJDA());
-
-        // Send confirmation
-        event
-                .reply(
-                        String.format(
-                                """
+    // Send confirmation
+    event
+        .reply(
+            String.format(
+                """
                 ✅ **Game Promotion Channel Configured**
 
                 Promotions will now be posted in %s
@@ -83,18 +83,18 @@ public class SetupPromotionChannelCommand implements CommandHandler {
                 **Next Steps:**
                 • Use `/admin-promotion-config set-verbosity` to control posting frequency
                 • Use `/admin-promotion-config force-check` to test immediately
-                                        
+
                 Default frequency: **MEDIUM** (every 12 hours)
                                         """,
-                                channel.getAsMention()))
-                .queue();
+                channel.getAsMention()))
+        .queue();
 
-        logger.info(
-                "Promotion channel set to {} for guild {} by user {}", channelId, guildId, member.getId());
-    }
+    logger.info(
+        "Promotion channel set to {} for guild {} by user {}", channelId, guildId, member.getId());
+  }
 
-    @Override
-    public String getCommandName() {
-        return "admin-promotion-setup";
-    }
+  @Override
+  public String getCommandName() {
+    return "admin-promotion-setup";
+  }
 }

@@ -60,6 +60,7 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 | Command                    | Description                                                      | Example                                                |
 |----------------------------|------------------------------------------------------------------|--------------------------------------------------------|
 | `/rpg-register`            | Create your RPG character                                        | `/rpg-register name:Aragorn class:WARRIOR`             |
+| `/rpg-reset-account`       | Delete your character and progression (confirm within 30s)      | `/rpg-reset-account` then `/rpg-reset-account confirm:confirm` |
 | `/rpg-profile`             | View your character stats                                        | `/rpg-profile`                                         |
 | `/rpg-profile user:<user>` | View another player's profile                                    | `/rpg-profile user:@Player`                            |
 | `/rpg-action`              | Perform an action (uses 1 charge). Failure messages are private. | `/rpg-action type:explore`                             |
@@ -84,15 +85,25 @@ mechanics, epic boss battles, player vs player duels, and an item crafting syste
 | `/admin-rpg-config`  | Configure RPG system | Administrator |
 
 **Setup Command:**
-- `/admin-rpg-setup channel:#channel` - Initial setup to configure RPG channel
+- `/admin-rpg-setup channel:#channel` - Initial setup to configure RPG channel. Clears all RPG play data for the server
+  (characters, bosses, curses, blessings, Nilfheim events, first-to achievements, aura holders) while keeping the new
+  channel and default settings.
 
 **Config Subcommands:**
 
 - `view` - View current configuration
 - `toggle` - Enable/disable RPG system
-- `update-channel` - Update RPG channel (requires setup first)
+- `update-channel` - Set a new RPG channel (requires setup first). **Fresh start:** same wipe as setup (all RPG play
+  data for the server). Clearing the channel option to allow “any channel” does **not** wipe data.
 - `set-charge-refresh` - Set charge refresh period (hours, default: 12)
-- `set-xp-multiplier` - Set XP multiplier (0.5x - 2.0x)
+- `set-xp-multiplier` - Set XP multiplier (0.1x - 10.0x)
+- `set-allow-no-role` - Allow or block users without roles from playing
+
+**Self-service reset:**
+
+- `/rpg-reset-account` — Deletes **only your** character (and archived history) for this server, removes your boss damage
+  for the current cycle, and releases first-to achievements / aura list entries tied to you. Guild-wide bosses and curses
+  are unchanged. Uses a 30-second confirmation step (`confirm:confirm`).
 
 ## Character Classes
 

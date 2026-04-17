@@ -12,35 +12,35 @@ import org.slf4j.LoggerFactory;
  * demos.
  */
 public class PromoRequestCommand implements CommandHandler {
-    private static final Logger logger = LoggerFactory.getLogger(PromoRequestCommand.class);
+  private static final Logger logger = LoggerFactory.getLogger(PromoRequestCommand.class);
 
-    @Override
-    public CommandData getCommandData() {
-        return Commands.slash(
-                "promo-request", "Request MIKROS promotional services and schedule a demo");
-    }
+  @Override
+  public CommandData getCommandData() {
+    return Commands.slash(
+        "promo-request", "Request MIKROS promotional services and schedule a demo");
+  }
 
-    @Override
-    public void handle(SlashCommandInteractionEvent event) {
-        String message =
-                """
+  @Override
+  public void handle(SlashCommandInteractionEvent event) {
+    String message =
+        """
                 Want a quick MIKROS product walkthrough or campaign setup demo?
 
                 📅 [Book a 30-min demo here](https://www.calendly.com/tatumgames)
                 """;
 
-        // Send ephemeral reply (only visible to the user who ran the command)
-        event
-                .reply(message)
-                .setEphemeral(true)
-                .queue(
-                        success ->
-                                logger.info("Sent promo-request message to user {}", event.getUser().getId()),
-                        error -> logger.error("Failed to send promo-request message", error));
-    }
+    // Send ephemeral reply (only visible to the user who ran the command)
+    event
+        .reply(message)
+        .setEphemeral(true)
+        .queue(
+            success ->
+                logger.info("Sent promo-request message to user {}", event.getUser().getId()),
+            error -> logger.error("Failed to send promo-request message", error));
+  }
 
-    @Override
-    public String getCommandName() {
-        return "promo-request";
-    }
+  @Override
+  public String getCommandName() {
+    return "promo-request";
+  }
 }
